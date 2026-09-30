@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, ClipboardCheck, ListTodo, LogOut, Users, Link2, Home } from "lucide-react";
+import { CalendarRange, ClipboardCheck, History, ListTodo, LogOut, Users, Link2, Home } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/ocorrencias", label: "Ocorrências", icon: ClipboardCheck },
+  { to: "/historico", label: "Histórico", icon: History },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
   { to: "/filhos", label: "Filhos", icon: Users },
   { to: "/tarefas", label: "Tarefas", icon: ListTodo },
