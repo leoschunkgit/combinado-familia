@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
@@ -25,6 +27,15 @@ function OcorrenciasPage() {
   const { data: todas = [], isLoading } = useFilhoTarefas();
   const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
   const [filtro, setFiltro] = useState(f);
+  const [datas, setDatas] = useState<Record<number, string>>({});
+
+  const hoje = new Date().toLocaleDateString("en-CA");
+  const dataDe = (r: FilhoTarefa) => {
+    const ini = r.t_vigencia?.data_inicio ?? hoje;
+    const fim = r.t_vigencia?.data_fim ?? hoje;
+    const d = datas[r.id] ?? hoje;
+    return d < ini ? ini : d > fim ? fim : d;
+  };
 
   const lista = todas.filter(
     (r) =>
