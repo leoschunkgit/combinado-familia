@@ -10,33 +10,107 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenticated/atribuicoes'
+import { Route as AuthenticatedFilhosRouteImport } from './routes/_authenticated/filhos'
+import { Route as AuthenticatedOcorrenciasRouteImport } from './routes/_authenticated/ocorrencias'
+import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
+import { Route as AuthenticatedVigenciasRouteImport } from './routes/_authenticated/vigencias'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAtribuicoesRoute =
+  AuthenticatedAtribuicoesRouteImport.update({
+    id: '/atribuicoes',
+    path: '/atribuicoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFilhosRoute = AuthenticatedFilhosRouteImport.update({
+  id: '/filhos',
+  path: '/filhos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOcorrenciasRoute =
+  AuthenticatedOcorrenciasRouteImport.update({
+    id: '/ocorrencias',
+    path: '/ocorrencias',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVigenciasRoute = AuthenticatedVigenciasRouteImport.update({
+  id: '/vigencias',
+  path: '/vigencias',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/filhos': typeof AuthenticatedFilhosRoute
+  '/ocorrencias': typeof AuthenticatedOcorrenciasRoute
+  '/tarefas': typeof AuthenticatedTarefasRoute
+  '/vigencias': typeof AuthenticatedVigenciasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/filhos': typeof AuthenticatedFilhosRoute
+  '/ocorrencias': typeof AuthenticatedOcorrenciasRoute
+  '/tarefas': typeof AuthenticatedTarefasRoute
+  '/vigencias': typeof AuthenticatedVigenciasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/_authenticated/filhos': typeof AuthenticatedFilhosRoute
+  '/_authenticated/ocorrencias': typeof AuthenticatedOcorrenciasRoute
+  '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
+  '/_authenticated/vigencias': typeof AuthenticatedVigenciasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/atribuicoes'
+    | '/filhos'
+    | '/ocorrencias'
+    | '/tarefas'
+    | '/vigencias'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/atribuicoes'
+    | '/filhos'
+    | '/ocorrencias'
+    | '/tarefas'
+    | '/vigencias'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/atribuicoes'
+    | '/_authenticated/filhos'
+    | '/_authenticated/ocorrencias'
+    | '/_authenticated/tarefas'
+    | '/_authenticated/vigencias'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +122,73 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/atribuicoes': {
+      id: '/_authenticated/atribuicoes'
+      path: '/atribuicoes'
+      fullPath: '/atribuicoes'
+      preLoaderRoute: typeof AuthenticatedAtribuicoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/filhos': {
+      id: '/_authenticated/filhos'
+      path: '/filhos'
+      fullPath: '/filhos'
+      preLoaderRoute: typeof AuthenticatedFilhosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ocorrencias': {
+      id: '/_authenticated/ocorrencias'
+      path: '/ocorrencias'
+      fullPath: '/ocorrencias'
+      preLoaderRoute: typeof AuthenticatedOcorrenciasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tarefas': {
+      id: '/_authenticated/tarefas'
+      path: '/tarefas'
+      fullPath: '/tarefas'
+      preLoaderRoute: typeof AuthenticatedTarefasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vigencias': {
+      id: '/_authenticated/vigencias'
+      path: '/vigencias'
+      fullPath: '/vigencias'
+      preLoaderRoute: typeof AuthenticatedVigenciasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAtribuicoesRoute: typeof AuthenticatedAtribuicoesRoute
+  AuthenticatedFilhosRoute: typeof AuthenticatedFilhosRoute
+  AuthenticatedOcorrenciasRoute: typeof AuthenticatedOcorrenciasRoute
+  AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
+  AuthenticatedVigenciasRoute: typeof AuthenticatedVigenciasRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAtribuicoesRoute: AuthenticatedAtribuicoesRoute,
+  AuthenticatedFilhosRoute: AuthenticatedFilhosRoute,
+  AuthenticatedOcorrenciasRoute: AuthenticatedOcorrenciasRoute,
+  AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
+  AuthenticatedVigenciasRoute: AuthenticatedVigenciasRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
