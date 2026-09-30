@@ -39,13 +39,39 @@ function OcorrenciasPage() {
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
-  function naoFez(r: FilhoTarefa) {
+  async function naoFez(r: FilhoTarefa) {
     const limite = r.t_vigencia?.qtd_ocorrencia ?? 1;
     const novo = Math.min(r.qtd_nao_fez + 1, limite);
     const penalizado = novo >= limite;
+    const { error } = await supabase.from("t_ocorrencia").insert({
+      id_filho_tarefa: r.id,
+      tipo: penalizado ? "PENALIDADE" : "NAO_FEZ",
+    });
+    if (error) { toast.error(error.message); return; }
     atualizar(r, { qtd_nao_fez: novo, feito: penalizado ? "N" : null });
+    qc.invalidateQueries({ queryKey: ["ocorrencias"] });
     if (penalizado) toast.warning(`Limite atingido! Penalidade: ${r.t_vigencia?.penalidade}`);
     else toast(`Ocorrência registrada (${novo}/${limite})`);
+  }
+
+  async function desfazer(r: FilhoTarefa, cumprida: boolean) {
+    if (!cumprida && r.qtd_nao_fez > 0) {
+      const { data: ultima } = await supabase
+        .from("t_ocorrencia")
+        .select("id")
+        .eq("id_filho_tarefa", r.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (ultima) {
+        await supabase.from("t_ocorrencia").delete().eq("id", ultima.id);
+        qc.invalidateQueries({ queryKey: ["ocorrencias"] });
+      }
+    }
+    atualizar(
+      r,
+      cumprida ? { feito: null } : { qtd_nao_fez: Math.max(0, r.qtd_nao_fez - 1), feito: null },
+    );
   }
 
   return (
@@ -114,11 +140,7 @@ function OcorrenciasPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() =>
-                          cumprida
-                            ? atualizar(r, { feito: null })
-                            : atualizar(r, { qtd_nao_fez: Math.max(0, r.qtd_nao_fez - 1), feito: null })
-                        }
+                        onClick={() => desfazer(r, cumprida)}
                       >
                         <RotateCcw className="h-4 w-4" /> Desfazer
                       </Button>

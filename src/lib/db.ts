@@ -48,6 +48,30 @@ export const useFilhoTarefas = () =>
       ),
   });
 
+export type Ocorrencia = Tables<"t_ocorrencia"> & {
+  t_filho_tarefa:
+    | (Pick<Tables<"t_filho_tarefa">, "id_filho" | "id_vigencia"> & {
+        t_filho: Pick<Filho, "nome"> | null;
+        t_tarefa: Pick<Tarefa, "nome"> | null;
+        t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade"> | null;
+      })
+    | null;
+};
+
+export const useOcorrencias = () =>
+  useQuery({
+    queryKey: ["ocorrencias"],
+    queryFn: () =>
+      unwrap<Ocorrencia[]>(
+        supabase
+          .from("t_ocorrencia")
+          .select(
+            "*, t_filho_tarefa(id_filho, id_vigencia, t_filho(nome), t_tarefa(nome), t_vigencia(data_inicio, data_fim, penalidade))",
+          )
+          .order("created_at", { ascending: false }),
+      ),
+  });
+
 export const fmtData = (d: string) =>
   new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
