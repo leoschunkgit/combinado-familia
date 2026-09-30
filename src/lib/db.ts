@@ -1,6 +1,37 @@
 import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+
+// Mensagens de validação sempre em português
+z.setErrorMap((issue, ctx) => {
+  switch (issue.code) {
+    case "too_small":
+      return {
+        message:
+          issue.type === "string"
+            ? `Informe pelo menos ${issue.minimum} caracteres`
+            : issue.type === "number"
+              ? `O valor mínimo é ${issue.minimum}`
+              : "Valor muito curto",
+      };
+    case "too_big":
+      return {
+        message:
+          issue.type === "string"
+            ? `Informe no máximo ${issue.maximum} caracteres`
+            : issue.type === "number"
+              ? `O valor máximo é ${issue.maximum}`
+              : "Valor muito longo",
+      };
+    case "invalid_type":
+      return { message: "Valor inválido" };
+    case "invalid_string":
+      return { message: issue.validation === "email" ? "Email inválido" : "Formato inválido" };
+    default:
+      return { message: ctx.defaultError };
+  }
+});
 
 export type Filho = Tables<"t_filho">;
 export type Vigencia = Tables<"t_vigencia">;
