@@ -142,6 +142,22 @@ function OcorrenciasPage() {
                     ))}
                     <span className="ml-2 text-sm tabular-nums text-muted-foreground">{r.qtd_nao_fez}/{limite}</span>
                   </div>
+                  {!penalizado && !cumprida && (
+                    <div className="w-full md:w-auto">
+                      <Label htmlFor={`data-${r.id}`} className="text-xs text-muted-foreground">
+                        Data da ocorrência
+                      </Label>
+                      <Input
+                        id={`data-${r.id}`}
+                        type="date"
+                        className="mt-1 md:w-40"
+                        value={dataDe(r)}
+                        min={r.t_vigencia?.data_inicio}
+                        max={r.t_vigencia?.data_fim}
+                        onChange={(e) => setDatas({ ...datas, [r.id]: e.target.value })}
+                      />
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {!penalizado && !cumprida && (
                       <>
