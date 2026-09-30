@@ -8,6 +8,13 @@
       "when": 1790736506308,
       "tag": "0000_schema_tarefas",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790736803688,
+      "tag": "0001_create_t_ocorrencia",
+      "breakpoints": true
     }
   ]
 }

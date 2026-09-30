@@ -111,6 +111,38 @@ export type Database = {
           },
         ]
       }
+      t_ocorrencia: {
+        Row: {
+          created_at: string
+          id: number
+          id_filho_tarefa: number
+          id_usuario_pai: number
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          id_filho_tarefa: number
+          id_usuario_pai?: number
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          id_filho_tarefa?: number
+          id_usuario_pai?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_ocorrencia_id_filho_tarefa_fkey"
+            columns: ["id_filho_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_filho_tarefa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_tarefa: {
         Row: {
           created_at: string
