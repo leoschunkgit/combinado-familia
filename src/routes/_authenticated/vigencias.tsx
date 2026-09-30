@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { fmtVigencia, useVigencias } from "@/lib/db";
+import { fmtVigencia, msgErro, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [{ title: "Vigências — Combinado" }] }),

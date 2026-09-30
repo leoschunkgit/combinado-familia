@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, useFilhos } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [{ title: "Filhos — Combinado" }] }),

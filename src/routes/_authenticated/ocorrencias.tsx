@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [{ title: "Ocorrências — Combinado" }] }),

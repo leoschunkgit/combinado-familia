@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [{ title: "Atribuições — Combinado" }] }),

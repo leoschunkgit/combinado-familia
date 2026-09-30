@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { useTarefas } from "@/lib/db";
+import { msgErro, useTarefas } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [{ title: "Tarefas — Combinado" }] }),

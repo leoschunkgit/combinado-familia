@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { maskCpf } from "@/lib/db";
+import { maskCpf, msgErro } from "@/lib/db";
 
 export const Route = createFileRoute("/")({
   head: () => ({
