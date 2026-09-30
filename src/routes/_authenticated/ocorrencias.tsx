@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
@@ -25,6 +27,15 @@ function OcorrenciasPage() {
   const { data: todas = [], isLoading } = useFilhoTarefas();
   const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
   const [filtro, setFiltro] = useState(f);
+  const [datas, setDatas] = useState<Record<number, string>>({});
+
+  const hoje = new Date().toLocaleDateString("en-CA");
+  const dataDe = (r: FilhoTarefa) => {
+    const ini = r.t_vigencia?.data_inicio ?? hoje;
+    const fim = r.t_vigencia?.data_fim ?? hoje;
+    const d = datas[r.id] ?? hoje;
+    return d < ini ? ini : d > fim ? fim : d;
+  };
 
   const lista = todas.filter(
     (r) =>
@@ -43,9 +54,15 @@ function OcorrenciasPage() {
     const limite = r.t_vigencia?.qtd_ocorrencia ?? 1;
     const novo = Math.min(r.qtd_nao_fez + 1, limite);
     const penalizado = novo >= limite;
+    const data = dataDe(r);
+    if (r.t_vigencia && (data < r.t_vigencia.data_inicio || data > r.t_vigencia.data_fim)) {
+      toast.error("A data deve estar dentro do período da vigência");
+      return;
+    }
     const { error } = await supabase.from("t_ocorrencia").insert({
       id_filho_tarefa: r.id,
       tipo: penalizado ? "PENALIDADE" : "NAO_FEZ",
+      created_at: `${data}T12:00:00`,
     });
     if (error) { toast.error(msgErro(error)); return; }
     atualizar(r, { qtd_nao_fez: novo, feito: penalizado ? "N" : null });
@@ -125,6 +142,22 @@ function OcorrenciasPage() {
                     ))}
                     <span className="ml-2 text-sm tabular-nums text-muted-foreground">{r.qtd_nao_fez}/{limite}</span>
                   </div>
+                  {!penalizado && !cumprida && (
+                    <div className="w-full md:w-auto">
+                      <Label htmlFor={`data-${r.id}`} className="text-xs text-muted-foreground">
+                        Data da ocorrência
+                      </Label>
+                      <Input
+                        id={`data-${r.id}`}
+                        type="date"
+                        className="mt-1 md:w-40"
+                        value={dataDe(r)}
+                        min={r.t_vigencia?.data_inicio}
+                        max={r.t_vigencia?.data_fim}
+                        onChange={(e) => setDatas({ ...datas, [r.id]: e.target.value })}
+                      />
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {!penalizado && !cumprida && (
                       <>
