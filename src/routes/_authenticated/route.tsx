@@ -15,10 +15,10 @@ export const Route = createFileRoute("/_authenticated")({
     let nome = pai?.nome;
     if (!pai) {
       const meta = user.user_metadata ?? {};
-      nome = (meta.nome as string) || user.email?.split("@")[0] || "Responsável";
+      nome = (meta["nome"] as string) || user.email?.split("@")[0] || "Responsável";
       await supabase.from("t_usuario_pai").insert({
         nome,
-        cpf: (meta.cpf as string) || "",
+        cpf: (meta["cpf"] as string) || "",
         email: user.email ?? "",
       });
     }

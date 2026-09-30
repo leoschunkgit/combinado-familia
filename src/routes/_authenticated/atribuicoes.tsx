@@ -38,20 +38,20 @@ function AtribuicoesPage() {
   };
 
   function adicionar() {
-    if (!vig || !filho || !tarefa) return toast.error("Selecione vigência, filho e tarefa");
+    if (!vig || !filho || !tarefa) { toast.error("Selecione vigência, filho e tarefa"); return; }
     const it = { id_vigencia: +vig, id_filho: +filho, id_tarefa: +tarefa };
     const dup = (a: Item) => a.id_vigencia === it.id_vigencia && a.id_filho === it.id_filho && a.id_tarefa === it.id_tarefa;
-    if (itens.some(dup) || existentes.some(dup)) return toast.error("Essa atribuição já existe");
+    if (itens.some(dup) || existentes.some(dup)) { toast.error("Essa atribuição já existe"); return; }
     setItens([...itens, it]);
     setTarefa("");
   }
 
   async function cadastrar() {
-    if (itens.length === 0) return toast.error("Adicione ao menos uma atribuição");
+    if (itens.length === 0) { toast.error("Adicione ao menos uma atribuição"); return; }
     setSaving(true);
     const { error } = await supabase.from("t_filho_tarefa").insert(itens);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`${itens.length} atribuição(ões) cadastrada(s)`);
     setItens([]);
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
@@ -59,7 +59,7 @@ function AtribuicoesPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 

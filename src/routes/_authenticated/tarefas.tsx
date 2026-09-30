@@ -24,9 +24,9 @@ function TarefasPage() {
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const n = nome.trim();
-    if (n.length < 2 || n.length > 150) return toast.error("Informe um nome entre 2 e 150 caracteres");
+    if (n.length < 2 || n.length > 150) { toast.error("Informe um nome entre 2 e 150 caracteres"); return; }
     const { error } = await supabase.from("t_tarefa").insert({ nome: n });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Tarefa cadastrada");
     setNome("");
     qc.invalidateQueries({ queryKey: ["tarefas"] });
@@ -34,7 +34,7 @@ function TarefasPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_tarefa").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries();
   }
 

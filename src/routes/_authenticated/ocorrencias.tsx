@@ -35,7 +35,7 @@ function OcorrenciasPage() {
 
   async function atualizar(r: FilhoTarefa, patch: { qtd_nao_fez?: number; feito?: string | null }) {
     const { error } = await supabase.from("t_filho_tarefa").update(patch).eq("id", r.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 

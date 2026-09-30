@@ -32,7 +32,7 @@ function FilhosPage() {
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
-    if (!p.success) return toast.error(p.error.issues[0].message);
+    if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     setSaving(true);
     const { error } = await supabase.from("t_filho").insert({
       nome: p.data.nome,
@@ -40,7 +40,7 @@ function FilhosPage() {
       celular: p.data.celular.replace(/\D/g, "") || null,
     });
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Filho cadastrado");
     setForm({ nome: "", email: "", celular: "" });
     qc.invalidateQueries({ queryKey: ["filhos"] });
@@ -48,7 +48,7 @@ function FilhosPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_filho").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries();
   }
 

@@ -48,14 +48,14 @@ function Index() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: login.email.trim(), password: login.senha });
     setLoading(false);
-    if (error) return toast.error("Email ou senha incorretos, ou email ainda não confirmado.");
+    if (error) { toast.error("Email ou senha incorretos, ou email ainda não confirmado."); return; }
     navigate({ to: "/ocorrencias" });
   }
 
   async function cadastrar(e: FormEvent) {
     e.preventDefault();
     const parsed = cadastroSchema.safeParse(cad);
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos"); return; }
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
@@ -66,7 +66,7 @@ function Index() {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     if (data.session) navigate({ to: "/ocorrencias" });
     else toast.success("Cadastro realizado! Confirme seu email para entrar.");
   }
