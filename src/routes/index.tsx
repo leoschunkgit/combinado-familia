@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { maskCpf } from "@/lib/db";
+import { maskCpf, msgErro } from "@/lib/db";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -66,7 +66,7 @@ function Index() {
       },
     });
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     if (data.session) navigate({ to: "/ocorrencias" });
     else toast.success("Cadastro realizado! Confirme seu email para entrar.");
   }

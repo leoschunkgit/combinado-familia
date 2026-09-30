@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, useFilhos } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [{ title: "Filhos — Combinado" }] }),
@@ -40,7 +40,7 @@ function FilhosPage() {
       celular: p.data.celular.replace(/\D/g, "") || null,
     });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     toast.success("Filho cadastrado");
     setForm({ nome: "", email: "", celular: "" });
     qc.invalidateQueries({ queryKey: ["filhos"] });
@@ -48,7 +48,7 @@ function FilhosPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_filho").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
   }
 

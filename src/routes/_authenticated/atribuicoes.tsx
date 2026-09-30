@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [{ title: "Atribuições — Combinado" }] }),
@@ -51,7 +51,7 @@ function AtribuicoesPage() {
     setSaving(true);
     const { error } = await supabase.from("t_filho_tarefa").insert(itens);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     toast.success(`${itens.length} atribuição(ões) cadastrada(s)`);
     setItens([]);
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
@@ -59,7 +59,7 @@ function AtribuicoesPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 

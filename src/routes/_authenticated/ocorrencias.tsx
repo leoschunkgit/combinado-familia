@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [{ title: "Ocorrências — Combinado" }] }),
@@ -35,7 +35,7 @@ function OcorrenciasPage() {
 
   async function atualizar(r: FilhoTarefa, patch: { qtd_nao_fez?: number; feito?: string | null }) {
     const { error } = await supabase.from("t_filho_tarefa").update(patch).eq("id", r.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
@@ -47,7 +47,7 @@ function OcorrenciasPage() {
       id_filho_tarefa: r.id,
       tipo: penalizado ? "PENALIDADE" : "NAO_FEZ",
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     atualizar(r, { qtd_nao_fez: novo, feito: penalizado ? "N" : null });
     qc.invalidateQueries({ queryKey: ["ocorrencias"] });
     if (penalizado) toast.warning(`Limite atingido! Penalidade: ${r.t_vigencia?.penalidade}`);
