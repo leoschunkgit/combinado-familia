@@ -128,7 +128,8 @@ function OcorrenciasPage() {
       <div className="grid gap-4">
         {lista.map((r) => {
           const limite = r.t_vigencia?.qtd_ocorrencia ?? 1;
-          const penalizado = r.feito === "N" || r.qtd_nao_fez >= limite;
+          const total = totalGrupo(r);
+          const penalizado = r.feito === "N" || total >= limite;
           const cumprida = r.feito === "S";
           return (
             <div
@@ -149,16 +150,16 @@ function OcorrenciasPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 md:items-end">
-                  <div className="flex flex-wrap items-center gap-1.5" aria-label={`${r.qtd_nao_fez} de ${limite} ocorrências`}>
+                  <div className="flex flex-wrap items-center gap-1.5" aria-label={`${total} de ${limite} ocorrências na vigência`}>
                     {Array.from({ length: limite }).map((_, i) => (
                       <Checkbox
                         key={i}
-                        checked={i < r.qtd_nao_fez}
+                        checked={i < total}
                         disabled
                         className="h-5 w-5 data-[state=checked]:border-destructive data-[state=checked]:bg-destructive disabled:opacity-100"
                       />
                     ))}
-                    <span className="ml-2 text-sm tabular-nums text-muted-foreground">{r.qtd_nao_fez}/{limite}</span>
+                    <span className="ml-2 text-sm tabular-nums text-muted-foreground">{total}/{limite} na vigência</span>
                   </div>
                   {!penalizado && !cumprida && (
                     <div className="w-full md:w-auto">
