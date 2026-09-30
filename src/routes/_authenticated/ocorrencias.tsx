@@ -44,15 +44,30 @@ function OcorrenciasPage() {
       (filtro.tarefa === "all" || r.id_tarefa === +filtro.tarefa),
   );
 
+  // O limite de ocorrências é por filho + vigência, somando todas as tarefas.
+  const totalGrupo = (r: FilhoTarefa) =>
+    todas
+      .filter((x) => x.id_filho === r.id_filho && x.id_vigencia === r.id_vigencia)
+      .reduce((s, x) => s + x.qtd_nao_fez, 0);
+
   async function atualizar(r: FilhoTarefa, patch: { qtd_nao_fez?: number; feito?: string | null }) {
     const { error } = await supabase.from("t_filho_tarefa").update(patch).eq("id", r.id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
+  async function marcarGrupo(r: FilhoTarefa, feito: string | null) {
+    const { error } = await supabase
+      .from("t_filho_tarefa")
+      .update({ feito })
+      .eq("id_filho", r.id_filho)
+      .eq("id_vigencia", r.id_vigencia);
+    if (error) toast.error(msgErro(error));
+  }
+
   async function naoFez(r: FilhoTarefa) {
     const limite = r.t_vigencia?.qtd_ocorrencia ?? 1;
-    const novo = Math.min(r.qtd_nao_fez + 1, limite);
+    const novo = Math.min(totalGrupo(r) + 1, limite);
     const penalizado = novo >= limite;
     const data = dataDe(r);
     if (r.t_vigencia && (data < r.t_vigencia.data_inicio || data > r.t_vigencia.data_fim)) {
@@ -65,7 +80,8 @@ function OcorrenciasPage() {
       created_at: `${data}T12:00:00`,
     });
     if (error) { toast.error(msgErro(error)); return; }
-    atualizar(r, { qtd_nao_fez: novo, feito: penalizado ? "N" : null });
+    await atualizar(r, { qtd_nao_fez: r.qtd_nao_fez + 1, feito: penalizado ? "N" : null });
+    if (penalizado) await marcarGrupo(r, "N");
     qc.invalidateQueries({ queryKey: ["ocorrencias"] });
     if (penalizado) toast.warning(`Limite atingido! Penalidade: ${r.t_vigencia?.penalidade}`);
     else toast(`Ocorrência registrada (${novo}/${limite})`);
@@ -84,6 +100,8 @@ function OcorrenciasPage() {
         await supabase.from("t_ocorrencia").delete().eq("id", ultima.id);
         qc.invalidateQueries({ queryKey: ["ocorrencias"] });
       }
+      const limite = r.t_vigencia?.qtd_ocorrencia ?? 1;
+      if (totalGrupo(r) >= limite) await marcarGrupo(r, null);
     }
     atualizar(
       r,
@@ -110,7 +128,8 @@ function OcorrenciasPage() {
       <div className="grid gap-4">
         {lista.map((r) => {
           const limite = r.t_vigencia?.qtd_ocorrencia ?? 1;
-          const penalizado = r.feito === "N" || r.qtd_nao_fez >= limite;
+          const total = totalGrupo(r);
+          const penalizado = r.feito === "N" || total >= limite;
           const cumprida = r.feito === "S";
           return (
             <div
@@ -131,16 +150,16 @@ function OcorrenciasPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 md:items-end">
-                  <div className="flex flex-wrap items-center gap-1.5" aria-label={`${r.qtd_nao_fez} de ${limite} ocorrências`}>
+                  <div className="flex flex-wrap items-center gap-1.5" aria-label={`${total} de ${limite} ocorrências na vigência`}>
                     {Array.from({ length: limite }).map((_, i) => (
                       <Checkbox
                         key={i}
-                        checked={i < r.qtd_nao_fez}
+                        checked={i < total}
                         disabled
                         className="h-5 w-5 data-[state=checked]:border-destructive data-[state=checked]:bg-destructive disabled:opacity-100"
                       />
                     ))}
-                    <span className="ml-2 text-sm tabular-nums text-muted-foreground">{r.qtd_nao_fez}/{limite}</span>
+                    <span className="ml-2 text-sm tabular-nums text-muted-foreground">{total}/{limite} na vigência</span>
                   </div>
                   {!penalizado && !cumprida && (
                     <div className="w-full md:w-auto">
