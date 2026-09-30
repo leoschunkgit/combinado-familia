@@ -54,9 +54,15 @@ function OcorrenciasPage() {
     const limite = r.t_vigencia?.qtd_ocorrencia ?? 1;
     const novo = Math.min(r.qtd_nao_fez + 1, limite);
     const penalizado = novo >= limite;
+    const data = dataDe(r);
+    if (r.t_vigencia && (data < r.t_vigencia.data_inicio || data > r.t_vigencia.data_fim)) {
+      toast.error("A data deve estar dentro do período da vigência");
+      return;
+    }
     const { error } = await supabase.from("t_ocorrencia").insert({
       id_filho_tarefa: r.id,
       tipo: penalizado ? "PENALIDADE" : "NAO_FEZ",
+      created_at: `${data}T12:00:00`,
     });
     if (error) { toast.error(msgErro(error)); return; }
     atualizar(r, { qtd_nao_fez: novo, feito: penalizado ? "N" : null });
