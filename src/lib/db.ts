@@ -1,6 +1,37 @@
 import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+
+// Mensagens de validação sempre em português
+z.setErrorMap((issue, ctx) => {
+  switch (issue.code) {
+    case "too_small":
+      return {
+        message:
+          issue.type === "string"
+            ? `Informe pelo menos ${issue.minimum} caracteres`
+            : issue.type === "number"
+              ? `O valor mínimo é ${issue.minimum}`
+              : "Valor muito curto",
+      };
+    case "too_big":
+      return {
+        message:
+          issue.type === "string"
+            ? `Informe no máximo ${issue.maximum} caracteres`
+            : issue.type === "number"
+              ? `O valor máximo é ${issue.maximum}`
+              : "Valor muito longo",
+      };
+    case "invalid_type":
+      return { message: "Valor inválido" };
+    case "invalid_string":
+      return { message: issue.validation === "email" ? "Email inválido" : "Formato inválido" };
+    default:
+      return { message: ctx.defaultError };
+  }
+});
 
 export type Filho = Tables<"t_filho">;
 export type Vigencia = Tables<"t_vigencia">;
@@ -75,23 +106,29 @@ export const useOcorrencias = () =>
 const ERROS: [RegExp, string][] = [
   [/invalid login credentials/i, "Email ou senha incorretos"],
   [/email not confirmed/i, "Confirme seu email antes de entrar"],
-  [/user already registered/i, "Este email já está cadastrado"],
+  [/user already registered|already been registered/i, "Este email já está cadastrado"],
   [/password should be at least/i, "A senha deve ter pelo menos 6 caracteres"],
-  [/unable to validate email|invalid email/i, "Email inválido"],
-  [/duplicate key|already exists/i, "Este registro já existe"],
-  [/violates foreign key/i, "Este registro está em uso e não pode ser removido"],
-  [/violates row-level security|row-level security/i, "Você não tem permissão para esta ação"],
+  [/weak password|password.*(breach|known|compromised)/i, "Senha muito fraca. Escolha outra"],
+  [/unable to validate email|invalid email|email.*invalid/i, "Email inválido"],
+  [/duplicate key|already exists|unique constraint/i, "Este registro já existe"],
+  [/violates foreign key|foreign key/i, "Este registro está em uso e não pode ser removido"],
+  [/row-level security|permission denied|not authorized|unauthorized/i, "Você não tem permissão para esta ação"],
   [/violates not-null|null value/i, "Preencha todos os campos obrigatórios"],
-  [/violates check/i, "Valor inválido para um dos campos"],
-  [/failed to fetch|network|fetch failed/i, "Sem conexão. Verifique sua internet"],
-  [/jwt|token/i, "Sua sessão expirou. Entre novamente"],
-  [/rate limit|too many requests/i, "Muitas tentativas. Aguarde um instante"],
+  [/violates check|check constraint/i, "Valor inválido para um dos campos"],
+  [/invalid input syntax/i, "Valor em formato inválido"],
+  [/value too long/i, "Um dos campos ultrapassou o tamanho máximo"],
+  [/out of range/i, "Valor fora do intervalo permitido"],
+  [/does not exist|not found/i, "Registro não encontrado"],
+  [/failed to fetch|network|fetch failed|load failed|econnrefused|timeout/i, "Sem conexão. Verifique sua internet"],
+  [/jwt|token|session/i, "Sua sessão expirou. Entre novamente"],
+  [/rate limit|too many requests|over_email_send_rate/i, "Muitas tentativas. Aguarde um instante"],
+  [/signup.*(disabled|not allowed)|signups/i, "Cadastro temporariamente indisponível"],
 ];
 
 export function msgErro(error: { message?: string } | null): string {
   const m = error?.message ?? "";
   for (const [re, msg] of ERROS) if (re.test(m)) return msg;
-  return m ? `Não foi possível concluir: ${m}` : "Ocorreu um erro inesperado";
+  return "Não foi possível concluir a operação. Tente novamente.";
 }
 
 export const fmtData = (d: string) =>
