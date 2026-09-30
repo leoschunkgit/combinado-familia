@@ -41,7 +41,7 @@ function VigenciasPage() {
       data_inicio: new Date(p.data.data_inicio).toISOString(),
       data_fim: new Date(p.data.data_fim).toISOString(),
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada");
     setForm({ data_inicio: "", data_fim: "", penalidade: "", qtd_ocorrencia: "3" });
     qc.invalidateQueries({ queryKey: ["vigencias"] });
@@ -49,7 +49,7 @@ function VigenciasPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_vigencia").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
   }
 

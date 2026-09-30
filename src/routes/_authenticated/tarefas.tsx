@@ -26,7 +26,7 @@ function TarefasPage() {
     const n = nome.trim();
     if (n.length < 2 || n.length > 150) { toast.error("Informe um nome entre 2 e 150 caracteres"); return; }
     const { error } = await supabase.from("t_tarefa").insert({ nome: n });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     toast.success("Tarefa cadastrada");
     setNome("");
     qc.invalidateQueries({ queryKey: ["tarefas"] });
@@ -34,7 +34,7 @@ function TarefasPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_tarefa").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
   }
 

@@ -72,6 +72,28 @@ export const useOcorrencias = () =>
       ),
   });
 
+const ERROS: [RegExp, string][] = [
+  [/invalid login credentials/i, "Email ou senha incorretos"],
+  [/email not confirmed/i, "Confirme seu email antes de entrar"],
+  [/user already registered/i, "Este email já está cadastrado"],
+  [/password should be at least/i, "A senha deve ter pelo menos 6 caracteres"],
+  [/unable to validate email|invalid email/i, "Email inválido"],
+  [/duplicate key|already exists/i, "Este registro já existe"],
+  [/violates foreign key/i, "Este registro está em uso e não pode ser removido"],
+  [/violates row-level security|row-level security/i, "Você não tem permissão para esta ação"],
+  [/violates not-null|null value/i, "Preencha todos os campos obrigatórios"],
+  [/violates check/i, "Valor inválido para um dos campos"],
+  [/failed to fetch|network|fetch failed/i, "Sem conexão. Verifique sua internet"],
+  [/jwt|token/i, "Sua sessão expirou. Entre novamente"],
+  [/rate limit|too many requests/i, "Muitas tentativas. Aguarde um instante"],
+];
+
+export function msgErro(error: { message?: string } | null): string {
+  const m = error?.message ?? "";
+  for (const [re, msg] of ERROS) if (re.test(m)) return msg;
+  return m ? `Não foi possível concluir: ${m}` : "Ocorreu um erro inesperado";
+}
+
 export const fmtData = (d: string) =>
   new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 

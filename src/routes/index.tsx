@@ -66,7 +66,7 @@ function Index() {
       },
     });
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     if (data.session) navigate({ to: "/ocorrencias" });
     else toast.success("Cadastro realizado! Confirme seu email para entrar.");
   }
