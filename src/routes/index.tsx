@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Home, ShieldCheck, Users } from "lucide-react";
+import { Check, CheckCircle2, Eye, EyeOff, Home, ShieldCheck, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,12 +24,37 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+const REGRAS_SENHA = [
+  { id: "tam", label: "Pelo menos 6 caracteres", ok: (s: string) => s.length >= 6 },
+  { id: "mai", label: "Uma letra maiúscula", ok: (s: string) => /[A-Z]/.test(s) },
+  { id: "num", label: "Um número", ok: (s: string) => /\d/.test(s) },
+] as const;
+
+const senhaValida = (s: string) => REGRAS_SENHA.every((r) => r.ok(s));
+
 const cadastroSchema = z.object({
   nome: z.string().trim().min(2, "Informe o nome").max(100),
   email: z.string().trim().email("Email inválido").max(255),
   cpf: z.string().refine((v) => v.replace(/\D/g, "").length === 11, "CPF deve ter 11 dígitos"),
-  senha: z.string().min(6, "A senha deve ter ao menos 6 caracteres").max(72),
+  senha: z.string().max(72).refine(senhaValida, "A senha não atende aos requisitos abaixo"),
 });
+
+function SenhaInput(props: React.ComponentProps<typeof Input>) {
+  const [ver, setVer] = useState(false);
+  return (
+    <div className="relative">
+      <Input {...props} type={ver ? "text" : "password"} className="pr-10" />
+      <button
+        type="button"
+        onClick={() => setVer(!ver)}
+        aria-label={ver ? "Ocultar senha" : "Mostrar senha"}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {ver ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+}
 
 function Index() {
   const navigate = useNavigate();
@@ -114,7 +139,7 @@ function Index() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ls">Senha</Label>
-                  <Input id="ls" type="password" required value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} />
+                  <SenhaInput id="ls" required value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} />
                 </div>
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>Entrar</Button>
               </form>
@@ -138,7 +163,18 @@ function Index() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="cs">Senha</Label>
-                  <Input id="cs" type="password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} />
+                  <SenhaInput id="cs" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} />
+                  <ul className="space-y-1 pt-1 text-sm" aria-live="polite">
+                    {REGRAS_SENHA.map((r) => {
+                      const ok = r.ok(cad.senha);
+                      return (
+                        <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-success" : "text-muted-foreground"}`}>
+                          {ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                          {r.label}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>Cadastrar</Button>
               </form>
