@@ -50,6 +50,13 @@
       "when": 1790824092803,
       "tag": "0006_allow_both_penalties_per_validity",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790824990904,
+      "tag": "0007_add_nullable_child_allowance_selection",
+      "breakpoints": true
     }
   ]
 }
