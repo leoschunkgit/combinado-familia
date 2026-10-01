@@ -8,13 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateField } from "@/components/BrDateField";
 import { BlockedAction } from "@/components/BlockedAction";
-import { fmtVigencia, msgErro, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhoTarefas, useOcorrencias, useVigencias, useFilhos, type Vigencia } from "@/lib/db";
+import { descricaoPenalidade } from "@/lib/mesada";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -32,17 +34,43 @@ const schema = z
   .object({
     data_inicio: z.string().min(1, "Informe a data de início"),
     data_fim: z.string().min(1, "Informe a data de fim"),
-    penalidade: z.string().trim().min(2, "Informe a penalidade").max(200),
+    penalidade: z.string().trim().max(200),
+    tipo_penalidade: z.enum(["texto", "mesada"]),
+    valor_debito: z.string(),
     qtd_ocorrencia: z.coerce.number().int().min(1, "Mínimo de 1 ocorrência").max(31, "Máximo de 31"),
   })
-  .refine((v) => v.data_fim >= v.data_inicio, "A data fim deve ser igual ou posterior à data início");
+  .refine((v) => v.data_fim >= v.data_inicio, "A data fim deve ser igual ou posterior à data início")
+  .refine((v) => v.tipo_penalidade !== "texto" || v.penalidade.length >= 2, { message: "Informe a penalidade", path: ["penalidade"] })
+  .refine((v) => v.tipo_penalidade !== "mesada" || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
+
+type VigenciaForm = z.input<typeof schema>;
+const vazio: VigenciaForm = { data_inicio: "", data_fim: "", penalidade: "", tipo_penalidade: "texto", valor_debito: "", qtd_ocorrencia: "3" };
+const dadosPenalidade = (v: VigenciaForm) => ({
+  tipo_penalidade: v.tipo_penalidade,
+  penalidade: v.tipo_penalidade === "texto" ? v.penalidade : "",
+  valor_debito: v.tipo_penalidade === "mesada" ? Number(v.valor_debito.replace(",", ".")) : null,
+});
+
+function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
+  return <div className="space-y-3">
+    <Label>Tipo de penalidade</Label>
+    <RadioGroup value={value.tipo_penalidade} onValueChange={(tipo) => onChange({ ...value, tipo_penalidade: tipo as VigenciaForm["tipo_penalidade"] })} className="gap-3">
+      <div className="flex items-center gap-2"><RadioGroupItem value="texto" id={`${prefix}-texto`} /><Label htmlFor={`${prefix}-texto`}>Penalidade escrita</Label></div>
+      <div className="flex items-center gap-2"><RadioGroupItem value="mesada" id={`${prefix}-mesada`} /><Label htmlFor={`${prefix}-mesada`}>Descontar da mesada</Label></div>
+    </RadioGroup>
+    {value.tipo_penalidade === "texto" ?
+      <div className="space-y-2"><Label htmlFor={`${prefix}-penalidade`}>Penalidade</Label><Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} /></div> :
+      <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Desconto por “Não fez” (R$)</Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="20,00" value={value.valor_debito} onChange={(e) => onChange({ ...value, valor_debito: e.target.value })} /><p className="text-xs text-muted-foreground">Aplicado a cada registro até atingir o limite. Somente filhos com valor de mesada cadastrado podem ser atribuídos.</p></div>}
+  </div>;
+}
 
 function VigenciasPage() {
   const qc = useQueryClient();
   const { data: vigencias = [] } = useVigencias();
+  const { data: filhos = [] } = useFilhos();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
-  const [form, setForm] = useState({ data_inicio: "", data_fim: "", penalidade: "", qtd_ocorrencia: "3" });
+  const [form, setForm] = useState<VigenciaForm>(vazio);
   const [editando, setEditando] = useState<Vigencia | null>(null);
   const [edicao, setEdicao] = useState(form);
 
@@ -61,12 +89,13 @@ function VigenciasPage() {
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     const { error } = await supabase.from("t_vigencia").insert({
       ...p.data,
+      ...dadosPenalidade(p.data),
       data_inicio: inicioDoDia(p.data.data_inicio),
       data_fim: fimDoDia(p.data.data_fim),
     });
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada");
-    setForm({ data_inicio: "", data_fim: "", penalidade: "", qtd_ocorrencia: "3" });
+    setForm(vazio);
     qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
@@ -81,7 +110,7 @@ function VigenciasPage() {
 
   function abrirEdicao(v: Vigencia) {
     setEditando(v);
-    setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim), penalidade: v.penalidade, qtd_ocorrencia: String(v.qtd_ocorrencia) });
+    setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim), penalidade: v.penalidade, tipo_penalidade: v.tipo_penalidade === "mesada" ? "mesada" : "texto", valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","), qtd_ocorrencia: String(v.qtd_ocorrencia) });
   }
 
   async function salvarEdicao(e: FormEvent) {
@@ -89,6 +118,9 @@ function VigenciasPage() {
     if (!editando) return;
     const p = schema.safeParse(edicao);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
+    if (p.data.tipo_penalidade === "mesada" && atribuicoes.some((a) => a.id_vigencia === editando.id && !filhos.some((f) => f.id === a.id_filho && f.tem_mesada && f.valor_mesada !== null))) {
+      toast.error("Todos os filhos atribuídos precisam ter um valor de mesada cadastrado"); return;
+    }
     const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho, qtd_nao_fez").eq("id_vigencia", editando.id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     const totais = new Map<number, number>();
@@ -110,6 +142,7 @@ function VigenciasPage() {
     }
     const { error } = await supabase.from("t_vigencia").update({
       ...p.data,
+      ...dadosPenalidade(p.data),
       data_inicio: inicioDoDia(p.data.data_inicio),
       data_fim: fimDoDia(p.data.data_fim),
     }).eq("id", editando.id);
@@ -140,7 +173,7 @@ function VigenciasPage() {
             <form onSubmit={salvar} className="space-y-4">
               <div className="space-y-2"><Label htmlFor="inicio">Data início</Label><BrDateField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
               <div className="space-y-2"><Label htmlFor="fim">Data fim</Label><BrDateField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
-              <div className="space-y-2"><Label>Penalidade</Label><Input placeholder="Ex.: Sem videogame no fim de semana" value={form.penalidade} onChange={(e) => setForm({ ...form, penalidade: e.target.value })} /></div>
+              <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" />
               <div className="space-y-2"><Label>Quantidade de ocorrências</Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Número de "não fez" que aplica a penalidade.</p></div>
               <Button type="submit" className="w-full">Cadastrar</Button>
@@ -158,7 +191,7 @@ function VigenciasPage() {
                     <p className="font-semibold">{fmtVigencia(v)}</p>
                     {ativa && <Badge className="bg-success text-success-foreground">Em andamento</Badge>}
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">Penalidade: {v.penalidade}</p>
+                 <p className="mt-1 text-sm text-muted-foreground">{v.tipo_penalidade === "mesada" ? "Mesada: " : "Penalidade: "}{descricaoPenalidade(v)}</p>
                   <p className="text-sm text-muted-foreground">Limite: {v.qtd_ocorrencia} ocorrência(s)</p>
                 </div>
                  <Button variant="ghost" size="icon" onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button>
@@ -176,7 +209,7 @@ function VigenciasPage() {
           <form onSubmit={salvarEdicao} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><BrDateField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><BrDateField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
-            <div className="space-y-2"><Label htmlFor="editar-penalidade">Penalidade</Label><Input id="editar-penalidade" value={edicao.penalidade} onChange={(e) => setEdicao({ ...edicao, penalidade: e.target.value })} /></div>
+             <EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" />
              <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências</Label><Input id="editar-limite" type="number" value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
                {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho nesta vigência.</p>}</div>
              {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
