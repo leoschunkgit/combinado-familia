@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
 import { fmtData, fmtVigencia, useFilhos, useOcorrencias, useVigencias } from "@/lib/db";
+import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({ meta: [
@@ -27,6 +28,7 @@ function HistoricoPage() {
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
   const { data: ocorrencias = [], isLoading } = useOcorrencias();
+  const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const [f, setF] = useState({ vig: "all", filho: "all" });
   const [filtro, setFiltro] = useState(f);
 
@@ -98,7 +100,7 @@ function HistoricoPage() {
                   <div className="grid gap-3">
                     {registros.map((o) => {
                       const ft = o.t_filho_tarefa;
-                      const penalidade = o.tipo === "PENALIDADE";
+                      const penalidade = penalizadas.has(o.id);
                       return (
                         <div
                           key={o.id}
