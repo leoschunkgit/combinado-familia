@@ -74,6 +74,9 @@ function AtribuicoesPage() {
 
   async function cadastrar() {
     if (itens.length === 0) { toast.error("Adicione ao menos uma atribuição"); return; }
+    if (itens.some((item) => vigencias.find((v) => v.id === item.id_vigencia)?.tipo_penalidade === "mesada" && !filhos.some((f) => f.id === item.id_filho && f.tem_mesada && f.valor_mesada !== null))) {
+      toast.error("Cadastre um valor de mesada para os filhos atribuídos a vigências com desconto"); return;
+    }
     setSaving(true);
     const { error } = await supabase.from("t_filho_tarefa").insert(itens);
     setSaving(false);

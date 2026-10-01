@@ -45,7 +45,7 @@ const schema = z
 
 type VigenciaForm = { data_inicio: string; data_fim: string; penalidade: string; tipo_penalidade: "texto" | "mesada"; valor_debito: string; qtd_ocorrencia: string };
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", penalidade: "", tipo_penalidade: "texto", valor_debito: "", qtd_ocorrencia: "3" };
-const dadosPenalidade = (v: VigenciaForm) => ({
+const dadosPenalidade = (v: Pick<VigenciaForm, "tipo_penalidade" | "penalidade" | "valor_debito">) => ({
   tipo_penalidade: v.tipo_penalidade,
   penalidade: v.tipo_penalidade === "texto" ? v.penalidade : "",
   valor_debito: v.tipo_penalidade === "mesada" ? Number(v.valor_debito.replace(",", ".")) : null,
