@@ -7,3 +7,6 @@
 - [x] Validar os fluxos atualizados em desktop e celular.
 - [x] Mostrar o nome da penalidade quando o filho atingir o limite da vigência.
 - [x] Impedir “Não fez” repetido no mesmo dia para a mesma tarefa atribuída.
+- [ ] Bloquear edição/exclusão de atribuições quando o filho já tiver “Não fez” na vigência.
+- [ ] Bloquear exclusão de vigências com atribuições; validar datas registradas e limite ao editar.
+- [ ] Permitir corrigir a data de um “Não fez” antes de reduzir o período da vigência.
