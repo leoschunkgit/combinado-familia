@@ -8,6 +8,7 @@ export function Pick({
   options,
   placeholder = "Selecione",
   allLabel,
+  required = false,
 }: {
   label: string;
   value: string;
@@ -15,10 +16,11 @@ export function Pick({
   options: { value: string; label: string }[];
   placeholder?: string;
   allLabel?: string;
+  required?: boolean;
 }) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label>{label}{required && <span className="text-destructive" aria-hidden="true"> *</span>}</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="w-full"><SelectValue placeholder={placeholder} /></SelectTrigger>
         <SelectContent>
