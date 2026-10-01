@@ -13,6 +13,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BlockedAction } from "@/components/BlockedAction";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
+import { erroLimiteMesada } from "@/lib/limite-mesada";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -55,6 +56,12 @@ function AtribuicoesPage() {
 
   function adicionar() {
     if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
+    const escolhido = filhos.find((f) => f.id === Number(filho));
+    const periodo = vigencias.find((v) => v.id === Number(vig));
+    if (escolhido && periodo) {
+      const erro = erroLimiteMesada(escolhido, periodo);
+      if (erro) { toast.error(erro); return; }
+    }
     const novos = tarefasSelecionadas
       .map((id_tarefa) => ({ id_vigencia: +vig, id_filho: +filho, id_tarefa }))
       .filter((it) => {
@@ -69,6 +76,14 @@ function AtribuicoesPage() {
 
   async function cadastrar() {
     if (itens.length === 0) { toast.error("Adicione ao menos uma atribuição"); return; }
+    for (const item of itens) {
+      const escolhido = filhos.find((f) => f.id === item.id_filho);
+      const periodo = vigencias.find((v) => v.id === item.id_vigencia);
+      if (escolhido && periodo) {
+        const erro = erroLimiteMesada(escolhido, periodo);
+        if (erro) { toast.error(erro); return; }
+      }
+    }
     setSaving(true);
     const { error } = await supabase.from("t_filho_tarefa").insert(itens);
     setSaving(false);
@@ -108,6 +123,12 @@ function AtribuicoesPage() {
     if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
     if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar a atribuição."); return; }
     const atualizada = { id_vigencia: +edicao.vig, id_filho: +edicao.filho, id_tarefa: +edicao.tarefa };
+    const escolhido = filhos.find((f) => f.id === atualizada.id_filho);
+    const periodo = vigencias.find((v) => v.id === atualizada.id_vigencia);
+    if (escolhido && periodo) {
+      const erro = erroLimiteMesada(escolhido, periodo);
+      if (erro) { toast.error(erro); return; }
+    }
     const duplicada = existentes.some((item) => item.id !== editando.id && item.id_vigencia === atualizada.id_vigencia && item.id_filho === atualizada.id_filho && item.id_tarefa === atualizada.id_tarefa);
     if (duplicada) { toast.error("Essa atribuição já existe"); return; }
     setSaving(true);

@@ -14,8 +14,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateField } from "@/components/BrDateField";
 import { BlockedAction } from "@/components/BlockedAction";
-import { fmtVigencia, msgErro, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade } from "@/lib/mesada";
+import { erroLimiteMesada } from "@/lib/limite-mesada";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -59,6 +60,7 @@ function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; o
 function VigenciasPage() {
   const qc = useQueryClient();
   const { data: vigencias = [] } = useVigencias();
+  const { data: filhos = [] } = useFilhos();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const [form, setForm] = useState<VigenciaForm>(vazio);
@@ -109,6 +111,14 @@ function VigenciasPage() {
     if (!editando) return;
     const p = schema.safeParse(edicao);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
+    const novoPeriodo = { valor_debito: Number(p.data.valor_debito.replace(",", ".")), qtd_ocorrencia: p.data.qtd_ocorrencia };
+    for (const idFilho of new Set(atribuicoes.filter((a) => a.id_vigencia === editando.id).map((a) => a.id_filho))) {
+      const filho = filhos.find((f) => f.id === idFilho);
+      if (filho) {
+        const erro = erroLimiteMesada(filho, novoPeriodo);
+        if (erro) { toast.error(erro); return; }
+      }
+    }
     const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho, qtd_nao_fez").eq("id_vigencia", editando.id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     const totais = new Map<number, number>();

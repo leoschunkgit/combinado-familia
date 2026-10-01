@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, msgErro, useFilhos, type Filho } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useVigencias, type Filho } from "@/lib/db";
+import { erroLimiteMesada } from "@/lib/limite-mesada";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -60,6 +61,8 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
 function FilhosPage() {
   const qc = useQueryClient();
   const { data: filhos = [] } = useFilhos();
+  const { data: atribuicoes = [] } = useFilhoTarefas();
+  const { data: vigencias = [] } = useVigencias();
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Filho | null>(null);
@@ -104,6 +107,14 @@ function FilhosPage() {
     if (!editando) return;
     const p = schema.safeParse(edicao);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
+    const novoFilho = { nome: p.data.nome, ...dadosExtras(p.data) };
+    for (const idVigencia of new Set(atribuicoes.filter((a) => a.id_filho === editando.id).map((a) => a.id_vigencia))) {
+      const vigencia = vigencias.find((v) => v.id === idVigencia);
+      if (vigencia) {
+        const erro = erroLimiteMesada(novoFilho, vigencia);
+        if (erro) { toast.error(erro); return; }
+      }
+    }
     setSaving(true);
     const { error } = await supabase.from("t_filho").update({
       nome: p.data.nome,
@@ -113,9 +124,7 @@ function FilhosPage() {
     }).eq("id", editando.id);
     setSaving(false);
     if (error) {
-      toast.error(/Mesada vinculada a vigência com desconto/i.test(error.message) ? msgErro(error) : /Filho com Não fez nesta vigência/i.test(error.message)
-        ? "Não foi possível atualizar os dados deste filho. Tente novamente."
-        : msgErro(error));
+      toast.error(msgErro(error));
       return;
     }
     toast.success("Filho atualizado");
