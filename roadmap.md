@@ -21,3 +21,4 @@
 - [x] Permitir penalidade escrita ou desconto por “Não fez” na mesada por vigência, com saldos em Ocorrências e Histórico.
 - [x] Exigir ambas as penalidades na vigência e aplicar automaticamente a opção correspondente à mesada de cada filho.
 - [x] Permitir mesada não informada e exigir valor ao marcar “Tem mesada” no cadastro ou edição.
+- [x] Mostrar guia de primeiros passos no primeiro acesso, com orientações nas telas, opção de pular e acesso pela Ajuda.
