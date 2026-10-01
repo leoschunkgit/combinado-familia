@@ -1,3 +1,7 @@
 - [x] Agrupar Ocorrências por vigência e filho, com total compartilhado e filtros de vigência/filho.
 - [x] Exibir cada “não fez” por tarefa com data e hora, e permitir registrar data/hora dentro da vigência.
 - [x] Conferir a tela e os estados de registro/desfazer em tamanhos de desktop e celular.
+- [x] Permitir editar filhos, tarefas, vigências e atribuições.
+- [x] Permitir selecionar várias ou todas as tarefas ao criar uma atribuição.
+- [x] Mover a data e hora de “Não fez” para um modal compacto.
+- [x] Validar os fluxos atualizados em desktop e celular.

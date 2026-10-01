@@ -3,15 +3,16 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, Trash2 } from "lucide-react";
+import { CalendarRange, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { fmtVigencia, msgErro, useVigencias } from "@/lib/db";
+import { fmtVigencia, msgErro, useVigencias, type Vigencia } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -38,6 +39,14 @@ function VigenciasPage() {
   const qc = useQueryClient();
   const { data: vigencias = [] } = useVigencias();
   const [form, setForm] = useState({ data_inicio: "", data_fim: "", penalidade: "", qtd_ocorrencia: "3" });
+  const [editando, setEditando] = useState<Vigencia | null>(null);
+  const [edicao, setEdicao] = useState(form);
+
+  const paraCampo = (valor: string) => {
+    const d = new Date(valor);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
@@ -58,6 +67,28 @@ function VigenciasPage() {
     const { error } = await supabase.from("t_vigencia").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
+  }
+
+  function abrirEdicao(v: Vigencia) {
+    setEditando(v);
+    setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim), penalidade: v.penalidade, qtd_ocorrencia: String(v.qtd_ocorrencia) });
+  }
+
+  async function salvarEdicao(e: FormEvent) {
+    e.preventDefault();
+    if (!editando) return;
+    const p = schema.safeParse(edicao);
+    if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
+    const { error } = await supabase.from("t_vigencia").update({
+      ...p.data,
+      data_inicio: new Date(p.data.data_inicio).toISOString(),
+      data_fim: new Date(p.data.data_fim).toISOString(),
+    }).eq("id", editando.id);
+    if (error) { toast.error(msgErro(error)); return; }
+    toast.success("Vigência atualizada");
+    setEditando(null);
+    qc.invalidateQueries({ queryKey: ["vigencias"] });
+    qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
   const agora = Date.now();
@@ -93,12 +124,28 @@ function VigenciasPage() {
                   <p className="mt-1 text-sm text-muted-foreground">Penalidade: {v.penalidade}</p>
                   <p className="text-sm text-muted-foreground">Limite: {v.qtd_ocorrencia} ocorrência(s)</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => excluir(v.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
+                 <Button variant="ghost" size="icon" onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button>
+                 <Button variant="ghost" size="icon" onClick={() => excluir(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
               </div>
             );
           })}
         </div>
       </div>
+      <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
+          <form onSubmit={salvarEdicao} className="space-y-4">
+            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><Input id="editar-inicio" type="datetime-local" value={edicao.data_inicio} onChange={(e) => setEdicao({ ...edicao, data_inicio: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><Input id="editar-fim" type="datetime-local" value={edicao.data_fim} onChange={(e) => setEdicao({ ...edicao, data_fim: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-penalidade">Penalidade</Label><Input id="editar-penalidade" value={edicao.penalidade} onChange={(e) => setEdicao({ ...edicao, penalidade: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências</Label><Input id="editar-limite" type="number" min={1} max={31} value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} /></div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
+              <Button type="submit">Salvar alterações</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

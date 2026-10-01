@@ -3,14 +3,15 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Trash2, Users } from "lucide-react";
+import { Pencil, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, msgErro, useFilhos } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos, type Filho } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -35,6 +36,8 @@ function FilhosPage() {
   const { data: filhos = [] } = useFilhos();
   const [form, setForm] = useState({ nome: "", email: "", celular: "" });
   const [saving, setSaving] = useState(false);
+  const [editando, setEditando] = useState<Filho | null>(null);
+  const [edicao, setEdicao] = useState({ nome: "", email: "", celular: "" });
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
@@ -57,6 +60,30 @@ function FilhosPage() {
     const { error } = await supabase.from("t_filho").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
+  }
+
+  function abrirEdicao(filho: Filho) {
+    setEditando(filho);
+    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "" });
+  }
+
+  async function salvarEdicao(e: FormEvent) {
+    e.preventDefault();
+    if (!editando) return;
+    const p = schema.safeParse(edicao);
+    if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
+    setSaving(true);
+    const { error } = await supabase.from("t_filho").update({
+      nome: p.data.nome,
+      email: p.data.email || null,
+      celular: p.data.celular.replace(/\D/g, "") || null,
+    }).eq("id", editando.id);
+    setSaving(false);
+    if (error) { toast.error(msgErro(error)); return; }
+    toast.success("Filho atualizado");
+    setEditando(null);
+    qc.invalidateQueries({ queryKey: ["filhos"] });
+    qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
   return (
@@ -87,11 +114,26 @@ function FilhosPage() {
                   {[f.email, f.celular && maskCelular(f.celular)].filter(Boolean).join(" · ") || "Sem contato"}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => excluir(f.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => excluir(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
             </div>
           ))}
         </div>
       </div>
+      <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader>
+          <form onSubmit={salvarEdicao} className="space-y-4">
+            <div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-filho-email">Email</Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular</Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
+              <Button type="submit" disabled={saving}>Salvar alterações</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
