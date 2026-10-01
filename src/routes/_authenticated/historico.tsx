@@ -8,7 +8,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
 import { fmtData, fmtVigencia, useFilhos, useOcorrencias, useVigencias } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
-import { descricaoPenalidade, reais, resumoMesada } from "@/lib/mesada";
+import { descricaoPenalidade, reais, resumoMesada, valorDebitado } from "@/lib/mesada";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({ meta: [
@@ -124,7 +124,7 @@ function HistoricoPage() {
                               )}
                             </div>
                              {vigencia.tipo_penalidade === "mesada" ? (
-                               <p className="mt-1 text-sm font-medium tabular-nums text-foreground">Desconto: {reais(vigencia.valor_debito ?? 0)} · Mesada após este registro: {reais(Math.max(0, (filho.valor_mesada ?? 0) - (vigencia.valor_debito ?? 0) * (indice + 1)))}</p>
+                               <p className="mt-1 text-sm font-medium tabular-nums text-foreground">Desconto: {reais(valorDebitado(filho, vigencia, indice + 1) - valorDebitado(filho, vigencia, indice))} · Mesada após este registro: {reais(Math.max(0, (filho.valor_mesada ?? 0) - valorDebitado(filho, vigencia, indice + 1)))}</p>
                              ) : penalidade && (
                               <p className="mt-1 text-sm font-medium text-destructive">
                                  {descricaoPenalidade(vigencia)}

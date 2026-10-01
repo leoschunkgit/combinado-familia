@@ -14,7 +14,7 @@ import { BrDateField } from "@/components/BrDateField";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
-import { descricaoPenalidade, reais, resumoMesada } from "@/lib/mesada";
+import { descricaoPenalidade, reais, resumoMesada, valorDebitado } from "@/lib/mesada";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [
@@ -122,7 +122,10 @@ function OcorrenciasPage() {
       await atualizar(r, { qtd_nao_fez: r.qtd_nao_fez + 1, feito: penalizado ? "N" : null });
       if (penalizado) await marcarGrupo(r, "N");
       await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
-       if (penalizado) toast.warning(vigencia.tipo_penalidade === "mesada" ? `Limite atingido! Desconto total: ${reais((vigencia.valor_debito ?? 0) * novo)}` : `Limite atingido! Penalidade: ${vigencia.penalidade}`);
+       if (penalizado) {
+         const filho = filhos.find((f) => f.id === r.id_filho);
+         toast.warning(vigencia.tipo_penalidade === "mesada" ? `Limite atingido! Desconto total: ${reais(filho ? valorDebitado(filho, vigencia, novo) : 0)}` : `Limite atingido! Penalidade: ${vigencia.penalidade}`);
+       }
       else toast(`Ocorrência registrada (${novo}/${vigencia.qtd_ocorrencia})`);
       setRegistro(null);
     } finally { setBusy(false); }
@@ -230,7 +233,7 @@ function OcorrenciasPage() {
                                   {registros.map((o, i) => (
                                     <li key={o.id} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs tabular-nums text-muted-foreground">
                                       <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                                       <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}{vigencia.tipo_penalidade === "mesada" ? ` · −${reais(vigencia.valor_debito ?? 0)}` : ""}</span>
+                                       <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}{vigencia.tipo_penalidade === "mesada" ? ` · −${reais(Math.min(vigencia.valor_debito ?? 0, Math.max(0, (filho.valor_mesada ?? 0) - valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id < o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length))))}` : ""}</span>
                                        {penalizadas.has(o.id) && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
                                       <Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy} title="Corrigir data" aria-label={`Corrigir data de ${occurrenceDate.format(new Date(o.created_at))}`} onClick={() => setCorrecao({ tarefa: r, ocorrencia: o, data: localDate(new Date(o.created_at)) })}><Pencil className="h-3 w-3" /></Button>
                                     </li>

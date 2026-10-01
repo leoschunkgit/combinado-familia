@@ -43,7 +43,7 @@ const schema = z
   .refine((v) => v.tipo_penalidade !== "texto" || v.penalidade.length >= 2, { message: "Informe a penalidade", path: ["penalidade"] })
   .refine((v) => v.tipo_penalidade !== "mesada" || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
-type VigenciaForm = z.input<typeof schema>;
+type VigenciaForm = { data_inicio: string; data_fim: string; penalidade: string; tipo_penalidade: "texto" | "mesada"; valor_debito: string; qtd_ocorrencia: string };
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", penalidade: "", tipo_penalidade: "texto", valor_debito: "", qtd_ocorrencia: "3" };
 const dadosPenalidade = (v: VigenciaForm) => ({
   tipo_penalidade: v.tipo_penalidade,
