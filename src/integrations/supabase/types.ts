@@ -21,7 +21,10 @@ export type Database = {
           email: string | null
           id: number
           id_usuario_pai: number
+          idade: number | null
           nome: string
+          tem_mesada: boolean
+          valor_mesada: number | null
         }
         Insert: {
           celular?: string | null
@@ -29,7 +32,10 @@ export type Database = {
           email?: string | null
           id?: never
           id_usuario_pai?: number
+          idade?: number | null
           nome: string
+          tem_mesada?: boolean
+          valor_mesada?: number | null
         }
         Update: {
           celular?: string | null
@@ -37,7 +43,10 @@ export type Database = {
           email?: string | null
           id?: never
           id_usuario_pai?: number
+          idade?: number | null
           nome?: string
+          tem_mesada?: boolean
+          valor_mesada?: number | null
         }
         Relationships: [
           {
