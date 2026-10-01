@@ -1,0 +1,3 @@
+- [x] Agrupar Ocorrências por vigência e filho, com total compartilhado e filtros de vigência/filho.
+- [x] Exibir cada “não fez” por tarefa com data e hora, e permitir registrar data/hora dentro da vigência.
+- [x] Conferir a tela e os estados de registro/desfazer em tamanhos de desktop e celular.

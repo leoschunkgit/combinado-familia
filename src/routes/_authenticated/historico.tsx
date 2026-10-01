@@ -9,7 +9,14 @@ import { Pick } from "@/components/Pick";
 import { fmtData, fmtVigencia, useFilhos, useOcorrencias, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/historico")({
-  head: () => ({ meta: [{ title: "Histórico — Combinado" }] }),
+  head: () => ({ meta: [
+    { title: "Histórico — Combinado" },
+    { name: "description", content: "Veja as ocorrências registradas e as penalidades por filho e vigência." },
+    { property: "og:title", content: "Histórico — Combinado" },
+    { property: "og:description", content: "Veja as ocorrências registradas e as penalidades por filho e vigência." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: HistoricoPage,
 });
 
