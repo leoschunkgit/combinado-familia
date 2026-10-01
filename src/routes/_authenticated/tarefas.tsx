@@ -44,7 +44,12 @@ function TarefasPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_tarefa").delete().eq("id", id);
-    if (error) { toast.error(msgErro(error)); return; }
+    if (error) {
+      toast.error(/Filho com Não fez nesta vigência/i.test(error.message)
+        ? "Esta tarefa tem registros de ‘Não fez’ e não pode ser excluída."
+        : msgErro(error));
+      return;
+    }
     qc.invalidateQueries();
   }
 
