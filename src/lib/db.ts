@@ -104,6 +104,7 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Desconto máximo da vigência supera a mesada do filho/i, "O desconto por ocorrência multiplicado pelo limite da vigência supera a mesada do filho. Ajuste os valores antes de salvar"],
   [/Filho sem valor de mesada cadastrado para esta vigência|Há filho sem valor de mesada cadastrado nesta vigência/i, "Para usar desconto da mesada, todos os filhos atribuídos precisam ter um valor de mesada cadastrado"],
   [/Mesada vinculada a vigência com desconto não pode ser removida/i, "Não é possível retirar o valor da mesada enquanto o filho estiver atribuído a uma vigência com desconto"],
   [/Filho com Não fez nesta vigência/i, "Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar ou excluir a atribuição"],

@@ -22,3 +22,4 @@
 - [x] Exigir ambas as penalidades na vigência e aplicar automaticamente a opção correspondente à mesada de cada filho.
 - [x] Permitir mesada não informada e exigir valor ao marcar “Tem mesada” no cadastro ou edição.
 - [x] Mostrar guia de primeiros passos no primeiro acesso, com orientações nas telas, opção de pular e acesso pela Ajuda.
+- [x] Validar desconto máximo contra mesada ao atribuir e ao editar filho ou vigência, sem depender da ordem de cadastro.

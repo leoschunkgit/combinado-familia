@@ -66,9 +66,11 @@ function AppLayout() {
   }
 
   function irParaEtapa(indice: number) {
+    const destino = ETAPAS[indice];
+    if (!destino) return;
     setAberto(false);
     setEtapa(indice);
-    navigate({ to: ETAPAS[indice].to });
+    navigate({ to: destino.to });
   }
 
   function abrirGuia() {
@@ -82,6 +84,8 @@ function AppLayout() {
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
   }
+
+  const passoAtual = etapa === null ? null : ETAPAS[etapa];
 
   return (
     <div className="min-h-screen md:flex">
@@ -102,7 +106,7 @@ function AppLayout() {
             <Link
               key={to}
               to={to}
-              className={`flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${etapa !== null && ETAPAS[etapa].to === to ? "ring-2 ring-sidebar-ring ring-offset-2 ring-offset-sidebar" : ""}`}
+              className={`flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${passoAtual?.to === to ? "ring-2 ring-sidebar-ring ring-offset-2 ring-offset-sidebar" : ""}`}
               activeProps={{ className: "!bg-primary !text-primary-foreground" }}
             >
               <Icon className="h-4 w-4" />
@@ -127,16 +131,16 @@ function AppLayout() {
       </aside>
       <main className="flex-1 p-4 md:p-10">
         <div className="mx-auto max-w-5xl">
-          {etapa !== null && (
+          {etapa !== null && passoAtual && (
             <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {ETAPAS[etapa].label}</p>
-                  <h2 className="mt-1 text-lg font-semibold">{ETAPAS[etapa].title}</h2>
+                   <p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p>
+                   <h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2>
                 </div>
                 <Button variant="ghost" size="icon" onClick={encerrar} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button>
               </div>
-              <p className="mt-2 text-sm leading-relaxed">{ETAPAS[etapa].rule}</p>
+               <p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 {etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}
                 <Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? encerrar() : irParaEtapa(etapa + 1)} disabled={salvando}>
