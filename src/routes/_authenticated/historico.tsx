@@ -8,7 +8,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
 import { fmtData, fmtVigencia, useFilhos, useOcorrencias, useVigencias } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
-import { descricaoPenalidade, reais, resumoMesada, valorDebitado } from "@/lib/mesada";
+import { reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({ meta: [
@@ -98,7 +98,7 @@ function HistoricoPage() {
                {gruposFilhos.map(({ filho, registros }) => (
                 <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
                   <h3 className="mb-3 font-display font-bold text-foreground">{filho.nome}</h3>
-                   {vigencia.tipo_penalidade === "mesada" && <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registros.length)}</p>}
+                   {usaDesconto(filho, vigencia) && <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registros.length)}</p>}
                   <div className="grid gap-3">
                      {[...registros].sort((a, b) => a.id - b.id).map((o, indice) => {
                       const ft = o.t_filho_tarefa;
@@ -115,7 +115,7 @@ function HistoricoPage() {
                               <p className="font-medium">{ft?.t_tarefa?.nome}</p>
                                {penalidade ? (
                                 <Badge variant="destructive">
-                                   <AlertTriangle className="mr-1 h-3 w-3" /> {vigencia.tipo_penalidade === "mesada" ? "Limite atingido" : "Penalidade atingida"}
+                                    <AlertTriangle className="mr-1 h-3 w-3" /> {usaDesconto(filho, vigencia) ? "Limite atingido" : "Penalidade atingida"}
                                 </Badge>
                               ) : (
                                 <Badge variant="secondary">
@@ -123,11 +123,11 @@ function HistoricoPage() {
                                 </Badge>
                               )}
                             </div>
-                             {vigencia.tipo_penalidade === "mesada" ? (
+                              {usaDesconto(filho, vigencia) ? (
                                <p className="mt-1 text-sm font-medium tabular-nums text-foreground">Desconto: {reais(valorDebitado(filho, vigencia, indice + 1) - valorDebitado(filho, vigencia, indice))} · Mesada após este registro: {reais(Math.max(0, (filho.valor_mesada ?? 0) - valorDebitado(filho, vigencia, indice + 1)))}</p>
                              ) : penalidade && (
                               <p className="mt-1 text-sm font-medium text-destructive">
-                                 {descricaoPenalidade(vigencia)}
+                                  {vigencia.penalidade}
                               </p>
                             )}
                           </div>

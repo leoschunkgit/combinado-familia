@@ -19,3 +19,4 @@
 - [x] Adicionar idade opcional, indicador de mesada e valor opcional no cadastro e edição de filhos.
 - [x] Corrigir a mensagem ao tentar excluir uma tarefa com registros de “Não fez”.
 - [x] Permitir penalidade escrita ou desconto por “Não fez” na mesada por vigência, com saldos em Ocorrências e Histórico.
+- [x] Exigir ambas as penalidades na vigência e aplicar automaticamente a opção correspondente à mesada de cada filho.
