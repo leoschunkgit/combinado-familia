@@ -14,7 +14,14 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { fmtVigencia, msgErro, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
-  head: () => ({ meta: [{ title: "Vigências — Combinado" }] }),
+  head: () => ({ meta: [
+    { title: "Vigências — Combinado" },
+    { name: "description", content: "Defina os períodos e limites dos combinados da família." },
+    { property: "og:title", content: "Vigências — Combinado" },
+    { property: "og:description", content: "Defina os períodos e limites dos combinados da família." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: VigenciasPage,
 });
 

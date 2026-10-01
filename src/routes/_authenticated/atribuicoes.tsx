@@ -12,7 +12,14 @@ import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
-  head: () => ({ meta: [{ title: "Atribuições — Combinado" }] }),
+  head: () => ({ meta: [
+    { title: "Atribuições — Combinado" },
+    { name: "description", content: "Associe tarefas aos filhos dentro de cada vigência." },
+    { property: "og:title", content: "Atribuições — Combinado" },
+    { property: "og:description", content: "Associe tarefas aos filhos dentro de cada vigência." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AtribuicoesPage,
 });
 

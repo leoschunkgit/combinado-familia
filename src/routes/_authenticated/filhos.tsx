@@ -13,7 +13,14 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { maskCelular, msgErro, useFilhos } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
-  head: () => ({ meta: [{ title: "Filhos — Combinado" }] }),
+  head: () => ({ meta: [
+    { title: "Filhos — Combinado" },
+    { name: "description", content: "Cadastre e consulte os filhos vinculados à sua família." },
+    { property: "og:title", content: "Filhos — Combinado" },
+    { property: "og:description", content: "Cadastre e consulte os filhos vinculados à sua família." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: FilhosPage,
 });
 

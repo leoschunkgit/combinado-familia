@@ -12,7 +12,14 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { msgErro, useTarefas } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
-  head: () => ({ meta: [{ title: "Tarefas — Combinado" }] }),
+  head: () => ({ meta: [
+    { title: "Tarefas — Combinado" },
+    { name: "description", content: "Organize as tarefas dos combinados da família." },
+    { property: "og:title", content: "Tarefas — Combinado" },
+    { property: "og:description", content: "Organize as tarefas dos combinados da família." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: TarefasPage,
 });
 
