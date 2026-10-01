@@ -85,8 +85,12 @@ function OcorrenciasPage() {
     const vigencia = r.t_vigencia;
     if (!vigencia) return;
     const selecionada = datas[r.id] ?? dataDe(r);
+    if (!selecionada) {
+      toast.error("Informe a data e hora da ocorrência");
+      return;
+    }
     const momento = new Date(selecionada);
-    if (!selecionada || Number.isNaN(momento.getTime()) || momento.getTime() < new Date(vigencia.data_inicio).getTime() || momento.getTime() > new Date(vigencia.data_fim).getTime()) {
+    if (Number.isNaN(momento.getTime()) || momento.getTime() < new Date(vigencia.data_inicio).getTime() || momento.getTime() > new Date(vigencia.data_fim).getTime()) {
       toast.error("A data e hora devem estar dentro do período da vigência");
       return;
     }
