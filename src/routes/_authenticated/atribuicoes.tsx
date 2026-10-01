@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { BlockedAction } from "@/components/BlockedAction";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 
@@ -198,8 +199,12 @@ function AtribuicoesPage() {
                   <TableCell>{e.t_tarefa?.nome}</TableCell>
                   <TableCell>{e.t_vigencia && fmtVigencia(e.t_vigencia)}</TableCell>
                     <TableCell className="space-x-1 text-right">
-                       <Button variant="ghost" size="icon" disabled={temHistorico(e)} title={temHistorico(e) ? "Filho com registro de Não fez nesta vigência" : "Editar atribuição"} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
-                     <Button variant="ghost" size="icon" disabled={temHistorico(e)} title={temHistorico(e) ? "Filho com registro de Não fez nesta vigência" : "Excluir atribuição"} onClick={() => excluir(e.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
+                       <BlockedAction reason={temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser editada." : undefined}>
+                         <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
+                       </BlockedAction>
+                       <BlockedAction reason={temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser excluída." : undefined}>
+                         <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => excluir(e.id)} aria-label="Excluir atribuição"><Trash2 className="h-4 w-4" /></Button>
+                       </BlockedAction>
                   </TableCell>
                 </TableRow>
               ))}
