@@ -96,6 +96,13 @@ function OcorrenciasPage() {
       toast.error("A data deve estar dentro do período da vigência");
       return;
     }
+    const dataRepetida = ocorrencias.some(
+      (ocorrencia) => ocorrencia.id_filho_tarefa === r.id && localDate(new Date(ocorrencia.created_at)) === selecionada,
+    );
+    if (dataRepetida) {
+      toast.error("Já existe um registro de “Não fez” para esta tarefa nesta data");
+      return;
+    }
     const momento = new Date(`${selecionada}T12:00:00`);
     setBusy(true);
     try {
