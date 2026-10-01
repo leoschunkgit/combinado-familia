@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, CalendarRange, Check, Clock3, ClipboardCheck, RotateCcw, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarRange, Clock3, ClipboardCheck, RotateCcw, Search, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -112,10 +112,10 @@ function OcorrenciasPage() {
     } finally { setBusy(false); }
   }
 
-  async function desfazer(r: FilhoTarefa, cumprida: boolean, total: number) {
+  async function desfazer(r: FilhoTarefa, total: number) {
     setBusy(true);
     try {
-      if (!cumprida && r.qtd_nao_fez > 0) {
+      if (r.qtd_nao_fez > 0) {
         // The newest record is the last one inserted, even if its occurrence date was backdated.
         const { data: ultima, error: buscaErro } = await supabase.from("t_ocorrencia")
           .select("id").eq("id_filho_tarefa", r.id).order("id", { ascending: false }).limit(1).maybeSingle();
@@ -125,7 +125,7 @@ function OcorrenciasPage() {
         if (total >= (r.t_vigencia?.qtd_ocorrencia ?? 1)) await marcarGrupo(r, null);
         await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
       }
-      await atualizar(r, cumprida ? { feito: null } : { qtd_nao_fez: Math.max(0, r.qtd_nao_fez - 1), feito: null });
+      await atualizar(r, { qtd_nao_fez: Math.max(0, r.qtd_nao_fez - 1), feito: null });
     } finally { setBusy(false); }
   }
 
@@ -173,14 +173,12 @@ function OcorrenciasPage() {
                     <div className="divide-y border-t">
                       {tarefas.map((r) => {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
-                        const cumprida = r.feito === "S";
                         const bloqueada = penalizado || r.feito === "N";
                         return (
                           <div key={r.id} className="grid gap-3 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-6">
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="font-semibold">{r.t_tarefa?.nome}</p>
-                                {cumprida && <Badge className="bg-success text-success-foreground"><Check className="mr-1 h-3 w-3" /> Cumprida</Badge>}
                               </div>
                               {registros.length > 0 && (
                                 <ul className="mt-2 flex flex-wrap gap-2" aria-label={`Datas de não fez: ${r.t_tarefa?.nome}`}>
@@ -195,18 +193,17 @@ function OcorrenciasPage() {
                               )}
                             </div>
                             <div className="flex flex-wrap items-end gap-2 lg:justify-end">
-                              {!bloqueada && !cumprida && (
+                              {!bloqueada && (
                                 <>
                                   <div className="w-full min-w-0 sm:w-52">
                                     <Label htmlFor={`data-${r.id}`} className="text-xs text-muted-foreground">Data e hora</Label>
                                     <Input id={`data-${r.id}`} type="datetime-local" className="mt-1" value={dataDe(r)} min={localDateTime(new Date(vigencia.data_inicio))} max={localDateTime(new Date(vigencia.data_fim))} onChange={(e) => setDatas({ ...datas, [r.id]: e.target.value })} />
                                   </div>
-                                  <Button size="sm" variant="outline" disabled={busy} onClick={() => atualizar(r, { feito: "S" })}><Check className="h-4 w-4" /> Cumpriu</Button>
                                   <Button size="sm" variant="destructive" disabled={busy} onClick={() => naoFez(r, total)}><ThumbsDown className="h-4 w-4" /> Não fez</Button>
                                 </>
                               )}
-                              {(r.qtd_nao_fez > 0 || r.feito === "S") && (
-                                <Button size="sm" variant="ghost" disabled={busy} onClick={() => desfazer(r, cumprida, total)}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
+                              {(r.qtd_nao_fez > 0) && (
+                                <Button size="sm" variant="ghost" disabled={busy} onClick={() => desfazer(r, total)}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
                               )}
                             </div>
                           </div>
