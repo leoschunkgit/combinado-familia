@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Pencil, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,15 +30,37 @@ const schema = z.object({
   nome: z.string().trim().min(2, "Informe o nome").max(100),
   email: z.union([z.literal(""), z.string().trim().email("Email inválido").max(255)]),
   celular: z.string().refine((v) => v === "" || v.replace(/\D/g, "").length >= 10, "Celular inválido"),
+  idade: z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 150), "Informe uma idade inteira entre 0 e 150"),
+  tem_mesada: z.boolean(),
+  valor_mesada: z.string(),
+}).refine((v) => !v.tem_mesada || v.valor_mesada === "" || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_mesada) && Number(v.valor_mesada.replace(",", ".")) <= 9999999999.99), {
+  message: "Informe um valor válido com até duas casas decimais", path: ["valor_mesada"],
 });
+
+type FilhoForm = z.input<typeof schema>;
+const vazio: FilhoForm = { nome: "", email: "", celular: "", idade: "", tem_mesada: false, valor_mesada: "" };
+const dinheiro = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const dadosExtras = (v: FilhoForm) => ({
+  idade: v.idade === "" ? null : Number(v.idade),
+  tem_mesada: v.tem_mesada,
+  valor_mesada: v.tem_mesada && v.valor_mesada !== "" ? Number(v.valor_mesada.replace(",", ".")) : null,
+});
+
+function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange: (v: FilhoForm) => void; prefix: string }) {
+  return <>
+    <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
+    <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada</Label></div>
+    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) (opcional)</Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="0,00" value={value.valor_mesada} onChange={(e) => onChange({ ...value, valor_mesada: e.target.value })} /></div>}
+  </>;
+}
 
 function FilhosPage() {
   const qc = useQueryClient();
   const { data: filhos = [] } = useFilhos();
-  const [form, setForm] = useState({ nome: "", email: "", celular: "" });
+  const [form, setForm] = useState<FilhoForm>(vazio);
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Filho | null>(null);
-  const [edicao, setEdicao] = useState({ nome: "", email: "", celular: "" });
+  const [edicao, setEdicao] = useState<FilhoForm>(vazio);
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
@@ -48,11 +71,12 @@ function FilhosPage() {
       nome: p.data.nome,
       email: p.data.email || null,
       celular: p.data.celular.replace(/\D/g, "") || null,
+      ...dadosExtras(p.data),
     });
     setSaving(false);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Filho cadastrado");
-    setForm({ nome: "", email: "", celular: "" });
+    setForm(vazio);
     qc.invalidateQueries({ queryKey: ["filhos"] });
   }
 
@@ -69,7 +93,7 @@ function FilhosPage() {
 
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
-    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "" });
+    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), tem_mesada: filho.tem_mesada, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
   }
 
   async function salvarEdicao(e: FormEvent) {
@@ -82,6 +106,7 @@ function FilhosPage() {
       nome: p.data.nome,
       email: p.data.email || null,
       celular: p.data.celular.replace(/\D/g, "") || null,
+      ...dadosExtras(p.data),
     }).eq("id", editando.id);
     setSaving(false);
     if (error) {
@@ -107,6 +132,7 @@ function FilhosPage() {
               <div className="space-y-2"><Label>Nome</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
               <div className="space-y-2"><Label>Celular</Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
+              <CamposExtras value={form} onChange={setForm} prefix="novo-filho" />
               <Button type="submit" className="w-full" disabled={saving}>Cadastrar</Button>
             </form>
           </CardContent>
@@ -123,6 +149,7 @@ function FilhosPage() {
                 <p className="truncate text-sm text-muted-foreground">
                   {[f.email, f.celular && maskCelular(f.celular)].filter(Boolean).join(" · ") || "Sem contato"}
                 </p>
+                <p className="text-sm text-muted-foreground">{[f.idade !== null && `${f.idade} anos`, f.tem_mesada ? `Mesada${f.valor_mesada !== null ? `: ${dinheiro(f.valor_mesada)}` : ""}` : null].filter(Boolean).join(" · ")}</p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => excluir(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
@@ -137,6 +164,7 @@ function FilhosPage() {
             <div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-filho-email">Email</Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular</Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div>
+            <CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
               <Button type="submit" disabled={saving}>Salvar alterações</Button>

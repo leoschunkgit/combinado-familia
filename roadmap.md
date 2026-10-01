@@ -15,3 +15,5 @@
 - [x] Exibir seletores de data em português brasileiro e explicar por dica as ações de edição ou exclusão bloqueadas.
 - [x] Recalcular a penalidade exibida ao editar o limite e manter a mensagem de bloqueio em português.
 - [x] Retirar a hora da vigência, contextualizar o erro ao editar/excluir filho e alinhar “Não fez” mesmo com registros anteriores.
+- [x] Filtrar atribuições cadastradas por vigência, filho e tarefa.
+- [x] Adicionar idade opcional, indicador de mesada e valor opcional no cadastro e edição de filhos.

@@ -42,6 +42,9 @@ function AtribuicoesPage() {
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<FilhoTarefa | null>(null);
   const [edicao, setEdicao] = useState({ vig: "", filho: "", tarefa: "" });
+  const [filtroVig, setFiltroVig] = useState("all");
+  const [filtroFilho, setFiltroFilho] = useState("all");
+  const [filtroTarefa, setFiltroTarefa] = useState("all");
 
   const nomeF = (id: number) => filhos.find((f) => f.id === id)?.nome ?? "";
   const nomeT = (id: number) => tarefas.find((t) => t.id === id)?.nome ?? "";
@@ -119,6 +122,11 @@ function AtribuicoesPage() {
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
   const temHistorico = (item: FilhoTarefa) => existentes.some((outra) => outra.id_filho === item.id_filho && outra.id_vigencia === item.id_vigencia && ocorrencias.some((o) => o.id_filho_tarefa === outra.id));
+  const filtradas = existentes.filter((item) =>
+    (filtroVig === "all" || item.id_vigencia === Number(filtroVig)) &&
+    (filtroFilho === "all" || item.id_filho === Number(filtroFilho)) &&
+    (filtroTarefa === "all" || item.id_tarefa === Number(filtroTarefa))
+  );
 
   return (
     <>
@@ -186,14 +194,21 @@ function AtribuicoesPage() {
       </Card>
 
       <h2 className="mb-3 text-xl font-bold">Atribuições cadastradas</h2>
+      {existentes.length > 0 && <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <Pick label="Filtrar por vigência" value={filtroVig} onChange={setFiltroVig} allLabel="Todas as vigências" options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+        <Pick label="Filtrar por filho" value={filtroFilho} onChange={setFiltroFilho} allLabel="Todos os filhos" options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
+        <Pick label="Filtrar por tarefa" value={filtroTarefa} onChange={setFiltroTarefa} allLabel="Todas as tarefas" options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
+      </div>}
       {existentes.length === 0 ? (
         <EmptyState>Nenhuma atribuição ainda.</EmptyState>
+      ) : filtradas.length === 0 ? (
+        <EmptyState>Nenhuma atribuição encontrada para estes filtros.</EmptyState>
       ) : (
         <div className="rounded-2xl border bg-card">
           <Table>
             <TableHeader><TableRow><TableHead>Filho</TableHead><TableHead>Tarefa</TableHead><TableHead>Vigência</TableHead><TableHead /></TableRow></TableHeader>
             <TableBody>
-              {existentes.map((e) => (
+              {filtradas.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.t_filho?.nome}</TableCell>
                   <TableCell>{e.t_tarefa?.nome}</TableCell>
