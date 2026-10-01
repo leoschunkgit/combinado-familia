@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateField } from "@/components/BrDateField";
 import { BlockedAction } from "@/components/BlockedAction";
-import { fmtVigencia, msgErro, useFilhoTarefas, useOcorrencias, useVigencias, useFilhos, type Vigencia } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade } from "@/lib/mesada";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
@@ -59,7 +59,6 @@ function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; o
 function VigenciasPage() {
   const qc = useQueryClient();
   const { data: vigencias = [] } = useVigencias();
-  const { data: filhos = [] } = useFilhos();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const [form, setForm] = useState<VigenciaForm>(vazio);
