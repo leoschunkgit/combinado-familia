@@ -98,7 +98,11 @@ function HistoricoPage() {
                {gruposFilhos.map(({ filho, registros }) => (
                 <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
                   <h3 className="mb-3 font-display font-bold text-foreground">{filho.nome}</h3>
-                   {usaDesconto(filho, vigencia) && <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registros.length)}</p>}
+                   {usaDesconto(filho, vigencia) ? (
+                     <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registros.length)}</p>
+                   ) : (
+                     <p className="mb-3 text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
+                   )}
                   <div className="grid gap-3">
                      {[...registros].sort((a, b) => a.id - b.id).map((o, indice) => {
                       const ft = o.t_filho_tarefa;

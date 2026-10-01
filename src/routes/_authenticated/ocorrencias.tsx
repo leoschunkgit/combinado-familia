@@ -217,7 +217,11 @@ function OcorrenciasPage() {
                         )}
                        </div>
                     </div>
-                     {comDesconto && <p className="mb-3 text-sm font-medium tabular-nums text-foreground">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}{penalizado && <span className="ml-2 text-destructive">Limite atingido</span>}</p>}
+                     {comDesconto ? (
+                       <p className="mb-3 text-sm font-medium tabular-nums text-foreground">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}{penalizado && <span className="ml-2 text-destructive">Limite atingido</span>}</p>
+                     ) : (
+                       <p className="mb-3 text-sm font-medium text-foreground">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
+                     )}
                     <div className="divide-y border-t">
                       {tarefas.map((r) => {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
