@@ -36,6 +36,13 @@
       "when": 1790821434578,
       "tag": "0004_add_child_age_and_allowance",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790822552672,
+      "tag": "0005_add_allowance_debit_penalty",
+      "breakpoints": true
     }
   ]
 }

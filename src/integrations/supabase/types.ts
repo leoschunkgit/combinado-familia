@@ -217,6 +217,8 @@ export type Database = {
           id_usuario_pai: number
           penalidade: string
           qtd_ocorrencia: number
+          tipo_penalidade: string
+          valor_debito: number | null
         }
         Insert: {
           created_at?: string
@@ -226,6 +228,8 @@ export type Database = {
           id_usuario_pai?: number
           penalidade: string
           qtd_ocorrencia?: number
+          tipo_penalidade?: string
+          valor_debito?: number | null
         }
         Update: {
           created_at?: string
@@ -235,6 +239,8 @@ export type Database = {
           id_usuario_pai?: number
           penalidade?: string
           qtd_ocorrencia?: number
+          tipo_penalidade?: string
+          valor_debito?: number | null
         }
         Relationships: [
           {
