@@ -55,6 +55,11 @@ function AtribuicoesPage() {
 
   function adicionar() {
     if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
+    const escolhida = vigencias.find((v) => v.id === Number(vig));
+    const selecionado = filhos.find((f) => f.id === Number(filho));
+    if (escolhida?.tipo_penalidade === "mesada" && (!selecionado?.tem_mesada || selecionado.valor_mesada === null)) {
+      toast.error("Cadastre um valor de mesada para este filho antes de atribuí-lo a esta vigência"); return;
+    }
     const novos = tarefasSelecionadas
       .map((id_tarefa) => ({ id_vigencia: +vig, id_filho: +filho, id_tarefa }))
       .filter((it) => {
@@ -108,6 +113,9 @@ function AtribuicoesPage() {
     if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
     if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar a atribuição."); return; }
     const atualizada = { id_vigencia: +edicao.vig, id_filho: +edicao.filho, id_tarefa: +edicao.tarefa };
+    if (vigencias.find((v) => v.id === atualizada.id_vigencia)?.tipo_penalidade === "mesada" && !filhos.some((f) => f.id === atualizada.id_filho && f.tem_mesada && f.valor_mesada !== null)) {
+      toast.error("Cadastre um valor de mesada para este filho antes de atribuí-lo a esta vigência"); return;
+    }
     const duplicada = existentes.some((item) => item.id !== editando.id && item.id_vigencia === atualizada.id_vigencia && item.id_filho === atualizada.id_filho && item.id_tarefa === atualizada.id_tarefa);
     if (duplicada) { toast.error("Essa atribuição já existe"); return; }
     setSaving(true);
