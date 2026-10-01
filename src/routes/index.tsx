@@ -110,7 +110,7 @@ function Index() {
             Combinado é combinado. <span className="text-accent">Em casa também.</span>
           </h1>
           <p className="mt-6 max-w-md text-lg opacity-80">
-            Defina tarefas para cada filho, um período de vigência e a penalidade. Marque quando algo não foi feito e acompanhe tudo num só lugar.
+            Defina tarefas e um período para cada filho. Escolha uma penalidade ou um valor a descontar da mesada por ocorrência. Registre o que não foi feito e acompanhe tudo em um só lugar.
           </p>
         </div>
         <ul className="grid gap-3 text-sm opacity-90 sm:grid-cols-3">
