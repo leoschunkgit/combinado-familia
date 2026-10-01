@@ -8,5 +8,5 @@ export function erroLimiteMesada(
   if (filho.tem_mesada_opcional !== true || filho.valor_mesada === null || vigencia.valor_debito === null) return null;
   const totalCentavos = Math.round(vigencia.valor_debito * 100) * vigencia.qtd_ocorrencia;
   if (totalCentavos <= Math.round(filho.valor_mesada * 100)) return null;
-  return `O desconto máximo da vigência (${reais(totalCentavos / 100)}) supera a mesada de ${filho.nome} (${reais(filho.valor_mesada)}). Ajuste os valores antes de vincular.`;
+  return `O desconto máximo da vigência (${reais(totalCentavos / 100)}) supera a mesada de ${filho.nome} (${reais(filho.valor_mesada)}). Ajuste os valores antes de salvar.`;
 }

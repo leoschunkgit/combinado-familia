@@ -15,9 +15,9 @@
 - T_USUARIO_PAI is linked to the auth user via `auth_user_id`; the row is created on first sign-in in `_authenticated/route.tsx` (no triggers on auth schema allowed). Passwords live only in auth, never in the table.
 - "Não fez" count is stored in `t_filho_tarefa.qtd_nao_fez`; `feito` = 'S' (cumprida), 'N' (penalidade atingida), null (em andamento).
 - Editing an assignment updates its existing `t_filho_tarefa` row so linked occurrence history is preserved.
-- Database triggers protect assignment edits/deletes after any “Não fez” for that child and validity, and protect validity deletion/period/limit against dependent records; UI checks are only early feedback, so concurrent writes cannot bypass these rules.
+- DB triggers protect assignment edits/deletes after “Não fez” and validity deletion/period/limit; UI checks give early feedback, DB prevents bypasses.
 - Date selection uses shared pt-BR calendar fields with ISO values internally; validity periods are entered as dates and stored from the start through the end of their local calendar days, while blocked actions use a focusable tooltip wrapper for restriction explanations.
 - Penalty indicators derive from the current validity limit and occurrence insertion order across all tasks per child; stored occurrence types remain historical data so editing a limit never rewrites records.
 - Child age/allowance are nullable; nullable `tem_mesada_opcional` is the source of truth, while legacy `tem_mesada` remains for compatibility. Selecting allowance requires a value in UI and DB; unselecting clears it.
-- New validities require both penalties: allowance children get per-occurrence debits; others get written penalty at the limit. Legacy rows may lack one; debits sum across tasks until the limit, cap at current allowance, and never mutate it.
+- Validities require both penalties: allowance children get debits; others get written penalty at the limit. Legacy rows may lack one. Assignment and linked child/validity edits require debit × limit ≤ allowance, enforced in UI and DB; standalone creation is free. Debits never mutate allowance.
 - Persist guide completion in auth metadata, not local storage, so first-access guidance follows the parent's account across devices.
