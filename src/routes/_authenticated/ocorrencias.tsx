@@ -173,14 +173,12 @@ function OcorrenciasPage() {
                     <div className="divide-y border-t">
                       {tarefas.map((r) => {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
-                        const cumprida = r.feito === "S";
                         const bloqueada = penalizado || r.feito === "N";
                         return (
                           <div key={r.id} className="grid gap-3 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-6">
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="font-semibold">{r.t_tarefa?.nome}</p>
-                                {cumprida && <Badge className="bg-success text-success-foreground"><Check className="mr-1 h-3 w-3" /> Cumprida</Badge>}
                               </div>
                               {registros.length > 0 && (
                                 <ul className="mt-2 flex flex-wrap gap-2" aria-label={`Datas de não fez: ${r.t_tarefa?.nome}`}>
