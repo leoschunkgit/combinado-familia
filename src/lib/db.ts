@@ -39,7 +39,7 @@ export type Tarefa = Tables<"t_tarefa">;
 export type FilhoTarefa = Tables<"t_filho_tarefa"> & {
   t_filho: Pick<Filho, "nome"> | null;
   t_tarefa: Pick<Tarefa, "nome"> | null;
-  t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade" | "qtd_ocorrencia"> | null;
+  t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade" | "qtd_ocorrencia" | "tipo_penalidade" | "valor_debito"> | null;
 };
 
 async function unwrap<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>) {
@@ -68,7 +68,7 @@ export const useTarefas = () =>
   });
 
 export const FT_SELECT =
-  "*, t_filho(nome), t_tarefa(nome), t_vigencia(data_inicio, data_fim, penalidade, qtd_ocorrencia)";
+  "*, t_filho(nome), t_tarefa(nome), t_vigencia(data_inicio, data_fim, penalidade, qtd_ocorrencia, tipo_penalidade, valor_debito)";
 
 export const useFilhoTarefas = () =>
   useQuery({
@@ -84,7 +84,7 @@ export type Ocorrencia = Tables<"t_ocorrencia"> & {
     | (Pick<Tables<"t_filho_tarefa">, "id_filho" | "id_vigencia"> & {
         t_filho: Pick<Filho, "nome"> | null;
         t_tarefa: Pick<Tarefa, "nome"> | null;
-        t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade"> | null;
+        t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade" | "tipo_penalidade" | "valor_debito"> | null;
       })
     | null;
 };
@@ -97,13 +97,15 @@ export const useOcorrencias = () =>
         supabase
           .from("t_ocorrencia")
           .select(
-            "*, t_filho_tarefa(id_filho, id_vigencia, t_filho(nome), t_tarefa(nome), t_vigencia(data_inicio, data_fim, penalidade))",
+            "*, t_filho_tarefa(id_filho, id_vigencia, t_filho(nome), t_tarefa(nome), t_vigencia(data_inicio, data_fim, penalidade, tipo_penalidade, valor_debito))",
           )
           .order("created_at", { ascending: false }),
       ),
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Filho sem valor de mesada cadastrado para esta vigência|Há filho sem valor de mesada cadastrado nesta vigência/i, "Para usar desconto da mesada, todos os filhos atribuídos precisam ter um valor de mesada cadastrado"],
+  [/Mesada vinculada a vigência com desconto não pode ser removida/i, "Não é possível retirar o valor da mesada enquanto o filho estiver atribuído a uma vigência com desconto"],
   [/Filho com Não fez nesta vigência/i, "Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar ou excluir a atribuição"],
   [/Vigência com atribuições não pode ser excluída/i, "Esta vigência tem atribuições e não pode ser excluída"],
   [/Limite menor que o número de Não fez/i, "O limite não pode ser menor que os registros de ‘Não fez’ já acumulados por um filho"],

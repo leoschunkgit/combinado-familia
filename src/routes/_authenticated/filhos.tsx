@@ -110,7 +110,7 @@ function FilhosPage() {
     }).eq("id", editando.id);
     setSaving(false);
     if (error) {
-      toast.error(/Filho com Não fez nesta vigência/i.test(error.message)
+      toast.error(/Mesada vinculada a vigência com desconto/i.test(error.message) ? msgErro(error) : /Filho com Não fez nesta vigência/i.test(error.message)
         ? "Não foi possível atualizar os dados deste filho. Tente novamente."
         : msgErro(error));
       return;
