@@ -104,6 +104,10 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Filho com Não fez nesta vigência/i, "Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar ou excluir a atribuição"],
+  [/Vigência com atribuições não pode ser excluída/i, "Esta vigência tem atribuições e não pode ser excluída"],
+  [/Limite menor que o número de Não fez/i, "O limite não pode ser menor que os registros de ‘Não fez’ já acumulados por um filho"],
+  [/Há datas de Não fez fora do novo período/i, "Há datas de ‘Não fez’ fora do novo período. Corrija-as em Ocorrências"],
   [/invalid login credentials/i, "Email ou senha incorretos"],
   [/email not confirmed/i, "Confirme seu email antes de entrar"],
   [/user already registered|already been registered/i, "Este email já está cadastrado"],

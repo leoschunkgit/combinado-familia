@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -33,6 +33,7 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
+  const { data: ocorrencias = [] } = useOcorrencias();
   const [vig, setVig] = useState("");
   const [filho, setFilho] = useState("");
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
@@ -74,6 +75,13 @@ function AtribuicoesPage() {
   }
 
   async function excluir(id: number) {
+    const alvo = existentes.find((item) => item.id === id);
+    if (!alvo) return;
+    const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", alvo.id_filho).eq("id_vigencia", alvo.id_vigencia);
+    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
+    const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
+    if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
+    if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível excluir a atribuição."); return; }
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
@@ -90,6 +98,11 @@ function AtribuicoesPage() {
 
   async function salvarEdicao() {
     if (!editando || !edicao.vig || !edicao.filho || !edicao.tarefa) return;
+    const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", editando.id_filho).eq("id_vigencia", editando.id_vigencia);
+    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
+    const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
+    if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
+    if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar a atribuição."); return; }
     const atualizada = { id_vigencia: +edicao.vig, id_filho: +edicao.filho, id_tarefa: +edicao.tarefa };
     const duplicada = existentes.some((item) => item.id !== editando.id && item.id_vigencia === atualizada.id_vigencia && item.id_filho === atualizada.id_filho && item.id_tarefa === atualizada.id_tarefa);
     if (duplicada) { toast.error("Essa atribuição já existe"); return; }
@@ -104,6 +117,7 @@ function AtribuicoesPage() {
   }
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
+  const temHistorico = (item: FilhoTarefa) => existentes.some((outra) => outra.id_filho === item.id_filho && outra.id_vigencia === item.id_vigencia && ocorrencias.some((o) => o.id_filho_tarefa === outra.id));
 
   return (
     <>
@@ -184,8 +198,8 @@ function AtribuicoesPage() {
                   <TableCell>{e.t_tarefa?.nome}</TableCell>
                   <TableCell>{e.t_vigencia && fmtVigencia(e.t_vigencia)}</TableCell>
                     <TableCell className="space-x-1 text-right">
-                      <Button variant="ghost" size="icon" onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => excluir(e.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
+                       <Button variant="ghost" size="icon" disabled={temHistorico(e)} title={temHistorico(e) ? "Filho com registro de Não fez nesta vigência" : "Editar atribuição"} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
+                     <Button variant="ghost" size="icon" disabled={temHistorico(e)} title={temHistorico(e) ? "Filho com registro de Não fez nesta vigência" : "Excluir atribuição"} onClick={() => excluir(e.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
