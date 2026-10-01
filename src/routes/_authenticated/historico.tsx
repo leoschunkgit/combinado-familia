@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AlertTriangle, History, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarRange, History, Search, ThumbsDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +37,12 @@ function HistoricoPage() {
       (filtro.filho === "all" || ft?.id_filho === +filtro.filho)
     );
   });
+  const grupos = vigencias
+    .map((vigencia) => ({
+      vigencia,
+      registros: lista.filter((o) => o.t_filho_tarefa?.id_vigencia === vigencia.id),
+    }))
+    .filter(({ registros }) => registros.length > 0);
 
   return (
     <>
@@ -71,8 +77,15 @@ function HistoricoPage() {
         <EmptyState>Nenhuma ocorrência registrada ainda. Registre na aba "Ocorrências".</EmptyState>
       )}
 
-      <div className="grid gap-3">
-        {lista.map((o) => {
+      <div className="space-y-8">
+        {grupos.map(({ vigencia, registros }) => (
+          <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
+            <h2 className="mb-3 flex items-center gap-2 border-b pb-3 text-lg font-bold">
+              <CalendarRange className="h-5 w-5 text-primary" aria-hidden="true" />
+              <span>Vigência: {fmtVigencia(vigencia)}</span>
+            </h2>
+            <div className="grid gap-3">
+              {registros.map((o) => {
           const ft = o.t_filho_tarefa;
           const penalidade = o.tipo === "PENALIDADE";
           return (
@@ -97,21 +110,24 @@ function HistoricoPage() {
                     </Badge>
                   )}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {ft?.t_vigencia && fmtVigencia(ft.t_vigencia)}
-                </p>
                 {penalidade && (
                   <p className="mt-1 text-sm font-medium text-destructive">
                     {ft?.t_vigencia?.penalidade}
                   </p>
                 )}
               </div>
-              <p className="shrink-0 text-sm tabular-nums text-muted-foreground">
-                {fmtData(o.created_at)} às {fmtHora(o.created_at)}
-              </p>
+              <div className="shrink-0 md:text-right">
+                <p className="text-xs font-semibold text-muted-foreground">Data da ocorrência</p>
+                <p className="mt-1 text-sm tabular-nums text-foreground">
+                  {fmtData(o.created_at)} às {fmtHora(o.created_at)}
+                </p>
+              </div>
             </div>
           );
-        })}
+              })}
+            </div>
+          </section>
+        ))}
       </div>
     </>
   );
