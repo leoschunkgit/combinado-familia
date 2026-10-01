@@ -15,3 +15,4 @@
 - T_USUARIO_PAI is linked to the auth user via `auth_user_id`; the row is created on first sign-in in `_authenticated/route.tsx` (no triggers on auth schema allowed). Passwords live only in auth, never in the table.
 - "Não fez" count is stored in `t_filho_tarefa.qtd_nao_fez`; `feito` = 'S' (cumprida), 'N' (penalidade atingida), null (em andamento).
 - Editing an assignment updates its existing `t_filho_tarefa` row so linked occurrence history is preserved.
+- Database triggers protect assignment edits/deletes after any “Não fez” for that child and validity, and protect validity deletion/period/limit against dependent records; UI checks are only early feedback, so concurrent writes cannot bypass these rules.
