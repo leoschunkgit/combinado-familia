@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-export function BlockedAction({ reason, children }: { reason?: string; children: ReactNode }) {
+export function BlockedAction({ reason, children }: { reason: string | undefined; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   if (!reason) return <>{children}</>;
   return (
