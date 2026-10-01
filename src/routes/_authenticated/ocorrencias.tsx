@@ -50,7 +50,8 @@ function OcorrenciasPage() {
     const agora = localDate(new Date());
     const inicio = r.t_vigencia ? localDate(new Date(r.t_vigencia.data_inicio)) : agora;
     const fim = r.t_vigencia ? localDate(new Date(r.t_vigencia.data_fim)) : agora;
-    if (datas[r.id] !== undefined) return datas[r.id];
+    const escolhida = datas[r.id];
+    if (escolhida !== undefined) return escolhida;
     return agora < inicio ? inicio : agora > fim ? fim : agora;
   };
 
