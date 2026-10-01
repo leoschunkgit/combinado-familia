@@ -28,6 +28,7 @@ const REGRAS_SENHA = [
   { id: "tam", label: "Pelo menos 6 caracteres", ok: (s: string) => s.length >= 6 },
   { id: "mai", label: "Uma letra maiúscula", ok: (s: string) => /[A-Z]/.test(s) },
   { id: "num", label: "Um número", ok: (s: string) => /\d/.test(s) },
+  { id: "especial", label: "Um caractere especial (ex.: !, @ ou #)", ok: (s: string) => /[^\p{L}\p{N}\s]/u.test(s) },
 ] as const;
 
 const senhaValida = (s: string) => REGRAS_SENHA.every((r) => r.ok(s));
