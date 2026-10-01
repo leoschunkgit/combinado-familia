@@ -15,6 +15,13 @@
       "when": 1790736803688,
       "tag": "0001_create_t_ocorrencia",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790818610287,
+      "tag": "0002_guard_assignment_and_validity_changes",
+      "breakpoints": true
     }
   ]
 }
