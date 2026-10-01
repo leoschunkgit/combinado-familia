@@ -50,7 +50,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
     <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada</Label></div>
-    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) (opcional)</Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="0,00" value={value.valor_mesada} onChange={(e) => onChange({ ...value, valor_mesada: e.target.value })} /></div>}
+    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) (opcional)</Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="0,00" value={value.valor_mesada} onChange={(e) => onChange({ ...value, valor_mesada: e.target.value })} /><p className="text-xs text-muted-foreground">Ao cadastrar um valor de mesada, a penalidade será um desconto na mesada por “Não fez”, até o limite da vigência. Sem valor cadastrado, vale a penalidade escrita.</p></div>}
   </>;
 }
 

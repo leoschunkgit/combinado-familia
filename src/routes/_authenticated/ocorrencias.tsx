@@ -14,7 +14,7 @@ import { BrDateField } from "@/components/BrDateField";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
-import { descricaoPenalidade, reais, resumoMesada, valorDebitado } from "@/lib/mesada";
+import { descricaoPenalidade, reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [
@@ -124,7 +124,7 @@ function OcorrenciasPage() {
       await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
        if (penalizado) {
          const filho = filhos.find((f) => f.id === r.id_filho);
-         toast.warning(vigencia.tipo_penalidade === "mesada" ? `Limite atingido! Desconto total: ${reais(filho ? valorDebitado(filho, vigencia, novo) : 0)}` : `Limite atingido! Penalidade: ${vigencia.penalidade}`);
+          toast.warning(filho && usaDesconto(filho, vigencia) ? `Limite atingido! Desconto total: ${reais(valorDebitado(filho, vigencia, novo))}` : `Limite atingido! Penalidade: ${vigencia.penalidade}`);
        }
       else toast(`Ocorrência registrada (${novo}/${vigencia.qtd_ocorrencia})`);
       setRegistro(null);
@@ -191,7 +191,7 @@ function OcorrenciasPage() {
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase text-muted-foreground">Vigência</p>
                 <h2 className="text-xl font-bold">{fmtVigencia(vigencia)}</h2>
-                 <p className="mt-1 text-sm text-muted-foreground">{vigencia.tipo_penalidade === "mesada" ? "Mesada: " : "Penalidade: "}{descricaoPenalidade(vigencia)}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(vigencia)}</p>
               </div>
             </div>
 
@@ -199,6 +199,7 @@ function OcorrenciasPage() {
               {gruposFilho.map(({ filho, tarefas }) => {
                 const total = tarefas.reduce((s, r) => s + r.qtd_nao_fez, 0);
                 const penalizado = total >= vigencia.qtd_ocorrencia;
+                 const comDesconto = usaDesconto(filho, vigencia);
                 return (
                   <div key={filho.id} className="border-b pb-6 last:border-b-0">
                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 pb-3 sm:flex sm:items-center sm:justify-between">
@@ -208,7 +209,7 @@ function OcorrenciasPage() {
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
                         <span className="text-sm font-semibold tabular-nums">Não fez: {total} de {vigencia.qtd_ocorrencia}</span>
-                         {penalizado && vigencia.tipo_penalidade !== "mesada" && (
+                          {penalizado && !comDesconto && (
                           <Badge variant="destructive">
                             <AlertTriangle className="mr-1 h-3 w-3" />
                             Penalidade: {vigencia.penalidade}
@@ -216,7 +217,7 @@ function OcorrenciasPage() {
                         )}
                        </div>
                     </div>
-                     {vigencia.tipo_penalidade === "mesada" && <p className="mb-3 text-sm font-medium tabular-nums text-foreground">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}{penalizado && <span className="ml-2 text-destructive">Limite atingido</span>}</p>}
+                     {comDesconto && <p className="mb-3 text-sm font-medium tabular-nums text-foreground">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}{penalizado && <span className="ml-2 text-destructive">Limite atingido</span>}</p>}
                     <div className="divide-y border-t">
                       {tarefas.map((r) => {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
@@ -233,7 +234,7 @@ function OcorrenciasPage() {
                                   {registros.map((o, i) => (
                                     <li key={o.id} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs tabular-nums text-muted-foreground">
                                       <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                                       <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}{vigencia.tipo_penalidade === "mesada" ? ` · −${reais(valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id <= o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length) - valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id < o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length))}` : ""}</span>
+                                        <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}{comDesconto ? ` · −${reais(valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id <= o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length) - valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id < o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length))}` : ""}</span>
                                        {penalizadas.has(o.id) && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
                                       <Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy} title="Corrigir data" aria-label={`Corrigir data de ${occurrenceDate.format(new Date(o.created_at))}`} onClick={() => setCorrecao({ tarefa: r, ocorrencia: o, data: localDate(new Date(o.created_at)) })}><Pencil className="h-3 w-3" /></Button>
                                     </li>

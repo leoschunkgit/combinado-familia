@@ -12,6 +12,10 @@ export function resumoMesada(filho: Pick<Filho, "valor_mesada">, vigencia: Pick<
   return `Desconto: ${reais(debito)} · Mesada após desconto: ${reais(Math.max(0, (filho.valor_mesada ?? 0) - debito))}`;
 }
 
-export function descricaoPenalidade(vigencia: Pick<Vigencia, "tipo_penalidade" | "penalidade" | "valor_debito">) {
-  return vigencia.tipo_penalidade === "mesada" ? `${reais(vigencia.valor_debito ?? 0)} por Não fez` : vigencia.penalidade;
+export function usaDesconto(filho: Pick<Filho, "tem_mesada" | "valor_mesada">, vigencia: Pick<Vigencia, "valor_debito">) {
+  return filho.tem_mesada && filho.valor_mesada !== null && vigencia.valor_debito !== null;
+}
+
+export function descricaoPenalidade(vigencia: Pick<Vigencia, "penalidade" | "valor_debito">) {
+  return `Penalidade escrita: ${vigencia.penalidade || "Não cadastrada"} · Desconto da mesada: ${vigencia.valor_debito !== null ? `${reais(vigencia.valor_debito)} por Não fez` : "Não cadastrado"}`;
 }

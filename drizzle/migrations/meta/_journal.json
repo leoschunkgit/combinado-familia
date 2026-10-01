@@ -43,6 +43,13 @@
       "when": 1790822552672,
       "tag": "0005_add_allowance_debit_penalty",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790824092803,
+      "tag": "0006_allow_both_penalties_per_validity",
+      "breakpoints": true
     }
   ]
 }
