@@ -113,9 +113,9 @@ function HistoricoPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="font-medium">{ft?.t_tarefa?.nome}</p>
-                               {penalidade && vigencia.tipo_penalidade !== "mesada" ? (
+                               {penalidade ? (
                                 <Badge variant="destructive">
-                                  <AlertTriangle className="mr-1 h-3 w-3" /> Penalidade atingida
+                                   <AlertTriangle className="mr-1 h-3 w-3" /> {vigencia.tipo_penalidade === "mesada" ? "Limite atingido" : "Penalidade atingida"}
                                 </Badge>
                               ) : (
                                 <Badge variant="secondary">
