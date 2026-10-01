@@ -145,8 +145,8 @@ function OcorrenciasPage() {
     if (!correcao || busy) return;
     const { tarefa, ocorrencia, data } = correcao;
     const vigencia = tarefa.t_vigencia;
-    if (!vigencia || !data || data < localDate(new Date(vigencia.data_inicio)) || data > localDate(new Date(vigencia.data_fim))) {
-      toast.error("A data deve estar dentro do período da vigência");
+    if (!vigencia || !/^\d{4}-\d{2}-\d{2}$/.test(data) || Number.isNaN(new Date(`${data}T12:00:00`).getTime())) {
+      toast.error("Informe uma data válida para a ocorrência");
       return;
     }
     if (ocorrencias.some((o) => o.id !== ocorrencia.id && o.id_filho_tarefa === tarefa.id && localDate(new Date(o.created_at)) === data)) {
@@ -212,7 +212,7 @@ function OcorrenciasPage() {
                     <div className="divide-y border-t">
                       {tarefas.map((r) => {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
-                        const bloqueada = penalizado || r.feito === "N";
+                         const bloqueada = penalizado;
                         return (
                           <div key={r.id} className="grid gap-3 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-6">
                             <div className="min-w-0">
@@ -282,7 +282,8 @@ function OcorrenciasPage() {
             <DialogHeader><DialogTitle>Corrigir data do “Não fez”</DialogTitle><DialogDescription>{correcao?.tarefa.t_tarefa?.nome}</DialogDescription></DialogHeader>
             <div className="space-y-2">
               <Label htmlFor="corrigir-data">Data</Label>
-              <Input id="corrigir-data" type="date" value={correcao?.data ?? ""} min={correcao?.tarefa.t_vigencia ? localDate(new Date(correcao.tarefa.t_vigencia.data_inicio)) : undefined} max={correcao?.tarefa.t_vigencia ? localDate(new Date(correcao.tarefa.t_vigencia.data_fim)) : undefined} onChange={(e) => setCorrecao((atual) => atual ? { ...atual, data: e.target.value } : null)} />
+              <Input id="corrigir-data" type="date" value={correcao?.data ?? ""} onChange={(e) => setCorrecao((atual) => atual ? { ...atual, data: e.target.value } : null)} />
+              <p className="text-xs text-muted-foreground">Para mudar o período da vigência, corrija aqui a data antes de salvá-lo.</p>
             </div>
             <DialogFooter><Button variant="outline" type="button" disabled={busy} onClick={() => setCorrecao(null)}>Cancelar</Button><Button type="button" disabled={busy} onClick={corrigirData}>Salvar data</Button></DialogFooter>
           </DialogContent>
