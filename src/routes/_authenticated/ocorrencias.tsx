@@ -48,8 +48,8 @@ function OcorrenciasPage() {
     const agora = localDateTime(new Date());
     const inicio = r.t_vigencia ? localDateTime(new Date(r.t_vigencia.data_inicio)) : agora;
     const fim = r.t_vigencia ? localDateTime(new Date(r.t_vigencia.data_fim)) : agora;
-    const escolhida = datas[r.id] ?? agora;
-    return escolhida < inicio ? inicio : escolhida > fim ? fim : escolhida;
+    if (datas[r.id] !== undefined) return datas[r.id];
+    return agora < inicio ? inicio : agora > fim ? fim : agora;
   };
 
   const grupos = vigencias
