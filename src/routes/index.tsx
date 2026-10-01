@@ -146,7 +146,7 @@ function Index() {
             </TabsContent>
 
             <TabsContent value="cadastrar">
-              <h2 className="text-3xl font-bold">Cadastrar usuário pai</h2>
+              <h2 className="text-3xl font-bold">Cadastrar usuário</h2>
               <p className="mb-6 mt-1 text-muted-foreground">Crie a conta do responsável pela família.</p>
               <form onSubmit={cadastrar} className="space-y-4">
                 <div className="space-y-2">
