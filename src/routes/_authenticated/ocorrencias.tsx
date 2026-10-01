@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, CalendarDays, CalendarRange, ClipboardCheck, RotateCcw, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarRange, ClipboardCheck, Pencil, RotateCcw, Search, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [
@@ -44,6 +44,7 @@ function OcorrenciasPage() {
   const [datas, setDatas] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
   const [registro, setRegistro] = useState<{ tarefa: FilhoTarefa; total: number } | null>(null);
+  const [correcao, setCorrecao] = useState<{ tarefa: FilhoTarefa; ocorrencia: Ocorrencia; data: string } | null>(null);
 
   const dataDe = (r: FilhoTarefa) => {
     const agora = localDate(new Date());
@@ -140,6 +141,28 @@ function OcorrenciasPage() {
     } finally { setBusy(false); }
   }
 
+  async function corrigirData() {
+    if (!correcao || busy) return;
+    const { tarefa, ocorrencia, data } = correcao;
+    const vigencia = tarefa.t_vigencia;
+    if (!vigencia || !data || data < localDate(new Date(vigencia.data_inicio)) || data > localDate(new Date(vigencia.data_fim))) {
+      toast.error("A data deve estar dentro do período da vigência");
+      return;
+    }
+    if (ocorrencias.some((o) => o.id !== ocorrencia.id && o.id_filho_tarefa === tarefa.id && localDate(new Date(o.created_at)) === data)) {
+      toast.error("Já existe um registro de “Não fez” para esta tarefa nesta data");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.from("t_ocorrencia").update({ created_at: new Date(`${data}T12:00:00`).toISOString() }).eq("id", ocorrencia.id);
+      if (error) { toast.error(msgErro(error)); return; }
+      await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
+      setCorrecao(null);
+      toast.success("Data corrigida");
+    } finally { setBusy(false); }
+  }
+
   return (
     <>
       <PageHeader title="Ocorrências" description="Acompanhe os combinados de cada filho por vigência." icon={<ClipboardCheck className="h-6 w-6" />} />
@@ -206,6 +229,7 @@ function OcorrenciasPage() {
                                       <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                                       <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}</span>
                                       {o.tipo === "PENALIDADE" && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy} title="Corrigir data" aria-label={`Corrigir data de ${occurrenceDate.format(new Date(o.created_at))}`} onClick={() => setCorrecao({ tarefa: r, ocorrencia: o, data: localDate(new Date(o.created_at)) })}><Pencil className="h-3 w-3" /></Button>
                                     </li>
                                   ))}
                                 </ul>
@@ -253,6 +277,16 @@ function OcorrenciasPage() {
            </DialogFooter>
          </DialogContent>
        </Dialog>
+        <Dialog open={Boolean(correcao)} onOpenChange={(open) => !open && !busy && setCorrecao(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Corrigir data do “Não fez”</DialogTitle><DialogDescription>{correcao?.tarefa.t_tarefa?.nome}</DialogDescription></DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="corrigir-data">Data</Label>
+              <Input id="corrigir-data" type="date" value={correcao?.data ?? ""} min={correcao?.tarefa.t_vigencia ? localDate(new Date(correcao.tarefa.t_vigencia.data_inicio)) : undefined} max={correcao?.tarefa.t_vigencia ? localDate(new Date(correcao.tarefa.t_vigencia.data_fim)) : undefined} onChange={(e) => setCorrecao((atual) => atual ? { ...atual, data: e.target.value } : null)} />
+            </div>
+            <DialogFooter><Button variant="outline" type="button" disabled={busy} onClick={() => setCorrecao(null)}>Cancelar</Button><Button type="button" disabled={busy} onClick={corrigirData}>Salvar data</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
     </>
   );
 }
