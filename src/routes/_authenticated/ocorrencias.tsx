@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa } from "@/lib/db";
@@ -43,6 +44,7 @@ function OcorrenciasPage() {
   const [filtro, setFiltro] = useState(f);
   const [datas, setDatas] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
+  const [registro, setRegistro] = useState<{ tarefa: FilhoTarefa; total: number } | null>(null);
 
   const dataDe = (r: FilhoTarefa) => {
     const agora = localDateTime(new Date());
@@ -109,6 +111,7 @@ function OcorrenciasPage() {
       await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
       if (penalizado) toast.warning(`Limite atingido! Penalidade: ${vigencia.penalidade}`);
       else toast(`Ocorrência registrada (${novo}/${vigencia.qtd_ocorrencia})`);
+      setRegistro(null);
     } finally { setBusy(false); }
   }
 
@@ -175,10 +178,13 @@ function OcorrenciasPage() {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
                         const bloqueada = penalizado || r.feito === "N";
                         return (
-                          <div key={r.id} className="grid gap-3 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-6">
+                          <div key={r.id} className="grid gap-3 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-6">
                             <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
+                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <p className="font-semibold">{r.t_tarefa?.nome}</p>
+                                 {!bloqueada && (
+                                   <Button size="sm" variant="destructive" disabled={busy} onClick={() => setRegistro({ tarefa: r, total })}><ThumbsDown className="h-4 w-4" /> Não fez</Button>
+                                 )}
                               </div>
                               {registros.length > 0 && (
                                 <ul className="mt-2 flex flex-wrap gap-2" aria-label={`Datas de não fez: ${r.t_tarefa?.nome}`}>
@@ -192,16 +198,7 @@ function OcorrenciasPage() {
                                 </ul>
                               )}
                             </div>
-                            <div className="flex flex-wrap items-end gap-2 lg:justify-end">
-                              {!bloqueada && (
-                                <>
-                                  <div className="w-full min-w-0 sm:w-52">
-                                    <Label htmlFor={`data-${r.id}`} className="text-xs text-muted-foreground">Data e hora</Label>
-                                    <Input id={`data-${r.id}`} type="datetime-local" className="mt-1" value={dataDe(r)} min={localDateTime(new Date(vigencia.data_inicio))} max={localDateTime(new Date(vigencia.data_fim))} onChange={(e) => setDatas({ ...datas, [r.id]: e.target.value })} />
-                                  </div>
-                                  <Button size="sm" variant="destructive" disabled={busy} onClick={() => naoFez(r, total)}><ThumbsDown className="h-4 w-4" /> Não fez</Button>
-                                </>
-                              )}
+                             <div className="flex flex-wrap items-end gap-2 lg:justify-end">
                               {(r.qtd_nao_fez > 0) && (
                                 <Button size="sm" variant="ghost" disabled={busy} onClick={() => desfazer(r, total)}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
                               )}
@@ -217,6 +214,32 @@ function OcorrenciasPage() {
           </section>
         ))}
       </div>
+       <Dialog open={Boolean(registro)} onOpenChange={(open) => !open && setRegistro(null)}>
+         <DialogContent>
+           <DialogHeader>
+             <DialogTitle>Registrar “Não fez”</DialogTitle>
+             <DialogDescription>{registro?.tarefa.t_tarefa?.nome}</DialogDescription>
+           </DialogHeader>
+           {registro?.tarefa.t_vigencia && (
+             <div className="space-y-2">
+               <Label htmlFor="data-ocorrencia">Data e hora</Label>
+               <Input
+                 id="data-ocorrencia"
+                 type="datetime-local"
+                 value={dataDe(registro.tarefa)}
+                 min={localDateTime(new Date(registro.tarefa.t_vigencia.data_inicio))}
+                 max={localDateTime(new Date(registro.tarefa.t_vigencia.data_fim))}
+                 onChange={(e) => setDatas({ ...datas, [registro.tarefa.id]: e.target.value })}
+               />
+               <p className="text-xs text-muted-foreground">A data deve estar dentro da vigência.</p>
+             </div>
+           )}
+           <DialogFooter>
+             <Button type="button" variant="outline" onClick={() => setRegistro(null)}>Cancelar</Button>
+             <Button type="button" variant="destructive" disabled={busy || !registro} onClick={() => registro && naoFez(registro.tarefa, registro.total)}><ThumbsDown className="h-4 w-4" /> Confirmar</Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
     </>
   );
 }

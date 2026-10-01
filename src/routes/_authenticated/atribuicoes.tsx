@@ -50,10 +50,12 @@ function AtribuicoesPage() {
 
   function adicionar() {
     if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
-    const dup = (a: Item) => a.id_vigencia === it.id_vigencia && a.id_filho === it.id_filho && a.id_tarefa === it.id_tarefa;
     const novos = tarefasSelecionadas
       .map((id_tarefa) => ({ id_vigencia: +vig, id_filho: +filho, id_tarefa }))
-      .filter((it) => !itens.some(dup.bind(null, it)) && !existentes.some(dup.bind(null, it)));
+      .filter((it) => {
+        const igual = (a: Item) => a.id_vigencia === it.id_vigencia && a.id_filho === it.id_filho && a.id_tarefa === it.id_tarefa;
+        return !itens.some(igual) && !existentes.some(igual);
+      });
     if (novos.length === 0) { toast.error("As atribuições selecionadas já existem"); return; }
     if (novos.length < tarefasSelecionadas.length) toast.info("As atribuições repetidas não foram adicionadas");
     setItens([...itens, ...novos]);
