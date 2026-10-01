@@ -6,11 +6,11 @@ import { AlertTriangle, CalendarDays, CalendarRange, ClipboardCheck, Pencil, Rot
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { BrDateField } from "@/components/BrDateField";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
 
@@ -50,7 +50,8 @@ function OcorrenciasPage() {
     const agora = localDate(new Date());
     const inicio = r.t_vigencia ? localDate(new Date(r.t_vigencia.data_inicio)) : agora;
     const fim = r.t_vigencia ? localDate(new Date(r.t_vigencia.data_fim)) : agora;
-    if (datas[r.id] !== undefined) return datas[r.id];
+    const escolhida = datas[r.id];
+    if (escolhida !== undefined) return escolhida;
     return agora < inicio ? inicio : agora > fim ? fim : agora;
   };
 
@@ -260,14 +261,13 @@ function OcorrenciasPage() {
            {registro?.tarefa.t_vigencia && (
              <div className="space-y-2">
                 <Label htmlFor="data-ocorrencia">Data</Label>
-               <Input
-                 id="data-ocorrencia"
-                  type="date"
-                 value={dataDe(registro.tarefa)}
+                <BrDateField
+                  id="data-ocorrencia"
+                  value={dataDe(registro.tarefa)}
                   min={localDate(new Date(registro.tarefa.t_vigencia.data_inicio))}
                   max={localDate(new Date(registro.tarefa.t_vigencia.data_fim))}
-                 onChange={(e) => setDatas({ ...datas, [registro.tarefa.id]: e.target.value })}
-               />
+                  onChange={(date) => setDatas({ ...datas, [registro.tarefa.id]: date })}
+                />
                <p className="text-xs text-muted-foreground">A data deve estar dentro da vigência.</p>
              </div>
            )}
@@ -282,7 +282,7 @@ function OcorrenciasPage() {
             <DialogHeader><DialogTitle>Corrigir data do “Não fez”</DialogTitle><DialogDescription>{correcao?.tarefa.t_tarefa?.nome}</DialogDescription></DialogHeader>
             <div className="space-y-2">
               <Label htmlFor="corrigir-data">Data</Label>
-              <Input id="corrigir-data" type="date" value={correcao?.data ?? ""} onChange={(e) => setCorrecao((atual) => atual ? { ...atual, data: e.target.value } : null)} />
+               <BrDateField id="corrigir-data" value={correcao?.data ?? ""} onChange={(date) => setCorrecao((atual) => atual ? { ...atual, data: date } : null)} />
               <p className="text-xs text-muted-foreground">Para mudar o período da vigência, corrija aqui a data antes de salvá-lo.</p>
             </div>
             <DialogFooter><Button variant="outline" type="button" disabled={busy} onClick={() => setCorrecao(null)}>Cancelar</Button><Button type="button" disabled={busy} onClick={corrigirData}>Salvar data</Button></DialogFooter>

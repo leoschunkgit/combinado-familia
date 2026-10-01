@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { BrDateTimeField } from "@/components/BrDateField";
+import { BlockedAction } from "@/components/BlockedAction";
 import { fmtVigencia, msgErro, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
@@ -133,8 +135,8 @@ function VigenciasPage() {
           <CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={salvar} className="space-y-4">
-              <div className="space-y-2"><Label>Data início</Label><Input type="datetime-local" value={form.data_inicio} onChange={(e) => setForm({ ...form, data_inicio: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Data fim</Label><Input type="datetime-local" value={form.data_fim} onChange={(e) => setForm({ ...form, data_fim: e.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor="inicio">Data início</Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
+              <div className="space-y-2"><Label htmlFor="fim">Data fim</Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
               <div className="space-y-2"><Label>Penalidade</Label><Input placeholder="Ex.: Sem videogame no fim de semana" value={form.penalidade} onChange={(e) => setForm({ ...form, penalidade: e.target.value })} /></div>
               <div className="space-y-2"><Label>Quantidade de ocorrências</Label><Input type="number" min={1} max={31} value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Número de "não fez" que aplica a penalidade.</p></div>
@@ -157,7 +159,9 @@ function VigenciasPage() {
                   <p className="text-sm text-muted-foreground">Limite: {v.qtd_ocorrencia} ocorrência(s)</p>
                 </div>
                  <Button variant="ghost" size="icon" onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button>
-                 <Button variant="ghost" size="icon" disabled={atribuicoes.some((a) => a.id_vigencia === v.id)} title={atribuicoes.some((a) => a.id_vigencia === v.id) ? "Vigência com atribuições não pode ser excluída" : "Excluir vigência"} onClick={() => excluir(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
+                 <BlockedAction reason={atribuicoes.some((a) => a.id_vigencia === v.id) ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}>
+                   <Button variant="ghost" size="icon" disabled={atribuicoes.some((a) => a.id_vigencia === v.id)} onClick={() => excluir(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
+                 </BlockedAction>
               </div>
             );
           })}
@@ -167,8 +171,8 @@ function VigenciasPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
           <form onSubmit={salvarEdicao} className="space-y-4">
-            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><Input id="editar-inicio" type="datetime-local" value={edicao.data_inicio} onChange={(e) => setEdicao({ ...edicao, data_inicio: e.target.value })} /></div>
-            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><Input id="editar-fim" type="datetime-local" value={edicao.data_fim} onChange={(e) => setEdicao({ ...edicao, data_fim: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-penalidade">Penalidade</Label><Input id="editar-penalidade" value={edicao.penalidade} onChange={(e) => setEdicao({ ...edicao, penalidade: e.target.value })} /></div>
              <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências</Label><Input id="editar-limite" type="number" min={minimoNaEdicao} max={31} value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
                {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho nesta vigência.</p>}</div>
