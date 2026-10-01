@@ -17,3 +17,4 @@
 - [x] Retirar a hora da vigência, contextualizar o erro ao editar/excluir filho e alinhar “Não fez” mesmo com registros anteriores.
 - [x] Filtrar atribuições cadastradas por vigência, filho e tarefa.
 - [x] Adicionar idade opcional, indicador de mesada e valor opcional no cadastro e edição de filhos.
+- [x] Corrigir a mensagem ao tentar excluir uma tarefa com registros de “Não fez”.
