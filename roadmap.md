@@ -14,3 +14,4 @@
 - [x] Agrupar o Histórico por filho dentro de cada vigência, sem repetir o nome em cada ocorrência.
 - [x] Exibir seletores de data em português brasileiro e explicar por dica as ações de edição ou exclusão bloqueadas.
 - [x] Recalcular a penalidade exibida ao editar o limite e manter a mensagem de bloqueio em português.
+- [x] Retirar a hora da vigência, contextualizar o erro ao editar/excluir filho e alinhar “Não fez” mesmo com registros anteriores.

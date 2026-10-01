@@ -3,7 +3,6 @@ import { CalendarDays } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 function fromDate(date: Date) {
@@ -53,20 +52,5 @@ export function BrDateField({ value, onChange, id, min, max }: {
         />
       </PopoverContent>
     </Popover>
-  );
-}
-
-export function BrDateTimeField({ value, onChange, id }: {
-  value: string;
-  onChange: (value: string) => void;
-  id: string;
-}) {
-  const date = value.slice(0, 10);
-  const time = value.slice(11, 16) || "00:00";
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
-      <BrDateField id={id} value={date} onChange={(next) => onChange(`${next}T${time}`)} />
-      <Input type="time" lang="pt-BR" aria-label="Hora" value={date ? time : ""} onChange={(e) => { if (date) onChange(`${date}T${e.target.value}`); }} />
-    </div>
   );
 }

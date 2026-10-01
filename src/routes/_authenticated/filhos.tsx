@@ -58,7 +58,12 @@ function FilhosPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_filho").delete().eq("id", id);
-    if (error) { toast.error(msgErro(error)); return; }
+    if (error) {
+      toast.error(/Filho com Não fez nesta vigência/i.test(error.message)
+        ? "Este filho tem registros de ‘Não fez’ e não pode ser excluído. A edição dos dados continua permitida."
+        : msgErro(error));
+      return;
+    }
     qc.invalidateQueries();
   }
 
@@ -79,7 +84,12 @@ function FilhosPage() {
       celular: p.data.celular.replace(/\D/g, "") || null,
     }).eq("id", editando.id);
     setSaving(false);
-    if (error) { toast.error(msgErro(error)); return; }
+    if (error) {
+      toast.error(/Filho com Não fez nesta vigência/i.test(error.message)
+        ? "Não foi possível atualizar os dados deste filho. Tente novamente."
+        : msgErro(error));
+      return;
+    }
     toast.success("Filho atualizado");
     setEditando(null);
     qc.invalidateQueries({ queryKey: ["filhos"] });

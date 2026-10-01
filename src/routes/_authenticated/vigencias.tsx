@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { BrDateTimeField } from "@/components/BrDateField";
+import { BrDateField } from "@/components/BrDateField";
 import { BlockedAction } from "@/components/BlockedAction";
 import { fmtVigencia, msgErro, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 
@@ -35,7 +35,7 @@ const schema = z
     penalidade: z.string().trim().min(2, "Informe a penalidade").max(200),
     qtd_ocorrencia: z.coerce.number().int().min(1, "Mínimo de 1 ocorrência").max(31, "Máximo de 31"),
   })
-  .refine((v) => new Date(v.data_fim) > new Date(v.data_inicio), "A data fim deve ser após a data início");
+  .refine((v) => v.data_fim >= v.data_inicio, "A data fim deve ser igual ou posterior à data início");
 
 function VigenciasPage() {
   const qc = useQueryClient();
@@ -49,9 +49,11 @@ function VigenciasPage() {
   const paraCampo = (valor: string) => {
     const d = new Date(valor);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
-  const dia = (valor: string) => paraCampo(valor).slice(0, 10);
+  const dia = (valor: string) => paraCampo(valor);
+  const inicioDoDia = (data: string) => new Date(`${data}T00:00:00`).toISOString();
+  const fimDoDia = (data: string) => new Date(`${data}T23:59:59.999`).toISOString();
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
@@ -59,8 +61,8 @@ function VigenciasPage() {
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     const { error } = await supabase.from("t_vigencia").insert({
       ...p.data,
-      data_inicio: new Date(p.data.data_inicio).toISOString(),
-      data_fim: new Date(p.data.data_fim).toISOString(),
+      data_inicio: inicioDoDia(p.data.data_inicio),
+      data_fim: fimDoDia(p.data.data_fim),
     });
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada");
@@ -108,8 +110,8 @@ function VigenciasPage() {
     }
     const { error } = await supabase.from("t_vigencia").update({
       ...p.data,
-      data_inicio: new Date(p.data.data_inicio).toISOString(),
-      data_fim: new Date(p.data.data_fim).toISOString(),
+      data_inicio: inicioDoDia(p.data.data_inicio),
+      data_fim: fimDoDia(p.data.data_fim),
     }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência atualizada");
@@ -136,8 +138,8 @@ function VigenciasPage() {
           <CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={salvar} className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="inicio">Data início</Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
-              <div className="space-y-2"><Label htmlFor="fim">Data fim</Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
+              <div className="space-y-2"><Label htmlFor="inicio">Data início</Label><BrDateField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
+              <div className="space-y-2"><Label htmlFor="fim">Data fim</Label><BrDateField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
               <div className="space-y-2"><Label>Penalidade</Label><Input placeholder="Ex.: Sem videogame no fim de semana" value={form.penalidade} onChange={(e) => setForm({ ...form, penalidade: e.target.value })} /></div>
               <div className="space-y-2"><Label>Quantidade de ocorrências</Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Número de "não fez" que aplica a penalidade.</p></div>
@@ -172,8 +174,8 @@ function VigenciasPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
           <form onSubmit={salvarEdicao} className="space-y-4">
-            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
-            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><BrDateField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><BrDateField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-penalidade">Penalidade</Label><Input id="editar-penalidade" value={edicao.penalidade} onChange={(e) => setEdicao({ ...edicao, penalidade: e.target.value })} /></div>
              <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências</Label><Input id="editar-limite" type="number" value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
                {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho nesta vigência.</p>}</div>

@@ -217,16 +217,14 @@ function OcorrenciasPage() {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
                          const bloqueada = penalizado;
                         return (
-                          <div key={r.id} className="grid gap-3 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-6">
-                            <div className="min-w-0">
-                               <div className="flex flex-wrap items-center justify-between gap-2">
-                                <p className="font-semibold">{r.t_tarefa?.nome}</p>
+                          <div key={r.id} className="py-3">
+                             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2">
+                                 <p className="min-w-0 break-words pt-1 font-semibold">{r.t_tarefa?.nome}</p>
                                  {!bloqueada && (
-                                   <Button size="sm" variant="destructive" disabled={busy} onClick={() => setRegistro({ tarefa: r, total })}><ThumbsDown className="h-4 w-4" /> Não fez</Button>
+                                    <Button className="shrink-0" size="sm" variant="destructive" disabled={busy} onClick={() => setRegistro({ tarefa: r, total })}><ThumbsDown className="h-4 w-4" /> Não fez</Button>
                                  )}
-                              </div>
                               {registros.length > 0 && (
-                                <ul className="mt-2 flex flex-wrap gap-2" aria-label={`Datas de não fez: ${r.t_tarefa?.nome}`}>
+                                 <ul className="col-span-2 flex flex-wrap gap-2" aria-label={`Datas de não fez: ${r.t_tarefa?.nome}`}>
                                   {registros.map((o, i) => (
                                     <li key={o.id} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs tabular-nums text-muted-foreground">
                                       <CalendarDays className="h-3.5 w-3.5 shrink-0" />
@@ -238,7 +236,7 @@ function OcorrenciasPage() {
                                 </ul>
                               )}
                             </div>
-                             <div className="flex flex-wrap items-end gap-2 lg:justify-end">
+                              <div className="mt-2 flex justify-end">
                               {(r.qtd_nao_fez > 0) && (
                                 <Button size="sm" variant="ghost" disabled={busy} onClick={() => desfazer(r, total)}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
                               )}
