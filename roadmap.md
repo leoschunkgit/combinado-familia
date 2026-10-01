@@ -11,3 +11,4 @@
 - [x] Bloquear exclusão de vigências com atribuições; validar datas registradas e limite ao editar.
 - [x] Permitir corrigir a data de um “Não fez” antes de reduzir o período da vigência.
 - [x] Agrupar o Histórico por vigência e identificar a data da ocorrência sem repetir o período em cada registro.
+- [x] Agrupar o Histórico por filho dentro de cada vigência, sem repetir o nome em cada ocorrência.

@@ -40,9 +40,16 @@ function HistoricoPage() {
   const grupos = vigencias
     .map((vigencia) => ({
       vigencia,
-      registros: lista.filter((o) => o.t_filho_tarefa?.id_vigencia === vigencia.id),
+      filhos: filhos
+        .map((filho) => ({
+          filho,
+          registros: lista.filter(
+            (o) => o.t_filho_tarefa?.id_vigencia === vigencia.id && o.t_filho_tarefa?.id_filho === filho.id,
+          ),
+        }))
+        .filter(({ registros }) => registros.length > 0),
     }))
-    .filter(({ registros }) => registros.length > 0);
+    .filter(({ filhos }) => filhos.length > 0);
 
   return (
     <>
@@ -78,53 +85,58 @@ function HistoricoPage() {
       )}
 
       <div className="space-y-8">
-        {grupos.map(({ vigencia, registros }) => (
+        {grupos.map(({ vigencia, filhos: gruposFilhos }) => (
           <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
             <h2 className="mb-3 flex items-center gap-2 border-b pb-3 text-lg font-bold">
               <CalendarRange className="h-5 w-5 text-primary" aria-hidden="true" />
               <span>Vigência: {fmtVigencia(vigencia)}</span>
             </h2>
-            <div className="grid gap-3">
-              {registros.map((o) => {
-          const ft = o.t_filho_tarefa;
-          const penalidade = o.tipo === "PENALIDADE";
-          return (
-            <div
-              key={o.id}
-              className={`flex flex-col gap-2 rounded-2xl border bg-card p-4 md:flex-row md:items-center ${
-                penalidade ? "border-destructive/50 bg-destructive/5" : ""
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-display font-bold">{ft?.t_filho?.nome}</p>
-                  <span className="text-muted-foreground">·</span>
-                  <p className="font-medium">{ft?.t_tarefa?.nome}</p>
-                  {penalidade ? (
-                    <Badge variant="destructive">
-                      <AlertTriangle className="mr-1 h-3 w-3" /> Penalidade atingida
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">
-                      <ThumbsDown className="mr-1 h-3 w-3" /> Não fez
-                    </Badge>
-                  )}
-                </div>
-                {penalidade && (
-                  <p className="mt-1 text-sm font-medium text-destructive">
-                    {ft?.t_vigencia?.penalidade}
-                  </p>
-                )}
-              </div>
-              <div className="shrink-0 md:text-right">
-                <p className="text-xs font-semibold text-muted-foreground">Data da ocorrência</p>
-                <p className="mt-1 text-sm tabular-nums text-foreground">
-                  {fmtData(o.created_at)} às {fmtHora(o.created_at)}
-                </p>
-              </div>
-            </div>
-          );
-              })}
+            <div className="space-y-6">
+              {gruposFilhos.map(({ filho, registros }) => (
+                <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
+                  <h3 className="mb-3 font-display font-bold text-foreground">{filho.nome}</h3>
+                  <div className="grid gap-3">
+                    {registros.map((o) => {
+                      const ft = o.t_filho_tarefa;
+                      const penalidade = o.tipo === "PENALIDADE";
+                      return (
+                        <div
+                          key={o.id}
+                          className={`flex flex-col gap-2 rounded-2xl border bg-card p-4 md:flex-row md:items-center ${
+                            penalidade ? "border-destructive/50 bg-destructive/5" : ""
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium">{ft?.t_tarefa?.nome}</p>
+                              {penalidade ? (
+                                <Badge variant="destructive">
+                                  <AlertTriangle className="mr-1 h-3 w-3" /> Penalidade atingida
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">
+                                  <ThumbsDown className="mr-1 h-3 w-3" /> Não fez
+                                </Badge>
+                              )}
+                            </div>
+                            {penalidade && (
+                              <p className="mt-1 text-sm font-medium text-destructive">
+                                {ft?.t_vigencia?.penalidade}
+                              </p>
+                            )}
+                          </div>
+                          <div className="shrink-0 md:text-right">
+                            <p className="text-xs font-semibold text-muted-foreground">Data da ocorrência</p>
+                            <p className="mt-1 text-sm tabular-nums text-foreground">
+                              {fmtData(o.created_at)} às {fmtHora(o.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
             </div>
           </section>
         ))}
