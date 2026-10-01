@@ -171,7 +171,12 @@ function OcorrenciasPage() {
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
                         <span className="text-sm font-semibold tabular-nums">Não fez: {total} de {vigencia.qtd_ocorrencia}</span>
-                        {penalizado && <Badge variant="destructive"><AlertTriangle className="mr-1 h-3 w-3" /> Penalidade</Badge>}
+                        {penalizado && (
+                          <Badge variant="destructive">
+                            <AlertTriangle className="mr-1 h-3 w-3" />
+                            Penalidade: {vigencia.penalidade}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="divide-y border-t">

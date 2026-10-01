@@ -5,3 +5,4 @@
 - [x] Permitir selecionar várias ou todas as tarefas ao criar uma atribuição.
 - [x] Mover a data de “Não fez” para um modal compacto.
 - [x] Validar os fluxos atualizados em desktop e celular.
+- [x] Mostrar o nome da penalidade quando o filho atingir o limite da vigência.
