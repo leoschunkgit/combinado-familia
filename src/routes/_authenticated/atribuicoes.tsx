@@ -2,14 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Link2, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronsUpDown, Link2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -33,9 +35,11 @@ function AtribuicoesPage() {
   const { data: existentes = [] } = useFilhoTarefas();
   const [vig, setVig] = useState("");
   const [filho, setFilho] = useState("");
-  const [tarefa, setTarefa] = useState("");
+  const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
   const [itens, setItens] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
+  const [editando, setEditando] = useState<FilhoTarefa | null>(null);
+  const [edicao, setEdicao] = useState({ vig: "", filho: "", tarefa: "" });
 
   const nomeF = (id: number) => filhos.find((f) => f.id === id)?.nome ?? "";
   const nomeT = (id: number) => tarefas.find((t) => t.id === id)?.nome ?? "";
@@ -45,12 +49,15 @@ function AtribuicoesPage() {
   };
 
   function adicionar() {
-    if (!vig || !filho || !tarefa) { toast.error("Selecione vigência, filho e tarefa"); return; }
-    const it = { id_vigencia: +vig, id_filho: +filho, id_tarefa: +tarefa };
+    if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
     const dup = (a: Item) => a.id_vigencia === it.id_vigencia && a.id_filho === it.id_filho && a.id_tarefa === it.id_tarefa;
-    if (itens.some(dup) || existentes.some(dup)) { toast.error("Essa atribuição já existe"); return; }
-    setItens([...itens, it]);
-    setTarefa("");
+    const novos = tarefasSelecionadas
+      .map((id_tarefa) => ({ id_vigencia: +vig, id_filho: +filho, id_tarefa }))
+      .filter((it) => !itens.some(dup.bind(null, it)) && !existentes.some(dup.bind(null, it)));
+    if (novos.length === 0) { toast.error("As atribuições selecionadas já existem"); return; }
+    if (novos.length < tarefasSelecionadas.length) toast.info("As atribuições repetidas não foram adicionadas");
+    setItens([...itens, ...novos]);
+    setTarefasSelecionadas([]);
   }
 
   async function cadastrar() {
@@ -70,6 +77,30 @@ function AtribuicoesPage() {
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
+  function alternarTarefa(id: number) {
+    setTarefasSelecionadas((atuais) => atuais.includes(id) ? atuais.filter((x) => x !== id) : [...atuais, id]);
+  }
+
+  function abrirEdicao(item: FilhoTarefa) {
+    setEditando(item);
+    setEdicao({ vig: String(item.id_vigencia), filho: String(item.id_filho), tarefa: String(item.id_tarefa) });
+  }
+
+  async function salvarEdicao() {
+    if (!editando || !edicao.vig || !edicao.filho || !edicao.tarefa) return;
+    const atualizada = { id_vigencia: +edicao.vig, id_filho: +edicao.filho, id_tarefa: +edicao.tarefa };
+    const duplicada = existentes.some((item) => item.id !== editando.id && item.id_vigencia === atualizada.id_vigencia && item.id_filho === atualizada.id_filho && item.id_tarefa === atualizada.id_tarefa);
+    if (duplicada) { toast.error("Essa atribuição já existe"); return; }
+    setSaving(true);
+    const { error } = await supabase.from("t_filho_tarefa").update(atualizada).eq("id", editando.id);
+    setSaving(false);
+    if (error) { toast.error(msgErro(error)); return; }
+    toast.success("Atribuição atualizada");
+    setEditando(null);
+    qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+    qc.invalidateQueries({ queryKey: ["ocorrencias"] });
+  }
+
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
 
   return (
@@ -86,7 +117,32 @@ function AtribuicoesPage() {
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
             <Pick label="Vigência" value={vig} onChange={setVig} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
             <Pick label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
-            <Pick label="Tarefa" value={tarefa} onChange={setTarefa} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Tarefas</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" className="w-full justify-between font-normal">
+                    <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
+                    <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
+                  <DropdownMenuCheckboxItem
+                    checked={tarefas.length > 0 && tarefasSelecionadas.length === tarefas.length}
+                    onSelect={(e) => e.preventDefault()}
+                    onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
+                  >
+                    Selecionar todas
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuSeparator />
+                  {tarefas.map((t) => (
+                    <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
+                      {t.nome}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <Button variant="secondary" onClick={adicionar}><Plus className="h-4 w-4" /> Adicionar</Button>
           </div>
           {itens.length > 0 && (
@@ -125,7 +181,8 @@ function AtribuicoesPage() {
                   <TableCell className="font-medium">{e.t_filho?.nome}</TableCell>
                   <TableCell>{e.t_tarefa?.nome}</TableCell>
                   <TableCell>{e.t_vigencia && fmtVigencia(e.t_vigencia)}</TableCell>
-                  <TableCell className="text-right">
+                    <TableCell className="space-x-1 text-right">
+                      <Button variant="ghost" size="icon" onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => excluir(e.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
@@ -134,6 +191,20 @@ function AtribuicoesPage() {
           </Table>
         </div>
       )}
+      <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar atribuição</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <Pick label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+            <Pick label="Filho" value={edicao.filho} onChange={(v) => setEdicao({ ...edicao, filho: v })} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
+            <Pick label="Tarefa" value={edicao.tarefa} onChange={(v) => setEdicao({ ...edicao, tarefa: v })} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
+            <Button type="button" disabled={saving} onClick={salvarEdicao}><Check className="h-4 w-4" /> Salvar alterações</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
