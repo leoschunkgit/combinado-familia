@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, CalendarRange, Clock3, ClipboardCheck, RotateCcw, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarRange, ClipboardCheck, RotateCcw, Search, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,13 +26,12 @@ export const Route = createFileRoute("/_authenticated/ocorrencias")({
   component: OcorrenciasPage,
 });
 
-// datetime-local expects local wall-clock time rather than an ISO UTC string.
-function localDateTime(value: Date) {
+function localDate(value: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
 }
 
-const occurrenceDate = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const occurrenceDate = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 
 function OcorrenciasPage() {
   const qc = useQueryClient();
@@ -47,9 +46,9 @@ function OcorrenciasPage() {
   const [registro, setRegistro] = useState<{ tarefa: FilhoTarefa; total: number } | null>(null);
 
   const dataDe = (r: FilhoTarefa) => {
-    const agora = localDateTime(new Date());
-    const inicio = r.t_vigencia ? localDateTime(new Date(r.t_vigencia.data_inicio)) : agora;
-    const fim = r.t_vigencia ? localDateTime(new Date(r.t_vigencia.data_fim)) : agora;
+    const agora = localDate(new Date());
+    const inicio = r.t_vigencia ? localDate(new Date(r.t_vigencia.data_inicio)) : agora;
+    const fim = r.t_vigencia ? localDate(new Date(r.t_vigencia.data_fim)) : agora;
     if (datas[r.id] !== undefined) return datas[r.id];
     return agora < inicio ? inicio : agora > fim ? fim : agora;
   };
@@ -88,14 +87,16 @@ function OcorrenciasPage() {
     if (!vigencia) return;
     const selecionada = datas[r.id] ?? dataDe(r);
     if (!selecionada) {
-      toast.error("Informe a data e hora da ocorrência");
+      toast.error("Informe a data da ocorrência");
       return;
     }
-    const momento = new Date(selecionada);
-    if (Number.isNaN(momento.getTime()) || momento.getTime() < new Date(vigencia.data_inicio).getTime() || momento.getTime() > new Date(vigencia.data_fim).getTime()) {
-      toast.error("A data e hora devem estar dentro do período da vigência");
+    const inicio = localDate(new Date(vigencia.data_inicio));
+    const fim = localDate(new Date(vigencia.data_fim));
+    if (selecionada < inicio || selecionada > fim) {
+      toast.error("A data deve estar dentro do período da vigência");
       return;
     }
+    const momento = new Date(`${selecionada}T12:00:00`);
     setBusy(true);
     try {
       const novo = total + 1;
@@ -190,7 +191,7 @@ function OcorrenciasPage() {
                                 <ul className="mt-2 flex flex-wrap gap-2" aria-label={`Datas de não fez: ${r.t_tarefa?.nome}`}>
                                   {registros.map((o, i) => (
                                     <li key={o.id} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs tabular-nums text-muted-foreground">
-                                      <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                                      <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                                       <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}</span>
                                       {o.tipo === "PENALIDADE" && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
                                     </li>
@@ -222,13 +223,13 @@ function OcorrenciasPage() {
            </DialogHeader>
            {registro?.tarefa.t_vigencia && (
              <div className="space-y-2">
-               <Label htmlFor="data-ocorrencia">Data e hora</Label>
+                <Label htmlFor="data-ocorrencia">Data</Label>
                <Input
                  id="data-ocorrencia"
-                 type="datetime-local"
+                  type="date"
                  value={dataDe(registro.tarefa)}
-                 min={localDateTime(new Date(registro.tarefa.t_vigencia.data_inicio))}
-                 max={localDateTime(new Date(registro.tarefa.t_vigencia.data_fim))}
+                  min={localDate(new Date(registro.tarefa.t_vigencia.data_inicio))}
+                  max={localDate(new Date(registro.tarefa.t_vigencia.data_fim))}
                  onChange={(e) => setDatas({ ...datas, [registro.tarefa.id]: e.target.value })}
                />
                <p className="text-xs text-muted-foreground">A data deve estar dentro da vigência.</p>
