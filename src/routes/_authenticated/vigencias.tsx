@@ -116,6 +116,7 @@ function VigenciasPage() {
     setEditando(null);
     qc.invalidateQueries({ queryKey: ["vigencias"] });
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+    qc.invalidateQueries({ queryKey: ["ocorrencias"] });
   }
 
   const agora = Date.now();
@@ -138,7 +139,7 @@ function VigenciasPage() {
               <div className="space-y-2"><Label htmlFor="inicio">Data início</Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
               <div className="space-y-2"><Label htmlFor="fim">Data fim</Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
               <div className="space-y-2"><Label>Penalidade</Label><Input placeholder="Ex.: Sem videogame no fim de semana" value={form.penalidade} onChange={(e) => setForm({ ...form, penalidade: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Quantidade de ocorrências</Label><Input type="number" min={1} max={31} value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
+              <div className="space-y-2"><Label>Quantidade de ocorrências</Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Número de "não fez" que aplica a penalidade.</p></div>
               <Button type="submit" className="w-full">Cadastrar</Button>
             </form>
@@ -174,7 +175,7 @@ function VigenciasPage() {
             <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-penalidade">Penalidade</Label><Input id="editar-penalidade" value={edicao.penalidade} onChange={(e) => setEdicao({ ...edicao, penalidade: e.target.value })} /></div>
-             <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências</Label><Input id="editar-limite" type="number" min={minimoNaEdicao} max={31} value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
+             <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências</Label><Input id="editar-limite" type="number" value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
                {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho nesta vigência.</p>}</div>
              {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
             <DialogFooter>

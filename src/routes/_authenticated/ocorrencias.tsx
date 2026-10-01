@@ -13,6 +13,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateField } from "@/components/BrDateField";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
+import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [
@@ -39,6 +40,7 @@ function OcorrenciasPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: todas = [], isLoading } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
+  const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const [f, setF] = useState({ vig: "all", filho: "all" });
   const [filtro, setFiltro] = useState(f);
   const [datas, setDatas] = useState<Record<number, string>>({});
@@ -229,7 +231,7 @@ function OcorrenciasPage() {
                                     <li key={o.id} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs tabular-nums text-muted-foreground">
                                       <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                                       <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}</span>
-                                      {o.tipo === "PENALIDADE" && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
+                                       {penalizadas.has(o.id) && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
                                       <Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy} title="Corrigir data" aria-label={`Corrigir data de ${occurrenceDate.format(new Date(o.created_at))}`} onClick={() => setCorrecao({ tarefa: r, ocorrencia: o, data: localDate(new Date(o.created_at)) })}><Pencil className="h-3 w-3" /></Button>
                                     </li>
                                   ))}

@@ -17,3 +17,4 @@
 - Editing an assignment updates its existing `t_filho_tarefa` row so linked occurrence history is preserved.
 - Database triggers protect assignment edits/deletes after any “Não fez” for that child and validity, and protect validity deletion/period/limit against dependent records; UI checks are only early feedback, so concurrent writes cannot bypass these rules.
 - Date selection uses shared pt-BR calendar fields with ISO values internally, and blocked actions use a focusable tooltip wrapper; this keeps display language and restriction explanations consistent across screens.
+- Penalty indicators derive from the current validity limit and occurrence insertion order across all tasks per child; stored occurrence types remain historical data so editing a limit never rewrites records.
