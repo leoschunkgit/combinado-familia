@@ -193,18 +193,17 @@ function OcorrenciasPage() {
                               )}
                             </div>
                             <div className="flex flex-wrap items-end gap-2 lg:justify-end">
-                              {!bloqueada && !cumprida && (
+                              {!bloqueada && (
                                 <>
                                   <div className="w-full min-w-0 sm:w-52">
                                     <Label htmlFor={`data-${r.id}`} className="text-xs text-muted-foreground">Data e hora</Label>
                                     <Input id={`data-${r.id}`} type="datetime-local" className="mt-1" value={dataDe(r)} min={localDateTime(new Date(vigencia.data_inicio))} max={localDateTime(new Date(vigencia.data_fim))} onChange={(e) => setDatas({ ...datas, [r.id]: e.target.value })} />
                                   </div>
-                                  <Button size="sm" variant="outline" disabled={busy} onClick={() => atualizar(r, { feito: "S" })}><Check className="h-4 w-4" /> Cumpriu</Button>
                                   <Button size="sm" variant="destructive" disabled={busy} onClick={() => naoFez(r, total)}><ThumbsDown className="h-4 w-4" /> Não fez</Button>
                                 </>
                               )}
-                              {(r.qtd_nao_fez > 0 || r.feito === "S") && (
-                                <Button size="sm" variant="ghost" disabled={busy} onClick={() => desfazer(r, cumprida, total)}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
+                              {(r.qtd_nao_fez > 0) && (
+                                <Button size="sm" variant="ghost" disabled={busy} onClick={() => desfazer(r, total)}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
                               )}
                             </div>
                           </div>
