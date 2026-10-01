@@ -33,7 +33,9 @@ const schema = z.object({
   idade: z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 150), "Informe uma idade inteira entre 0 e 150"),
   tem_mesada: z.boolean(),
   valor_mesada: z.string(),
-}).refine((v) => !v.tem_mesada || v.valor_mesada === "" || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_mesada) && Number(v.valor_mesada.replace(",", ".")) <= 9999999999.99), {
+}).refine((v) => !v.tem_mesada || v.valor_mesada.trim() !== "", {
+  message: "Informe o valor da mesada ao marcar ‘Tem mesada’", path: ["valor_mesada"],
+}).refine((v) => !v.tem_mesada || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_mesada) && Number(v.valor_mesada.replace(",", ".")) <= 9999999999.99), {
   message: "Informe um valor válido com até duas casas decimais", path: ["valor_mesada"],
 });
 
@@ -43,6 +45,7 @@ const dinheiro = (valor: number) => valor.toLocaleString("pt-BR", { style: "curr
 const dadosExtras = (v: FilhoForm) => ({
   idade: v.idade === "" ? null : Number(v.idade),
   tem_mesada: v.tem_mesada,
+  tem_mesada_opcional: v.tem_mesada ? true : null,
   valor_mesada: v.tem_mesada && v.valor_mesada !== "" ? Number(v.valor_mesada.replace(",", ".")) : null,
 });
 
@@ -50,7 +53,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
     <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada</Label></div>
-    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) (opcional)</Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="0,00" value={value.valor_mesada} onChange={(e) => onChange({ ...value, valor_mesada: e.target.value })} /><p className="text-xs text-muted-foreground">Ao cadastrar um valor de mesada, a penalidade será um desconto na mesada por “Não fez”, até o limite da vigência. Sem valor cadastrado, vale a penalidade escrita.</p></div>}
+    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="0,00" value={value.valor_mesada} onChange={(e) => onChange({ ...value, valor_mesada: e.target.value })} /><p className="text-xs text-muted-foreground">Ao cadastrar uma mesada, a penalidade será um desconto na mesada por “Não fez”, até o limite da vigência. Sem mesada cadastrada, vale a penalidade escrita.</p></div>}
   </>;
 }
 
@@ -93,7 +96,7 @@ function FilhosPage() {
 
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
-    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), tem_mesada: filho.tem_mesada, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
+    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), tem_mesada: filho.tem_mesada_opcional === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
   }
 
   async function salvarEdicao(e: FormEvent) {
@@ -149,7 +152,7 @@ function FilhosPage() {
                 <p className="truncate text-sm text-muted-foreground">
                   {[f.email, f.celular && maskCelular(f.celular)].filter(Boolean).join(" · ") || "Sem contato"}
                 </p>
-                <p className="text-sm text-muted-foreground">{[f.idade !== null && `${f.idade} anos`, f.tem_mesada ? `Mesada${f.valor_mesada !== null ? `: ${dinheiro(f.valor_mesada)}` : ""}` : null].filter(Boolean).join(" · ")}</p>
+                <p className="text-sm text-muted-foreground">{[f.idade !== null && `${f.idade} anos`, f.tem_mesada_opcional === true && f.valor_mesada !== null ? `Mesada: ${dinheiro(f.valor_mesada)}` : null].filter(Boolean).join(" · ")}</p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => excluir(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
