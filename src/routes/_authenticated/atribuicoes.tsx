@@ -74,6 +74,13 @@ function AtribuicoesPage() {
   }
 
   async function excluir(id: number) {
+    const alvo = existentes.find((item) => item.id === id);
+    if (!alvo) return;
+    const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", alvo.id_filho).eq("id_vigencia", alvo.id_vigencia);
+    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
+    const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
+    if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
+    if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível excluir a atribuição."); return; }
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
@@ -90,6 +97,11 @@ function AtribuicoesPage() {
 
   async function salvarEdicao() {
     if (!editando || !edicao.vig || !edicao.filho || !edicao.tarefa) return;
+    const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", editando.id_filho).eq("id_vigencia", editando.id_vigencia);
+    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
+    const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
+    if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
+    if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar a atribuição."); return; }
     const atualizada = { id_vigencia: +edicao.vig, id_filho: +edicao.filho, id_tarefa: +edicao.tarefa };
     const duplicada = existentes.some((item) => item.id !== editando.id && item.id_vigencia === atualizada.id_vigencia && item.id_filho === atualizada.id_filho && item.id_tarefa === atualizada.id_tarefa);
     if (duplicada) { toast.error("Essa atribuição já existe"); return; }
