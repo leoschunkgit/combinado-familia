@@ -266,7 +266,7 @@ function OcorrenciasPage() {
            </DialogHeader>
            {registro?.tarefa.t_vigencia && (
              <div className="space-y-2">
-                <Label htmlFor="data-ocorrencia">Data</Label>
+                <Label htmlFor="data-ocorrencia">Data <span className="text-destructive" aria-hidden="true">*</span></Label>
                 <BrDateField
                   id="data-ocorrencia"
                   value={dataDe(registro.tarefa)}
@@ -287,7 +287,7 @@ function OcorrenciasPage() {
           <DialogContent>
             <DialogHeader><DialogTitle>Corrigir data do “Não fez”</DialogTitle><DialogDescription>{correcao?.tarefa.t_tarefa?.nome}</DialogDescription></DialogHeader>
             <div className="space-y-2">
-              <Label htmlFor="corrigir-data">Data</Label>
+              <Label htmlFor="corrigir-data">Data <span className="text-destructive" aria-hidden="true">*</span></Label>
                <BrDateField id="corrigir-data" value={correcao?.data ?? ""} onChange={(date) => setCorrecao((atual) => atual ? { ...atual, data: date } : null)} />
               <p className="text-xs text-muted-foreground">Para mudar o período da vigência, corrija aqui a data antes de salvá-lo.</p>
             </div>

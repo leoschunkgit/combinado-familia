@@ -135,11 +135,11 @@ function Index() {
               <p className="mb-6 mt-1 text-muted-foreground">Acesse sua conta de responsável.</p>
               <form onSubmit={entrar} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="le">Email</Label>
+                  <Label htmlFor="le">Email <span className="text-destructive" aria-hidden="true">*</span></Label>
                   <Input id="le" type="email" required value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ls">Senha</Label>
+                  <Label htmlFor="ls">Senha <span className="text-destructive" aria-hidden="true">*</span></Label>
                   <SenhaInput id="ls" required value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} />
                 </div>
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>Entrar</Button>
@@ -151,19 +151,19 @@ function Index() {
               <p className="mb-6 mt-1 text-muted-foreground">Crie a conta do responsável pela família.</p>
               <form onSubmit={cadastrar} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cn">Nome</Label>
+                  <Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label>
                   <Input id="cn" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ce">Email</Label>
+                  <Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label>
                   <Input id="ce" type="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cc">CPF</Label>
+                  <Label htmlFor="cc">CPF <span className="text-destructive" aria-hidden="true">*</span></Label>
                   <Input id="cc" inputMode="numeric" placeholder="000.000.000-00" value={cad.cpf} onChange={(e) => setCad({ ...cad, cpf: maskCpf(e.target.value) })} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cs">Senha</Label>
+                  <Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label>
                   <SenhaInput id="cs" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} />
                   <ul className="space-y-1 pt-1 text-sm" aria-live="polite">
                     {REGRAS_SENHA.map((r) => {

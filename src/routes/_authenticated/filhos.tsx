@@ -129,7 +129,7 @@ function FilhosPage() {
           <CardHeader><CardTitle>Cadastrar filho</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={salvar} className="space-y-4">
-              <div className="space-y-2"><Label>Nome</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
               <div className="space-y-2"><Label>Celular</Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
               <CamposExtras value={form} onChange={setForm} prefix="novo-filho" />
@@ -161,7 +161,7 @@ function FilhosPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader>
           <form onSubmit={salvarEdicao} className="space-y-4">
-            <div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-filho-email">Email</Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular</Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div>
             <CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" />

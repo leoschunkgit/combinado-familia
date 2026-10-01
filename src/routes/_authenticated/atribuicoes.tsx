@@ -140,10 +140,10 @@ function AtribuicoesPage() {
         <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <Pick label="Vigência" value={vig} onChange={setVig} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
-            <Pick label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
+            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+            <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <div className="space-y-2">
-              <span className="text-sm font-medium">Tarefas</span>
+              <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button type="button" variant="outline" className="w-full justify-between font-normal">
@@ -231,9 +231,9 @@ function AtribuicoesPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar atribuição</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <Pick label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
-            <Pick label="Filho" value={edicao.filho} onChange={(v) => setEdicao({ ...edicao, filho: v })} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
-            <Pick label="Tarefa" value={edicao.tarefa} onChange={(v) => setEdicao({ ...edicao, tarefa: v })} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
+            <Pick required label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+            <Pick required label="Filho" value={edicao.filho} onChange={(v) => setEdicao({ ...edicao, filho: v })} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
+            <Pick required label="Tarefa" value={edicao.tarefa} onChange={(v) => setEdicao({ ...edicao, tarefa: v })} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>

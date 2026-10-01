@@ -74,7 +74,7 @@ function TarefasPage() {
           <CardHeader><CardTitle>Cadastrar tarefa</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={salvar} className="space-y-4">
-              <div className="space-y-2"><Label>Nome</Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
               <Button type="submit" className="w-full">Cadastrar</Button>
             </form>
           </CardContent>
@@ -95,7 +95,7 @@ function TarefasPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar tarefa</DialogTitle></DialogHeader>
           <form onSubmit={salvarEdicao} className="space-y-4">
-            <div className="space-y-2"><Label htmlFor="editar-tarefa-nome">Nome</Label><Input id="editar-tarefa-nome" value={nomeEdicao} onChange={(e) => setNomeEdicao(e.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-tarefa-nome">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-tarefa-nome" value={nomeEdicao} onChange={(e) => setNomeEdicao(e.target.value)} /></div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
               <Button type="submit">Salvar alterações</Button>

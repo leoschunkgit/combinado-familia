@@ -51,8 +51,8 @@ const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) =
 
 function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
   return <div className="space-y-3">
-    <div className="space-y-2"><Label htmlFor={`${prefix}-penalidade`}>Penalidade escrita</Label><Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} /></div>
-    <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Desconto por “Não fez” (R$)</Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="20,00" value={value.valor_debito} onChange={(e) => onChange({ ...value, valor_debito: e.target.value })} /><p className="text-xs text-muted-foreground">Com mesada cadastrada, aplica-se o desconto por registro até o limite. Sem mesada, aplica-se a penalidade escrita ao atingir o limite.</p></div>
+    <div className="space-y-2"><Label htmlFor={`${prefix}-penalidade`}>Penalidade escrita <span className="text-destructive" aria-hidden="true">*</span></Label><Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} /></div>
+    <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Desconto por “Não fez” (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="20,00" value={value.valor_debito} onChange={(e) => onChange({ ...value, valor_debito: e.target.value })} /><p className="text-xs text-muted-foreground">Com mesada cadastrada, aplica-se o desconto por registro até o limite. Sem mesada, aplica-se a penalidade escrita ao atingir o limite.</p></div>
   </div>;
 }
 
@@ -159,10 +159,10 @@ function VigenciasPage() {
           <CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={salvar} className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="inicio">Data início</Label><BrDateField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
-              <div className="space-y-2"><Label htmlFor="fim">Data fim</Label><BrDateField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
+              <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
+              <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
               <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" />
-              <div className="space-y-2"><Label>Quantidade de ocorrências</Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
+              <div className="space-y-2"><Label>Quantidade de ocorrências <span className="text-destructive" aria-hidden="true">*</span></Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Número de "não fez" que aplica a penalidade.</p></div>
               <Button type="submit" className="w-full">Cadastrar</Button>
             </form>
@@ -195,10 +195,10 @@ function VigenciasPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
           <form onSubmit={salvarEdicao} className="space-y-4">
-            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início</Label><BrDateField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
-            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim</Label><BrDateField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
              <EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" />
-             <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências</Label><Input id="editar-limite" type="number" value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
+             <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-limite" type="number" value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
                {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho nesta vigência.</p>}</div>
              {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
             <DialogFooter>
