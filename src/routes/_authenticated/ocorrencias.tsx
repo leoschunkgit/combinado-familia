@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, CalendarRange, Check, Clock3, ClipboardCheck, RotateCcw, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarRange, Clock3, ClipboardCheck, RotateCcw, Search, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -112,10 +112,10 @@ function OcorrenciasPage() {
     } finally { setBusy(false); }
   }
 
-  async function desfazer(r: FilhoTarefa, cumprida: boolean, total: number) {
+  async function desfazer(r: FilhoTarefa, total: number) {
     setBusy(true);
     try {
-      if (!cumprida && r.qtd_nao_fez > 0) {
+      if (r.qtd_nao_fez > 0) {
         // The newest record is the last one inserted, even if its occurrence date was backdated.
         const { data: ultima, error: buscaErro } = await supabase.from("t_ocorrencia")
           .select("id").eq("id_filho_tarefa", r.id).order("id", { ascending: false }).limit(1).maybeSingle();
@@ -125,7 +125,7 @@ function OcorrenciasPage() {
         if (total >= (r.t_vigencia?.qtd_ocorrencia ?? 1)) await marcarGrupo(r, null);
         await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
       }
-      await atualizar(r, cumprida ? { feito: null } : { qtd_nao_fez: Math.max(0, r.qtd_nao_fez - 1), feito: null });
+      await atualizar(r, { qtd_nao_fez: Math.max(0, r.qtd_nao_fez - 1), feito: null });
     } finally { setBusy(false); }
   }
 
