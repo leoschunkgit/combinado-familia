@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -33,6 +33,7 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
+  const { data: ocorrencias = [] } = useOcorrencias();
   const [vig, setVig] = useState("");
   const [filho, setFilho] = useState("");
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
@@ -116,6 +117,7 @@ function AtribuicoesPage() {
   }
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
+  const temHistorico = (item: FilhoTarefa) => existentes.some((outra) => outra.id_filho === item.id_filho && outra.id_vigencia === item.id_vigencia && ocorrencias.some((o) => o.id_filho_tarefa === outra.id));
 
   return (
     <>
@@ -196,8 +198,8 @@ function AtribuicoesPage() {
                   <TableCell>{e.t_tarefa?.nome}</TableCell>
                   <TableCell>{e.t_vigencia && fmtVigencia(e.t_vigencia)}</TableCell>
                     <TableCell className="space-x-1 text-right">
-                      <Button variant="ghost" size="icon" onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => excluir(e.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
+                       <Button variant="ghost" size="icon" disabled={temHistorico(e)} title={temHistorico(e) ? "Filho com registro de Não fez nesta vigência" : "Editar atribuição"} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
+                     <Button variant="ghost" size="icon" disabled={temHistorico(e)} title={temHistorico(e) ? "Filho com registro de Não fez nesta vigência" : "Excluir atribuição"} onClick={() => excluir(e.id)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
