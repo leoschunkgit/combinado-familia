@@ -85,7 +85,7 @@ function AuthenticatedLayout() {
   return (
     <ActionLoadingProvider>
       <div className="min-h-screen md:flex">
-        <aside className="border-b bg-sidebar md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:border-b-0 md:border-r">
+        <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="flex items-center justify-between p-4 md:p-6">
             <Link to="/ocorrencias" className="flex items-center gap-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Home className="h-5 w-5" /></span>
@@ -94,13 +94,13 @@ function AuthenticatedLayout() {
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" /></Button>
           </div>
 
-          <nav aria-label="Navegação principal" className="hidden md:flex md:flex-col md:gap-1 md:px-4">
+          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:gap-1 md:px-4">
             {NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-4 w-4" />{label}</Link>)}
             <ContaLink />
             <Link to="/relatorio" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><FileText className="h-4 w-4" /> Relatório</Link>
             <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
           </nav>
-          <div className="hidden p-2 md:absolute md:bottom-0 md:block md:w-64">
+          <div className="hidden shrink-0 p-2 md:block md:w-64">
             <div className="rounded-lg bg-muted p-2"><p className="text-[10px] text-muted-foreground">Conectado como</p><p className="truncate text-sm font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-2 h-8 w-full text-xs" onClick={sair}><LogOut className="h-3.5 w-3.5" /> Sair</Button></div>
           </div>
         </aside>
