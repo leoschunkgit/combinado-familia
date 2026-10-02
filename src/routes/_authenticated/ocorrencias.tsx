@@ -16,6 +16,7 @@ import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVi
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
 import { useActionLoading } from "@/components/ActionLoading";
+import { VigenciaStatus } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [
@@ -202,7 +203,7 @@ function OcorrenciasPage() {
               <CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase text-muted-foreground">Vigência</p>
-                <h2 className="text-xl font-bold">{fmtVigencia(vigencia)}</h2>
+                <div className="flex flex-wrap items-center gap-2">\n                  <h2 className="text-xl font-bold">{fmtVigencia(vigencia)}</h2>\n                  <VigenciaStatus vigencia={vigencia} />\n                </div>
                 <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(vigencia)}</p>
               </div>
             </button>
