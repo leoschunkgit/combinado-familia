@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
+import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade } from "@/lib/mesada";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -72,13 +72,8 @@ function VigenciasPage() {
   const [edicao, setEdicao] = useState(form);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
 
-  const paraCampo = (valor: string) => {
-    const d = new Date(valor);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
-  };
-  const dia = (valor: string) => paraCampo(valor);
-  const paraIso = (valor: string) => new Date(valor).toISOString();
+  const paraCampo = paraCampoDataHoraBrasil;
+  const paraIso = paraIsoDataHoraBrasil;
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
@@ -135,9 +130,9 @@ function VigenciasPage() {
     if (vinculadas?.length) {
       const { data: registros, error: registrosErro } = await supabase.from("t_ocorrencia").select("created_at").in("id_filho_tarefa", vinculadas.map((item) => item.id));
       if (registrosErro) { toast.error(msgErro(registrosErro)); return; }
-      const inicio = p.data.data_inicio.slice(0, 10);
-      const fim = p.data.data_fim.slice(0, 10);
-      if (registros?.some((o) => dia(o.created_at) < inicio || dia(o.created_at) > fim)) {
+      const inicio = new Date(p.data.data_inicio).getTime();
+      const fim = new Date(p.data.data_fim).getTime();
+      if (registros?.some((o) => new Date(o.created_at).getTime() < inicio || new Date(o.created_at).getTime() > fim)) {
         toast.error("Há datas de ‘Não fez’ fora do novo período. Corrija-as na aba Ocorrências antes de salvar a vigência.");
         return;
       }
@@ -145,8 +140,8 @@ function VigenciasPage() {
     const { error } = await supabase.from("t_vigencia").update({
       ...p.data,
       ...dadosPenalidade(p.data),
-      data_inicio: inicioDoDia(p.data.data_inicio),
-      data_fim: fimDoDia(p.data.data_fim),
+      data_inicio: paraIso(p.data.data_inicio),
+      data_fim: paraIso(p.data.data_fim),
     }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência atualizada");
