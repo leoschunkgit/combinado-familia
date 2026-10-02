@@ -103,7 +103,7 @@ function AuthenticatedLayout() {
             <span className="font-display text-xl font-bold">Combinado</span>
           </Link>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={sair} aria-label="Sair">
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
         <nav aria-label="Navegação principal" className="hidden md:flex md:flex-col md:gap-1 md:px-4">
@@ -164,16 +164,16 @@ function AuthenticatedLayout() {
             <Link
               key={to}
               to={to}
-              className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors"
+              className="flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors"
               activeProps={{ className: "!bg-primary !text-primary-foreground" }}
               onClick={() => setMaisAberto(false)}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-4 w-4" />
               <span className="truncate">{label}</span>
             </Link>
           ))}
-          <button type="button" onClick={() => setMaisAberto((aberto) => !aberto)} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors ${maisAberto ? "bg-primary text-primary-foreground" : ""}`} aria-expanded={maisAberto} aria-label="Mais opções">
-            <span className="text-lg leading-none">•••</span>
+          <button type="button" onClick={() => setMaisAberto((aberto) => !aberto)} className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors ${maisAberto ? "bg-primary text-primary-foreground" : ""}`} aria-expanded={maisAberto} aria-label="Mais opções">
+            <span className="text-base leading-none">•••</span>
             <span>Mais</span>
           </button>
         </nav>
@@ -182,13 +182,13 @@ function AuthenticatedLayout() {
         <div className="fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-50 rounded-2xl border bg-background p-2 shadow-xl md:hidden" role="menu">
           <div className="grid grid-cols-3 gap-2">
             {NAV.slice(3).map(({ to, label, icon: Icon }) => (
-              <Link key={to} to={to} onClick={() => setMaisAberto(false)} className="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-sm font-medium text-muted-foreground hover:bg-muted" activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
-                <Icon className="h-5 w-5" />
+              <Link key={to} to={to} onClick={() => setMaisAberto(false)} className="flex flex-col items-center gap-1 rounded-lg p-2 text-center text-xs font-medium text-muted-foreground hover:bg-muted" activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
+                <Icon className="h-4 w-4" />
                 <span>{label}</span>
               </Link>
             ))}
             <button type="button" onClick={() => { setMaisAberto(false); abrirGuia(); }} className="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-sm font-medium text-muted-foreground hover:bg-muted">
-              <CircleHelp className="h-5 w-5" />
+              <CircleHelp className="h-4 w-4" />
               <span>Ajuda</span>
             </button>
             <button type="button" onClick={sair} className="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-sm font-medium text-muted-foreground hover:bg-muted">
