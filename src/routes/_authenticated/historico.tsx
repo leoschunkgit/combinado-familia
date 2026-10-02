@@ -9,6 +9,7 @@ import { Pick } from "@/components/Pick";
 import { fmtData, fmtVigencia, useFilhos, useOcorrencias, useVigencias } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
+import { VigenciaStatus } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({ meta: [
@@ -102,7 +103,7 @@ function HistoricoPage() {
             >
               <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${vigenciaAberta ? "" : "-rotate-90"}`} aria-hidden="true" />
               <CalendarRange className="h-5 w-5 text-primary" aria-hidden="true" />
-              <span>Vigência: {fmtVigencia(vigencia)}</span>
+              <span>Vigência: {fmtVigencia(vigencia)}</span>\n              <VigenciaStatus vigencia={vigencia} />
             </button>
             {vigenciaAberta && <div className="space-y-6">
                {gruposFilhos.map(({ filho, registros }) => {
