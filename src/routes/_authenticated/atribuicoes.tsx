@@ -15,6 +15,7 @@ import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
+import { VigenciaStatus } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -203,7 +204,7 @@ function AtribuicoesPage() {
                     <TableRow key={i}>
                       <TableCell className="font-medium">{nomeF(it.id_filho)}</TableCell>
                       <TableCell>{nomeT(it.id_tarefa)}</TableCell>
-                      <TableCell>{nomeV(it.id_vigencia)}</TableCell>
+                      <TableCell><div className="flex items-center gap-2"><span>{nomeV(it.id_vigencia)}</span>{vigencias.find((v) => v.id === it.id_vigencia) && <VigenciaStatus vigencia={vigencias.find((v) => v.id === it.id_vigencia)!} />}</div></TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => setItens(itens.filter((_, j) => j !== i))} aria-label="Remover"><X className="h-4 w-4" /></Button>
                       </TableCell>
@@ -236,7 +237,7 @@ function AtribuicoesPage() {
                 <TableRow key={e.id}>
                   <TableCell className="font-medium">{e.t_filho?.nome}</TableCell>
                   <TableCell>{e.t_tarefa?.nome}</TableCell>
-                  <TableCell>{e.t_vigencia && fmtVigencia(e.t_vigencia)}</TableCell>
+                  <TableCell>{e.t_vigencia && <div className="flex items-center gap-2"><span>{fmtVigencia(e.t_vigencia)}</span><VigenciaStatus vigencia={e.t_vigencia} /></div>}</TableCell>
                     <TableCell className="space-x-1 text-right">
                        <BlockedAction reason={temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser editada." : undefined}>
                          <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
