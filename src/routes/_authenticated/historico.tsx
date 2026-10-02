@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AlertTriangle, CalendarRange, ChevronDown, History, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarRange, ChevronDown, ChevronsDownUp, ChevronsUpDown, History, Search, ThumbsDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +35,11 @@ function HistoricoPage() {
   const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
 
+  function definirTudo(aberto: boolean) {
+    setVigenciasAbertas(Object.fromEntries(grupos.map(({ vigencia }) => [vigencia.id, aberto])));
+    setFilhosAbertos(Object.fromEntries(grupos.flatMap(({ vigencia, filhos: gruposFilhos }) => gruposFilhos.map(({ filho }) => [`${vigencia.id}-${filho.id}`, aberto]))));
+  }
+
   const lista = ocorrencias.filter((o) => {
     const ft = o.t_filho_tarefa;
     return (
@@ -63,6 +68,10 @@ function HistoricoPage() {
         description="Consulte quando cada ocorrência foi registrada e qual penalidade foi atingida."
         icon={<History className="h-6 w-6" />}
       />
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => definirTudo(true)}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
+        <Button variant="outline" size="sm" onClick={() => definirTudo(false)}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
+      </div>
       <Card className="mb-6">
         <CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
           <Pick
