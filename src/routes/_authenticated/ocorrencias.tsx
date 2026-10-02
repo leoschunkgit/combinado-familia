@@ -101,10 +101,11 @@ function OcorrenciasPage() {
       toast.error("Informe a data da ocorrência");
       return;
     }
-    const inicio = localDate(new Date(vigencia.data_inicio));
-    const fim = localDate(new Date(vigencia.data_fim));
-    if (selecionada < inicio || selecionada > fim) {
-      toast.error("A data deve estar dentro do período da vigência");
+    const momento = new Date(selecionada + "T12:00:00");
+    const inicio = new Date(vigencia.data_inicio);
+    const fim = new Date(vigencia.data_fim);
+    if (Number.isNaN(momento.getTime()) || momento.getTime() < inicio.getTime() || momento.getTime() > fim.getTime()) {
+      toast.error("A data da ocorrência deve estar dentro do período e horário da vigência");
       return;
     }
     const dataRepetida = ocorrencias.some(
