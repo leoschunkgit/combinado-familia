@@ -89,7 +89,7 @@ function HistoricoPage() {
                 ? "finalizada" as const
                 : new Date(v.data_inicio).getTime() <= Date.now() && new Date(v.data_fim).getTime() >= Date.now()
                   ? "andamento" as const
-                  : undefined
+                  : "futura" as const
             }))}
           />
           <Pick
