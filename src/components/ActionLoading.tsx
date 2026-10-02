@@ -9,7 +9,7 @@ const ActionLoadingContext = createContext<ActionLoadingContextValue | null>(nul
 
 export function useActionLoading() {
   const context = useContext(ActionLoadingContext);
-  if (!context) throw new Error("useActionLoading deve ser usado dentro de ActionLoadingProvider");
+  if (!context) throw new Error("O indicador de processamento não está disponível nesta página");
   return context;
 }
 
