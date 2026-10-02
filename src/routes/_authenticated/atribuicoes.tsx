@@ -43,6 +43,7 @@ function AtribuicoesPage() {
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<FilhoTarefa | null>(null);
   const [edicao, setEdicao] = useState({ vig: "", filho: "", tarefa: "" });
+  const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filtroVig, setFiltroVig] = useState("all");
   const [filtroFilho, setFiltroFilho] = useState("all");
   const [filtroTarefa, setFiltroTarefa] = useState("all");
@@ -239,7 +240,7 @@ function AtribuicoesPage() {
                          <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
                        </BlockedAction>
                        <BlockedAction reason={temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser excluída." : undefined}>
-                         <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => excluir(e.id)} aria-label="Excluir atribuição"><Trash2 className="h-4 w-4" /></Button>
+                         <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => setConfirmarExclusao(e.id)} aria-label="Excluir atribuição"><Trash2 className="h-4 w-4" /></Button>
                        </BlockedAction>
                   </TableCell>
                 </TableRow>
@@ -248,6 +249,16 @@ function AtribuicoesPage() {
           </Table>
         </div>
       )}
+      <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
+          <p>Tem certeza que deseja excluir esta atribuição?</p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
+            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void excluir(confirmarExclusao); setConfirmarExclusao(null); }}>Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar atribuição</DialogTitle></DialogHeader>
