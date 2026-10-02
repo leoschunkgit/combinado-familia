@@ -96,12 +96,6 @@ function VigenciasPage() {
     const vigencia = vigencias.find((v) => v.id === id);
     if (!vigencia) return;
     const agora = Date.now();
-  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
-    const aAndamento = new Date(a.data_inicio).getTime() <= agora && new Date(a.data_fim).getTime() >= agora;
-    const bAndamento = new Date(b.data_inicio).getTime() <= agora && new Date(b.data_fim).getTime() >= agora;
-    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
-    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
-  });
     const inicio = new Date(vigencia.data_inicio).getTime();
     const fim = new Date(vigencia.data_fim).getTime();
     if (inicio > agora || fim < agora) {
@@ -206,6 +200,12 @@ function VigenciasPage() {
   }
 
   const agora = Date.now();
+  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
+    const aAndamento = new Date(a.data_inicio).getTime() <= agora && new Date(a.data_fim).getTime() >= agora;
+    const bAndamento = new Date(b.data_inicio).getTime() <= agora && new Date(b.data_fim).getTime() >= agora;
+    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
+    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
+  });
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
   const totaisNaEdicao = new Map<number, number>();
