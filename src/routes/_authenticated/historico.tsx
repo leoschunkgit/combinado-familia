@@ -40,6 +40,13 @@ function HistoricoPage() {
     setFilhosAbertos(Object.fromEntries(grupos.flatMap(({ vigencia, filhos: gruposFilhos }) => gruposFilhos.map(({ filho }) => [`${vigencia.id}-${filho.id}`, aberto]))));
   }
 
+  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
+    const aAndamento = new Date(a.data_inicio).getTime() <= Date.now() && new Date(a.data_fim).getTime() >= Date.now();
+    const bAndamento = new Date(b.data_inicio).getTime() <= Date.now() && new Date(b.data_fim).getTime() >= Date.now();
+    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
+    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
+  });
+
   const lista = ocorrencias.filter((o) => {
     const ft = o.t_filho_tarefa;
     return (
@@ -47,7 +54,7 @@ function HistoricoPage() {
       (filtro.filho === "all" || ft?.id_filho === +filtro.filho) && (filtro.tarefa === "all" || ft?.id_tarefa === +filtro.tarefa)
     );
   });
-  const grupos = vigencias
+  const grupos = vigenciasOrdenadas
     .map((vigencia) => ({
       vigencia,
       filhos: filhos
@@ -75,7 +82,7 @@ function HistoricoPage() {
             value={f.vig}
             onChange={(v) => setF({ ...f, vig: v })}
             allLabel="Todas"
-            options={vigencias.map((v) => ({
+            options={vigenciasOrdenadas.map((v) => ({
               value: String(v.id),
               label: fmtVigencia(v),
               status: new Date(v.data_fim).getTime() < Date.now()
