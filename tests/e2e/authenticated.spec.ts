@@ -19,6 +19,19 @@ test.describe("Combinado Família - usuário autenticado", () => {
       await page.goto(path);
       await expect(page).not.toHaveURL(/\/404/);
       await expect(page.locator("body")).not.toContainText(/Application error|Unhandled Runtime Error/i);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+      expect(overflow).toBe(false);
     }
+  });
+
+  test("menu mobile abre e mostra as opções principais", async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 1024) >= 768, "Teste exclusivo para o projeto mobile.");
+    await page.goto("/ocorrencias");
+    await page.getByRole("button", { name: "Abrir menu" }).click();
+    await expect(page.getByRole("complementary", { name: "Menu lateral mobile" })).toBeVisible();
+    await expect(page.getByText("Relatório", { exact: true })).toBeVisible();
+    await expect(page.getByText("Ajuda", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Fechar menu" }).click();
+    await expect(page.getByRole("complementary", { name: "Menu lateral mobile" })).toBeHidden();
   });
 });
