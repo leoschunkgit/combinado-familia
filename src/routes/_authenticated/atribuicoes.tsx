@@ -178,7 +178,7 @@ function AtribuicoesPage() {
       ? "finalizada" as const
       : vigenciaEmAndamento(v)
         ? "andamento" as const
-        : undefined,
+        : "futura" as const,
   });
 
   return (
