@@ -176,7 +176,7 @@ function AtribuicoesPage() {
         <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: new Date(v.data_fim).getTime() < Date.now() ? "finalizada" as const : vigenciaEmAndamento(v) ? "andamento" as const : undefined }))} />
             <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <div className="space-y-2">
               <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
