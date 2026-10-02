@@ -129,7 +129,8 @@ function AppLayout() {
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
 
   return (
-    <div className="min-h-screen md:flex">
+    <ActionLoadingProvider>
+      <div className="min-h-screen md:flex">
       <aside className="border-b bg-sidebar md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:border-b-0 md:border-r">
         <div className="flex items-center justify-between p-4 md:p-6">
           <Link to="/ocorrencias" className="flex items-center gap-2">
@@ -214,6 +215,7 @@ function AppLayout() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </ActionLoadingProvider>
   );
 }
