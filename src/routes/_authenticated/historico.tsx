@@ -69,7 +69,15 @@ function HistoricoPage() {
             value={f.vig}
             onChange={(v) => setF({ ...f, vig: v })}
             allLabel="Todas"
-            options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))}
+            options={vigencias.map((v) => ({
+              value: String(v.id),
+              label: fmtVigencia(v),
+              status: new Date(v.data_fim).getTime() < Date.now()
+                ? "finalizada" as const
+                : new Date(v.data_inicio).getTime() <= Date.now() && new Date(v.data_fim).getTime() >= Date.now()
+                  ? "andamento" as const
+                  : undefined
+            }))}
           />
           <Pick
             label="Filho"
