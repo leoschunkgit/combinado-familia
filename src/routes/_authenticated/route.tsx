@@ -29,7 +29,6 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/ocorrencias", label: "Ocorrências", icon: ClipboardCheck },
   { to: "/historico", label: "Histórico", icon: History },
-  { to: "/relatorio", label: "Relatório", icon: FileText },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
   { to: "/filhos", label: "Filhos", icon: Users },
   { to: "/tarefas", label: "Tarefas", icon: ListTodo },
@@ -98,12 +97,11 @@ function AuthenticatedLayout() {
           <nav aria-label="Navegação principal" className="hidden md:flex md:flex-col md:gap-1 md:px-4">
             {NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-4 w-4" />{label}</Link>)}
             <ContaLink />
-          </nav>
-          <div className="hidden md:block px-3 pb-3 md:px-4">
+            <Link to="/relatorio" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><FileText className="h-4 w-4" /> Relatório</Link>
             <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
-          </div>
-          <div className="hidden p-4 md:absolute md:bottom-0 md:block md:w-64">
-            <div className="rounded-xl bg-muted p-3"><p className="text-xs text-muted-foreground">Conectado como</p><p className="truncate font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-3 w-full" onClick={sair}><LogOut className="h-4 w-4" /> Sair</Button></div>
+          </nav>
+          <div className="hidden p-2 md:absolute md:bottom-0 md:block md:w-64">
+            <div className="rounded-lg bg-muted p-2"><p className="text-[10px] text-muted-foreground">Conectado como</p><p className="truncate text-sm font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-2 h-8 w-full text-xs" onClick={sair}><LogOut className="h-3.5 w-3.5" /> Sair</Button></div>
           </div>
         </aside>
 
@@ -114,7 +112,7 @@ function AuthenticatedLayout() {
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="fixed inset-y-0 left-0 z-50 w-[78vw] max-w-xs border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="flex items-center justify-between border-b p-4"><Link to="/ocorrencias" className="flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="font-display text-lg font-bold">Combinado</span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
-          <nav className="flex flex-col gap-1 p-3">{NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" />{label}</Link>)}<ContaLink mobile /><Button variant="ghost" className="mt-2 justify-start gap-3 px-3 py-3 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><Button variant="ghost" className="justify-start gap-3 px-3 py-3 text-sm text-muted-foreground" onClick={sair} disabled={salvando}><LogOut className="h-5 w-5" /> Sair</Button></nav>
+          <nav className="flex flex-col gap-1 p-3">{NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" />{label}</Link>)}<ContaLink mobile /><Link to="/relatorio" onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><FileText className="h-5 w-5" /> Relatório</Link><Button variant="ghost" className="mt-2 justify-start gap-3 px-3 py-3 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><Button variant="ghost" className="justify-start gap-3 px-3 py-3 text-sm text-muted-foreground" onClick={sair} disabled={salvando}><LogOut className="h-5 w-5" /> Sair</Button></nav>
           <div className="absolute inset-x-3 bottom-4 rounded-xl bg-muted p-3"><p className="text-xs text-muted-foreground">Conectado como</p><p className="truncate text-sm font-semibold">{nomePai}</p></div>
         </aside></>}
 
