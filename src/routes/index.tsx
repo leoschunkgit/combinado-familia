@@ -79,6 +79,16 @@ function Index() {
     const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.senha, options: { emailRedirectTo: window.location.origin, data: { nome: parsed.data.nome, cpf: parsed.data.cpf.replace(/\D/g, "") } } });
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
+    // Com confirmações de email habilitadas, o Supabase pode devolver um usuário
+    // ofuscado quando o email já existe. Não tratar esse caso como novo cadastro.
+    if (data.user?.identities?.length === 0) {
+      toast.error("Este email já está cadastrado. Tente entrar ou recuperar sua senha.");
+      return;
+    }
+    if (!data.user) {
+      toast.error("Não foi possível concluir o cadastro. Tente novamente.");
+      return;
+    }
     if (data.session) navigate({ to: "/ocorrencias" }); else toast.success("Cadastro realizado! Confirme seu email para entrar.");
   }
 
