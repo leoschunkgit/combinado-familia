@@ -55,6 +55,7 @@ function AuthenticatedLayout() {
   const [aberto, setAberto] = useState(user.user_metadata?.["guia_concluido"] !== true);
   const [etapa, setEtapa] = useState<number | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [maisAberto, setMaisAberto] = useState(false);
 
   async function encerrar() {
     setAberto(false);
@@ -105,12 +106,12 @@ function AuthenticatedLayout() {
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
-        <nav aria-label="Navegação principal" className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:px-4">
+        <nav aria-label="Navegação principal" className="hidden md:flex md:flex-col md:gap-1 md:px-4">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
-              className={`flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${passoAtual?.to === to ? "ring-2 ring-sidebar-ring ring-offset-2 ring-offset-sidebar" : ""}`}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${passoAtual?.to === to ? "ring-2 ring-sidebar-ring ring-offset-2 ring-offset-sidebar" : ""}`}
               activeProps={{ className: "!bg-primary !text-primary-foreground" }}
             >
               <Icon className="h-4 w-4" />
@@ -118,7 +119,7 @@ function AuthenticatedLayout() {
             </Link>
           ))}
         </nav>
-        <div className="px-3 pb-3 md:px-4">
+        <div className="hidden md:block px-3 pb-3 md:px-4">
           <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos">
             <CircleHelp className="h-4 w-4" /> Ajuda
           </Button>
@@ -133,7 +134,7 @@ function AuthenticatedLayout() {
           </div>
         </div>
       </aside>
-      <main className="flex-1 p-4 md:p-10">
+      <main className="flex-1 p-4 pb-24 md:p-10 md:pb-10">
         <div className="mx-auto max-w-5xl">
           {etapa !== null && passoAtual && (
             <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5">
@@ -157,6 +158,46 @@ function AuthenticatedLayout() {
           <Outlet />
         </div>
       </main>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-sidebar/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-lg backdrop-blur md:hidden">
+        <nav aria-label="Navegação mobile" className="mx-auto grid max-w-lg grid-cols-4 gap-1">
+          {NAV.slice(0, 3).map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors"
+              activeProps={{ className: "!bg-primary !text-primary-foreground" }}
+              onClick={() => setMaisAberto(false)}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="truncate">{label}</span>
+            </Link>
+          ))}
+          <button type="button" onClick={() => setMaisAberto((aberto) => !aberto)} className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors ${maisAberto ? "bg-primary text-primary-foreground" : ""}`} aria-expanded={maisAberto} aria-label="Mais opções">
+            <span className="text-lg leading-none">•••</span>
+            <span>Mais</span>
+          </button>
+        </nav>
+      </div>
+      {maisAberto && (
+        <div className="fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-50 rounded-2xl border bg-background p-2 shadow-xl md:hidden" role="menu">
+          <div className="grid grid-cols-3 gap-2">
+            {NAV.slice(3).map(({ to, label, icon: Icon }) => (
+              <Link key={to} to={to} onClick={() => setMaisAberto(false)} className="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-sm font-medium text-muted-foreground hover:bg-muted" activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
+                <Icon className="h-5 w-5" />
+                <span>{label}</span>
+              </Link>
+            ))}
+            <button type="button" onClick={() => { setMaisAberto(false); abrirGuia(); }} className="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-sm font-medium text-muted-foreground hover:bg-muted">
+              <CircleHelp className="h-5 w-5" />
+              <span>Ajuda</span>
+            </button>
+            <button type="button" onClick={sair} className="flex flex-col items-center gap-2 rounded-xl p-3 text-center text-sm font-medium text-muted-foreground hover:bg-muted">
+              <LogOut className="h-5 w-5" />
+              <span>Sair</span>
+            </button>
+          </div>
+        </div>
+      )}
       <Dialog open={aberto} onOpenChange={(open) => { if (!open) void encerrar(); }}>
         <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-lg">
           <DialogHeader>
