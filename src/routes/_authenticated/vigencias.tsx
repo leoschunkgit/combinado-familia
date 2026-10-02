@@ -17,6 +17,7 @@ import { BlockedAction } from "@/components/BlockedAction";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade } from "@/lib/mesada";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
+import { useActionLoading } from "./route";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -59,6 +60,7 @@ function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; o
 
 function VigenciasPage() {
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
   const { data: atribuicoes = [] } = useFilhoTarefas();
@@ -169,7 +171,7 @@ function VigenciasPage() {
         <Card>
           <CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader>
           <CardContent>
-            <form onSubmit={salvar} className="space-y-4">
+            <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
               <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
               <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
               <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" />
@@ -208,14 +210,14 @@ function VigenciasPage() {
           <p>Tem certeza que deseja excluir a vigência <strong>{confirmarExclusao !== null ? (() => { const v = vigencias.find((item) => item.id === confirmarExclusao); return v ? fmtVigencia(v) : ""; })() : ""}</strong>?</p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
-            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void excluir(confirmarExclusao); setConfirmarExclusao(null); }}>Excluir</Button>
+            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
-          <form onSubmit={salvarEdicao} className="space-y-4">
+          <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="editar-inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
              <EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" />
