@@ -72,4 +72,17 @@ test("smoke: login + cadastrar filho", async ({ page }) => {
 
   await expect(page.getByText("Tarefa cadastrada")).toBeVisible();
   await expect(page.getByText(nomeTarefa, { exact: true })).toBeVisible();
+
+  await page.goto("/vigencias");
+  await expect(page.getByRole("heading", { name: "Vigências" })).toBeVisible();
+
+  await page.locator("#inicio").fill("01/10/2026 00:00");
+  await page.locator("#fim").fill("31/12/2026 23:59");
+  await page.locator("#novo-penalidade").fill("Sem videogame");
+  await page.locator("#novo-valor").fill("20,00");
+  await page.getByRole("spinbutton").fill("3");
+
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+
+  await expect(page.getByText("Vigência cadastrada")).toBeVisible();
 });
