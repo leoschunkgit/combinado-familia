@@ -51,6 +51,13 @@ function AtribuicoesPage() {
   const [filtroFilho, setFiltroFilho] = useState("all");
   const [filtroTarefa, setFiltroTarefa] = useState("all");
 
+  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
+    const aAndamento = vigenciaEmAndamento(a);
+    const bAndamento = vigenciaEmAndamento(b);
+    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
+    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
+  });
+
   const nomeF = (id: number) => filhos.find((f) => f.id === id)?.nome ?? "";
   const nomeT = (id: number) => tarefas.find((t) => t.id === id)?.nome ?? "";
   const nomeV = (id: number) => {
@@ -186,7 +193,7 @@ function AtribuicoesPage() {
         <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigencias.map(statusVigencia)} />
+            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
             <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <div className="space-y-2">
               <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
@@ -241,7 +248,7 @@ function AtribuicoesPage() {
 
       <h2 className="mb-3 text-xl font-bold">Atribuições cadastradas</h2>
       {existentes.length > 0 && <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <Pick label="Filtrar por vigência" value={filtroVig} onChange={setFiltroVig} allLabel="Todas as vigências" options={vigencias.map(statusVigencia)} />
+        <Pick label="Filtrar por vigência" value={filtroVig} onChange={setFiltroVig} allLabel="Todas as vigências" options={vigenciasOrdenadas.map(statusVigencia)} />
         <Pick label="Filtrar por filho" value={filtroFilho} onChange={setFiltroFilho} allLabel="Todos os filhos" options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
         <Pick label="Filtrar por tarefa" value={filtroTarefa} onChange={setFiltroTarefa} allLabel="Todas as tarefas" options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
       </div>}
@@ -287,7 +294,7 @@ function AtribuicoesPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar atribuição</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <Pick required label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigencias.map(statusVigencia)} />
+            <Pick required label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigenciasOrdenadas.map(statusVigencia)} />
             <Pick required label="Filho" value={edicao.filho} onChange={(v) => setEdicao({ ...edicao, filho: v })} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <Pick required label="Tarefa" value={edicao.tarefa} onChange={(v) => setEdicao({ ...edicao, tarefa: v })} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
           </div>
