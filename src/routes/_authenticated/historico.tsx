@@ -126,7 +126,7 @@ function HistoricoPage() {
                      <p className="mb-3 text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
                    )}
                   <div className="grid gap-3">
-                     {[...registros].sort((a, b) => a.id - b.id).map((o, indice) => {
+                     {[...registros].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((o, indice) => {
                       const ft = o.t_filho_tarefa;
                       const penalidade = penalizadas.has(o.id);
                       return (
