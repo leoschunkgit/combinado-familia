@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("smoke: login", async ({ page }) => {
+test("smoke: login + cadastrar filho", async ({ page }) => {
   const email = process.env.E2E_EMAIL;
   const password = process.env.E2E_PASSWORD;
 
@@ -48,4 +48,16 @@ test("smoke: login", async ({ page }) => {
   }
 
   await expect(page).toHaveURL(/\/ocorrencias/, { timeout: 15_000 });
+
+  const nomeFilho = `Teste E2E ${Date.now()}`;
+  await page.goto("/filhos");
+  await expect(page.getByRole("heading", { name: "Filhos" })).toBeVisible();
+
+  const nomeInput = page.locator("input").first();
+  await nomeInput.fill(nomeFilho);
+
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+
+  await expect(page.getByText("Filho cadastrado")).toBeVisible();
+  await expect(page.getByText(nomeFilho, { exact: true })).toBeVisible();
 });
