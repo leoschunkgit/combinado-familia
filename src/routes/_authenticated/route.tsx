@@ -1,11 +1,12 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { CalendarRange, ClipboardCheck, History, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Loader2 } from "lucide-react";
+import { CalendarRange, ClipboardCheck, History, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ActionLoadingProvider } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -47,46 +48,7 @@ const ETAPAS = [
   { to: "/ocorrencias", label: "Ocorrências", title: "Acompanhe os combinados", rule: "Registre ‘Não fez’ na data em que aconteceu. O limite soma todas as tarefas do mesmo filho na vigência; você pode consultar as datas e penalidades no Histórico." },
 ] as const;
 
-type ActionLoadingContextValue = {
-  runAction: <T,>(action: () => Promise<T>) => Promise<T>;
-};
-
-const ActionLoadingContext = createContext<ActionLoadingContextValue | null>(null);
-
-export function useActionLoading() {
-  const context = useContext(ActionLoadingContext);
-  if (!context) throw new Error("useActionLoading deve ser usado dentro de AppLayout");
-  return context;
-}
-
-function ActionLoadingProvider({ children }: { children: ReactNode }) {
-  const [loading, setLoading] = useState(false);
-
-  async function runAction<T,>(action: () => Promise<T>) {
-    setLoading(true);
-    try {
-      return await action();
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <ActionLoadingContext.Provider value={{ runAction }}>
-      {children}
-      {loading && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/60 backdrop-blur-[2px]" role="status" aria-live="polite" aria-label="Processando ação">
-          <div className="flex items-center gap-3 rounded-xl border bg-card px-5 py-4 shadow-lg">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="font-medium">Processando...</span>
-          </div>
-        </div>
-      )}
-    </ActionLoadingContext.Provider>
-  );
-}
-
-function AuthenticatedLayout() {\n  return (\n    <ActionLoadingProvider>\n      <AppLayout />\n    </ActionLoadingProvider>\n  );\n}\n\nfunction AppLayout() {
+function AuthenticatedLayout() {
   const { nomePai, user } = Route.useRouteContext();
   const navigate = useNavigate();
   const qc = useQueryClient();
