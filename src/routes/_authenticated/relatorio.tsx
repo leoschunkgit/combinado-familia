@@ -46,22 +46,33 @@ function RelatorioPage() {
     return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
   }), [vigencias]);
 
+  /*
+   * IMPORTANTE: a montagem abaixo replica a lógica da tela de Ocorrências.
+   *
+   * Na tela de Ocorrências:
+   *   1. busca as atribuições (t_filho_tarefa);
+   *   2. agrupa por vigência + filho;
+   *   3. para cada atribuição, busca os registros por:
+   *      ocorrencias.filter((o) => o.id_filho_tarefa === r.id)
+   *
+   * O relatório usa exatamente essa mesma relação. Não depende de
+   * t_filho_tarefa aninhado dentro de t_ocorrencia para descobrir os registros.
+   */
   const relatorio = useMemo(() => vigenciasOrdenadas
-    .filter((v) => filtro.vig === "all" || v.id === Number(filtro.vig))
+    .filter((vigencia) => filtro.vig === "all" || vigencia.id === Number(filtro.vig))
     .map((vigencia) => ({
       vigencia,
       filhos: filhos
         .filter((filho) => filtro.filho === "all" || filho.id === Number(filtro.filho))
         .map((filho) => {
-          const tarefas = atribuicoes.filter((a) => Number(a.id_vigencia) === Number(vigencia.id) && Number(a.id_filho) === Number(filho.id));
-          const idsTarefasVigencia = new Set(tarefas.map((tarefa) => Number(tarefa.id)));
-          const registros = ocorrencias.filter((o) => {
-            const vinculo = o.t_filho_tarefa;
-            return (
-              idsTarefasVigencia.has(Number(o.id_filho_tarefa)) ||
-              (Number(vinculo?.id_vigencia) === Number(vigencia.id) && Number(vinculo?.id_filho) === Number(filho.id))
-            );
-          });
+          const tarefas = atribuicoes.filter(
+            (r) => r.id_vigencia === vigencia.id && r.id_filho === filho.id,
+          );
+
+          const registros = tarefas.flatMap((r) =>
+            ocorrencias.filter((o) => o.id_filho_tarefa === r.id),
+          );
+
           return { filho, tarefas, registros };
         })
         .filter(({ tarefas }) => tarefas.length > 0),
@@ -131,8 +142,8 @@ function RelatorioPage() {
         }
 
         for (const tarefa of tarefas) {
-          const registrosTarefa = registros
-            .filter((o) => Number(o.t_filho_tarefa?.id_tarefa) === Number(tarefa.id))
+          const registrosTarefa = ocorrencias
+            .filter((o) => o.id_filho_tarefa === tarefa.id)
             .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
           precisa(14);
           texto(`Tarefa: ${tarefa.t_tarefa?.nome || "Tarefa"} · Não fez: ${registrosTarefa.length}`, margem + 8, largura - 8, 9, true);
@@ -212,7 +223,7 @@ function RelatorioPage() {
                       )}
                       <div className="mt-4 space-y-3">
                         {tarefas.map((tarefa) => {
-                          const registrosTarefa = registros.filter((o) => o.t_filho_tarefa?.id_tarefa === tarefa.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                          const registrosTarefa = ocorrencias.filter((o) => o.id_filho_tarefa === tarefa.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                           return (
                             <div key={tarefa.id} className="border-t pt-3">
                               <div className="flex flex-wrap justify-between gap-2">
