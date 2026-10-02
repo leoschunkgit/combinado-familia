@@ -90,7 +90,7 @@ function AuthenticatedLayout() {
           <div className="flex items-center justify-between px-4 py-3 md:px-4 md:py-4">
             <Link to="/inicio" className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span>
-              <span className="font-display text-lg font-bold">Combinado</span>
+              <span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span>
             </Link>
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" /></Button>
           </div>
