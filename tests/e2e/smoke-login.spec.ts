@@ -15,6 +15,7 @@ test("smoke: login + cadastrar filho", async ({ page }) => {
 
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.waitForTimeout(2000);
+  await page.reload();
 
   await page.goto("/ocorrencias");
   await expect(page.getByRole("heading", { name: "Ocorrências" })).toBeVisible();
