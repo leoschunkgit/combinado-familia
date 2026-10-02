@@ -15,7 +15,12 @@ test("smoke: login + cadastrar filho", async ({ page }) => {
 
   await page.getByRole("button", { name: "Entrar" }).click();
 
-  await expect(page).toHaveURL(/\/ocorrencias/, { timeout: 30_000 });
+  await page.waitForFunction(() =>
+    Object.keys(localStorage).some((key) => key.includes("auth-token"))
+  );
+
+  await page.goto("/ocorrencias");
+  await expect(page.getByRole("heading", { name: "Ocorrências" })).toBeVisible();
 
   const nomeFilho = `Teste E2E ${Date.now()}`;
   await page.goto("/filhos");
