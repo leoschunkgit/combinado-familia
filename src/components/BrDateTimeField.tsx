@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -86,29 +86,21 @@ export function BrDateTimeField({
         className="pr-11 tabular-nums"
         aria-label="Data e hora no formato DD/MM/AAAA HH:MM"
       />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="absolute right-1 top-1/2 -translate-y-1/2"
-        aria-label="Abrir calendário"
-        title="Escolher data e hora"
-        onClick={openPicker}
+      <span
+        className="pointer-events-none absolute right-1 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center"
+        aria-hidden="true"
       >
         <CalendarDays className="h-4 w-4" />
-      </Button>
+      </span>
       <input
-        ref={pickerRef}
         type="datetime-local"
         value={value}
-        min={""}
-        max={""}
         onChange={(e) => {
           if (e.target.value) onChange(e.target.value);
         }}
-        tabIndex={-1}
-        aria-hidden="true"
-        className="pointer-events-none absolute h-0 w-0 opacity-0"
+        aria-label="Escolher data e hora"
+        title="Escolher data e hora"
+        className="absolute right-1 top-1/2 z-20 h-9 w-9 -translate-y-1/2 cursor-pointer opacity-0"
       />
     </div>
   );
