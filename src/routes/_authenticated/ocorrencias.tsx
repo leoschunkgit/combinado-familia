@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, CalendarDays, CalendarRange, ChevronDown, ClipboardCheck, Pencil, RotateCcw, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarRange, ChevronDown, ChevronsDownUp, ChevronsUpDown, ClipboardCheck, Pencil, RotateCcw, Search, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +54,11 @@ function OcorrenciasPage() {
   const [correcao, setCorrecao] = useState<{ tarefa: FilhoTarefa; ocorrencia: Ocorrencia; data: string } | null>(null);
   const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
+
+  function definirTudo(aberto: boolean) {
+    setVigenciasAbertas(Object.fromEntries(grupos.map(({ vigencia }) => [vigencia.id, aberto])));
+    setFilhosAbertos(Object.fromEntries(grupos.flatMap(({ vigencia, filhos: gruposFilho }) => gruposFilho.map(({ filho }) => [`${vigencia.id}-${filho.id}`, aberto]))));
+  }
 
   const dataDe = (r: FilhoTarefa) => {
     const agora = localDate(new Date());
@@ -182,6 +187,10 @@ function OcorrenciasPage() {
   return (
     <>
       <PageHeader title="Ocorrências" description="Acompanhe os combinados de cada filho por vigência." icon={<ClipboardCheck className="h-6 w-6" />} />
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => definirTudo(true)}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
+        <Button variant="outline" size="sm" onClick={() => definirTudo(false)}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
+      </div>
       <Card className="mb-8">
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
           <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigencias.map((v) => ({
