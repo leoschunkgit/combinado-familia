@@ -7,11 +7,25 @@ export function vigenciaEmAndamento(vigencia: Vigencia) {
 }
 
 export function VigenciaStatus({ vigencia }: { vigencia: Vigencia }) {
-  if (!vigenciaEmAndamento(vigencia)) return null;
+  const agora = Date.now();
+  const inicio = new Date(vigencia.data_inicio).getTime();
+  const fim = new Date(vigencia.data_fim).getTime();
 
-  return (
-    <Badge className="h-5 px-1.5 py-0 text-[10px] font-semibold bg-success text-success-foreground">
-      Em andamento
-    </Badge>
-  );
+  if (inicio <= agora && fim >= agora) {
+    return (
+      <Badge className="h-5 px-1.5 py-0 text-[10px] font-semibold bg-success text-success-foreground">
+        Em andamento
+      </Badge>
+    );
+  }
+
+  if (fim < agora) {
+    return (
+      <Badge variant="secondary" className="h-5 px-1.5 py-0 text-[10px] font-semibold">
+        Finalizada
+      </Badge>
+    );
+  }
+
+  return null;
 }
