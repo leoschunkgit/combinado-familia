@@ -40,7 +40,22 @@ test.describe("Combinado Família - fluxo E2E completo", () => {
     await page.goto("/");
     await page.locator("#le").fill(email!);
     await page.locator("#ls").fill(password!);
+    const authResponsePromise = page.waitForResponse(
+      (response) => response.url().includes("/auth/v1/token") && response.request().method() === "POST",
+      { timeout: 15000 }
+    );
+
     await page.getByRole("button", { name: "Entrar" }).click();
+
+    const authResponse = await authResponsePromise;
+    const authStatus = authResponse.status();
+
+    if (authStatus !== 200) {
+      throw new Error(
+        `LOGIN_FAILED_AUTH: Supabase rejeitou a autenticação com HTTP ${authStatus}. ` +
+        "Isso normalmente indica credencial inválida, email não confirmado ou configuração de autenticação."
+      );
+    }
 
     try {
       await page.waitForURL(/\/ocorrencias/, { timeout: 15000 });
