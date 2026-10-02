@@ -13,7 +13,7 @@ export function Pick({
   label: string;
   value: string;
   onChange: (v: string) => void;
-  options: { value: string; label: string; status?: "andamento" | "finalizada" | undefined }[];
+  options: { value: string; label: string; status?: "andamento" | "finalizada" | "futura" | undefined }[];
   placeholder?: string;
   allLabel?: string;
   required?: boolean;
@@ -28,7 +28,7 @@ export function Pick({
           {options.map((o) => (
             <SelectItem key={o.value} value={o.value}>
               <span className="flex items-center gap-2">
-                {o.status && <span className={`h-2 w-2 shrink-0 rounded-full ${o.status === "andamento" ? "bg-green-500" : "bg-red-500"}`} aria-hidden="true" />}
+                {o.status && <span className={`h-2 w-2 shrink-0 rounded-full ${o.status === "andamento" ? "bg-green-300" : o.status === "finalizada" ? "bg-red-300" : "bg-gray-300"}`} aria-hidden="true" />}
                 <span>{o.label}</span>
               </span>
             </SelectItem>
