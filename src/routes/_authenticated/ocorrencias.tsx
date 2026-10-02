@@ -69,7 +69,14 @@ function OcorrenciasPage() {
     return agora < inicio ? inicio : agora > fim ? fim : agora;
   };
 
-  const grupos = vigencias
+  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
+    const aAndamento = vigenciaEmAndamento(a);
+    const bAndamento = vigenciaEmAndamento(b);
+    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
+    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
+  });
+
+  const grupos = vigenciasOrdenadas
     .filter((v) => filtro.vig === "all" || v.id === Number(filtro.vig))
     .map((vigencia) => ({
       vigencia,
@@ -189,7 +196,7 @@ function OcorrenciasPage() {
       <PageHeader title="Ocorrências" description="Acompanhe os combinados de cada filho por vigência." icon={<ClipboardCheck className="h-6 w-6" />} />
       <Card className="mb-6">
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
-          <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigencias.map((v) => ({
+          <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({
               value: String(v.id),
               label: fmtVigencia(v),
               status: new Date(v.data_fim).getTime() < Date.now()
