@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { msgErro, useTarefas, type Tarefa } from "@/lib/db";
+import { useActionLoading } from "./route";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/tarefas")({
 
 function TarefasPage() {
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const { data: tarefas = [] } = useTarefas();
   const [nome, setNome] = useState("");
   const [editando, setEditando] = useState<Tarefa | null>(null);
@@ -74,7 +76,7 @@ function TarefasPage() {
         <Card>
           <CardHeader><CardTitle>Cadastrar tarefa</CardTitle></CardHeader>
           <CardContent>
-            <form onSubmit={salvar} className="space-y-4">
+            <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
               <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
               <Button type="submit" className="w-full">Cadastrar</Button>
             </form>
@@ -98,14 +100,14 @@ function TarefasPage() {
           <p>Tem certeza que deseja excluir <strong>{tarefas.find((t) => t.id === confirmarExclusao)?.nome}</strong>?</p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
-            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void excluir(confirmarExclusao); setConfirmarExclusao(null); }}>Excluir</Button>
+            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar tarefa</DialogTitle></DialogHeader>
-          <form onSubmit={salvarEdicao} className="space-y-4">
+          <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="editar-tarefa-nome">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-tarefa-nome" value={nomeEdicao} onChange={(e) => setNomeEdicao(e.target.value)} /></div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
