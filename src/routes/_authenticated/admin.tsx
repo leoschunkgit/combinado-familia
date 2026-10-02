@@ -22,7 +22,6 @@ function SenhaInput({ value, onChange, id }: { value: string; onChange: (v: stri
 }
 
 function Admin() {
-  const { data: { user } } = { data: { user: null as any } };
   const [nome, setNome] = useState("");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
