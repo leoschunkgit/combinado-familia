@@ -53,12 +53,15 @@ function RelatorioPage() {
       filhos: filhos
         .filter((filho) => filtro.filho === "all" || filho.id === Number(filtro.filho))
         .map((filho) => {
-          const tarefas = atribuicoes.filter((a) => a.id_vigencia === vigencia.id && a.id_filho === filho.id);
-          const idsTarefasVigencia = new Set(tarefas.map((tarefa) => tarefa.id));
-          const registros = ocorrencias.filter((o) =>
-            idsTarefasVigencia.has(o.id_filho_tarefa) ||
-            (o.t_filho_tarefa?.id_vigencia === vigencia.id && o.t_filho_tarefa?.id_filho === filho.id)
-          );
+          const tarefas = atribuicoes.filter((a) => Number(a.id_vigencia) === Number(vigencia.id) && Number(a.id_filho) === Number(filho.id));
+          const idsTarefasVigencia = new Set(tarefas.map((tarefa) => Number(tarefa.id)));
+          const registros = ocorrencias.filter((o) => {
+            const vinculo = o.t_filho_tarefa;
+            return (
+              idsTarefasVigencia.has(Number(o.id_filho_tarefa)) ||
+              (Number(vinculo?.id_vigencia) === Number(vigencia.id) && Number(vinculo?.id_filho) === Number(filho.id))
+            );
+          });
           return { filho, tarefas, registros };
         })
         .filter(({ tarefas }) => tarefas.length > 0),
@@ -129,7 +132,7 @@ function RelatorioPage() {
 
         for (const tarefa of tarefas) {
           const registrosTarefa = registros
-            .filter((o) => o.t_filho_tarefa?.id_tarefa === tarefa.id)
+            .filter((o) => Number(o.t_filho_tarefa?.id_tarefa) === Number(tarefa.id))
             .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
           precisa(14);
           texto(`Tarefa: ${tarefa.t_tarefa?.nome || "Tarefa"} · Não fez: ${registrosTarefa.length}`, margem + 8, largura - 8, 9, true);
