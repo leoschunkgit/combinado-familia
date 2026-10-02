@@ -117,8 +117,15 @@ function OcorrenciasPage() {
     const momento = new Date(selecionada + "T12:00:00");
     const inicio = new Date(vigencia.data_inicio);
     const fim = new Date(vigencia.data_fim);
-    if (Number.isNaN(momento.getTime()) || momento.getTime() < inicio.getTime() || momento.getTime() > fim.getTime()) {
-      toast.error("A data da ocorrência deve estar dentro do período e horário da vigência");
+    const hoje = localDate(new Date());
+    const limiteMaximo = localDate(new Date(Math.min(fim.getTime(), Date.now())));
+    if (
+      Number.isNaN(momento.getTime()) ||
+      selecionada < localDate(inicio) ||
+      selecionada > limiteMaximo ||
+      selecionada > hoje
+    ) {
+      toast.error("A data do “Não fez” deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência");
       return;
     }
     const dataRepetida = ocorrencias.some(
@@ -331,10 +338,10 @@ function OcorrenciasPage() {
                   id="data-ocorrencia"
                   value={dataDe(registro.tarefa)}
                   min={localDate(new Date(registro.tarefa.t_vigencia.data_inicio))}
-                  max={localDate(new Date(registro.tarefa.t_vigencia.data_fim))}
+                  max={localDate(new Date(Math.min(new Date(registro.tarefa.t_vigencia.data_fim).getTime(), Date.now())))}
                   onChange={(date) => setDatas({ ...datas, [registro.tarefa.id]: date })}
                 />
-               <p className="text-xs text-muted-foreground">A data deve estar dentro da vigência.</p>
+               <p className="text-xs text-muted-foreground">A data deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência.</p>
              </div>
            )}
            <DialogFooter>
