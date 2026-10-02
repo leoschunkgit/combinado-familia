@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { BrDateField } from "@/components/BrDateField";
+import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade } from "@/lib/mesada";
@@ -39,7 +39,7 @@ const schema = z
     valor_debito: z.string(),
     qtd_ocorrencia: z.coerce.number().int().min(1, "Mínimo de 1 ocorrência").max(31, "Máximo de 31"),
   })
-  .refine((v) => v.data_fim >= v.data_inicio, "A data fim deve ser igual ou posterior à data início")
+  .refine((v) => /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })\n  .refine((v) => /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })\n  .refine((v) => new Date(v.data_fim).getTime() >= new Date(v.data_inicio).getTime(), "A data/hora fim deve ser igual ou posterior à data/hora início")
   .refine((v) => v.penalidade.length >= 2, { message: "Informe a penalidade escrita", path: ["penalidade"] })
   .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
@@ -73,11 +73,10 @@ function VigenciasPage() {
   const paraCampo = (valor: string) => {
     const d = new Date(valor);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
   };
   const dia = (valor: string) => paraCampo(valor);
-  const inicioDoDia = (data: string) => new Date(`${data}T00:00:00`).toISOString();
-  const fimDoDia = (data: string) => new Date(`${data}T23:59:59.999`).toISOString();
+  const paraIso = (valor: string) => new Date(valor).toISOString();
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
@@ -86,8 +85,8 @@ function VigenciasPage() {
     const { error } = await supabase.from("t_vigencia").insert({
       ...p.data,
       ...dadosPenalidade(p.data),
-      data_inicio: inicioDoDia(p.data.data_inicio),
-      data_fim: fimDoDia(p.data.data_fim),
+      data_inicio: paraIso(p.data.data_inicio),
+      data_fim: paraIso(p.data.data_fim),
     });
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada");
@@ -162,7 +161,7 @@ function VigenciasPage() {
   for (const a of vinculadasNaEdicao) totaisNaEdicao.set(a.id_filho, (totaisNaEdicao.get(a.id_filho) ?? 0) + a.qtd_nao_fez);
   const minimoNaEdicao = Math.max(1, ...totaisNaEdicao.values());
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) &&
-    (dia(o.created_at) < edicao.data_inicio.slice(0, 10) || dia(o.created_at) > edicao.data_fim.slice(0, 10))) : [];
+    (new Date(o.created_at).getTime() < new Date(edicao.data_inicio).getTime() || new Date(o.created_at).getTime() > new Date(edicao.data_fim).getTime())) : [];
 
   return (
     <>
