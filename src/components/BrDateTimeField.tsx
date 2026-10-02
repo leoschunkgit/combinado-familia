@@ -53,7 +53,6 @@ export function BrDateTimeField({
   max?: string;
 }) {
   const [displayValue, setDisplayValue] = useState(() => displayFromValue(value));
-  const pickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDisplayValue(displayFromValue(value));
@@ -71,17 +70,6 @@ export function BrDateTimeField({
     if (masked.length === 16) {
       const internalValue = toInternalValue(masked);
       if (internalValue) onChange(internalValue);
-    }
-  };
-
-  const openPicker = () => {
-    const picker = pickerRef.current;
-    if (!picker) return;
-    if (typeof picker.showPicker === "function") {
-      picker.showPicker();
-    } else {
-      picker.focus();
-      picker.click();
     }
   };
 
