@@ -116,7 +116,7 @@ function HistoricoPage() {
 
       <div className="space-y-8">
         {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
-          const vigenciaAberta = vigenciasAbertas[vigencia.id] !== false;
+          const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
           return (
           <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
             <button
@@ -133,7 +133,7 @@ function HistoricoPage() {
             {vigenciaAberta && <div className="space-y-6">
                {gruposFilhos.map(({ filho, registros }) => {
                  const chaveFilho = `${vigencia.id}-${filho.id}`;
-                 const filhoAberto = filhosAbertos[chaveFilho] !== false;
+                 const filhoAberto = filhosAbertos[chaveFilho] === true;
                  return (
                 <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
                   <button
