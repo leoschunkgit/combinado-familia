@@ -183,7 +183,15 @@ function OcorrenciasPage() {
       <PageHeader title="Ocorrências" description="Acompanhe os combinados de cada filho por vigência." icon={<ClipboardCheck className="h-6 w-6" />} />
       <Card className="mb-8">
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
-          <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+          <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigencias.map((v) => ({
+              value: String(v.id),
+              label: fmtVigencia(v),
+              status: new Date(v.data_fim).getTime() < Date.now()
+                ? "finalizada" as const
+                : new Date(v.data_inicio).getTime() <= Date.now() && new Date(v.data_fim).getTime() >= Date.now()
+                  ? "andamento" as const
+                  : undefined
+            }))} />
           <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
           <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
         </CardContent>
