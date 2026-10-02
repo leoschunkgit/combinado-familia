@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { maskCpf, msgErro } from "@/lib/db";
+import { msgErro } from "@/lib/db";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Combinado — Tarefas da família com regras claras" }, { name: "description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:title", content: "Combinado — Tarefas da família com regras claras" }, { property: "og:description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -25,7 +25,6 @@ const senhaValida = (s: string) => REGRAS_SENHA.every((r) => r.ok(s));
 const cadastroSchema = z.object({
   nome: z.string().trim().min(2, "Informe o nome").max(100),
   email: z.string().trim().email("Email inválido").max(255),
-  cpf: z.string().refine((v) => v.replace(/\D/g, "").length === 11, "CPF deve ter 11 dígitos"),
   senha: z.string().max(72).refine(senhaValida, "A senha não atende aos requisitos abaixo"),
   confirmarSenha: z.string(),
 }).refine((data) => data.senha === data.confirmarSenha, {
@@ -41,7 +40,7 @@ function SenhaInput(props: React.ComponentProps<typeof Input>) {
 function Index() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [cad, setCad] = useState({ nome: "", email: "", cpf: "", senha: "", confirmarSenha: "" });
+  const [cad, setCad] = useState({ nome: "", email: "", senha: "", confirmarSenha: "" });
   const [login, setLogin] = useState({ email: "", senha: "" });
   const [recuperar, setRecuperar] = useState(false);
   const [emailRecuperacao, setEmailRecuperacao] = useState("");
@@ -76,7 +75,7 @@ function Index() {
     const parsed = cadastroSchema.safeParse(cad);
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos"); return; }
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.senha, options: { emailRedirectTo: window.location.origin, data: { nome: parsed.data.nome, cpf: parsed.data.cpf.replace(/\D/g, "") } } });
+    const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.senha, options: { emailRedirectTo: window.location.origin, data: { nome: parsed.data.nome } } });
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
     // Com confirmações de email habilitadas, o Supabase pode devolver um usuário
@@ -128,7 +127,6 @@ function Index() {
               <form onSubmit={cadastrar} className="space-y-4">
                 <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" type="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
-                <div className="space-y-2"><Label htmlFor="cc">CPF <span className="text-destructive" aria-hidden="true"> *</span></Label><Input id="cc" inputMode="numeric" placeholder="000.000.000-00" value={cad.cpf} onChange={(e) => setCad({ ...cad, cpf: maskCpf(e.target.value) })} /></div>
                 <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="space-y-1 pt-1 text-sm" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-success" : "text-muted-foreground"}`}>{ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{r.label}</li>; })}</ul></div>
                 <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>Cadastrar</Button>
