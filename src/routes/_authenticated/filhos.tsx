@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useVigencias, type Filho } from "@/lib/db";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
-import { useActionLoading } from "./route";
+import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [

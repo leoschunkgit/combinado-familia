@@ -21,3 +21,4 @@
 - Child age/allowance are nullable; nullable `tem_mesada_opcional` is the source of truth, while legacy `tem_mesada` remains for compatibility. Selecting allowance requires a value in UI and DB; unselecting clears it.
 - Validities require both penalties: allowance children get debits; others get written penalty at the limit. Legacy rows may lack one. Assignment and linked child/validity edits require debit × limit ≤ allowance, enforced in UI and DB; standalone creation is free. Debits never mutate allowance.
 - Persist guide completion in auth metadata, not local storage, so first-access guidance follows the parent's account across devices.
+- Shared React contexts used by route components live outside route modules so TanStack route code splitting cannot duplicate their instances.

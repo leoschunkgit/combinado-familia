@@ -17,7 +17,7 @@ import { BlockedAction } from "@/components/BlockedAction";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade } from "@/lib/mesada";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
-import { useActionLoading } from "./route";
+import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
