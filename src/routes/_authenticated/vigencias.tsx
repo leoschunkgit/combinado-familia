@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, Pencil, Trash2 } from "lucide-react";
+import { CalendarRange, CheckCircle2, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,7 @@ function VigenciasPage() {
   const [form, setForm] = useState<VigenciaForm>(vazio);
   const [editando, setEditando] = useState<Vigencia | null>(null);
   const [edicao, setEdicao] = useState(form);
-  const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
+  const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);\n  const [confirmarFinalizacao, setConfirmarFinalizacao] = useState<number | null>(null);
 
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
@@ -92,7 +92,7 @@ function VigenciasPage() {
     qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
-  async function excluir(id: number) {
+  async function finalizar(id: number) {\n    const vigencia = vigencias.find((v) => v.id === id);\n    if (!vigencia) return;\n    const agora = Date.now();\n    const inicio = new Date(vigencia.data_inicio).getTime();\n    const fim = new Date(vigencia.data_fim).getTime();\n    if (inicio > agora || fim < agora) {\n      toast.error("Somente vigências em andamento podem ser finalizadas");\n      return;\n    }\n    const { error } = await supabase.from("t_vigencia").update({ data_fim: new Date().toISOString() }).eq("id", id);\n    if (error) { toast.error(msgErro(error)); return; }\n    toast.success("Vigência finalizada");\n    qc.invalidateQueries({ queryKey: ["vigencias"] });\n  }\n\n  async function excluir(id: number) {
     const vigencia = vigencias.find((v) => v.id === id);
     if (vigencia && new Date(vigencia.data_fim).getTime() < Date.now()) {
       toast.error("Vigências finalizadas não podem ser excluídas");
@@ -211,7 +211,7 @@ function VigenciasPage() {
           })}
         </div>
       </div>
-      <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
+      <Dialog open={confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}>\n        <DialogContent>\n          <DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader>\n          <p>Tem certeza que deseja finalizar a vigência <strong>{confirmarFinalizacao !== null ? (() => { const v = vigencias.find((item) => item.id === confirmarFinalizacao); return v ? fmtVigencia(v) : ""; })() : ""}</strong>?</p>\n          <p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora. Depois disso, esta vigência será considerada finalizada e não poderá mais ser editada ou excluída.</p>\n          <DialogFooter>\n            <Button type="button" variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button>\n            <Button type="button" onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button>\n          </DialogFooter>\n        </DialogContent>\n      </Dialog>\n      <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
           <p>Tem certeza que deseja excluir a vigência <strong>{confirmarExclusao !== null ? (() => { const v = vigencias.find((item) => item.id === confirmarExclusao); return v ? fmtVigencia(v) : ""; })() : ""}</strong>?</p>
