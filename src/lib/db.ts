@@ -139,10 +139,10 @@ export function msgErro(error: { message?: string } | null): string {
 }
 
 export const fmtData = (d: string) =>
-  new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
 
 export const fmtDataHora = (d: string) =>
-  new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" });
 
 export const fmtVigencia = (v: Pick<Vigencia, "data_inicio" | "data_fim">) =>
   `${fmtDataHora(v.data_inicio)} à ${fmtDataHora(v.data_fim)}`;
