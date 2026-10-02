@@ -14,6 +14,7 @@ import { BlockedAction } from "@/components/BlockedAction";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
+import { useActionLoading } from "./route";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -31,6 +32,7 @@ type Item = { id_vigencia: number; id_filho: number; id_tarefa: number };
 
 function AtribuicoesPage() {
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
@@ -211,7 +213,7 @@ function AtribuicoesPage() {
               </Table>
             </div>
           )}
-          <Button onClick={cadastrar} disabled={saving || itens.length === 0}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
+          <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
         </CardContent>
       </Card>
 
@@ -255,7 +257,7 @@ function AtribuicoesPage() {
           <p>Tem certeza que deseja excluir esta atribuição?</p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
-            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void excluir(confirmarExclusao); setConfirmarExclusao(null); }}>Excluir</Button>
+            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -269,7 +271,7 @@ function AtribuicoesPage() {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
-            <Button type="button" disabled={saving} onClick={salvarEdicao}><Check className="h-4 w-4" /> Salvar alterações</Button>
+            <Button type="button" disabled={saving} onClick={() => { void runAction(salvarEdicao); }}><Check className="h-4 w-4" /> Salvar alterações</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
