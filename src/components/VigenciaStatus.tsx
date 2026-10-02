@@ -13,7 +13,7 @@ export function VigenciaStatus({ vigencia }: { vigencia: Pick<Vigencia, "data_in
 
   if (inicio <= agora && fim >= agora) {
     return (
-      <Badge className="h-5 px-1.5 py-0 text-[10px] font-semibold bg-success text-success-foreground">
+      <Badge className="h-5 max-w-full shrink-0 whitespace-nowrap px-1.5 py-0 text-[10px] font-semibold bg-success text-success-foreground">
         Em andamento
       </Badge>
     );
@@ -21,7 +21,7 @@ export function VigenciaStatus({ vigencia }: { vigencia: Pick<Vigencia, "data_in
 
   if (fim < agora) {
     return (
-      <Badge variant="secondary" className="h-5 px-1.5 py-0 text-[10px] font-semibold">
+      <Badge variant="secondary" className="h-5 max-w-full shrink-0 whitespace-nowrap px-1.5 py-0 text-[10px] font-semibold">
         Finalizada
       </Badge>
     );
