@@ -119,5 +119,13 @@ function RedefinirSenha() {
 }
 
 export const Route = createFileRoute("/redefinir-senha")({
+  head: () => ({ meta: [
+    { title: "Redefinir senha — Combinado" },
+    { name: "description", content: "Redefina a senha da sua conta no Combinado." },
+    { property: "og:title", content: "Redefinir senha — Combinado" },
+    { property: "og:description", content: "Redefina a senha da sua conta no Combinado." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: RedefinirSenha,
 });

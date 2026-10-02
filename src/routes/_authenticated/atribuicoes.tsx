@@ -98,7 +98,7 @@ function AtribuicoesPage() {
     const { error } = await supabase.from("t_filho_tarefa").insert(itens);
     setSaving(false);
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success(${${itens.length} atribuição(ões) cadastrada(s)});
+    toast.success(`${itens.length} atribuição(ões) cadastrada(s)`);
     setItens([]);
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
@@ -193,7 +193,7 @@ function AtribuicoesPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button type="button" variant="outline" className="w-full justify-between font-normal">
-                    <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : ${${tarefasSelecionadas.length} tarefa(s) selecionada(s)}}</span>
+                     <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
                     <ChevronsUpDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -235,7 +235,7 @@ function AtribuicoesPage() {
               </Table>
             </div>
           )}
-          <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && vigenciaEmAndamento(v)))}>Cadastrar {itens.length > 0 && ${${itens.length}}}</Button>
+           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && vigenciaEmAndamento(v)))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
         </CardContent>
       </Card>
 
