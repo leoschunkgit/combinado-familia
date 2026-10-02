@@ -16,7 +16,7 @@ import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVi
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
 import { useActionLoading } from "@/components/ActionLoading";
-import { VigenciaStatus } from "@/components/VigenciaStatus";
+import { VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [
@@ -95,6 +95,7 @@ function OcorrenciasPage() {
   async function naoFez(r: FilhoTarefa, total: number) {
     const vigencia = r.t_vigencia;
     if (!vigencia) return;
+    if (!vigenciaEmAndamento(vigencia)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
     const selecionada = datas[r.id] ?? dataDe(r);
     if (!selecionada) {
       toast.error("Informe a data da ocorrência");
@@ -137,6 +138,7 @@ function OcorrenciasPage() {
   }
 
   async function desfazer(r: FilhoTarefa, total: number) {
+    if (!r.t_vigencia || !vigenciaEmAndamento(r.t_vigencia)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
     setBusy(true);
     try {
       if (r.qtd_nao_fez > 0) {
@@ -157,7 +159,8 @@ function OcorrenciasPage() {
     if (!correcao || busy) return;
     const { tarefa, ocorrencia, data } = correcao;
     const vigencia = tarefa.t_vigencia;
-    if (!vigencia || !/^\d{4}-\d{2}-\d{2}$/.test(data) || Number.isNaN(new Date(`${data}T12:00:00`).getTime())) {
+    if (!vigencia || !vigenciaEmAndamento(vigencia)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || Number.isNaN(new Date(`${data}T12:00:00`).getTime())) {
       toast.error("Informe uma data válida para a ocorrência");
       return;
     }
@@ -250,7 +253,7 @@ function OcorrenciasPage() {
                     <div className="divide-y border-t">
                       {tarefas.map((r) => {
                         const registros = ocorrencias.filter((o) => o.id_filho_tarefa === r.id).sort((a, b) => a.id - b.id);
-                         const bloqueada = penalizado;
+                         const bloqueada = penalizado || !vigenciaEmAndamento(vigencia);
                         return (
                           <div key={r.id} className="py-3">
                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2">
@@ -265,7 +268,7 @@ function OcorrenciasPage() {
                                       <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                                         <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}{comDesconto ? ` · −${reais(valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id <= o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length) - valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id < o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length))}` : ""}</span>
                                        {penalizadas.has(o.id) && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy} title="Corrigir data" aria-label={`Corrigir data de ${occurrenceDate.format(new Date(o.created_at))}`} onClick={() => setCorrecao({ tarefa: r, ocorrencia: o, data: localDate(new Date(o.created_at)) })}><Pencil className="h-3 w-3" /></Button>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy || !vigenciaEmAndamento(vigencia)} title="Corrigir data" aria-label={`Corrigir data de ${occurrenceDate.format(new Date(o.created_at))}`} onClick={() => setCorrecao({ tarefa: r, ocorrencia: o, data: localDate(new Date(o.created_at)) })}><Pencil className="h-3 w-3" /></Button>
                                     </li>
                                   ))}
                                 </ul>
@@ -273,7 +276,7 @@ function OcorrenciasPage() {
                             </div>
                               <div className="mt-2 flex justify-end">
                               {(r.qtd_nao_fez > 0) && (
-                                <Button size="sm" variant="ghost" disabled={busy} onClick={() => { void runAction(() => desfazer(r, total)); }}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
+                                <Button size="sm" variant="ghost" disabled={busy || !vigenciaEmAndamento(vigencia)} onClick={() => { void runAction(() => desfazer(r, total)); }}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
                               )}
                             </div>
                           </div>
