@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AlertTriangle, CalendarRange, History, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarRange, ChevronDown, History, Search, ThumbsDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +32,8 @@ function HistoricoPage() {
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const [f, setF] = useState({ vig: "all", filho: "all" });
   const [filtro, setFiltro] = useState(f);
+  const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
+  const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
 
   const lista = ocorrencias.filter((o) => {
     const ft = o.t_filho_tarefa;
@@ -88,16 +90,36 @@ function HistoricoPage() {
       )}
 
       <div className="space-y-8">
-        {grupos.map(({ vigencia, filhos: gruposFilhos }) => (
+        {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
+          const vigenciaAberta = vigenciasAbertas[vigencia.id] !== false;
+          return (
           <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
-            <h2 className="mb-3 flex items-center gap-2 border-b pb-3 text-lg font-bold">
+            <button
+              type="button"
+              className="mb-3 flex w-full items-center gap-2 border-b pb-3 text-left text-lg font-bold"
+              aria-expanded={vigenciaAberta}
+              onClick={() => setVigenciasAbertas((atual) => ({ ...atual, [vigencia.id]: !vigenciaAberta }))}
+            >
+              <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${vigenciaAberta ? "" : "-rotate-90"}`} aria-hidden="true" />
               <CalendarRange className="h-5 w-5 text-primary" aria-hidden="true" />
               <span>Vigência: {fmtVigencia(vigencia)}</span>
-            </h2>
-            <div className="space-y-6">
-               {gruposFilhos.map(({ filho, registros }) => (
+            </button>
+            {vigenciaAberta && <div className="space-y-6">
+               {gruposFilhos.map(({ filho, registros }) => {
+                 const chaveFilho = `${vigencia.id}-${filho.id}`;
+                 const filhoAberto = filhosAbertos[chaveFilho] !== false;
+                 return (
                 <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
-                  <h3 className="mb-3 font-display font-bold text-foreground">{filho.nome}</h3>
+                  <button
+                    type="button"
+                    className="mb-3 flex w-full items-center gap-2 text-left font-display font-bold text-foreground"
+                    aria-expanded={filhoAberto}
+                    onClick={() => setFilhosAbertos((atual) => ({ ...atual, [chaveFilho]: !filhoAberto }))}
+                  >
+                    <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${filhoAberto ? "" : "-rotate-90"}`} aria-hidden="true" />
+                    <span>{filho.nome}</span>
+                  </button>
+                  {filhoAberto && <>
                    {usaDesconto(filho, vigencia) ? (
                      <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registros.length)}</p>
                    ) : (
@@ -145,11 +167,14 @@ function HistoricoPage() {
                       );
                     })}
                   </div>
+                  </>}
                 </section>
-              ))}
-            </div>
+                );
+              })}
+            </div>}
           </section>
-        ))}
+          );
+        })}
       </div>
     </>
   );
