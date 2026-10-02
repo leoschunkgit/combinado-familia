@@ -98,7 +98,7 @@ function AtribuicoesPage() {
     const { error } = await supabase.from("t_filho_tarefa").insert(itens);
     setSaving(false);
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success(`${itens.length} atribuição(ões) cadastrada(s)`);
+    toast.success(${${itens.length} atribuição(ões) cadastrada(s)});
     setItens([]);
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
@@ -164,6 +164,16 @@ function AtribuicoesPage() {
     (filtroTarefa === "all" || item.id_tarefa === Number(filtroTarefa))
   );
 
+  const statusVigencia = (v: (typeof vigencias)[number]) => ({
+    value: String(v.id),
+    label: fmtVigencia(v),
+    status: new Date(v.data_fim).getTime() < Date.now()
+      ? "finalizada" as const
+      : vigenciaEmAndamento(v)
+        ? "andamento" as const
+        : undefined,
+  });
+
   return (
     <>
       <PageHeader title="Filho na tarefa" description="Associe tarefas aos filhos dentro de uma vigência." icon={<Link2 className="h-6 w-6" />} />
@@ -176,14 +186,14 @@ function AtribuicoesPage() {
         <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: new Date(v.data_fim).getTime() < Date.now() ? "finalizada" as const : vigenciaEmAndamento(v) ? "andamento" as const : undefined }))} />
+            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigencias.map(statusVigencia)} />
             <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <div className="space-y-2">
               <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button type="button" variant="outline" className="w-full justify-between font-normal">
-                    <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
+                    <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : ${${tarefasSelecionadas.length} tarefa(s) selecionada(s)}}</span>
                     <ChevronsUpDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -225,13 +235,13 @@ function AtribuicoesPage() {
               </Table>
             </div>
           )}
-          <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && vigenciaEmAndamento(v)))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
+          <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && vigenciaEmAndamento(v)))}>Cadastrar {itens.length > 0 && ${${itens.length}}}</Button>
         </CardContent>
       </Card>
 
       <h2 className="mb-3 text-xl font-bold">Atribuições cadastradas</h2>
       {existentes.length > 0 && <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <Pick label="Filtrar por vigência" value={filtroVig} onChange={setFiltroVig} allLabel="Todas as vigências" options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+        <Pick label="Filtrar por vigência" value={filtroVig} onChange={setFiltroVig} allLabel="Todas as vigências" options={vigencias.map(statusVigencia)} />
         <Pick label="Filtrar por filho" value={filtroFilho} onChange={setFiltroFilho} allLabel="Todos os filhos" options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
         <Pick label="Filtrar por tarefa" value={filtroTarefa} onChange={setFiltroTarefa} allLabel="Todas as tarefas" options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
       </div>}
@@ -277,7 +287,7 @@ function AtribuicoesPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Editar atribuição</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <Pick required label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigencias.map((v) => ({ value: String(v.id), label: fmtVigencia(v) }))} />
+            <Pick required label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigencias.map(statusVigencia)} />
             <Pick required label="Filho" value={edicao.filho} onChange={(v) => setEdicao({ ...edicao, filho: v })} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <Pick required label="Tarefa" value={edicao.tarefa} onChange={(v) => setEdicao({ ...edicao, tarefa: v })} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
           </div>
