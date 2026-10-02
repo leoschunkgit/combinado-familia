@@ -46,7 +46,7 @@ function Index() {
   const [emailRecuperacao, setEmailRecuperacao] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate({ to: "/ocorrencias" }); });
+    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate({ to: "/inicio" }); });
   }, [navigate]);
 
   async function entrar(e: FormEvent) {
@@ -88,7 +88,7 @@ function Index() {
       toast.error("Não foi possível concluir o cadastro. Tente novamente.");
       return;
     }
-    if (data.session) navigate({ to: "/ocorrencias" }); else toast.success("Cadastro realizado! Confirme seu email para entrar.");
+    if (data.session) navigate({ to: "/inicio" }); else toast.success("Cadastro realizado! Confirme seu email para entrar.");
   }
 
   return (
