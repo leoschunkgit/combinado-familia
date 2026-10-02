@@ -147,6 +147,23 @@ export const fmtDataHora = (d: string) =>
 export const fmtVigencia = (v: Pick<Vigencia, "data_inicio" | "data_fim">) =>
   `${fmtDataHora(v.data_inicio)} à ${fmtDataHora(v.data_fim)}`;
 
+export const paraCampoDataHoraBrasil = (d: string) => {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(d));
+  const partesMap = Object.fromEntries(partes.map((item) => [item.type, item.value]));
+  return partesMap.year + "-" + partesMap.month + "-" + partesMap.day + "T" + partesMap.hour + ":" + partesMap.minute;
+};
+
+export const paraIsoDataHoraBrasil = (valor: string) =>
+  new Date(valor + ":00-03:00").toISOString();
+
 export const maskCpf = (v: string) =>
   v
     .replace(/\D/g, "")
