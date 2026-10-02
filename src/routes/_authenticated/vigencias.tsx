@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
+import { VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade } from "@/lib/mesada";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
@@ -186,7 +187,7 @@ function VigenciasPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{fmtVigencia(v)}</p>
-                    {ativa && <Badge className="bg-success text-success-foreground">Em andamento</Badge>}
+                    <VigenciaStatus vigencia={v} />
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(v)}</p>
                   <p className="text-sm text-muted-foreground">Limite: {v.qtd_ocorrencia} ocorrência(s)</p>
