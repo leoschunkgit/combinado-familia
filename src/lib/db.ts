@@ -141,8 +141,11 @@ export function msgErro(error: { message?: string } | null): string {
 export const fmtData = (d: string) =>
   new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+export const fmtDataHora = (d: string) =>
+  new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
 export const fmtVigencia = (v: Pick<Vigencia, "data_inicio" | "data_fim">) =>
-  `${fmtData(v.data_inicio)} à ${fmtData(v.data_fim)}`;
+  `${fmtDataHora(v.data_inicio)} à ${fmtDataHora(v.data_fim)}`;
 
 export const maskCpf = (v: string) =>
   v
