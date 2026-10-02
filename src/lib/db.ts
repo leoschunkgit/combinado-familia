@@ -81,7 +81,7 @@ export const useFilhoTarefas = () =>
 
 export type Ocorrencia = Tables<"t_ocorrencia"> & {
   t_filho_tarefa:
-    | (Pick<Tables<"t_filho_tarefa">, "id_filho" | "id_vigencia"> & {
+    | (Pick<Tables<"t_filho_tarefa">, "id_filho" | "id_vigencia" | "id_tarefa"> & {
         t_filho: Pick<Filho, "nome"> | null;
         t_tarefa: Pick<Tarefa, "nome"> | null;
         t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade" | "tipo_penalidade" | "valor_debito"> | null;
@@ -97,7 +97,7 @@ export const useOcorrencias = () =>
         supabase
           .from("t_ocorrencia")
           .select(
-            "*, t_filho_tarefa(id_filho, id_vigencia, t_filho(nome), t_tarefa(nome), t_vigencia(data_inicio, data_fim, penalidade, tipo_penalidade, valor_debito))",
+             "*, t_filho_tarefa(id_filho, id_vigencia, id_tarefa, t_filho(nome), t_tarefa(nome), t_vigencia(data_inicio, data_fim, penalidade, tipo_penalidade, valor_debito))",
           )
           .order("created_at", { ascending: false }),
       ),
@@ -158,7 +158,7 @@ export const paraCampoDataHoraBrasil = (d: string) => {
     hourCycle: "h23",
   }).formatToParts(new Date(d));
   const partesMap = Object.fromEntries(partes.map((item) => [item.type, item.value]));
-  return partesMap.year + "-" + partesMap.month + "-" + partesMap.day + "T" + partesMap.hour + ":" + partesMap.minute;
+  return partesMap["year"] + "-" + partesMap["month"] + "-" + partesMap["day"] + "T" + partesMap["hour"] + ":" + partesMap["minute"];
 };
 
 export const paraIsoDataHoraBrasil = (valor: string) =>

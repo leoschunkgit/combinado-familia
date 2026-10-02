@@ -97,7 +97,7 @@ function HistoricoPage() {
             <Search className="h-4 w-4" /> Pesquisar
           </Button>
         </CardContent>
-      </Card>      </Card>
+      </Card>
       <div className="mb-6 flex flex-wrap justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => definirTudo(true)}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
         <Button variant="outline" size="sm" onClick={() => definirTudo(false)}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>

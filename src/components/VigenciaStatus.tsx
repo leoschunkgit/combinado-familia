@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import type { Vigencia } from "@/lib/db";
 
-export function vigenciaEmAndamento(vigencia: Vigencia) {
+export function vigenciaEmAndamento(vigencia: Pick<Vigencia, "data_inicio" | "data_fim">) {
   const agora = Date.now();
   return new Date(vigencia.data_inicio).getTime() <= agora && new Date(vigencia.data_fim).getTime() >= agora;
 }
 
-export function VigenciaStatus({ vigencia }: { vigencia: Vigencia }) {
+export function VigenciaStatus({ vigencia }: { vigencia: Pick<Vigencia, "data_inicio" | "data_fim"> }) {
   const agora = Date.now();
   const inicio = new Date(vigencia.data_inicio).getTime();
   const fim = new Date(vigencia.data_fim).getTime();
