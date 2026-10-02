@@ -13,7 +13,7 @@ export function Pick({
   label: string;
   value: string;
   onChange: (v: string) => void;
-  options: { value: string; label: string; status?: "andamento" | "finalizada" }[];
+  options: { value: string; label: string; status?: "andamento" | "finalizada" | undefined }[];
   placeholder?: string;
   allLabel?: string;
   required?: boolean;
