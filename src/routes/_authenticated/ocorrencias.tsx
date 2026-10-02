@@ -226,7 +226,7 @@ function OcorrenciasPage() {
 
       <div className="space-y-10">
         {grupos.map(({ vigencia, filhos: gruposFilho }) => {
-          const vigenciaAberta = vigenciasAbertas[vigencia.id] !== false;
+          const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
           return (
           <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
             <button
@@ -250,7 +250,7 @@ function OcorrenciasPage() {
             {vigenciaAberta && <div className="space-y-7">
               {gruposFilho.map(({ filho, tarefas }) => {
                 const chaveFilho = `${vigencia.id}-${filho.id}`;
-                const filhoAberto = filhosAbertos[chaveFilho] !== false;
+                const filhoAberto = filhosAbertos[chaveFilho] === true;
                 const total = tarefas.reduce((s, r) => s + r.qtd_nao_fez, 0);
                 const penalizado = total >= vigencia.qtd_ocorrencia;
                  const comDesconto = usaDesconto(filho, vigencia);
