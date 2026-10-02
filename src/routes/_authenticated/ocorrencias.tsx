@@ -187,11 +187,7 @@ function OcorrenciasPage() {
   return (
     <>
       <PageHeader title="Ocorrências" description="Acompanhe os combinados de cada filho por vigência." icon={<ClipboardCheck className="h-6 w-6" />} />
-      <div className="mb-4 flex flex-wrap justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => definirTudo(true)}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
-        <Button variant="outline" size="sm" onClick={() => definirTudo(false)}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
-      </div>
-      <Card className="mb-8">
+      <Card className="mb-6">
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
           <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigencias.map((v) => ({
               value: String(v.id),
@@ -207,6 +203,10 @@ function OcorrenciasPage() {
           <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
         </CardContent>
       </Card>
+      <div className="mb-6 flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => definirTudo(true)}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
+        <Button variant="outline" size="sm" onClick={() => definirTudo(false)}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
+      </div>
 
       {!isLoading && grupos.length === 0 && <EmptyState>Nenhuma tarefa encontrada. Crie atribuições na aba "Atribuições".</EmptyState>}
 
