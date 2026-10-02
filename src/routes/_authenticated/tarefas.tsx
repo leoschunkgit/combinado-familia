@@ -30,6 +30,7 @@ function TarefasPage() {
   const [nome, setNome] = useState("");
   const [editando, setEditando] = useState<Tarefa | null>(null);
   const [nomeEdicao, setNomeEdicao] = useState("");
+  const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
@@ -86,11 +87,21 @@ function TarefasPage() {
               <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent" />
               <p className="flex-1 font-medium">{t.nome}</p>
                <Button variant="ghost" size="icon" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}><Pencil className="h-4 w-4" /></Button>
-               <Button variant="ghost" size="icon" onClick={() => excluir(t.id)} aria-label={`Excluir ${t.nome}`}><Trash2 className="h-4 w-4" /></Button>
+               <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}><Trash2 className="h-4 w-4" /></Button>
             </div>
           ))}
         </div>
       </div>
+      <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
+          <p>Tem certeza que deseja excluir <strong>{tarefas.find((t) => t.id === confirmarExclusao)?.nome}</strong>?</p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
+            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void excluir(confirmarExclusao); setConfirmarExclusao(null); }}>Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar tarefa</DialogTitle></DialogHeader>
