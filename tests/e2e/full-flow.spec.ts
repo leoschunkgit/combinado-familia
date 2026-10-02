@@ -70,9 +70,7 @@ test.describe("Combinado Família - fluxo E2E completo", () => {
 
       const selects = page.getByRole("button", { name: "Selecione" });
       await selects.nth(0).click();
-      await page.getByRole("option").filter({ hasText: "andamento" }).first().click().catch(async () => {
-        await page.getByRole("option").last().click();
-      });
+      await page.getByRole("option").filter({ hasText: /\\d{2}\\/\\d{2}\\/\\d{4}/ }).first().click();
 
       await page.getByRole("button", { name: "Selecione" }).nth(0).click();
       await page.getByRole("option", { name: nomeFilho, exact: true }).click();
@@ -83,7 +81,7 @@ test.describe("Combinado Família - fluxo E2E completo", () => {
 
       await page.getByRole("button", { name: "Adicionar" }).click();
       await expect(page.getByText(nomeTarefa, { exact: true })).toBeVisible();
-      await page.getByRole("button", { name: /Cadastrar 1 atribuição/ }).click();
+      await page.getByRole("button", { name: "Cadastrar (1)" }).click();
       await expect(page.getByText(/1 atribuição.*cadastrada/i)).toBeVisible();
     });
 
