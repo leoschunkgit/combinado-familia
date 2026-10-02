@@ -39,7 +39,9 @@ const schema = z
     valor_debito: z.string(),
     qtd_ocorrencia: z.coerce.number().int().min(1, "Mínimo de 1 ocorrência").max(31, "Máximo de 31"),
   })
-  .refine((v) => /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })\n  .refine((v) => /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })\n  .refine((v) => new Date(v.data_fim).getTime() >= new Date(v.data_inicio).getTime(), "A data/hora fim deve ser igual ou posterior à data/hora início")
+  .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })
+  .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })
+  .refine((v) => new Date(v.data_fim).getTime() >= new Date(v.data_inicio).getTime(), "A data/hora fim deve ser igual ou posterior à data/hora início")
   .refine((v) => v.penalidade.length >= 2, { message: "Informe a penalidade escrita", path: ["penalidade"] })
   .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
