@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, ClipboardCheck, ListTodo, Users } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardCheck, History, Link2, ListTodo, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
@@ -10,7 +10,9 @@ function Inicio() {
   const etapas = [
     { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
     { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
-    { numero: "3", titulo: "Acompanhe os combinados", texto: "Registre as ocorrências e acompanhe tudo com clareza.", to: "/ocorrencias", icon: ClipboardCheck },
+    { numero: "3", titulo: "Faça as atribuições", texto: "Associe os filhos às tarefas e defina as vigências dos combinados.", to: "/atribuicoes", icon: Link2 },
+    { numero: "4", titulo: "Registre as ocorrências", texto: "Marque quando um combinado não foi cumprido e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
+    { numero: "5", titulo: "Consulte o histórico", texto: "Veja o que aconteceu ao longo das vigências e acompanhe os registros.", to: "/historico", icon: History },
   ];
 
   return (
@@ -60,7 +62,7 @@ function Inicio() {
           <h2 className="text-xl font-semibold">Como começar</h2>
           <p className="mt-1 text-sm text-muted-foreground">Siga estes passos para configurar seu primeiro combinado.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {etapas.map(({ numero, titulo, texto, to, icon: Icon }) => (
             <Link key={to} to={to} className="group rounded-xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/30">
               <div className="flex items-start justify-between gap-3">
@@ -81,7 +83,7 @@ function Inicio() {
           <div>
             <h2 className="font-semibold">A primeira ação é cadastrar os filhos</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Depois disso, você poderá criar as tarefas, definir as vigências e associar cada tarefa aos filhos. Quando estiver tudo configurado, as ocorrências ficam prontas para serem acompanhadas.
+              Depois disso, você poderá criar as tarefas, fazer as atribuições e definir as vigências. Quando estiver tudo configurado, as ocorrências ficam prontas para serem registradas e o histórico para ser consultado.
             </p>
           </div>
         </div>
