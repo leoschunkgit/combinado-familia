@@ -115,7 +115,6 @@ function OcorrenciasPage() {
       toast.error("Já existe um registro de “Não fez” para esta tarefa nesta data");
       return;
     }
-    const momento = new Date(`${selecionada}T12:00:00`);
     setBusy(true);
     try {
       const novo = total + 1;
