@@ -96,6 +96,12 @@ function VigenciasPage() {
     const vigencia = vigencias.find((v) => v.id === id);
     if (!vigencia) return;
     const agora = Date.now();
+  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
+    const aAndamento = new Date(a.data_inicio).getTime() <= agora && new Date(a.data_fim).getTime() >= agora;
+    const bAndamento = new Date(b.data_inicio).getTime() <= agora && new Date(b.data_fim).getTime() >= agora;
+    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
+    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
+  });
     const inicio = new Date(vigencia.data_inicio).getTime();
     const fim = new Date(vigencia.data_fim).getTime();
     if (inicio > agora || fim < agora) {
@@ -227,7 +233,7 @@ function VigenciasPage() {
         </Card>
         <div className="space-y-3">
           {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
-          {vigencias.map((v) => {
+          {vigenciasOrdenadas.map((v) => {
             const finalizada = new Date(v.data_fim).getTime() < agora;
             const emAndamento = new Date(v.data_inicio).getTime() <= agora && !finalizada;
             const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
