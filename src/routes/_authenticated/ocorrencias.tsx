@@ -210,7 +210,7 @@ function OcorrenciasPage() {
                 ? "finalizada" as const
                 : new Date(v.data_inicio).getTime() <= Date.now() && new Date(v.data_fim).getTime() >= Date.now()
                   ? "andamento" as const
-                  : undefined
+                  : "futura" as const
             }))} />
           <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
           <Pick label="Tarefa" value={f.tarefa} onChange={(v) => setF({ ...f, tarefa: v })} allLabel="Todas" options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
