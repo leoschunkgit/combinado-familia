@@ -23,8 +23,6 @@ export const Route = createFileRoute("/_authenticated/historico")({
   component: HistoricoPage,
 });
 
-const fmtHora = (d: string) =>
-  new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 function HistoricoPage() {
   const { data: vigencias = [] } = useVigencias();
@@ -162,7 +160,7 @@ function HistoricoPage() {
                           <div className="shrink-0 md:text-right">
                             <p className="text-xs font-semibold text-muted-foreground">Data da ocorrência</p>
                             <p className="mt-1 text-sm tabular-nums text-foreground">
-                              {fmtData(o.created_at)} às {fmtHora(o.created_at)}
+                              {fmtData(o.created_at)}
                             </p>
                           </div>
                         </div>
