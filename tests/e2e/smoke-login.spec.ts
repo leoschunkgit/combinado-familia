@@ -60,4 +60,16 @@ test("smoke: login + cadastrar filho", async ({ page }) => {
 
   await expect(page.getByText("Filho cadastrado")).toBeVisible();
   await expect(page.getByText(nomeFilho, { exact: true })).toBeVisible();
+
+  const nomeTarefa = `Teste E2E tarefa ${Date.now()}`;
+  await page.goto("/tarefas");
+  await expect(page.getByRole("heading", { name: "Tarefas" })).toBeVisible();
+
+  const tarefaInput = page.locator("input").first();
+  await tarefaInput.fill(nomeTarefa);
+
+  await page.getByRole("button", { name: "Cadastrar" }).click();
+
+  await expect(page.getByText("Tarefa cadastrada")).toBeVisible();
+  await expect(page.getByText(nomeTarefa, { exact: true })).toBeVisible();
 });
