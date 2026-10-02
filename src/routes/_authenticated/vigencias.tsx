@@ -93,6 +93,11 @@ function VigenciasPage() {
   }
 
   async function excluir(id: number) {
+    const vigencia = vigencias.find((v) => v.id === id);
+    if (vigencia && new Date(vigencia.data_fim).getTime() < Date.now()) {
+      toast.error("Vigências finalizadas não podem ser excluídas");
+      return;
+    }
     const { count, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id", { count: "exact", head: true }).eq("id_vigencia", id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     if (count) { toast.error("Esta vigência tem atribuições e não pode ser excluída"); return; }
@@ -102,6 +107,10 @@ function VigenciasPage() {
   }
 
   function abrirEdicao(v: Vigencia) {
+    if (new Date(v.data_fim).getTime() < Date.now()) {
+      toast.error("Vigências finalizadas não podem ser editadas");
+      return;
+    }
     setEditando(v);
     setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim), penalidade: v.penalidade, valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","), qtd_ocorrencia: String(v.qtd_ocorrencia) });
   }
@@ -181,7 +190,8 @@ function VigenciasPage() {
         <div className="space-y-3">
           {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
           {vigencias.map((v) => {
-            const ativa = new Date(v.data_inicio).getTime() <= agora && new Date(v.data_fim).getTime() >= agora;
+            const finalizada = new Date(v.data_fim).getTime() < agora;
+            const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
             return (
               <div key={v.id} className="flex items-start gap-4 rounded-2xl border bg-card p-4">
                 <div className="min-w-0 flex-1">
@@ -192,9 +202,9 @@ function VigenciasPage() {
                   <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(v)}</p>
                   <p className="text-sm text-muted-foreground">Limite: {v.qtd_ocorrencia} ocorrência(s)</p>
                 </div>
-                 <Button variant="ghost" size="icon" onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button>
-                 <BlockedAction reason={atribuicoes.some((a) => a.id_vigencia === v.id) ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}>
-                   <Button variant="ghost" size="icon" disabled={atribuicoes.some((a) => a.id_vigencia === v.id)} onClick={() => setConfirmarExclusao(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
+                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button></BlockedAction>
+                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}>
+                   <Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
                  </BlockedAction>
               </div>
             );
