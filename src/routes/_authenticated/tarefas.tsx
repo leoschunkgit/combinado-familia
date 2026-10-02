@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ListTodo, Pencil, Trash2 } from "lucide-react";
+import { ListTodo, Pencil, Search, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ function TarefasPage() {
   const { runAction } = useActionLoading();
   const { data: tarefas = [] } = useTarefas();
   const [nome, setNome] = useState("");
+  const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<Tarefa | null>(null);
   const [nomeEdicao, setNomeEdicao] = useState("");
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
@@ -69,10 +70,14 @@ function TarefasPage() {
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
+  const tarefasFiltradas = tarefas.filter((t) =>
+    t.nome.toLocaleLowerCase().includes(busca.trim().toLocaleLowerCase())
+  );
+
   return (
     <>
       <PageHeader title="Tarefas" description="Crie as tarefas que poderão ser atribuídas aos filhos." icon={<ListTodo className="h-6 w-6" />} />
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
         <Card>
           <CardHeader><CardTitle>Cadastrar tarefa</CardTitle></CardHeader>
           <CardContent>
@@ -82,18 +87,43 @@ function TarefasPage() {
             </form>
           </CardContent>
         </Card>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {tarefas.length === 0 && <div className="sm:col-span-2"><EmptyState>Nenhuma tarefa cadastrada ainda.</EmptyState></div>}
-          {tarefas.map((t) => (
-            <div key={t.id} className="flex items-center gap-3 rounded-2xl border bg-card p-4">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent" />
-              <p className="flex-1 font-medium">{t.nome}</p>
-               <Button variant="ghost" size="icon" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}><Pencil className="h-4 w-4" /></Button>
-               <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}><Trash2 className="h-4 w-4" /></Button>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle>Tarefas cadastradas</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">{tarefas.length} tarefa{tarefas.length === 1 ? "" : "s"}</p>
+              </div>
+              {tarefas.length > 0 && (
+                <div className="relative w-full sm:w-64">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar tarefa..." className="pl-9" aria-label="Pesquisar tarefa" />
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {tarefas.length === 0 ? (
+              <EmptyState>Nenhuma tarefa cadastrada ainda.</EmptyState>
+            ) : tarefasFiltradas.length === 0 ? (
+              <EmptyState>Nenhuma tarefa encontrada.</EmptyState>
+            ) : (
+              <div className="grid max-h-[65vh] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
+                {tarefasFiltradas.map((t) => (
+                  <div key={t.id} className="flex min-h-12 items-center gap-2 rounded-xl border bg-card px-3 py-2">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium" title={t.nome}>{t.nome}</p>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
@@ -104,6 +134,7 @@ function TarefasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar tarefa</DialogTitle></DialogHeader>
