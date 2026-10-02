@@ -54,9 +54,8 @@ function RelatorioPage() {
         .filter((filho) => filtro.filho === "all" || filho.id === Number(filtro.filho))
         .map((filho) => {
           const tarefas = atribuicoes.filter((a) => a.id_vigencia === vigencia.id && a.id_filho === filho.id);
-          const registros = ocorrencias.filter((o) =>
-            o.t_filho_tarefa?.id_vigencia === vigencia.id && o.t_filho_tarefa?.id_filho === filho.id
-          );
+          const idsTarefasVigencia = new Set(tarefas.map((tarefa) => tarefa.id));
+          const registros = ocorrencias.filter((o) => idsTarefasVigencia.has(o.id_filho_tarefa));
           return { filho, tarefas, registros };
         })
         .filter(({ tarefas }) => tarefas.length > 0),
