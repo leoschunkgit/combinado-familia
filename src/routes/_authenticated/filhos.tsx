@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useVigencias, type Filho } from "@/lib/db";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
+import { useActionLoading } from "./route";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -60,6 +61,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
 
 function FilhosPage() {
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const { data: filhos = [] } = useFilhos();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: vigencias = [] } = useVigencias();
@@ -141,7 +143,7 @@ function FilhosPage() {
         <Card>
           <CardHeader><CardTitle>Cadastrar filho</CardTitle></CardHeader>
           <CardContent>
-            <form onSubmit={salvar} className="space-y-4">
+            <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
               <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
               <div className="space-y-2"><Label>Celular</Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
@@ -176,14 +178,14 @@ function FilhosPage() {
           <p>Tem certeza que deseja excluir <strong>{filhos.find((f) => f.id === confirmarExclusao)?.nome}</strong>?</p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
-            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void excluir(confirmarExclusao); setConfirmarExclusao(null); }}>Excluir</Button>
+            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader>
-          <form onSubmit={salvarEdicao} className="space-y-4">
+          <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-filho-email">Email</Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular</Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div>
