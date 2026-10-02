@@ -9,6 +9,18 @@ test.describe("Combinado Família - fluxo E2E completo", () => {
   test("filho → tarefa → vigência → atribuição → ocorrência → relatório → PDF", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === "mobile", "Fluxo completo roda no desktop; o projeto mobile valida navegação e layout.");
 
+    const authResponses: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on("response", async (response) => {
+      if (response.url().includes("/auth/v1/")) {
+        authResponses.push(`${response.status()} ${response.request().method()} ${response.url().replace(/\/auth\/v1\/.*/, "/auth/v1/…")}`);
+      }
+    });
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text().slice(0, 500));
+    });
+
     const sufixo = Date.now();
     const nomeFilho = `E2E Filho ${sufixo}`;
     const nomeTarefa = `E2E Tarefa ${sufixo}`;
@@ -35,11 +47,13 @@ test.describe("Combinado Família - fluxo E2E completo", () => {
     } catch {
       const loginError = page.getByText("Email ou senha incorretos, ou email ainda não confirmado.").first();
       const errorVisible = await loginError.isVisible().catch(() => false);
+      const buttonText = await page.getByRole("button", { name: /Entrar|Entrando/ }).first().innerText().catch(() => "botão não encontrado");
       const bodyText = (await page.locator("body").innerText()).slice(0, 2000);
 
       throw new Error(
-        `LOGIN_FAILED: a aplicação não chegou em /ocorrencias. URL atual: ${page.url()}. ` +
-        `Mensagem de login visível: ${errorVisible}. Conteúdo da tela: ${bodyText}`
+        `LOGIN_FAILED: URL atual: ${page.url()}. Mensagem de login visível: ${errorVisible}. ` +
+        `Botão: ${buttonText}. Auth responses: [${authResponses.join(" | ")}]. ` +
+        `Console errors: [${consoleErrors.join(" | ")}]. Tela: ${bodyText}`
       );
     }
 
