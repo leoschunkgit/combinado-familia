@@ -46,31 +46,21 @@ function RelatorioPage() {
     return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
   }), [vigencias]);
 
-  /*
-   * IMPORTANTE: a montagem abaixo replica a lógica da tela de Ocorrências.
-   *
-   * Na tela de Ocorrências:
-   *   1. busca as atribuições (t_filho_tarefa);
-   *   2. agrupa por vigência + filho;
-   *   3. para cada atribuição, busca os registros por:
-   *      ocorrencias.filter((o) => o.id_filho_tarefa === r.id)
-   *
-   * O relatório usa exatamente essa mesma relação. Não depende de
-   * t_filho_tarefa aninhado dentro de t_ocorrencia para descobrir os registros.
-   */
+  // Mesma relação usada em Ocorrências: atribuição -> id_filho_tarefa -> ocorrência.
+  // Number() evita diferença de tipo entre IDs retornados em ambientes/dispositivos distintos.
   const relatorio = useMemo(() => vigenciasOrdenadas
-    .filter((vigencia) => filtro.vig === "all" || vigencia.id === Number(filtro.vig))
+    .filter((vigencia) => filtro.vig === "all" || Number(vigencia.id) === Number(filtro.vig))
     .map((vigencia) => ({
       vigencia,
       filhos: filhos
-        .filter((filho) => filtro.filho === "all" || filho.id === Number(filtro.filho))
+        .filter((filho) => filtro.filho === "all" || Number(filho.id) === Number(filtro.filho))
         .map((filho) => {
           const tarefas = atribuicoes.filter(
-            (r) => r.id_vigencia === vigencia.id && r.id_filho === filho.id,
+            (r) => Number(r.id_vigencia) === Number(vigencia.id) && Number(r.id_filho) === Number(filho.id),
           );
 
           const registros = tarefas.flatMap((r) =>
-            ocorrencias.filter((o) => o.id_filho_tarefa === r.id),
+            ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(r.id)),
           );
 
           return { filho, tarefas, registros };
@@ -89,13 +79,8 @@ function RelatorioPage() {
     const largura = 182;
     let y = 16;
 
-    const pagina = () => {
-      doc.addPage();
-      y = 16;
-    };
-    const precisa = (altura: number) => {
-      if (y + altura > 282) pagina();
-    };
+    const pagina = () => { doc.addPage(); y = 16; };
+    const precisa = (altura: number) => { if (y + altura > 282) pagina(); };
     const texto = (valor: string, x: number, larguraMax: number, tamanho = 9, negrito = false) => {
       doc.setFont("helvetica", negrito ? "bold" : "normal");
       doc.setFontSize(tamanho);
@@ -143,7 +128,7 @@ function RelatorioPage() {
 
         for (const tarefa of tarefas) {
           const registrosTarefa = ocorrencias
-            .filter((o) => o.id_filho_tarefa === tarefa.id)
+            .filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id))
             .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
           precisa(14);
           texto(`Tarefa: ${tarefa.t_tarefa?.nome || "Tarefa"} · Não fez: ${registrosTarefa.length}`, margem + 8, largura - 8, 9, true);
@@ -152,8 +137,7 @@ function RelatorioPage() {
           } else {
             for (const [i, registro] of registrosTarefa.entries()) {
               const penalidade = penalizadas.has(registro.id);
-              const detalhe = `${i + 1}º não fez: ${fmtData(registro.created_at)}${penalidade ? " · Limite atingido" : ""}`;
-              texto(detalhe, margem + 12, largura - 12, 8);
+              texto(`${i + 1}º não fez: ${fmtData(registro.created_at)}${penalidade ? " · Limite atingido" : ""}`, margem + 12, largura - 12, 8);
             }
           }
         }
@@ -223,7 +207,7 @@ function RelatorioPage() {
                       )}
                       <div className="mt-4 space-y-3">
                         {tarefas.map((tarefa) => {
-                          const registrosTarefa = ocorrencias.filter((o) => o.id_filho_tarefa === tarefa.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                          const registrosTarefa = ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id)).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                           return (
                             <div key={tarefa.id} className="border-t pt-3">
                               <div className="flex flex-wrap justify-between gap-2">
