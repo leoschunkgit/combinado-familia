@@ -27,5 +27,9 @@ export function VigenciaStatus({ vigencia }: { vigencia: Pick<Vigencia, "data_in
     );
   }
 
-  return null;
+  return (
+    <Badge className="h-5 max-w-full shrink-0 whitespace-nowrap border-gray-200 bg-gray-100 px-1.5 py-0 text-[10px] font-semibold text-gray-600">
+      Ainda não começou
+    </Badge>
+  );
 }
