@@ -208,6 +208,7 @@ function VigenciasPage() {
           {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
           {vigencias.map((v) => {
             const finalizada = new Date(v.data_fim).getTime() < agora;
+            const emAndamento = new Date(v.data_inicio).getTime() <= agora && !finalizada;
             const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
             return (
               <div key={v.id} className="flex items-start gap-4 rounded-2xl border bg-card p-4">
@@ -219,10 +220,21 @@ function VigenciasPage() {
                   <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(v)}</p>
                   <p className="text-sm text-muted-foreground">Limite: {v.qtd_ocorrencia} ocorrência(s)</p>
                 </div>
-                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button></BlockedAction>
-                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}>
-                   <Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
-                 </BlockedAction>
+                {emAndamento && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setConfirmarFinalizacao(v.id)}
+                    aria-label={`Finalizar vigência ${fmtVigencia(v)}`}
+                    title="Finalizar vigência"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </Button>
+                )}
+                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button></BlockedAction>
+                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}>
+                  <Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
+                </BlockedAction>
               </div>
             );
           })}
