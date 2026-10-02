@@ -355,8 +355,14 @@ function OcorrenciasPage() {
             <DialogHeader><DialogTitle>Corrigir data do “Não fez”</DialogTitle><DialogDescription>{correcao?.tarefa.t_tarefa?.nome}</DialogDescription></DialogHeader>
             <div className="space-y-2">
               <Label htmlFor="corrigir-data">Data <span className="text-destructive" aria-hidden="true">*</span></Label>
-               <BrDateField id="corrigir-data" value={correcao?.data ?? ""} onChange={(date) => setCorrecao((atual) => atual ? { ...atual, data: date } : null)} />
-              <p className="text-xs text-muted-foreground">Para mudar o período da vigência, corrija aqui a data antes de salvá-lo.</p>
+               <BrDateField
+                id="corrigir-data"
+                value={correcao?.data ?? ""}
+                min={correcao?.tarefa.t_vigencia ? localDate(new Date(correcao.tarefa.t_vigencia.data_inicio)) : undefined}
+                max={correcao?.tarefa.t_vigencia ? localDate(new Date(Math.min(new Date(correcao.tarefa.t_vigencia.data_fim).getTime(), Date.now()))) : undefined}
+                onChange={(date) => setCorrecao((atual) => atual ? { ...atual, data: date } : null)}
+              />
+              <p className="text-xs text-muted-foreground">A data deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência.</p>
             </div>
             <DialogFooter><Button variant="outline" type="button" disabled={busy} onClick={() => setCorrecao(null)}>Cancelar</Button><Button type="button" disabled={busy} onClick={() => { void runAction(corrigirData); }}>Salvar data</Button></DialogFooter>
           </DialogContent>
