@@ -66,6 +66,7 @@ function VigenciasPage() {
   const [form, setForm] = useState<VigenciaForm>(vazio);
   const [editando, setEditando] = useState<Vigencia | null>(null);
   const [edicao, setEdicao] = useState(form);
+  const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
 
   const paraCampo = (valor: string) => {
     const d = new Date(valor);
@@ -194,13 +195,23 @@ function VigenciasPage() {
                 </div>
                  <Button variant="ghost" size="icon" onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button>
                  <BlockedAction reason={atribuicoes.some((a) => a.id_vigencia === v.id) ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}>
-                   <Button variant="ghost" size="icon" disabled={atribuicoes.some((a) => a.id_vigencia === v.id)} onClick={() => excluir(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
+                   <Button variant="ghost" size="icon" disabled={atribuicoes.some((a) => a.id_vigencia === v.id)} onClick={() => setConfirmarExclusao(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
                  </BlockedAction>
               </div>
             );
           })}
         </div>
       </div>
+      <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
+          <p>Tem certeza que deseja excluir a vigência <strong>{confirmarExclusao !== null ? (() => { const v = vigencias.find((item) => item.id === confirmarExclusao); return v ? fmtVigencia(v) : ""; })() : ""}</strong>?</p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
+            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void excluir(confirmarExclusao); setConfirmarExclusao(null); }}>Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
