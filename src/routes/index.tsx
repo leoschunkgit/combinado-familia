@@ -54,7 +54,7 @@ function Index() {
     const { error } = await supabase.auth.signInWithPassword({ email: login.email.trim(), password: login.senha });
     setLoading(false);
     if (error) { toast.error("Email ou senha incorretos, ou email ainda não confirmado."); return; }
-    navigate({ to: "/ocorrencias" });
+    navigate({ to: "/inicio" });
   }
 
   async function recuperarSenha(e: FormEvent) {
