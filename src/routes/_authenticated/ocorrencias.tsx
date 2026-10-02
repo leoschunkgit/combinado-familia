@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateField } from "@/components/BrDateField";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, useTarefas, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -43,9 +43,10 @@ function OcorrenciasPage() {
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
   const { data: todas = [], isLoading } = useFilhoTarefas();
+  const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
-  const [f, setF] = useState({ vig: "all", filho: "all" });
+  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
   const [filtro, setFiltro] = useState(f);
   const [datas, setDatas] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
@@ -71,7 +72,7 @@ function OcorrenciasPage() {
         .filter((filho) => filtro.filho === "all" || filho.id === Number(filtro.filho))
         .map((filho) => ({
           filho,
-          tarefas: todas.filter((r) => r.id_vigencia === vigencia.id && r.id_filho === filho.id),
+          tarefas: todas.filter((r) => r.id_vigencia === vigencia.id && r.id_filho === filho.id && (filtro.tarefa === "all" || r.id_tarefa === Number(filtro.tarefa))),
         }))
         .filter(({ tarefas }) => tarefas.length > 0),
     }))
@@ -182,7 +183,7 @@ function OcorrenciasPage() {
     <>
       <PageHeader title="Ocorrências" description="Acompanhe os combinados de cada filho por vigência." icon={<ClipboardCheck className="h-6 w-6" />} />
       <Card className="mb-8">
-        <CardContent className="grid gap-4 pt-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+        <CardContent className="grid gap-4 pt-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
           <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigencias.map((v) => ({
               value: String(v.id),
               label: fmtVigencia(v),
@@ -193,6 +194,7 @@ function OcorrenciasPage() {
                   : undefined
             }))} />
           <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
+          <Pick label="Tarefa" value={f.tarefa} onChange={(v) => setF({ ...f, tarefa: v })} allLabel="Todas" options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
           <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
         </CardContent>
       </Card>
