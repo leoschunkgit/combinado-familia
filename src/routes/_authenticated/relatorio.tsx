@@ -164,7 +164,7 @@ function RelatorioPage() {
           <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({
             value: String(v.id),
             label: fmtVigencia(v),
-            status: new Date(v.data_fim).getTime() < Date.now() ? "finalizada" as const : andamento(v) ? "andamento" as const : undefined,
+            status: new Date(v.data_fim).getTime() < Date.now() ? "finalizada" as const : andamento(v) ? "andamento" as const : "futura" as const,
           }))} />
           <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
           <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
