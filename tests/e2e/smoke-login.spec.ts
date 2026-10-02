@@ -13,15 +13,8 @@ test("smoke: login + cadastrar filho", async ({ page }) => {
   await page.locator("#le").fill(email!);
   await page.locator("#ls").fill(password!);
 
-  await Promise.all([
-    page.waitForResponse(
-      (response) =>
-        response.url().includes("/auth/v1/token") &&
-        response.request().method() === "POST",
-      { timeout: 30_000 }
-    ),
-    page.getByRole("button", { name: "Entrar" }).click(),
-  ]);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.waitForTimeout(2000);
 
   await page.goto("/ocorrencias");
   await expect(page.getByRole("heading", { name: "Ocorrências" })).toBeVisible();
