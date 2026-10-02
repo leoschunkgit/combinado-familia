@@ -170,7 +170,7 @@ function HistoricoPage() {
                                     <AlertTriangle className="mr-1 h-3 w-3" /> {usaDesconto(filho, vigencia) ? "Limite atingido" : "Penalidade atingida"}
                                 </Badge>
                               ) : (
-                                <Badge variant="secondary">
+                                <Badge className="border-red-200 bg-red-100 text-red-700 hover:bg-red-100">
                                   <ThumbsDown className="mr-1 h-3 w-3" /> Não fez
                                 </Badge>
                               )}
