@@ -72,4 +72,17 @@ test("smoke: login + cadastrar filho", async ({ page }) => {
   await page.getByRole("button", { name: /^Cadastrar \(1\)$/ }).click();
 
   await expect(page.getByText(/1 atribuição\(ões\) cadastrada\(s\)/)).toBeVisible();
+
+  await page.goto("/ocorrencias");
+  await expect(page.getByRole("heading", { name: "Ocorrências" })).toBeVisible();
+
+  const tarefaOcorrencia = page.getByText(nomeTarefa, { exact: true }).locator("..");
+  await tarefaOcorrencia.getByRole("button", { name: "Não fez" }).click();
+
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Registrar “Não fez”" })).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Confirmar" }).click();
+
+  await expect(page.getByText(/Ocorrência registrada \(1\/3\)/)).toBeVisible();
+  await expect(page.getByText(/1º não fez/)).toBeVisible();
 });
