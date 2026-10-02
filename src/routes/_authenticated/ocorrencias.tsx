@@ -15,6 +15,7 @@ import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
+import { useActionLoading } from "./route";
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
   head: () => ({ meta: [
@@ -37,6 +38,7 @@ const occurrenceDate = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month:
 
 function OcorrenciasPage() {
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
   const { data: todas = [], isLoading } = useFilhoTarefas();
@@ -267,7 +269,7 @@ function OcorrenciasPage() {
                             </div>
                               <div className="mt-2 flex justify-end">
                               {(r.qtd_nao_fez > 0) && (
-                                <Button size="sm" variant="ghost" disabled={busy} onClick={() => desfazer(r, total)}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
+                                <Button size="sm" variant="ghost" disabled={busy} onClick={() => { void runAction(() => desfazer(r, total)); }}><RotateCcw className="h-4 w-4" /> Desfazer</Button>
                               )}
                             </div>
                           </div>
@@ -304,7 +306,7 @@ function OcorrenciasPage() {
            )}
            <DialogFooter>
              <Button type="button" variant="outline" onClick={() => setRegistro(null)}>Cancelar</Button>
-             <Button type="button" variant="destructive" disabled={busy || !registro} onClick={() => registro && naoFez(registro.tarefa, registro.total)}><ThumbsDown className="h-4 w-4" /> Confirmar</Button>
+             <Button type="button" variant="destructive" disabled={busy || !registro} onClick={() => { if (registro) void runAction(() => naoFez(registro.tarefa, registro.total)); }}><ThumbsDown className="h-4 w-4" /> Confirmar</Button>
            </DialogFooter>
          </DialogContent>
        </Dialog>
@@ -316,7 +318,7 @@ function OcorrenciasPage() {
                <BrDateField id="corrigir-data" value={correcao?.data ?? ""} onChange={(date) => setCorrecao((atual) => atual ? { ...atual, data: date } : null)} />
               <p className="text-xs text-muted-foreground">Para mudar o período da vigência, corrija aqui a data antes de salvá-lo.</p>
             </div>
-            <DialogFooter><Button variant="outline" type="button" disabled={busy} onClick={() => setCorrecao(null)}>Cancelar</Button><Button type="button" disabled={busy} onClick={corrigirData}>Salvar data</Button></DialogFooter>
+            <DialogFooter><Button variant="outline" type="button" disabled={busy} onClick={() => setCorrecao(null)}>Cancelar</Button><Button type="button" disabled={busy} onClick={() => { void runAction(corrigirData); }}>Salvar data</Button></DialogFooter>
           </DialogContent>
         </Dialog>
     </>
