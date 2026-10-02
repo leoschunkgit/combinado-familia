@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, CalendarDays, CalendarRange, ClipboardCheck, Pencil, RotateCcw, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarDays, CalendarRange, ChevronDown, ClipboardCheck, Pencil, RotateCcw, Search, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,8 @@ function OcorrenciasPage() {
   const [busy, setBusy] = useState(false);
   const [registro, setRegistro] = useState<{ tarefa: FilhoTarefa; total: number } | null>(null);
   const [correcao, setCorrecao] = useState<{ tarefa: FilhoTarefa; ocorrencia: Ocorrencia; data: string } | null>(null);
+  const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
+  const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
 
   const dataDe = (r: FilhoTarefa) => {
     const agora = localDate(new Date());
@@ -184,26 +186,42 @@ function OcorrenciasPage() {
       {!isLoading && grupos.length === 0 && <EmptyState>Nenhuma tarefa encontrada. Crie atribuições na aba "Atribuições".</EmptyState>}
 
       <div className="space-y-10">
-        {grupos.map(({ vigencia, filhos: gruposFilho }) => (
+        {grupos.map(({ vigencia, filhos: gruposFilho }) => {
+          const vigenciaAberta = vigenciasAbertas[vigencia.id] !== false;
+          return (
           <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
-            <div className="mb-5 flex min-w-0 items-start gap-3 border-b pb-4">
-              <CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary" />
+            <button
+              type="button"
+              className="mb-5 flex w-full min-w-0 items-start gap-3 border-b pb-4 text-left"
+              aria-expanded={vigenciaAberta}
+              onClick={() => setVigenciasAbertas((atual) => ({ ...atual, [vigencia.id]: !vigenciaAberta }))}
+            >
+              <ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-primary transition-transform ${vigenciaAberta ? "" : "-rotate-90"}`} aria-hidden="true" />
+              <CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase text-muted-foreground">Vigência</p>
                 <h2 className="text-xl font-bold">{fmtVigencia(vigencia)}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(vigencia)}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(vigencia)}</p>
               </div>
-            </div>
+            </button>
 
-            <div className="space-y-7">
+            {vigenciaAberta && <div className="space-y-7">
               {gruposFilho.map(({ filho, tarefas }) => {
+                const chaveFilho = `${vigencia.id}-${filho.id}`;
+                const filhoAberto = filhosAbertos[chaveFilho] !== false;
                 const total = tarefas.reduce((s, r) => s + r.qtd_nao_fez, 0);
                 const penalizado = total >= vigencia.qtd_ocorrencia;
                  const comDesconto = usaDesconto(filho, vigencia);
                 return (
                   <div key={filho.id} className="border-b pb-6 last:border-b-0">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 pb-3 sm:flex sm:items-center sm:justify-between">
+                    <button
+                      type="button"
+                      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3 pb-3 text-left sm:flex sm:items-center sm:justify-between"
+                      aria-expanded={filhoAberto}
+                      onClick={() => setFilhosAbertos((atual) => ({ ...atual, [chaveFilho]: !filhoAberto }))}
+                    >
                       <div className="flex min-w-0 items-center gap-3">
+                        <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${filhoAberto ? "" : "-rotate-90"}`} aria-hidden="true" />
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary font-bold text-secondary-foreground">{filho.nome[0]?.toUpperCase()}</span>
                         <h3 className="min-w-0 truncate text-lg font-bold">{filho.nome}</h3>
                       </div>
@@ -216,7 +234,8 @@ function OcorrenciasPage() {
                           </Badge>
                         )}
                        </div>
-                    </div>
+                    </button>
+                    {filhoAberto && <>
                      {comDesconto ? (
                        <p className="mb-3 text-sm font-medium tabular-nums text-foreground">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}{penalizado && <span className="ml-2 text-destructive">Limite atingido</span>}</p>
                      ) : (
@@ -255,12 +274,14 @@ function OcorrenciasPage() {
                         );
                       })}
                     </div>
+                    </>}
                   </div>
                 );
               })}
-            </div>
+            </div>}
           </section>
-        ))}
+          );
+        })}
       </div>
        <Dialog open={Boolean(registro)} onOpenChange={(open) => !open && setRegistro(null)}>
          <DialogContent>
