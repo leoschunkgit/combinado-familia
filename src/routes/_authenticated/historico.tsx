@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtData, fmtVigencia, useFilhos, useOcorrencias, useVigencias } from "@/lib/db";
+import { fmtData, fmtVigencia, useFilhos, useOcorrencias, useVigencias, useTarefas } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
 import { VigenciaStatus } from "@/components/VigenciaStatus";
@@ -27,9 +27,10 @@ export const Route = createFileRoute("/_authenticated/historico")({
 function HistoricoPage() {
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
+  const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [], isLoading } = useOcorrencias();
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
-  const [f, setF] = useState({ vig: "all", filho: "all" });
+  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
   const [filtro, setFiltro] = useState(f);
   const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
@@ -38,7 +39,7 @@ function HistoricoPage() {
     const ft = o.t_filho_tarefa;
     return (
       (filtro.vig === "all" || ft?.id_vigencia === +filtro.vig) &&
-      (filtro.filho === "all" || ft?.id_filho === +filtro.filho)
+      (filtro.filho === "all" || ft?.id_filho === +filtro.filho) && (filtro.tarefa === "all" || ft?.id_tarefa === +filtro.tarefa)
     );
   });
   const grupos = vigencias
@@ -63,7 +64,7 @@ function HistoricoPage() {
         icon={<History className="h-6 w-6" />}
       />
       <Card className="mb-6">
-        <CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_auto] md:items-end">
+        <CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
           <Pick
             label="Vigência"
             value={f.vig}
@@ -86,6 +87,7 @@ function HistoricoPage() {
             allLabel="Todos"
             options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))}
           />
+          <Pick label="Tarefa" value={f.tarefa} onChange={(v) => setF({ ...f, tarefa: v })} allLabel="Todas" options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
           <Button onClick={() => setFiltro(f)}>
             <Search className="h-4 w-4" /> Pesquisar
           </Button>
