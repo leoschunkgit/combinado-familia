@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated")({
     }
     return { user, nomePai: nome ?? "" };
   },
-  component: AppLayout,
+  component: AuthenticatedLayout,
 });
 
 const NAV = [
@@ -86,7 +86,7 @@ function ActionLoadingProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function AppLayout() {
+function AuthenticatedLayout() {\n  return (\n    <ActionLoadingProvider>\n      <AppLayout />\n    </ActionLoadingProvider>\n  );\n}\n\nfunction AppLayout() {
   const { nomePai, user } = Route.useRouteContext();
   const navigate = useNavigate();
   const qc = useQueryClient();
