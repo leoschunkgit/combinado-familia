@@ -29,7 +29,8 @@ test.describe("Combinado Família - fluxo E2E completo", () => {
     await page.locator("#le").fill(email!);
     await page.locator("#ls").fill(password!);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(page).toHaveURL(/\/ocorrencias/);
+    await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible({ timeout: 10000 });
+    await expect.poll(async () => page.url(), { timeout: 15000, message: "Login não redirecionou para /ocorrencias" }).toContain("/ocorrencias");
 
     const pularGuia = page.getByRole("button", { name: "Pular guia" }).first();
     if (await pularGuia.isVisible().catch(() => false)) {
