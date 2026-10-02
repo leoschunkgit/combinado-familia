@@ -103,7 +103,8 @@ function HistoricoPage() {
             >
               <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${vigenciaAberta ? "" : "-rotate-90"}`} aria-hidden="true" />
               <CalendarRange className="h-5 w-5 text-primary" aria-hidden="true" />
-              <span>Vigência: {fmtVigencia(vigencia)}</span>\n              <VigenciaStatus vigencia={vigencia} />
+              <span>Vigência: {fmtVigencia(vigencia)}</span>
+              <VigenciaStatus vigencia={vigencia} />
             </button>
             {vigenciaAberta && <div className="space-y-6">
                {gruposFilhos.map(({ filho, registros }) => {
