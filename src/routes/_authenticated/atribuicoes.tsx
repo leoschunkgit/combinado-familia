@@ -15,7 +15,7 @@ import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
-import { VigenciaStatus } from "@/components/VigenciaStatus";
+import { VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -60,6 +60,8 @@ function AtribuicoesPage() {
 
   function adicionar() {
     if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
+    const periodoSelecionado = vigencias.find((v) => v.id === Number(vig));
+    if (!periodoSelecionado || !vigenciaEmAndamento(periodoSelecionado)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
     const escolhido = filhos.find((f) => f.id === Number(filho));
     const periodo = vigencias.find((v) => v.id === Number(vig));
     if (escolhido && periodo) {
@@ -80,6 +82,10 @@ function AtribuicoesPage() {
 
   async function cadastrar() {
     if (itens.length === 0) { toast.error("Adicione ao menos uma atribuição"); return; }
+    if (itens.some((item) => {
+      const periodo = vigencias.find((v) => v.id === item.id_vigencia);
+      return !periodo || !vigenciaEmAndamento(periodo);
+    })) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
     for (const item of itens) {
       const escolhido = filhos.find((f) => f.id === item.id_filho);
       const periodo = vigencias.find((v) => v.id === item.id_vigencia);
@@ -100,6 +106,8 @@ function AtribuicoesPage() {
   async function excluir(id: number) {
     const alvo = existentes.find((item) => item.id === id);
     if (!alvo) return;
+    const periodo = vigencias.find((v) => v.id === alvo.id_vigencia);
+    if (!periodo || !vigenciaEmAndamento(periodo)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
     const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", alvo.id_filho).eq("id_vigencia", alvo.id_vigencia);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
@@ -121,6 +129,9 @@ function AtribuicoesPage() {
 
   async function salvarEdicao() {
     if (!editando || !edicao.vig || !edicao.filho || !edicao.tarefa) return;
+    const periodoOriginal = vigencias.find((v) => v.id === editando.id_vigencia);
+    const periodoNovo = vigencias.find((v) => v.id === Number(edicao.vig));
+    if (!periodoOriginal || !vigenciaEmAndamento(periodoOriginal) || !periodoNovo || !vigenciaEmAndamento(periodoNovo)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
     const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", editando.id_filho).eq("id_vigencia", editando.id_vigencia);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
@@ -193,7 +204,7 @@ function AtribuicoesPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <Button variant="secondary" onClick={adicionar}><Plus className="h-4 w-4" /> Adicionar</Button>
+            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && vigenciaEmAndamento(v))}><Plus className="h-4 w-4" /> Adicionar</Button>
           </div>
           {itens.length > 0 && (
             <div className="rounded-xl border">
@@ -214,7 +225,7 @@ function AtribuicoesPage() {
               </Table>
             </div>
           )}
-          <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
+          <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && vigenciaEmAndamento(v)))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
         </CardContent>
       </Card>
 
@@ -239,11 +250,11 @@ function AtribuicoesPage() {
                   <TableCell>{e.t_tarefa?.nome}</TableCell>
                   <TableCell>{e.t_vigencia && <div className="flex items-center gap-2"><span>{fmtVigencia(e.t_vigencia)}</span><VigenciaStatus vigencia={e.t_vigencia} /></div>}</TableCell>
                     <TableCell className="space-x-1 text-right">
-                       <BlockedAction reason={temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser editada." : undefined}>
-                         <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
+                       <BlockedAction reason={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) ? "Ações só podem ser feitas em uma vigência em andamento." : temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser editada." : undefined}>
+                         <Button variant="ghost" size="icon" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label="Editar atribuição"><Pencil className="h-4 w-4" /></Button>
                        </BlockedAction>
-                       <BlockedAction reason={temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser excluída." : undefined}>
-                         <Button variant="ghost" size="icon" disabled={temHistorico(e)} onClick={() => setConfirmarExclusao(e.id)} aria-label="Excluir atribuição"><Trash2 className="h-4 w-4" /></Button>
+                       <BlockedAction reason={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) ? "Ações só podem ser feitas em uma vigência em andamento." : temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser excluída." : undefined}>
+                         <Button variant="ghost" size="icon" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => setConfirmarExclusao(e.id)} aria-label="Excluir atribuição"><Trash2 className="h-4 w-4" /></Button>
                        </BlockedAction>
                   </TableCell>
                 </TableRow>
