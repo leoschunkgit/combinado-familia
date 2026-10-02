@@ -217,6 +217,12 @@ function VigenciasPage() {
   return (
     <>
       <PageHeader title="Vigências" description="Defina o período, a penalidade e quantas falhas são toleradas." icon={<CalendarRange className="h-6 w-6" />} />
+      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border bg-card px-4 py-3 text-sm">
+        <span className="font-medium">Legenda:</span>
+        <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" aria-hidden="true" />Em andamento</span>
+        <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" aria-hidden="true" />Finalizada</span>
+        <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" aria-hidden="true" />Ainda não começou</span>
+      </div>
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <Card>
           <CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader>
