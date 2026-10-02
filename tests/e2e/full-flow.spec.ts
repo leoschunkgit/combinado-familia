@@ -70,7 +70,7 @@ test.describe("Combinado Família - fluxo E2E completo", () => {
 
       const selects = page.getByRole("button", { name: "Selecione" });
       await selects.nth(0).click();
-      await page.getByRole("option").filter({ hasText: /\\d{2}\\/\\d{2}\\/\\d{4}/ }).first().click();
+      await page.getByRole("option").filter({ hasText: /\d{2}\/\d{2}\/\d{4}/ }).first().click();
 
       await page.getByRole("button", { name: "Selecione" }).nth(0).click();
       await page.getByRole("option", { name: nomeFilho, exact: true }).click();
