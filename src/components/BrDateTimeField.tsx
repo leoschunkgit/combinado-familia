@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const displayFromValue = (value: string) => {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
@@ -51,6 +53,7 @@ export function BrDateTimeField({
   max?: string;
 }) {
   const [displayValue, setDisplayValue] = useState(() => displayFromValue(value));
+  const pickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDisplayValue(displayFromValue(value));
@@ -71,17 +74,54 @@ export function BrDateTimeField({
     }
   };
 
+  const openPicker = () => {
+    const picker = pickerRef.current;
+    if (!picker) return;
+    if (typeof picker.showPicker === "function") {
+      picker.showPicker();
+    } else {
+      picker.focus();
+      picker.click();
+    }
+  };
+
   return (
-    <Input
-      id={id}
-      type="text"
-      value={displayValue}
-      onChange={(e) => handleChange(e.target.value)}
-      placeholder="DD/MM/AAAA HH:MM"
-      inputMode="numeric"
-      autoComplete="off"
-      className="tabular-nums"
-      aria-label="Data e hora no formato DD/MM/AAAA HH:MM"
-    />
+    <div className="relative">
+      <Input
+        id={id}
+        type="text"
+        value={displayValue}
+        onChange={(e) => handleChange(e.target.value)}
+        placeholder="DD/MM/AAAA HH:MM"
+        inputMode="numeric"
+        autoComplete="off"
+        className="pr-11 tabular-nums"
+        aria-label="Data e hora no formato DD/MM/AAAA HH:MM"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute right-1 top-1/2 -translate-y-1/2"
+        aria-label="Abrir calendário"
+        title="Escolher data e hora"
+        onClick={openPicker}
+      >
+        <CalendarDays className="h-4 w-4" />
+      </Button>
+      <input
+        ref={pickerRef}
+        type="datetime-local"
+        value={value}
+        min={""}
+        max={""}
+        onChange={(e) => {
+          if (e.target.value) onChange(e.target.value);
+        }}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="pointer-events-none absolute h-0 w-0 opacity-0"
+      />
+    </div>
   );
 }
