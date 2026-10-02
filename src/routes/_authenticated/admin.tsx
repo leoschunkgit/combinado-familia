@@ -126,5 +126,13 @@ function Admin() {
 }
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  head: () => ({ meta: [
+    { title: "Minha conta — Combinado" },
+    { name: "description", content: "Atualize seus dados e sua senha no Combinado." },
+    { property: "og:title", content: "Minha conta — Combinado" },
+    { property: "og:description", content: "Atualize seus dados e sua senha no Combinado." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Admin,
 });
