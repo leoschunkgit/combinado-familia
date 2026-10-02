@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenticated/atribuicoes'
 import { Route as AuthenticatedFilhosRouteImport } from './routes/_authenticated/filhos'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
@@ -26,6 +28,16 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAtribuicoesRoute =
   AuthenticatedAtribuicoesRouteImport.update({
@@ -62,6 +74,8 @@ const AuthenticatedVigenciasRoute = AuthenticatedVigenciasRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -71,6 +85,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -82,6 +98,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/atribuicoes': typeof AuthenticatedAtribuicoesRoute
   '/_authenticated/filhos': typeof AuthenticatedFilhosRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
@@ -93,6 +111,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/redefinir-senha'
+    | '/admin'
     | '/atribuicoes'
     | '/filhos'
     | '/historico'
@@ -102,6 +122,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/redefinir-senha'
+    | '/admin'
     | '/atribuicoes'
     | '/filhos'
     | '/historico'
@@ -112,6 +134,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/redefinir-senha'
+    | '/_authenticated/admin'
     | '/_authenticated/atribuicoes'
     | '/_authenticated/filhos'
     | '/_authenticated/historico'
@@ -123,6 +147,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,6 +165,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/atribuicoes': {
       id: '/_authenticated/atribuicoes'
@@ -187,6 +226,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAtribuicoesRoute: typeof AuthenticatedAtribuicoesRoute
   AuthenticatedFilhosRoute: typeof AuthenticatedFilhosRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
@@ -196,6 +236,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAtribuicoesRoute: AuthenticatedAtribuicoesRoute,
   AuthenticatedFilhosRoute: AuthenticatedFilhosRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
@@ -210,6 +251,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
