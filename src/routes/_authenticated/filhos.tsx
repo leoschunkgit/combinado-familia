@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Link2, MoreVertical, Pencil, Share2, Trash2, Users } from "lucide-react";
+import { Copy, ExternalLink, Link2, Minus, MoreVertical, Pencil, Plus, Share2, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -73,6 +73,7 @@ function FilhosPage() {
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [acessos, setAcessos] = useState<Record<number, AcessoPublico | null>>({});
   const [carregandoAcesso, setCarregandoAcesso] = useState<Record<number, boolean>>({});
+  const [paineisAbertos, setPaineisAbertos] = useState<Record<number, boolean>>({});
   const [maisOpcoes, setMaisOpcoes] = useState<number | null>(null);
   const [confirmarNovoLink, setConfirmarNovoLink] = useState<Filho | null>(null);
   const [confirmarDesativar, setConfirmarDesativar] = useState<Filho | null>(null);
@@ -180,18 +181,20 @@ function FilhosPage() {
         <CamposExtras value={form} onChange={setForm} prefix="novo-filho" /><Button type="submit" className="w-full" disabled={saving}>Cadastrar</Button>
       </form></CardContent></Card>
       <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
-        const acesso = acessos[f.id]; const ativo = acesso?.ativo === true;
+        const acesso = acessos[f.id]; const ativo = acesso?.ativo === true; const painelAberto = paineisAbertos[f.id] === true;
         return <div key={f.id} className="min-w-0 max-w-full rounded-2xl border bg-card p-4">
           <div className="flex min-w-0 items-center gap-3"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary font-display text-lg font-bold text-secondary-foreground">{f.nome[0]?.toUpperCase()}</div>
             <div className="min-w-0 flex-1"><p className="truncate font-semibold">{f.nome}</p><p className="truncate text-sm text-muted-foreground">{[f.email, f.celular && maskCelular(f.celular)].filter(Boolean).join(" · ") || "Sem contato"}</p><p className="truncate text-sm text-muted-foreground">{[f.idade !== null && `${f.idade} anos`, f.tem_mesada_opcional === true && f.valor_mesada !== null ? `Mesada: ${dinheiro(f.valor_mesada)}` : null].filter(Boolean).join(" · ")}</p></div>
             <Button className="shrink-0" variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button><Button className="shrink-0" variant="ghost" size="icon" onClick={() => setConfirmarExclusao(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
           </div>
-          <div className="mt-4 min-w-0 max-w-full rounded-xl border bg-muted/25 p-3"><div className="flex min-w-0 items-start gap-2"><Link2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Painel de acompanhamento</p>
-            {carregandoAcesso[f.id] ? <p className="mt-1 text-xs text-muted-foreground">Carregando acesso...</p> : !acesso ? <><p className="mt-1 text-xs text-muted-foreground">Permita que {f.nome} acompanhe tarefas e resultados sem fazer login.</p><Button size="sm" className="mt-3" onClick={() => void runAction(() => gerarLink(f))}>Gerar link</Button></> : <>
-              <div className="mt-1 flex items-center gap-1.5 text-xs"><span className={`h-2 w-2 shrink-0 rounded-full ${ativo ? "bg-green-500" : "bg-muted-foreground/50"}`} /><span className={ativo ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>{ativo ? "Acesso ativo" : "Acesso desativado"}</span></div>
+          <div className="mt-4 min-w-0 max-w-full rounded-xl border bg-muted/25 p-3">
+            <div className="flex min-w-0 items-center gap-2"><Link2 className="h-4 w-4 shrink-0 text-muted-foreground" /><p className="min-w-0 flex-1 text-sm font-medium">Painel de acompanhamento</p><Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-expanded={painelAberto} aria-label={painelAberto ? `Fechar painel de acompanhamento de ${f.nome}` : `Abrir painel de acompanhamento de ${f.nome}`} onClick={() => setPaineisAbertos((v) => ({ ...v, [f.id]: !painelAberto }))}>{painelAberto ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}</Button></div>
+            {painelAberto && <div className="mt-2 min-w-0 pl-6">{carregandoAcesso[f.id] ? <p className="text-xs text-muted-foreground">Carregando acesso...</p> : !acesso ? <><p className="text-xs text-muted-foreground">Permita que {f.nome} acompanhe tarefas e resultados sem fazer login.</p><Button size="sm" className="mt-3" onClick={() => void runAction(() => gerarLink(f))}>Gerar link</Button></> : <>
+              <div className="flex items-center gap-1.5 text-xs"><span className={`h-2 w-2 shrink-0 rounded-full ${ativo ? "bg-green-500" : "bg-muted-foreground/50"}`} /><span className={ativo ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>{ativo ? "Acesso ativo" : "Acesso desativado"}</span></div>
               {ativo && <><p className="mt-2 max-w-full break-all text-xs text-muted-foreground">{urlAcesso(acesso.token)}</p><div className="mt-3 flex min-w-0 flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void copiarLink(acesso.token)}><Copy className="mr-1.5 h-3.5 w-3.5" />Copiar link</Button><Button size="sm" variant="outline" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartilhar</Button><Button size="sm" variant="ghost" onClick={() => window.open(urlAcesso(acesso.token), "_blank", "noopener,noreferrer")}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Abrir</Button></div></>}
-               <div className="relative mt-2 min-w-0 max-w-full"><Button size="sm" variant="ghost" className="max-w-full px-2 text-muted-foreground" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="mr-1 h-3.5 w-3.5" />Mais opções</Button>{maisOpcoes === f.id && <div className="mt-1 flex min-w-0 max-w-full flex-wrap gap-2 rounded-lg border bg-background p-2">{ativo ? <><Button size="sm" variant="ghost" onClick={() => setConfirmarDesativar(f)}>Desativar acesso</Button><Button size="sm" variant="ghost" onClick={() => setConfirmarNovoLink(f)}>Gerar novo link</Button></> : <div className="min-w-0 max-w-full"><Button size="sm" variant="ghost" onClick={() => void runAction(() => gerarLink(f))}>Gerar novo link</Button><p className="max-w-full break-words px-2 pb-1 text-xs text-muted-foreground">Será criado um novo endereço de acesso.</p></div>}</div>}</div>
-            </>}</div></div></div>
+              <div className="relative mt-2 min-w-0 max-w-full"><Button size="sm" variant="ghost" className="max-w-full px-2 text-muted-foreground" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="mr-1 h-3.5 w-3.5" />Mais opções</Button>{maisOpcoes === f.id && <div className="mt-1 flex min-w-0 max-w-full flex-wrap gap-2 rounded-lg border bg-background p-2">{ativo ? <><Button size="sm" variant="ghost" onClick={() => setConfirmarDesativar(f)}>Desativar acesso</Button><Button size="sm" variant="ghost" onClick={() => setConfirmarNovoLink(f)}>Gerar novo link</Button></> : <div className="min-w-0 max-w-full"><Button size="sm" variant="ghost" onClick={() => void runAction(() => gerarLink(f))}>Gerar novo link</Button><p className="max-w-full break-words px-2 pb-1 text-xs text-muted-foreground">Será criado um novo endereço de acesso.</p></div>}</div>}</div>
+            </>}</div>}
+          </div>
         </div>;
       })}</div>
     </div>
