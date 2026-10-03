@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -198,7 +198,6 @@ function FilhosPage() {
         </div>;
       })}</div>
     </div>
-    {filhos.length > 0 && <Link to="/link-filhos" className="fixed bottom-5 right-5 z-30 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 md:hidden" aria-label="Ir para Gerar Link / Filho"><Link2 className="h-4 w-4" />Link/Filho</Link>}
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir <strong>{filhos.find((f) => f.id === confirmarExclusao)?.nome}</strong>?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(confirmarDesativar)} onOpenChange={(open) => !open && setConfirmarDesativar(null)}><DialogContent><DialogHeader><DialogTitle>Desativar painel</DialogTitle></DialogHeader><p>O link de <strong>{confirmarDesativar?.nome}</strong> deixará de permitir acesso ao painel. Os dados não serão apagados.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarDesativar(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { const f = confirmarDesativar; setConfirmarDesativar(null); if (f) void runAction(() => desativarLink(f)); }}>Desativar</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(confirmarNovoLink)} onOpenChange={(open) => !open && setConfirmarNovoLink(null)}><DialogContent><DialogHeader><DialogTitle>Gerar novo link</DialogTitle></DialogHeader><p>O link atual de <strong>{confirmarNovoLink?.nome}</strong> deixará de funcionar imediatamente. Deseja continuar?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarNovoLink(null)}>Cancelar</Button><Button onClick={() => { const f = confirmarNovoLink; setConfirmarNovoLink(null); if (f) void runAction(() => gerarLink(f, true)); }}>Gerar novo link</Button></DialogFooter></DialogContent></Dialog>
