@@ -119,8 +119,9 @@ function RelatorioPage() {
         y += 6;
 
         const total = registros.length;
-        texto(`Não fez: ${total} de ${grupo.vigencia.qtd_ocorrencia}`, margem + 4, largura - 4, 9, true);
-        if (filho.valor_mesada !== null && filho.tem_mesada_opcional) {
+        const comDesconto = usaDesconto(filho, grupo.vigencia);
+        texto(comDesconto ? `Não fez: ${total}` : `Não fez: ${total} de ${grupo.vigencia.qtd_ocorrencia}`, margem + 4, largura - 4, 9, true);
+        if (comDesconto) {
           texto(`Mesada: ${reais(filho.valor_mesada)} · ${resumoMesada(filho, grupo.vigencia, total)}`, margem + 4, largura - 4);
         } else {
           texto(`Penalidade escrita ao atingir o limite: ${grupo.vigencia.penalidade || "Não cadastrada"}`, margem + 4, largura - 4);
@@ -136,7 +137,7 @@ function RelatorioPage() {
             texto("Nenhum registro de “Não fez”.", margem + 12, largura - 12, 8);
           } else {
             for (const [i, registro] of registrosTarefa.entries()) {
-              const penalidade = penalizadas.has(registro.id);
+              const penalidade = !comDesconto && penalizadas.has(registro.id);
               texto(`${i + 1}º não fez: ${fmtData(registro.created_at)}${penalidade ? " · Limite atingido" : ""}`, margem + 12, largura - 12, 8);
             }
           }
@@ -198,7 +199,7 @@ function RelatorioPage() {
                     <div key={filho.id} className="rounded-xl border p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <h3 className="text-lg font-bold">{filho.nome}</h3>
-                        <span className="text-sm font-semibold tabular-nums">Não fez: {total} de {vigencia.qtd_ocorrencia}</span>
+                        <span className="text-sm font-semibold tabular-nums">{comDesconto ? `Não fez: ${total}` : `Não fez: ${total} de ${vigencia.qtd_ocorrencia}`}</span>
                       </div>
                       {comDesconto ? (
                         <p className="mt-2 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}</p>
