@@ -197,11 +197,7 @@ function AtribuicoesPage() {
         <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <div className="space-y-1.5">
-              <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
-              {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
-              {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Não é possível fazer atribuições para uma vigência que ainda não foi iniciada.</p>}
-            </div>
+            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
             <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <div className="space-y-2">
               <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
@@ -231,6 +227,8 @@ function AtribuicoesPage() {
             </div>
             <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && vigenciaEmAndamento(v))}><Plus className="h-4 w-4" /> Adicionar</Button>
           </div>
+          {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
+          {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Não é possível fazer atribuições para uma vigência que ainda não foi iniciada.</p>}
           {itens.length > 0 && (
             <div className="rounded-xl border">
               <Table>
