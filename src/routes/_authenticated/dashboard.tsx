@@ -103,7 +103,10 @@ function DashboardPage() {
         if (vigencia && usaDesconto(filho, vigencia)) desconto += valorDebitado(filho, vigencia, total);
       }
 
-      return { id: filho.id, nome: filho.nome, ocorrencias: regs.length, penalidades, desconto };
+      const mesada = filho.tem_mesada_opcional === true && filho.valor_mesada !== null ? filho.valor_mesada : null;
+      const diferenca = mesada === null ? null : Math.max(0, mesada - desconto);
+
+      return { id: filho.id, nome: filho.nome, ocorrencias: regs.length, penalidades, desconto, mesada, diferenca };
     })
     .filter((x) => x.ocorrencias > 0)
     .sort((a, b) => b.ocorrencias - a.ocorrencias);
@@ -212,9 +215,16 @@ function DashboardPage() {
                       <p className="min-w-0 truncate font-semibold">{item.nome}</p>
                       <span className="shrink-0 text-sm font-semibold tabular-nums">{item.ocorrencias} “Não fez”</span>
                     </div>
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                      {item.penalidades > 0 && <span>{item.penalidades} penalidade(s)</span>}
-                      {item.desconto > 0 && <span>Desconto: {reais(item.desconto)}</span>}
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      {item.mesada !== null ? (
+                        <>
+                          <span>Mesada: <strong className="font-semibold text-foreground">{reais(item.mesada)}</strong></span>
+                          <span>Desconto: <strong className="font-semibold text-foreground">{reais(item.desconto)}</strong></span>
+                          <span>Diferença: <strong className="font-semibold text-foreground">{reais(item.diferenca ?? 0)}</strong></span>
+                        </>
+                      ) : (
+                        item.penalidades > 0 && <span>{item.penalidades} penalidade(s)</span>
+                      )}
                     </div>
                   </div>
                 ))}
