@@ -47,9 +47,9 @@ type VigenciaForm = { data_inicio: string; data_fim: string; penalidade: string;
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", penalidade: "", valor_debito: "", qtd_ocorrencia: "3" };
 const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) => ({ tipo_penalidade: "texto", penalidade: v.penalidade, valor_debito: Number(v.valor_debito.replace(",", ".")) });
 
-function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
+function EscolhaPenalidade({ value, onChange, prefix, mostrarPenalidade = true }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string; mostrarPenalidade?: boolean }) {
   return <div className="space-y-3">
-    <div className="rounded-lg border border-amber-400 bg-amber-50/60 md:border-amber-300/70 md:bg-amber-50/30 p-3 space-y-2 dark:border-amber-700/60 dark:bg-amber-950/10">
+    {mostrarPenalidade && <div className="rounded-lg border border-amber-400 bg-amber-50/60 md:border-amber-300/70 md:bg-amber-50/30 p-3 space-y-2 dark:border-amber-700/60 dark:bg-amber-950/10">
       <p className="text-sm font-semibold">Penalidade</p>
       <Label htmlFor={`${prefix}-penalidade`}>Descrição <span className="text-destructive" aria-hidden="true">*</span></Label>
       <Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} />
@@ -58,7 +58,7 @@ function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; o
         <Input id={`${prefix}-quantidade`} type="number" min="1" max="31" value={value.qtd_ocorrencia} onChange={(e) => onChange({ ...value, qtd_ocorrencia: e.target.value })} />
         <p className="text-xs text-muted-foreground">Usado apenas para filhos sem mesada.</p>
       </div>
-    </div>
+    </div>}
     <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 md:border-emerald-300/70 md:bg-emerald-50/30 p-3 space-y-2 dark:border-emerald-700/60 dark:bg-emerald-950/10">
       <p className="text-sm font-semibold">Desconto por cada “Não fez” na mesada</p>
       <Label htmlFor={`${prefix}-valor`}>Valor do desconto (R$) <span className="text-destructive" aria-hidden="true">*</span></Label>
@@ -160,6 +160,12 @@ function VigenciasPage() {
     const filho = filhos.find((f) => f.id === a.id_filho);
     if (filho && !usaDesconto(filho, editando ? { valor_debito: edicao.valor_debito === "" ? null : Number(edicao.valor_debito.replace(",", ".")) } : { valor_debito: null })) totaisNaEdicao.set(a.id_filho, (totaisNaEdicao.get(a.id_filho) ?? 0) + a.qtd_nao_fez);
   }
+  const temVinculosNaEdicao = vinculadasNaEdicao.length > 0;
+  const temFilhoSemMesadaNaEdicao = vinculadasNaEdicao.some((a) => {
+    const filho = filhos.find((f) => f.id === a.id_filho);
+    return filho ? !(filho.tem_mesada_opcional === true && filho.valor_mesada !== null) : false;
+  });
+  const mostrarPenalidadeNaEdicao = !temVinculosNaEdicao || temFilhoSemMesadaNaEdicao;
   const minimoNaEdicao = Math.max(1, ...totaisNaEdicao.values());
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (new Date(o.created_at).getTime() < new Date(edicao.data_inicio).getTime() || new Date(o.created_at).getTime() > new Date(edicao.data_fim).getTime())) : [];
 
@@ -215,8 +221,8 @@ function VigenciasPage() {
       <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-3">
         <div className="space-y-1.5"><Label htmlFor="editar-inicio" className="text-sm">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
         <div className="space-y-1.5"><Label htmlFor="editar-fim" className="text-sm">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
-        <div className="[&_.space-y-3]:space-y-2 [&_.space-y-2]:space-y-1.5 [&_.p-3]:p-2.5 [&_input]:h-9 [&_label]:text-sm [&_p.text-xs]:text-[11px]"><EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" /></div>
-        {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho sem mesada nesta vigência.</p>}
+        <div className="[&_.space-y-3]:space-y-2 [&_.space-y-2]:space-y-1.5 [&_.p-3]:p-2.5 [&_input]:h-9 [&_label]:text-sm [&_p.text-xs]:text-[11px]"><EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" mostrarPenalidade={mostrarPenalidadeNaEdicao} /></div>
+        {mostrarPenalidadeNaEdicao && minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho sem mesada nesta vigência.</p>}
         {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
         <DialogFooter className="pt-1"><Button type="button" variant="outline" size="sm" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" size="sm">Salvar alterações</Button></DialogFooter>
       </form>
