@@ -109,6 +109,8 @@ function OcorrenciasPage() {
     const vigencia = r.t_vigencia;
     if (!vigencia) return;
     if (!vigenciaEmAndamento(vigencia)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
+    const filho = filhos.find((f) => f.id === r.id_filho);
+    const comDesconto = filho ? usaDesconto(filho, vigencia) : false;
     const selecionada = datas[r.id] ?? dataDe(r);
     if (!selecionada) {
       toast.error("Informe a data da ocorrência");
@@ -138,7 +140,7 @@ function OcorrenciasPage() {
     setBusy(true);
     try {
       const novo = total + 1;
-      const penalizado = novo >= vigencia.qtd_ocorrencia;
+      const penalizado = !comDesconto && novo >= vigencia.qtd_ocorrencia;
       const { error } = await supabase.from("t_ocorrencia").insert({
         id_filho_tarefa: r.id,
         tipo: penalizado ? "PENALIDADE" : "NAO_FEZ",
@@ -148,11 +150,13 @@ function OcorrenciasPage() {
       await atualizar(r, { qtd_nao_fez: r.qtd_nao_fez + 1, feito: penalizado ? "N" : null });
       if (penalizado) await marcarGrupo(r, "N");
       await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
-       if (penalizado) {
-         const filho = filhos.find((f) => f.id === r.id_filho);
-          toast.warning(filho && usaDesconto(filho, vigencia) ? `Limite atingido! Desconto total: ${reais(valorDebitado(filho, vigencia, novo))}` : `Limite atingido! Penalidade: ${vigencia.penalidade}`);
-       }
-      else toast(`Ocorrência registrada (${novo}/${vigencia.qtd_ocorrencia})`);
+      if (comDesconto) {
+        toast.success(`Ocorrência registrada · Desconto acumulado: ${reais(valorDebitado(filho!, vigencia, novo))}`);
+      } else if (penalizado) {
+        toast.warning(`Limite atingido! Penalidade: ${vigencia.penalidade}`);
+      } else {
+        toast(`Ocorrência registrada (${novo}/${vigencia.qtd_ocorrencia})`);
+      }
       setRegistro(null);
     } finally { setBusy(false); }
   }
@@ -168,7 +172,7 @@ function OcorrenciasPage() {
         if (buscaErro || !ultima) { toast.error(buscaErro ? msgErro(buscaErro) : "Não foi possível encontrar a ocorrência para desfazer"); return; }
         const { error } = await supabase.from("t_ocorrencia").delete().eq("id", ultima.id);
         if (error) { toast.error(msgErro(error)); return; }
-        if (total >= (r.t_vigencia?.qtd_ocorrencia ?? 1)) await marcarGrupo(r, null);
+        if (!comDesconto && total >= (r.t_vigencia?.qtd_ocorrencia ?? 1)) await marcarGrupo(r, null);
         await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
       }
       await atualizar(r, { qtd_nao_fez: Math.max(0, r.qtd_nao_fez - 1), feito: null });
@@ -268,7 +272,7 @@ function OcorrenciasPage() {
                         <h3 className="min-w-0 truncate text-lg font-bold">{filho.nome}</h3>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
-                        <span className="text-sm font-semibold tabular-nums">Não fez: {total} de {vigencia.qtd_ocorrencia}</span>
+                        {!comDesconto && <span className="text-sm font-semibold tabular-nums">Não fez: {total} de {vigencia.qtd_ocorrencia}</span>}
                           {penalizado && !comDesconto && (
                           <Badge variant="destructive">
                             <AlertTriangle className="mr-1 h-3 w-3" />
@@ -279,7 +283,7 @@ function OcorrenciasPage() {
                     </button>
                     {filhoAberto && <>
                      {comDesconto ? (
-                       <p className="mb-3 text-sm font-medium tabular-nums text-foreground">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}{penalizado && <span className="ml-2 text-destructive">Limite atingido</span>}</p>
+                       <p className="mb-3 text-sm font-medium tabular-nums text-foreground">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}</p>
                      ) : (
                        <p className="mb-3 text-sm font-medium text-foreground">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
                      )}
@@ -299,7 +303,7 @@ function OcorrenciasPage() {
                                   {registros.map((o, i) => (
                                     <li key={o.id} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs tabular-nums text-muted-foreground">
                                       <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                                        <span>{i + 1}º não fez · {occurrenceDate.format(new Date(o.created_at))}{comDesconto ? ` · −${reais(valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id <= o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length) - valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id < o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length))}` : ""}</span>
+                                        <span>{occurrenceDate.format(new Date(o.created_at))}{comDesconto ? ` · −${reais(valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id <= o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length) - valorDebitado(filho, vigencia, ocorrencias.filter((anterior) => anterior.id < o.id && anterior.t_filho_tarefa?.id_filho === filho.id && anterior.t_filho_tarefa.id_vigencia === vigencia.id).length))}` : ""}</span>
                                        {penalizadas.has(o.id) && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" aria-label="Penalidade atingida" />}
                                       <Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy || !vigenciaEmAndamento(vigencia)} title="Corrigir data" aria-label={`Corrigir data de ${occurrenceDate.format(new Date(o.created_at))}`} onClick={() => setCorrecao({ tarefa: r, ocorrencia: o, data: localDate(new Date(o.created_at)) })}><Pencil className="h-3 w-3" /></Button>
                                     </li>
