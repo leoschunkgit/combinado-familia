@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ActionLoadingProvider } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
+import { useFilhos } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -49,6 +50,8 @@ const ETAPAS = [
 function AuthenticatedLayout() {
   const { nomePai, user } = Route.useRouteContext();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { data: filhos = [] } = useFilhos();
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
   const [etapa, setEtapa] = useState<number | null>(null);
@@ -64,7 +67,6 @@ function AuthenticatedLayout() {
     setSalvando(false);
     if (error) toast.error("Não foi possível salvar sua escolha. O guia poderá aparecer novamente no próximo acesso.");
   }
-
 
   function irParaEtapa(indice: number) {
     const destino = ETAPAS[indice];
@@ -85,6 +87,7 @@ function AuthenticatedLayout() {
   }
 
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
+  const mostrarAtalhoLinkFilho = filhos.length > 0 && pathname !== "/filhos" && pathname !== "/link-filhos";
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
@@ -120,6 +123,8 @@ function AuthenticatedLayout() {
           {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Button variant="ghost" size="icon" onClick={encerrar} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? encerrar() : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={encerrar} disabled={salvando}>Pular guia</Button></div></section>}
           <Outlet />
         </div></main>
+
+        {mostrarAtalhoLinkFilho && <Link to="/link-filhos" className="fixed bottom-5 right-5 z-30 inline-flex h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/75 px-4 text-sm font-medium text-primary-foreground shadow-lg backdrop-blur-sm transition-all hover:bg-primary/90 md:hidden" aria-label="Ir para Gerar Link / Filho"><Link2 className="h-4 w-4" />Link/Filho</Link>}
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="fixed inset-y-0 left-0 z-50 w-[78vw] max-w-xs border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="flex items-center justify-between border-b p-3"><Link to="/inicio" className="flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
