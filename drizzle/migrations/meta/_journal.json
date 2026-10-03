@@ -78,6 +78,13 @@
       "when": 1791051166529,
       "tag": "0010_rotate_token_when_reactivating_child_access",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791054173205,
+      "tag": "0011_public_dashboard_responsavel",
+      "breakpoints": true
     }
   ]
 }
