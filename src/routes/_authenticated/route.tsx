@@ -33,7 +33,7 @@ const NAV = [
   { to: "/historico", label: "Histórico", icon: History },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
   { to: "/filhos", label: "Filhos", icon: Users },
-  { to: "/link-filhos", label: "Link / Filhos", icon: Link2 },
+  { to: "/link-filhos", label: "Gerar Link / Filho", icon: Link2 },
   { to: "/tarefas", label: "Tarefas", icon: ListTodo },
   { to: "/vigencias", label: "Vigências", icon: CalendarRange },
 ] as const;
