@@ -22,7 +22,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
     { title: "Vigências — Combinado" },
-    { name: "description", content: "Defina os períodos e limites dos combinados da família." },
+    { name: "description", content: "Defina o período, a penalidade e o desconto da mesada." },
     { property: "og:title", content: "Vigências — Combinado" },
     { property: "og:description", content: "Defina os períodos e limites dos combinados da família." },
     { property: "og:type", content: "website" },
@@ -42,7 +42,7 @@ const schema = z
   .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })
   .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })
   .refine((v) => new Date(v.data_fim).getTime() >= new Date(v.data_inicio).getTime(), "A data/hora fim deve ser igual ou posterior à data/hora início")
-  .refine((v) => v.penalidade.length >= 2, { message: "Informe a penalidade escrita", path: ["penalidade"] })
+  .refine((v) => v.penalidade.length >= 2, { message: "Informe a penalidade", path: ["penalidade"] })
   .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
 type VigenciaForm = { data_inicio: string; data_fim: string; penalidade: string; valor_debito: string; qtd_ocorrencia: string };
@@ -55,8 +55,17 @@ const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) =
 
 function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
   return <div className="space-y-3">
-    <div className="space-y-2"><Label htmlFor={`${prefix}-penalidade`}>Penalidade escrita <span className="text-destructive" aria-hidden="true">*</span></Label><Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} /></div>
-    <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Desconto por “Não fez” (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="20,00" value={value.valor_debito} onChange={(e) => onChange({ ...value, valor_debito: e.target.value })} /><p className="text-xs text-muted-foreground">Com mesada cadastrada, aplica-se o desconto por registro até o limite. Sem mesada, aplica-se a penalidade escrita ao atingir o limite.</p></div>
+    <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+      <p className="text-sm font-semibold">Penalidade</p>
+      <Label htmlFor={`${prefix}-penalidade`}>Descrição <span className="text-destructive" aria-hidden="true">*</span></Label>
+      <Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} />
+    </div>
+    <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+      <p className="text-sm font-semibold">Desconto por cada “Não fez” na mesada</p>
+      <Label htmlFor={`${prefix}-valor`}>Valor do desconto (R$) <span className="text-destructive" aria-hidden="true">*</span></Label>
+      <Input id={`${prefix}-valor`} inputMode="decimal" placeholder="20,00" value={value.valor_debito} onChange={(e) => onChange({ ...value, valor_debito: e.target.value })} />
+      <p className="text-xs text-muted-foreground">Usado apenas para filhos com mesada. Cada “Não fez” gera esse desconto.</p>
+    </div>
   </div>;
 }
 
@@ -231,8 +240,8 @@ function VigenciasPage() {
               <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
               <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
               <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" />
-              <div className="space-y-2"><Label>Quantidade de ocorrências <span className="text-destructive" aria-hidden="true">*</span></Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Número de "não fez" que aplica a penalidade.</p></div>
+              <div className="space-y-2"><Label>Quantidade de “Não fez” para ser penalizado <span className="text-destructive" aria-hidden="true">*</span></Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
+                <p className="text-xs text-muted-foreground">Usado apenas para filhos sem mesada.</p></div>
               <Button type="submit" className="w-full">Cadastrar</Button>
             </form>
           </CardContent>
@@ -251,7 +260,7 @@ function VigenciasPage() {
                     <VigenciaStatus vigencia={v} />
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(v)}</p>
-                  <p className="text-sm text-muted-foreground">Limite: {v.qtd_ocorrencia} ocorrência(s)</p>
+                  <p className="text-sm text-muted-foreground">Quantidade para penalização: {v.qtd_ocorrencia}</p>
                 </div>
                 {emAndamento && (
                   <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} aria-label={`Finalizar vigência ${fmtVigencia(v)}`} title="Finalizar vigência">
