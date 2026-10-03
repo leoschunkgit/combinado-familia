@@ -49,7 +49,7 @@ const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) =
 
 function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
   return <div className="space-y-3">
-    <div className="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-2">
+    <div className="rounded-lg border border-amber-300/70 bg-amber-50/30 p-3 space-y-2 dark:border-amber-700/60 dark:bg-amber-950/10">
       <p className="text-sm font-semibold">Penalidade</p>
       <Label htmlFor={`${prefix}-penalidade`}>Descrição <span className="text-destructive" aria-hidden="true">*</span></Label>
       <Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} />
@@ -59,7 +59,7 @@ function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; o
         <p className="text-xs text-muted-foreground">Usado apenas para filhos sem mesada.</p>
       </div>
     </div>
-    <div className="rounded-lg border border-border/70 bg-muted/20 p-3 space-y-2">
+    <div className="rounded-lg border border-emerald-300/70 bg-emerald-50/30 p-3 space-y-2 dark:border-emerald-700/60 dark:bg-emerald-950/10">
       <p className="text-sm font-semibold">Desconto por cada “Não fez” na mesada</p>
       <Label htmlFor={`${prefix}-valor`}>Valor do desconto (R$) <span className="text-destructive" aria-hidden="true">*</span></Label>
       <Input id={`${prefix}-valor`} inputMode="decimal" placeholder="20,00" value={value.valor_debito} onChange={(e) => onChange({ ...value, valor_debito: e.target.value })} />
@@ -197,11 +197,11 @@ function VigenciasPage() {
               </div>
             </div>
             <div className="mt-2 space-y-1.5">
-              <div className="w-full rounded-lg border border-border/70 bg-muted/20 px-3 py-1.5 text-xs">
+              <div className="w-full rounded-lg border border-amber-300/70 bg-amber-50/30 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10">
                 <span className="font-semibold text-foreground">Penalidade:</span>{" "}<span className="text-muted-foreground">{v.penalidade || "Não cadastrada"}</span>{" "}
                 <span className="text-muted-foreground">·</span>{" "}<span className="font-semibold text-foreground">Quantidade de “Não fez”:</span>{" "}<span className="text-muted-foreground">{v.qtd_ocorrencia}</span>
               </div>
-              <div className="w-full rounded-lg border border-border/70 bg-muted/20 px-3 py-1.5 text-xs">
+              <div className="w-full rounded-lg border border-emerald-300/70 bg-emerald-50/30 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10">
                 <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} por cada “Não fez”` : "Não cadastrado"}</span>
               </div>
             </div>
