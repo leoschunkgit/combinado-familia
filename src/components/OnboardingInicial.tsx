@@ -204,8 +204,7 @@ export function OnboardingInicial() {
   return (
     <Dialog open={aberto}>
       <DialogContent
-        hideClose
-        className="max-h-[92vh] max-w-lg overflow-y-auto rounded-xl"
+        className="max-h-[92vh] max-w-lg overflow-y-auto rounded-xl [&>button]:hidden"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
