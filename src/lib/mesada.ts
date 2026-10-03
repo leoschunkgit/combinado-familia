@@ -17,5 +17,5 @@ export function usaDesconto(filho: Pick<Filho, "tem_mesada_opcional" | "valor_me
 }
 
 export function descricaoPenalidade(vigencia: Pick<Vigencia, "penalidade" | "valor_debito">) {
-  return `Penalidade escrita: ${vigencia.penalidade || "Não cadastrada"} · Desconto da mesada: ${vigencia.valor_debito !== null ? `${reais(vigencia.valor_debito)} por Não fez` : "Não cadastrado"}`;
+  return `Penalidade: ${vigencia.penalidade || "Não cadastrada"} · Desconto da mesada: ${vigencia.valor_debito !== null ? `${reais(vigencia.valor_debito)} por Não fez` : "Não cadastrado"}`;
 }
