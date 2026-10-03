@@ -16,7 +16,6 @@ import { BlockedAction } from "@/components/BlockedAction";
 import { VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { descricaoPenalidade, usaDesconto } from "@/lib/mesada";
-import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
@@ -151,15 +150,6 @@ function VigenciasPage() {
     if (novoFim < novoInicio) {
       toast.error("A data/hora fim deve ser igual ou posterior à data/hora início");
       return;
-    }
-
-    const novoPeriodo = { valor_debito: Number(p.data.valor_debito.replace(",", ".")), qtd_ocorrencia: p.data.qtd_ocorrencia };
-    for (const idFilho of new Set(atribuicoes.filter((a) => a.id_vigencia === editando.id).map((a) => a.id_filho))) {
-      const filho = filhos.find((f) => f.id === idFilho);
-      if (filho) {
-        const erro = erroLimiteMesada(filho, novoPeriodo);
-        if (erro) { toast.error(erro); return; }
-      }
     }
 
     const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho, qtd_nao_fez").eq("id_vigencia", editando.id);
