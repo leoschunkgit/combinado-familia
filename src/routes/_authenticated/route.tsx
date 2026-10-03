@@ -6,7 +6,8 @@ import { CalendarRange, ClipboardCheck, History, ListTodo, LogOut, Users, Link2,
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ActionLoadingProvider } from "@/components/ActionLoading";\nimport { OnboardingInicial } from "@/components/OnboardingInicial";
+import { ActionLoadingProvider } from "@/components/ActionLoading";
+import { OnboardingInicial } from "@/components/OnboardingInicial";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
