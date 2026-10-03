@@ -12,7 +12,8 @@
 # AGENTS.md
 
 - Data access uses the browser client with RLS scoped by `current_pai_id()`; every table carries `id_usuario_pai` (including t_tarefa) so each parent only sees their own data.
-- T_USUARIO_PAI is linked to the auth user via `auth_user_id`; the row is created on first sign-in in `_authenticated/route.tsx` (no triggers on auth schema allowed). Passwords live only in auth, never in the table.
+- T_USUARIO_PAI is linked to the auth user via `auth_user_id`; signup creates its row through `handle_new_auth_user()` and the authenticated layout provides a fallback for missing legacy rows. Passwords live only in auth, never in the table.
+- Account name edits update the parent row and auth metadata; email is read-only and CPF is not part of the current schema, so account writes must never include CPF.
 - "Não fez" count is stored in `t_filho_tarefa.qtd_nao_fez`; `feito` = 'S' (cumprida), 'N' (penalidade atingida), null (em andamento).
 - Editing an assignment updates its existing `t_filho_tarefa` row so linked occurrence history is preserved.
 - DB triggers protect assignment edits/deletes after “Não fez” and validity deletion/period/limit; UI checks give early feedback, DB prevents bypasses.

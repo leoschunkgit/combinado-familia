@@ -358,8 +358,10 @@ function OcorrenciasPage() {
                <BrDateField
                 id="corrigir-data"
                 value={correcao?.data ?? ""}
-                min={correcao?.tarefa.t_vigencia ? localDate(new Date(correcao.tarefa.t_vigencia.data_inicio)) : undefined}
-                max={correcao?.tarefa.t_vigencia ? localDate(new Date(Math.min(new Date(correcao.tarefa.t_vigencia.data_fim).getTime(), Date.now()))) : undefined}
+                {...(correcao?.tarefa.t_vigencia ? {
+                  min: localDate(new Date(correcao.tarefa.t_vigencia.data_inicio)),
+                  max: localDate(new Date(Math.min(new Date(correcao.tarefa.t_vigencia.data_fim).getTime(), Date.now()))),
+                } : {})}
                 onChange={(date) => setCorrecao((atual) => atual ? { ...atual, data: date } : null)}
               />
               <p className="text-xs text-muted-foreground">A data deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência.</p>
