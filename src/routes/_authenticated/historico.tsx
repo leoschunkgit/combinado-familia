@@ -134,6 +134,7 @@ function HistoricoPage() {
                {gruposFilhos.map(({ filho, registros }) => {
                  const chaveFilho = `${vigencia.id}-${filho.id}`;
                  const filhoAberto = filhosAbertos[chaveFilho] === true;
+                 const comDesconto = usaDesconto(filho, vigencia);
                  return (
                 <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
                   <button
@@ -146,15 +147,15 @@ function HistoricoPage() {
                     <span>{filho.nome}</span>
                   </button>
                   {filhoAberto && <>
-                   {usaDesconto(filho, vigencia) ? (
+                   {comDesconto ? (
                      <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registros.length)}</p>
                    ) : (
-                     <p className="mb-3 text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
+                     <p className="mb-3 text-sm font-medium">Penalidade ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
                    )}
                   <div className="grid gap-3">
                      {[...registros].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((o, indice) => {
                       const ft = o.t_filho_tarefa;
-                      const penalidade = penalizadas.has(o.id);
+                      const penalidade = !comDesconto && penalizadas.has(o.id);
                       return (
                         <div
                           key={o.id}
@@ -167,7 +168,7 @@ function HistoricoPage() {
                               <p className="font-medium">{ft?.t_tarefa?.nome}</p>
                                {penalidade ? (
                                 <Badge variant="destructive">
-                                    <AlertTriangle className="mr-1 h-3 w-3" /> {usaDesconto(filho, vigencia) ? "Limite atingido" : "Penalidade atingida"}
+                                    <AlertTriangle className="mr-1 h-3 w-3" /> Penalidade atingida
                                 </Badge>
                               ) : (
                                 <Badge className="border-red-200 bg-red-100 text-red-700 hover:bg-red-100">
@@ -175,7 +176,7 @@ function HistoricoPage() {
                                 </Badge>
                               )}
                             </div>
-                              {usaDesconto(filho, vigencia) ? (
+                              {comDesconto ? (
                                <p className="mt-1 text-sm font-medium tabular-nums text-foreground">Desconto: {reais(valorDebitado(filho, vigencia, indice + 1) - valorDebitado(filho, vigencia, indice))} · Mesada após este registro: {reais(Math.max(0, (filho.valor_mesada ?? 0) - valorDebitado(filho, vigencia, indice + 1)))}</p>
                              ) : penalidade && (
                               <p className="mt-1 text-sm font-medium text-destructive">
