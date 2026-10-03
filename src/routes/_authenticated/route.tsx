@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CalendarRange, ClipboardCheck, History, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText } from "lucide-react";
+import { CalendarRange, ClipboardCheck, History, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -31,6 +31,7 @@ const NAV = [
   { to: "/inicio", label: "Início", icon: Home },
   { to: "/ocorrencias", label: "Ocorrências", icon: ClipboardCheck },
   { to: "/historico", label: "Histórico", icon: History },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
   { to: "/filhos", label: "Filhos", icon: Users },
   { to: "/tarefas", label: "Tarefas", icon: ListTodo },
