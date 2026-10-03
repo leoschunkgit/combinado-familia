@@ -188,8 +188,19 @@ function RelatorioPage() {
                   <CardTitle>{fmtVigencia(vigencia)}</CardTitle>
                   <VigenciaStatus vigencia={vigencia} />
                 </div>
-                <p className="text-sm text-muted-foreground">{descricaoPenalidade(vigencia)}</p>
-                <p className="text-sm text-muted-foreground">Limite: {vigencia.qtd_ocorrencia} ocorrência(s)</p>
+                <div className="mt-2 space-y-1.5">
+                  <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10 md:border-amber-300/70 md:bg-amber-50/30">
+                    <span className="font-semibold text-foreground">Penalidade:</span>{" "}
+                    <span className="text-muted-foreground">{vigencia.penalidade || "Não cadastrada"}</span>{" "}
+                    <span className="text-muted-foreground">·</span>{" "}
+                    <span className="font-semibold text-foreground">Limite:</span>{" "}
+                    <span className="text-muted-foreground">{vigencia.qtd_ocorrencia} ocorrência(s)</span>
+                  </div>
+                  <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10 md:border-emerald-300/70 md:bg-emerald-50/30">
+                    <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}
+                    <span className="text-muted-foreground">{vigencia.valor_debito !== null ? `${reais(vigencia.valor_debito)} por Não fez` : "Não cadastrado"}</span>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {gruposFilhos.map(({ filho, tarefas, registros }) => {
