@@ -15,7 +15,7 @@ import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
 import { VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
-import { descricaoPenalidade, usaDesconto } from "@/lib/mesada";
+import { reais, usaDesconto } from "@/lib/mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
@@ -30,27 +30,22 @@ export const Route = createFileRoute("/_authenticated/vigencias")({
   component: VigenciasPage,
 });
 
-const schema = z
-  .object({
-    data_inicio: z.string().min(1, "Informe a data de início"),
-    data_fim: z.string().min(1, "Informe a data de fim"),
-    penalidade: z.string().trim().max(200),
-    valor_debito: z.string(),
-    qtd_ocorrencia: z.coerce.number().int().min(1, "Mínimo de 1 ocorrência").max(31, "Máximo de 31"),
-  })
-  .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })
-  .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })
-  .refine((v) => new Date(v.data_fim).getTime() >= new Date(v.data_inicio).getTime(), "A data/hora fim deve ser igual ou posterior à data/hora início")
-  .refine((v) => v.penalidade.length >= 2, { message: "Informe a penalidade", path: ["penalidade"] })
-  .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
+const schema = z.object({
+  data_inicio: z.string().min(1, "Informe a data de início"),
+  data_fim: z.string().min(1, "Informe a data de fim"),
+  penalidade: z.string().trim().max(200),
+  valor_debito: z.string(),
+  qtd_ocorrencia: z.coerce.number().int().min(1, "Mínimo de 1 ocorrência").max(31, "Máximo de 31"),
+})
+.refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })
+.refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })
+.refine((v) => new Date(v.data_fim).getTime() >= new Date(v.data_inicio).getTime(), "A data/hora fim deve ser igual ou posterior à data/hora início")
+.refine((v) => v.penalidade.length >= 2, { message: "Informe a penalidade", path: ["penalidade"] })
+.refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
 type VigenciaForm = { data_inicio: string; data_fim: string; penalidade: string; valor_debito: string; qtd_ocorrencia: string };
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", penalidade: "", valor_debito: "", qtd_ocorrencia: "3" };
-const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) => ({
-  tipo_penalidade: "texto",
-  penalidade: v.penalidade,
-  valor_debito: Number(v.valor_debito.replace(",", ".")),
-});
+const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) => ({ tipo_penalidade: "texto", penalidade: v.penalidade, valor_debito: Number(v.valor_debito.replace(",", ".")) });
 
 function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
   return <div className="space-y-3">
@@ -85,7 +80,6 @@ function VigenciasPage() {
   const [edicao, setEdicao] = useState(form);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [confirmarFinalizacao, setConfirmarFinalizacao] = useState<number | null>(null);
-
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
@@ -93,40 +87,23 @@ function VigenciasPage() {
     e.preventDefault();
     const p = schema.safeParse(form);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
-    const { error } = await supabase.from("t_vigencia").insert({
-      ...p.data,
-      ...dadosPenalidade(p.data),
-      data_inicio: paraIso(p.data.data_inicio),
-      data_fim: paraIso(p.data.data_fim),
-    });
+    const { error } = await supabase.from("t_vigencia").insert({ ...p.data, ...dadosPenalidade(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) });
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Vigência cadastrada");
-    setForm(vazio);
-    qc.invalidateQueries({ queryKey: ["vigencias"] });
+    toast.success("Vigência cadastrada"); setForm(vazio); qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
   async function finalizar(id: number) {
-    const vigencia = vigencias.find((v) => v.id === id);
-    if (!vigencia) return;
+    const vigencia = vigencias.find((v) => v.id === id); if (!vigencia) return;
     const agora = Date.now();
-    const inicio = new Date(vigencia.data_inicio).getTime();
-    const fim = new Date(vigencia.data_fim).getTime();
-    if (inicio > agora || fim < agora) {
-      toast.error("Somente vigências em andamento podem ser finalizadas");
-      return;
-    }
+    if (new Date(vigencia.data_inicio).getTime() > agora || new Date(vigencia.data_fim).getTime() < agora) { toast.error("Somente vigências em andamento podem ser finalizadas"); return; }
     const { error } = await supabase.from("t_vigencia").update({ data_fim: new Date().toISOString() }).eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Vigência finalizada");
-    qc.invalidateQueries({ queryKey: ["vigencias"] });
+    toast.success("Vigência finalizada"); qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
   async function excluir(id: number) {
     const vigencia = vigencias.find((v) => v.id === id);
-    if (vigencia && new Date(vigencia.data_fim).getTime() < Date.now()) {
-      toast.error("Vigências finalizadas não podem ser excluídas");
-      return;
-    }
+    if (vigencia && new Date(vigencia.data_fim).getTime() < Date.now()) { toast.error("Vigências finalizadas não podem ser excluídas"); return; }
     const { count, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id", { count: "exact", head: true }).eq("id_vigencia", id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     if (count) { toast.error("Esta vigência tem atribuições e não pode ser excluída"); return; }
@@ -136,76 +113,37 @@ function VigenciasPage() {
   }
 
   function abrirEdicao(v: Vigencia) {
-    if (new Date(v.data_fim).getTime() < Date.now()) {
-      toast.error("Vigências finalizadas não podem ser editadas");
-      return;
-    }
+    if (new Date(v.data_fim).getTime() < Date.now()) { toast.error("Vigências finalizadas não podem ser editadas"); return; }
     setEditando(v);
     setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim), penalidade: v.penalidade, valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","), qtd_ocorrencia: String(v.qtd_ocorrencia) });
   }
 
   async function salvarEdicao(e: FormEvent) {
-    e.preventDefault();
-    if (!editando) return;
+    e.preventDefault(); if (!editando) return;
     const p = schema.safeParse(edicao);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
-
-    const novoInicio = new Date(p.data.data_inicio).getTime();
-    const novoFim = new Date(p.data.data_fim).getTime();
-    if (novoFim < novoInicio) {
-      toast.error("A data/hora fim deve ser igual ou posterior à data/hora início");
-      return;
-    }
-
+    const novoInicio = new Date(p.data.data_inicio).getTime(); const novoFim = new Date(p.data.data_fim).getTime();
+    if (novoFim < novoInicio) { toast.error("A data/hora fim deve ser igual ou posterior à data/hora início"); return; }
     const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho, qtd_nao_fez").eq("id_vigencia", editando.id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
-
     const idsVinculadas = (vinculadas ?? []).map((item) => item.id);
     if (idsVinculadas.length) {
-      const { data: registros, error: registrosErro } = await supabase
-        .from("t_ocorrencia")
-        .select("id, created_at")
-        .in("id_filho_tarefa", idsVinculadas);
+      const { data: registros, error: registrosErro } = await supabase.from("t_ocorrencia").select("id, created_at").in("id_filho_tarefa", idsVinculadas);
       if (registrosErro) { toast.error(msgErro(registrosErro)); return; }
-
-      const foraDoPeriodo = (registros ?? []).filter((o) => {
-        const dataRegistro = new Date(o.created_at).getTime();
-        return dataRegistro < novoInicio || dataRegistro > novoFim;
-      });
-
-      if (foraDoPeriodo.length > 0) {
-        toast.error(
-          `Não é possível alterar o período: existem ${foraDoPeriodo.length} registro(s) de “Não fez” fora das novas datas. Ajuste ou remova esses registros em Ocorrências antes de salvar.`,
-        );
-        return;
-      }
+      const fora = (registros ?? []).filter((o) => { const d = new Date(o.created_at).getTime(); return d < novoInicio || d > novoFim; });
+      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} registro(s) de “Não fez” fora das novas datas. Ajuste ou remova esses registros em Ocorrências antes de salvar.`); return; }
     }
-
     const totais = new Map<number, number>();
     for (const item of vinculadas ?? []) {
       const filho = filhos.find((f) => f.id === item.id_filho);
-      if (filho && !usaDesconto(filho, { valor_debito: Number(p.data.valor_debito.replace(",", ".")) })) {
-        totais.set(item.id_filho, (totais.get(item.id_filho) ?? 0) + item.qtd_nao_fez);
-      }
+      if (filho && !usaDesconto(filho, { valor_debito: Number(p.data.valor_debito.replace(",", ".")) })) totais.set(item.id_filho, (totais.get(item.id_filho) ?? 0) + item.qtd_nao_fez);
     }
     const maiorTotal = Math.max(0, ...totais.values());
-    if (p.data.qtd_ocorrencia < maiorTotal) {
-      toast.error(`O limite não pode ser menor que os ${maiorTotal} registros de “Não fez” já acumulados por um filho sem mesada nesta vigência`);
-      return;
-    }
-
-    const { error } = await supabase.from("t_vigencia").update({
-      ...p.data,
-      ...dadosPenalidade(p.data),
-      data_inicio: paraIso(p.data.data_inicio),
-      data_fim: paraIso(p.data.data_fim),
-    }).eq("id", editando.id);
+    if (p.data.qtd_ocorrencia < maiorTotal) { toast.error(`O limite não pode ser menor que os ${maiorTotal} registros de “Não fez” já acumulados por um filho sem mesada nesta vigência`); return; }
+    const { error } = await supabase.from("t_vigencia").update({ ...p.data, ...dadosPenalidade(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Vigência atualizada");
-    setEditando(null);
-    qc.invalidateQueries({ queryKey: ["vigencias"] });
-    qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    qc.invalidateQueries({ queryKey: ["ocorrencias"] });
+    toast.success("Vigência atualizada"); setEditando(null);
+    qc.invalidateQueries({ queryKey: ["vigencias"] }); qc.invalidateQueries({ queryKey: ["filho_tarefas"] }); qc.invalidateQueries({ queryKey: ["ocorrencias"] });
   }
 
   const agora = Date.now();
@@ -220,101 +158,66 @@ function VigenciasPage() {
   const totaisNaEdicao = new Map<number, number>();
   for (const a of vinculadasNaEdicao) {
     const filho = filhos.find((f) => f.id === a.id_filho);
-    if (filho && !usaDesconto(filho, editando ? { valor_debito: edicao.valor_debito === "" ? null : Number(edicao.valor_debito.replace(",", ".")) } : { valor_debito: null })) {
-      totaisNaEdicao.set(a.id_filho, (totaisNaEdicao.get(a.id_filho) ?? 0) + a.qtd_nao_fez);
-    }
+    if (filho && !usaDesconto(filho, editando ? { valor_debito: edicao.valor_debito === "" ? null : Number(edicao.valor_debito.replace(",", ".")) } : { valor_debito: null })) totaisNaEdicao.set(a.id_filho, (totaisNaEdicao.get(a.id_filho) ?? 0) + a.qtd_nao_fez);
   }
   const minimoNaEdicao = Math.max(1, ...totaisNaEdicao.values());
-  const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) &&
-    (new Date(o.created_at).getTime() < new Date(edicao.data_inicio).getTime() || new Date(o.created_at).getTime() > new Date(edicao.data_fim).getTime())) : [];
+  const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (new Date(o.created_at).getTime() < new Date(edicao.data_inicio).getTime() || new Date(o.created_at).getTime() > new Date(edicao.data_fim).getTime())) : [];
 
-  return (
-    <>
-      <PageHeader title="Vigências" description="Defina o período, a penalidade e quantas falhas são toleradas." icon={<CalendarRange className="h-6 w-6" />} />
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-        <span className="font-medium">Legenda:</span>
-        <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" aria-hidden="true" />Em andamento</span>
-        <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" aria-hidden="true" />Finalizada</span>
-        <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" aria-hidden="true" />Ainda não começou</span>
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        <Card>
-          <CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader>
-          <CardContent>
-            <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
-              <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
-              <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" />
-              <Button type="submit" className="w-full">Cadastrar</Button>
-            </form>
-          </CardContent>
-        </Card>
-        <div className="space-y-3">
-          {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
-          {vigenciasOrdenadas.map((v) => {
-            const finalizada = new Date(v.data_fim).getTime() < agora;
-            const emAndamento = new Date(v.data_inicio).getTime() <= agora && !finalizada;
-            const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
-            return (
-              <div key={v.id} className="flex items-start gap-4 rounded-2xl border bg-card p-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold">{fmtVigencia(v)}</p>
-                    <VigenciaStatus vigencia={v} />
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{descricaoPenalidade(v)}</p>
-                  <p className="text-sm text-muted-foreground">Quantidade para penalização: {v.qtd_ocorrencia}</p>
+  return <>
+    <PageHeader title="Vigências" description="Defina o período, a penalidade e o desconto da mesada." icon={<CalendarRange className="h-6 w-6" />} />
+    <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+      <span className="font-medium">Legenda:</span>
+      <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" />Em andamento</span>
+      <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" />Finalizada</span>
+      <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Ainda não começou</span>
+    </div>
+    <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <Card><CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader><CardContent>
+        <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
+          <div className="space-y-2"><Label htmlFor="inicio">Data início *</Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
+          <div className="space-y-2"><Label htmlFor="fim">Data fim *</Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
+          <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" /><Button type="submit" className="w-full">Cadastrar</Button>
+        </form>
+      </CardContent></Card>
+      <div className="space-y-3">
+        {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
+        {vigenciasOrdenadas.map((v) => {
+          const finalizada = new Date(v.data_fim).getTime() < agora;
+          const emAndamento = new Date(v.data_inicio).getTime() <= agora && !finalizada;
+          const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
+          return <div key={v.id} className="flex items-start gap-4 rounded-2xl border bg-card p-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2"><p className="font-semibold">{fmtVigencia(v)}</p><VigenciaStatus vigencia={v} /></div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                  <p className="text-xs font-semibold text-foreground">Penalidade</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{v.penalidade || "Não cadastrada"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Quantidade de “Não fez”: <span className="font-medium text-foreground">{v.qtd_ocorrencia}</span></p>
                 </div>
-                {emAndamento && (
-                  <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} aria-label={`Finalizar vigência ${fmtVigencia(v)}`} title="Finalizar vigência">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </Button>
-                )}
-                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)} aria-label={`Editar vigência ${fmtVigencia(v)}`}><Pencil className="h-4 w-4" /></Button></BlockedAction>
-                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}>
-                  <Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)} aria-label={`Excluir vigência ${fmtVigencia(v)}`}><Trash2 className="h-4 w-4" /></Button>
-                </BlockedAction>
+                <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                  <p className="text-xs font-semibold text-foreground">Desconto da mesada</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Por cada “Não fez”: <span className="font-medium text-foreground">{v.valor_debito !== null ? reais(v.valor_debito) : "Não cadastrado"}</span></p>
+                </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+            {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
+            <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
+            <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}><Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)}><Trash2 className="h-4 w-4" /></Button></BlockedAction>
+          </div>;
+        })}
       </div>
-      <Dialog open={confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader>
-          <p>Tem certeza que deseja finalizar a vigência <strong>{confirmarFinalizacao !== null ? (() => { const v = vigencias.find((item) => item.id === confirmarFinalizacao); return v ? fmtVigencia(v) : ""; })() : ""}</strong>?</p>
-          <p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora. Depois disso, esta vigência será considerada finalizada e não poderá mais ser editada ou excluída.</p>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button>
-            <Button type="button" onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
-          <p>Tem certeza que deseja excluir a vigência <strong>{confirmarExclusao !== null ? (() => { const v = vigencias.find((item) => item.id === confirmarExclusao); return v ? fmtVigencia(v) : ""; })() : ""}</strong>?</p>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
-            <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
-          <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
-            <div className="space-y-2"><Label htmlFor="editar-inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
-            <div className="space-y-2"><Label htmlFor="editar-fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
-            <EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" />
-            {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
-              <Button type="submit">Salvar alterações</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+    </div>
+    <Dialog open={confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}><DialogContent><DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader><p>Tem certeza que deseja finalizar esta vigência?</p><p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button><Button onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir esta vigência?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
+      <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
+        <div className="space-y-2"><Label htmlFor="editar-inicio">Data início *</Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
+        <div className="space-y-2"><Label htmlFor="editar-fim">Data fim *</Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
+        <EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" />
+        {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho sem mesada nesta vigência.</p>}
+        {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
+        <DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit">Salvar alterações</Button></DialogFooter>
+      </form>
+    </DialogContent></Dialog>
+  </>;
 }
