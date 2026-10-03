@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenticated/atribuicoes'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFilhosRouteImport } from './routes/_authenticated/filhos'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
@@ -21,6 +22,7 @@ import { Route as AuthenticatedOcorrenciasRouteImport } from './routes/_authenti
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedVigenciasRouteImport } from './routes/_authenticated/vigencias'
+import { Route as AcompanharTokenRouteImport } from './routes/acompanhar.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,6 +49,11 @@ const AuthenticatedAtribuicoesRoute =
     path: '/atribuicoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFilhosRoute = AuthenticatedFilhosRouteImport.update({
   id: '/filhos',
   path: '/filhos',
@@ -83,12 +90,18 @@ const AuthenticatedVigenciasRoute = AuthenticatedVigenciasRouteImport.update({
   path: '/vigencias',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AcompanharTokenRoute = AcompanharTokenRouteImport.update({
+  id: '/acompanhar/$token',
+  path: '/acompanhar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/inicio': typeof AuthenticatedInicioRoute
@@ -96,12 +109,14 @@ export interface FileRoutesByFullPath {
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vigencias': typeof AuthenticatedVigenciasRoute
+  '/acompanhar/$token': typeof AcompanharTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/inicio': typeof AuthenticatedInicioRoute
@@ -109,6 +124,7 @@ export interface FileRoutesByTo {
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vigencias': typeof AuthenticatedVigenciasRoute
+  '/acompanhar/$token': typeof AcompanharTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -117,6 +133,7 @@ export interface FileRoutesById {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/filhos': typeof AuthenticatedFilhosRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
@@ -124,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/vigencias': typeof AuthenticatedVigenciasRoute
+  '/acompanhar/$token': typeof AcompanharTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -132,6 +150,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/admin'
     | '/atribuicoes'
+    | '/dashboard'
     | '/filhos'
     | '/historico'
     | '/inicio'
@@ -139,12 +158,14 @@ export interface FileRouteTypes {
     | '/relatorio'
     | '/tarefas'
     | '/vigencias'
+    | '/acompanhar/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/redefinir-senha'
     | '/admin'
     | '/atribuicoes'
+    | '/dashboard'
     | '/filhos'
     | '/historico'
     | '/inicio'
@@ -152,6 +173,7 @@ export interface FileRouteTypes {
     | '/relatorio'
     | '/tarefas'
     | '/vigencias'
+    | '/acompanhar/$token'
   id:
     | '__root__'
     | '/'
@@ -159,6 +181,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/_authenticated/admin'
     | '/_authenticated/atribuicoes'
+    | '/_authenticated/dashboard'
     | '/_authenticated/filhos'
     | '/_authenticated/historico'
     | '/_authenticated/inicio'
@@ -166,12 +189,14 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorio'
     | '/_authenticated/tarefas'
     | '/_authenticated/vigencias'
+    | '/acompanhar/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  AcompanharTokenRoute: typeof AcompanharTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -209,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/atribuicoes'
       fullPath: '/atribuicoes'
       preLoaderRoute: typeof AuthenticatedAtribuicoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/filhos': {
@@ -260,12 +292,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVigenciasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/acompanhar/$token': {
+      id: '/acompanhar/$token'
+      path: '/acompanhar/$token'
+      fullPath: '/acompanhar/$token'
+      preLoaderRoute: typeof AcompanharTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAtribuicoesRoute: typeof AuthenticatedAtribuicoesRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFilhosRoute: typeof AuthenticatedFilhosRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
@@ -278,6 +318,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAtribuicoesRoute: AuthenticatedAtribuicoesRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFilhosRoute: AuthenticatedFilhosRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
@@ -294,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  AcompanharTokenRoute: AcompanharTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

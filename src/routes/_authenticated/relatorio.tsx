@@ -133,7 +133,7 @@ function RelatorioPage() {
         const comDesconto = usaDesconto(filho, grupo.vigencia);
         texto(comDesconto ? `Não fez: ${total}` : `Não fez: ${total} de ${grupo.vigencia.qtd_ocorrencia}`, margem + 4, largura - 4, 9, true);
         if (comDesconto) {
-          texto(`Mesada: ${reais(filho.valor_mesada)} · ${resumoMesada(filho, grupo.vigencia, total)}`, margem + 4, largura - 4);
+          texto(`Mesada: ${reais(filho.valor_mesada ?? 0)} · ${resumoMesada(filho, grupo.vigencia, total)}`, margem + 4, largura - 4);
         } else {
           texto(`Penalidade escrita ao atingir o limite: ${grupo.vigencia.penalidade || "Não cadastrada"}`, margem + 4, largura - 4);
         }

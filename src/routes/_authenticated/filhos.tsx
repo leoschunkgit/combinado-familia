@@ -83,7 +83,7 @@ function FilhosPage() {
     const row = Array.isArray(data) ? data[0] : data;
     if (!row || typeof row !== "object") return null;
     const r = row as Record<string, unknown>;
-    return typeof r.token === "string" ? { token: r.token, ativo: r.ativo === true } : null;
+    return typeof r["token"] === "string" ? { token: r["token"], ativo: r["ativo"] === true } : null;
   }
 
   async function carregarAcesso(idFilho: number) {
