@@ -87,10 +87,6 @@ function VigenciasPage() {
     e.preventDefault();
     const p = schema.safeParse(form);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
-    const inicio = new Date(p.data.data_inicio).getTime();
-    const agoraMinuto = new Date();
-    agoraMinuto.setSeconds(0, 0);
-    if (inicio < agoraMinuto.getTime()) { toast.error("A data/hora de início deve ser a atual ou futura"); return; }
     const { error } = await supabase.from("t_vigencia").insert({ ...p.data, ...dadosPenalidade(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) });
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada"); setForm(vazio); qc.invalidateQueries({ queryKey: ["vigencias"] });
