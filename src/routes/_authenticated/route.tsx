@@ -64,6 +64,18 @@ function AuthenticatedLayout() {
     if (error) toast.error("Não foi possível salvar sua escolha. O guia poderá aparecer novamente no próximo acesso.");
   }
 
+  async function concluirAjuda() {
+    setAberto(false);
+    setEtapa(null);
+    if (user.user_metadata?.["guia_concluido"] !== true) {
+      setSalvando(true);
+      const { error } = await supabase.auth.updateUser({ data: { guia_concluido: true } });
+      setSalvando(false);
+      if (error) toast.error("Não foi possível salvar a conclusão da ajuda.");
+    }
+    await qc.invalidateQueries();
+  }
+
   function irParaEtapa(indice: number) {
     const destino = ETAPAS[indice];
     if (!destino) return;
@@ -115,7 +127,7 @@ function AuthenticatedLayout() {
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
-          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Button variant="ghost" size="icon" onClick={encerrar} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? encerrar() : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={encerrar} disabled={salvando}>Pular guia</Button></div></section>}
+          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Button variant="ghost" size="icon" onClick={encerrar} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? void concluirAjuda() : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={encerrar} disabled={salvando}>Pular guia</Button></div></section>}
           <Outlet />
         </div></main>
 
