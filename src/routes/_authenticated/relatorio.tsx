@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
-import { CalendarRange, ChevronDown, FileDown, FileText, Search } from "lucide-react";
+import { CalendarRange, ChevronDown, ChevronsDownUp, ChevronsUpDown, FileDown, FileText, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pick } from "@/components/Pick";
@@ -73,6 +73,15 @@ function RelatorioPage() {
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const carregando = loadingVigencias || loadingFilhos || loadingAtribuicoes || loadingOcorrencias;
+
+  function definirTudo(aberto: boolean) {
+    setVigenciasAbertas(Object.fromEntries(relatorio.map(({ vigencia }) => [vigencia.id, aberto])));
+    setFilhosAbertos(Object.fromEntries(
+      relatorio.flatMap(({ vigencia, filhos: gruposFilhos }) =>
+        gruposFilhos.map(({ filho }) => [`${vigencia.id}-${filho.id}`, aberto]),
+      ),
+    ));
+  }
 
   function gerarPdf() {
     if (!relatorio.length) return;
@@ -174,7 +183,13 @@ function RelatorioPage() {
         </CardContent>
       </Card>
 
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => definirTudo(true)} disabled={carregando || relatorio.length === 0}>
+          <ChevronsDownUp className="h-4 w-4" /> Expandir tudo
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => definirTudo(false)} disabled={carregando || relatorio.length === 0}>
+          <ChevronsUpDown className="h-4 w-4" /> Recolher tudo
+        </Button>
         <Button onClick={gerarPdf} disabled={carregando || relatorio.length === 0}><FileDown className="h-4 w-4" /> Extrair PDF</Button>
       </div>
 
