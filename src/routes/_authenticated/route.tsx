@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated")({
     if (!pai) {
       const meta = user.user_metadata ?? {};
       nome = (meta["nome"] as string) || user.email?.split("@")[0] || "Responsável";
-      await supabase.from("t_usuario_pai").insert({ nome, cpf: (meta["cpf"] as string) || "", email: user.email ?? "" });
+      await supabase.from("t_usuario_pai").insert({ nome, email: user.email ?? "" });
     }
     return { user, nomePai: nome ?? "" };
   },
