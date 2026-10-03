@@ -6,6 +6,7 @@ import { ListTodo, Pencil, Search, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,6 +31,7 @@ function TarefasPage() {
   const { runAction } = useActionLoading();
   const { data: tarefas = [] } = useTarefas();
   const [nome, setNome] = useState("");
+  const [lote, setLote] = useState("");
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<Tarefa | null>(null);
   const [nomeEdicao, setNomeEdicao] = useState("");
@@ -44,6 +46,30 @@ function TarefasPage() {
     toast.success("Tarefa cadastrada");
     setNome("");
     qc.invalidateQueries({ queryKey: ["tarefas"] });
+  }
+
+  async function salvarLote(e: FormEvent) {
+    e.preventDefault();
+    const nomes = [...new Set(lote.split("#").map((item) => item.trim()).filter(Boolean))];
+    if (nomes.length === 0) { toast.error("Informe ao menos uma tarefa separada por #"); return; }
+    const invalida = nomes.find((item) => item.length < 2 || item.length > 150);
+    if (invalida) { toast.error(`A tarefa "${invalida}" deve ter entre 2 e 150 caracteres`); return; }
+
+    let salvas = 0;
+    for (const tarefa of nomes) {
+      const { error } = await supabase.from("t_tarefa").insert({ nome: tarefa });
+      if (error) {
+        toast.error(`Erro ao cadastrar "${tarefa}": ${msgErro(error)}`);
+        break;
+      }
+      salvas += 1;
+    }
+
+    if (salvas > 0) {
+      toast.success(`${salvas} tarefa(s) cadastrada(s)`);
+      if (salvas === nomes.length) setLote("");
+      qc.invalidateQueries({ queryKey: ["tarefas"] });
+    }
   }
 
   async function excluir(id: number) {
@@ -81,10 +107,29 @@ function TarefasPage() {
         <Card>
           <CardHeader><CardTitle>Cadastrar tarefa</CardTitle></CardHeader>
           <CardContent>
-            <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-              <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-              <Button type="submit" className="w-full">Cadastrar</Button>
-            </form>
+            <div className="space-y-5">
+              <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
+                <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
+                <Button type="submit" className="w-full">Cadastrar</Button>
+              </form>
+
+              <div className="border-t pt-5">
+                <form onSubmit={(e) => { void runAction(() => salvarLote(e)); }} className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="tarefas-lote">Cadastrar várias tarefas</Label>
+                    <Textarea
+                      id="tarefas-lote"
+                      value={lote}
+                      onChange={(e) => setLote(e.target.value)}
+                      placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
+                      className="min-h-28 resize-y"
+                    />
+                    <p className="text-xs text-muted-foreground">Separe cada tarefa com #. Os espaços antes e depois serão removidos automaticamente.</p>
+                  </div>
+                  <Button type="submit" variant="secondary" className="w-full">Cadastrar tarefas</Button>
+                </form>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
