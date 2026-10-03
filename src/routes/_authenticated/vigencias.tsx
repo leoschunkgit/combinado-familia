@@ -174,8 +174,8 @@ function VigenciasPage() {
     <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
       <Card><CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader><CardContent>
         <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-          <div className="space-y-2"><Label htmlFor="inicio">Data início *</Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
-          <div className="space-y-2"><Label htmlFor="fim">Data fim *</Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
+          <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
+          <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
           <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" /><Button type="submit" className="w-full">Cadastrar</Button>
         </form>
       </CardContent></Card>
@@ -213,8 +213,8 @@ function VigenciasPage() {
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir esta vigência?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent className="max-h-[92vh] overflow-y-auto p-4 sm:max-w-lg sm:p-5"><DialogHeader className="space-y-0.5"><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
       <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-3">
-        <div className="space-y-1.5"><Label htmlFor="editar-inicio" className="text-sm">Data início *</Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
-        <div className="space-y-1.5"><Label htmlFor="editar-fim" className="text-sm">Data fim *</Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
+        <div className="space-y-1.5"><Label htmlFor="editar-inicio" className="text-sm">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
+        <div className="space-y-1.5"><Label htmlFor="editar-fim" className="text-sm">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
         <div className="[&_.space-y-3]:space-y-2 [&_.space-y-2]:space-y-1.5 [&_.p-3]:p-2.5 [&_input]:h-9 [&_label]:text-sm [&_p.text-xs]:text-[11px]"><EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" /></div>
         {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho sem mesada nesta vigência.</p>}
         {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
