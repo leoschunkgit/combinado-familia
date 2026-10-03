@@ -197,11 +197,11 @@ function VigenciasPage() {
               </div>
             </div>
             <div className="mt-2 space-y-1.5">
-              <div className="w-full rounded-lg border bg-muted/20 px-3 py-1.5 text-sm">
+              <div className="w-full rounded-lg border bg-muted/20 px-3 py-1.5 text-xs">
                 <span className="font-semibold text-foreground">Penalidade:</span>{" "}<span className="text-muted-foreground">{v.penalidade || "Não cadastrada"}</span>{" "}
                 <span className="text-muted-foreground">·</span>{" "}<span className="font-semibold text-foreground">Quantidade de “Não fez”:</span>{" "}<span className="text-muted-foreground">{v.qtd_ocorrencia}</span>
               </div>
-              <div className="w-full rounded-lg border bg-muted/20 px-3 py-1.5 text-sm">
+              <div className="w-full rounded-lg border bg-muted/20 px-3 py-1.5 text-xs">
                 <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} por cada “Não fez”` : "Não cadastrado"}</span>
               </div>
             </div>
