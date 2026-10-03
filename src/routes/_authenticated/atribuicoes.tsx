@@ -58,6 +58,10 @@ function AtribuicoesPage() {
     return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
   });
 
+  const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
+  const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && new Date(vigenciaSelecionada.data_fim).getTime() < Date.now());
+  const vigenciaSelecionadaFutura = Boolean(vigenciaSelecionada && new Date(vigenciaSelecionada.data_inicio).getTime() > Date.now());
+
   const nomeF = (id: number) => filhos.find((f) => f.id === id)?.nome ?? "";
   const nomeT = (id: number) => tarefas.find((t) => t.id === id)?.nome ?? "";
   const nomeV = (id: number) => {
@@ -193,7 +197,11 @@ function AtribuicoesPage() {
         <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
+            <div className="space-y-1.5">
+              <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
+              {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
+              {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Não é possível fazer atribuições para uma vigência que ainda não foi iniciada.</p>}
+            </div>
             <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <div className="space-y-2">
               <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
