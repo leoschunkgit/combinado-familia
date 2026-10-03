@@ -54,7 +54,7 @@ const dadosExtras = (v: FilhoForm) => ({
 function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange: (v: FilhoForm) => void; prefix: string }) {
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
-    <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada</Label></div>
+    <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label></div>
     {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><Input id={`${prefix}-valor`} inputMode="decimal" placeholder="0,00" value={value.valor_mesada} onChange={(e) => onChange({ ...value, valor_mesada: e.target.value })} /><p className="text-xs text-muted-foreground">Ao cadastrar uma mesada, a penalidade será um desconto na mesada por “Não fez”, até o limite da vigência. Sem mesada cadastrada, vale a penalidade escrita.</p></div>}
   </>;
 }
@@ -145,8 +145,8 @@ function FilhosPage() {
           <CardContent>
             <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
               <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Celular</Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
+              <div className="space-y-2"><Label>Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
               <CamposExtras value={form} onChange={setForm} prefix="novo-filho" />
               <Button type="submit" className="w-full" disabled={saving}>Cadastrar</Button>
             </form>
@@ -187,8 +187,8 @@ function FilhosPage() {
           <DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader>
           <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div>
-            <div className="space-y-2"><Label htmlFor="editar-filho-email">Email</Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div>
-            <div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular</Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-filho-email">Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div>
             <CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
