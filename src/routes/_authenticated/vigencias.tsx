@@ -185,23 +185,26 @@ function VigenciasPage() {
           const finalizada = new Date(v.data_fim).getTime() < agora;
           const emAndamento = new Date(v.data_inicio).getTime() <= agora && !finalizada;
           const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
-          return <div key={v.id} className="flex items-start gap-4 rounded-2xl border bg-card p-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col items-start gap-1"><VigenciaStatus vigencia={v} /><p className="font-semibold">{fmtVigencia(v)}</p></div>
-              <div className="mt-3 space-y-2">
-                <div className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm">
-                  <p><span className="font-semibold text-foreground">Penalidade:</span> <span className="text-muted-foreground">{v.penalidade || "Não cadastrada"}</span></p>
-                  <p className="mt-0.5"><span className="font-semibold text-foreground">Quantidade de “Não fez”:</span> <span className="text-muted-foreground">{v.qtd_ocorrencia}</span></p>
-                </div>
-                <div className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm">
-                  <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}
-                  <span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} por cada “Não fez”` : "Não cadastrado"}</span>
-                </div>
+          return <div key={v.id} className="rounded-2xl border bg-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-col items-start gap-1"><VigenciaStatus vigencia={v} /><p className="font-semibold">{fmtVigencia(v)}</p></div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
+                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
+                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}><Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)}><Trash2 className="h-4 w-4" /></Button></BlockedAction>
               </div>
             </div>
-            {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
-            <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
-            <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}><Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)}><Trash2 className="h-4 w-4" /></Button></BlockedAction>
+            <div className="mt-2 space-y-1.5">
+              <div className="w-full rounded-lg border bg-muted/20 px-3 py-1.5 text-sm">
+                <span className="font-semibold text-foreground">Penalidade:</span>{" "}<span className="text-muted-foreground">{v.penalidade || "Não cadastrada"}</span>{" "}
+                <span className="text-muted-foreground">·</span>{" "}<span className="font-semibold text-foreground">Quantidade de “Não fez”:</span>{" "}<span className="text-muted-foreground">{v.qtd_ocorrencia}</span>
+              </div>
+              <div className="w-full rounded-lg border bg-muted/20 px-3 py-1.5 text-sm">
+                <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} por cada “Não fez”` : "Não cadastrado"}</span>
+              </div>
+            </div>
           </div>;
         })}
       </div>
