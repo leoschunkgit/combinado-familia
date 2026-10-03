@@ -24,3 +24,4 @@
 - [x] Mostrar guia de primeiros passos no primeiro acesso, com orientações nas telas, opção de pular e acesso pela Ajuda.
 - [x] Validar desconto máximo contra mesada ao atribuir e ao editar filho ou vigência, sem depender da ordem de cadastro.
 - [x] Corrigir o contexto de processamento compartilhado para evitar tela em branco nas páginas autenticadas.
+- [ ] Remover referências ao CPF inexistente da conta e do primeiro acesso; permitir editar apenas nome, mostrar email e corrigir troca de senha.
