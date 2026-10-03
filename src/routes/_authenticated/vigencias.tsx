@@ -58,6 +58,11 @@ function EscolhaPenalidade({ value, onChange, prefix }: { value: VigenciaForm; o
       <p className="text-sm font-semibold">Penalidade</p>
       <Label htmlFor={`${prefix}-penalidade`}>Descrição <span className="text-destructive" aria-hidden="true">*</span></Label>
       <Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} />
+      <div className="space-y-2">
+        <Label htmlFor={`${prefix}-quantidade`}>Quantidade de “Não fez” para ser penalizado <span className="text-destructive" aria-hidden="true">*</span></Label>
+        <Input id={`${prefix}-quantidade`} type="number" min="1" max="31" value={value.qtd_ocorrencia} onChange={(e) => onChange({ ...value, qtd_ocorrencia: e.target.value })} />
+        <p className="text-xs text-muted-foreground">Usado apenas para filhos sem mesada.</p>
+      </div>
     </div>
     <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
       <p className="text-sm font-semibold">Desconto por cada “Não fez” na mesada</p>
@@ -240,8 +245,6 @@ function VigenciasPage() {
               <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
               <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
               <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" />
-              <div className="space-y-2"><Label>Quantidade de “Não fez” para ser penalizado <span className="text-destructive" aria-hidden="true">*</span></Label><Input type="number" value={form.qtd_ocorrencia} onChange={(e) => setForm({ ...form, qtd_ocorrencia: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Usado apenas para filhos sem mesada.</p></div>
               <Button type="submit" className="w-full">Cadastrar</Button>
             </form>
           </CardContent>
@@ -304,8 +307,6 @@ function VigenciasPage() {
             <div className="space-y-2"><Label htmlFor="editar-inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
             <div className="space-y-2"><Label htmlFor="editar-fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
             <EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" />
-            <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-limite" type="number" value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
-              {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho sem mesada nesta vigência.</p>}</div>
             {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
