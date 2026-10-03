@@ -56,14 +56,14 @@ function EscolhaPenalidade({ value, onChange, prefix, mostrarPenalidade = true }
       <div className="space-y-2">
         <Label htmlFor={`${prefix}-quantidade`} className="block leading-5">Número de “Não fez” para ser penalizado <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Input id={`${prefix}-quantidade`} type="number" min="1" max="31" value={value.qtd_ocorrencia} onChange={(e) => onChange({ ...value, qtd_ocorrencia: e.target.value })} />
-        <p className="animate-pulse text-xs font-medium text-foreground">Usado apenas para filhos sem mesada.</p>
+        <p className="animate-pulse text-xs font-semibold text-amber-600 dark:text-amber-400">Usado apenas para filhos sem mesada.</p>
       </div>
     </div>}
     <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 md:border-emerald-300/70 md:bg-emerald-50/30 p-3 space-y-2 dark:border-emerald-700/60 dark:bg-emerald-950/10">
       <p className="text-sm font-semibold">Desconto por cada “Não fez” na mesada</p>
       <Label htmlFor={`${prefix}-valor`}>Valor do desconto (R$) <span className="text-destructive" aria-hidden="true">*</span></Label>
       <Input id={`${prefix}-valor`} inputMode="decimal" placeholder="20,00" value={value.valor_debito} onChange={(e) => onChange({ ...value, valor_debito: e.target.value })} />
-      <p className="animate-pulse text-xs font-medium text-foreground">Usado apenas para filhos com mesada. Cada “Não fez” gera esse desconto.</p>
+      <p className="animate-pulse text-xs font-semibold text-emerald-600 dark:text-emerald-400">Usado apenas para filhos com mesada. Cada “Não fez” gera esse desconto.</p>
     </div>
   </div>;
 }
