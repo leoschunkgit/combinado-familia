@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
-import { CalendarRange, FileDown, FileText, Search } from "lucide-react";
+import { CalendarRange, ChevronDown, FileDown, FileText, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pick } from "@/components/Pick";
@@ -38,6 +38,8 @@ function RelatorioPage() {
   const { data: ocorrencias = [], isLoading: loadingOcorrencias } = useOcorrencias();
   const [f, setF] = useState({ vig: "all", filho: "all" });
   const [filtro, setFiltro] = useState(f);
+  const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
+  const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort((a, b) => {
     const aAndamento = andamento(a);
@@ -178,70 +180,101 @@ function RelatorioPage() {
 
       {!carregando && relatorio.length === 0 && <EmptyState>Nenhuma informação encontrada para os filtros selecionados.</EmptyState>}
 
-      <div className="space-y-8">
-        {relatorio.map(({ vigencia, filhos: gruposFilhos }) => (
-          <section key={vigencia.id} className="space-y-4" aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
-            <Card>
-              <CardHeader>
-                <div className="flex flex-wrap items-center gap-2">
-                  <CalendarRange className="h-5 w-5 text-primary" />
-                  <CardTitle>{fmtVigencia(vigencia)}</CardTitle>
-                  <VigenciaStatus vigencia={vigencia} />
-                </div>
-                <div className="mt-2 space-y-1.5">
-                  <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10 md:border-amber-300/70 md:bg-amber-50/30">
-                    <span className="font-semibold text-foreground">Penalidade:</span>{" "}
-                    <span className="text-muted-foreground">{vigencia.penalidade || "Não cadastrada"}</span>{" "}
-                    <span className="text-muted-foreground">·</span>{" "}
-                    <span className="font-semibold text-foreground">Limite:</span>{" "}
-                    <span className="text-muted-foreground">{vigencia.qtd_ocorrencia} ocorrência(s)</span>
-                  </div>
-                  <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10 md:border-emerald-300/70 md:bg-emerald-50/30">
-                    <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}
-                    <span className="text-muted-foreground">{vigencia.valor_debito !== null ? `${reais(vigencia.valor_debito)} por Não fez` : "Não cadastrado"}</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {gruposFilhos.map(({ filho, tarefas, registros }) => {
-                  const total = registros.length;
-                  const comDesconto = usaDesconto(filho, vigencia);
-                  return (
-                    <div key={filho.id} className="rounded-xl border p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-lg font-bold">{filho.nome}</h3>
-                        <span className="text-sm font-semibold tabular-nums">{comDesconto ? `Não fez: ${total}` : `Não fez: ${total} de ${vigencia.qtd_ocorrencia}`}</span>
-                      </div>
-                      {comDesconto ? (
-                        <p className="mt-2 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}</p>
-                      ) : (
-                        <p className="mt-2 text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
-                      )}
-                      <div className="mt-4 space-y-3">
-                        {tarefas.map((tarefa) => {
-                          const registrosTarefa = ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id)).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                          return (
-                            <div key={tarefa.id} className="border-t pt-3">
-                              <div className="flex flex-wrap justify-between gap-2">
-                                <span className="font-semibold">{tarefa.t_tarefa?.nome}</span>
-                                <span className="text-sm text-muted-foreground">{registrosTarefa.length} “Não fez”</span>
-                              </div>
-                              {registrosTarefa.length ? (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  {registrosTarefa.map((o) => <span key={o.id} className="rounded-md bg-muted px-2 py-1 text-xs tabular-nums">{fmtData(o.created_at)}</span>)}
-                                </div>
-                              ) : <p className="mt-2 text-xs text-muted-foreground">Nenhum registro de “Não fez”.</p>}
-                            </div>
-                          );
-                        })}
+      <div className="space-y-4">
+        {relatorio.map(({ vigencia, filhos: gruposFilhos }) => {
+          const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
+          return (
+            <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
+              <Card>
+                <CardHeader>
+                  <button
+                    type="button"
+                    className="flex w-full cursor-pointer items-start gap-2 text-left"
+                    onClick={() => setVigenciasAbertas((atual) => ({ ...atual, [vigencia.id]: !vigenciaAberta }))}
+                  >
+                    <ChevronDown className={`mt-0.5 h-5 w-5 shrink-0 transition-transform ${vigenciaAberta ? "" : "-rotate-90"}`} />
+                    <CalendarRange className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CardTitle>{fmtVigencia(vigencia)}</CardTitle>
+                        <VigenciaStatus vigencia={vigencia} />
                       </div>
                     </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          </section>
-        ))}
+                  </button>
+                  {vigenciaAberta && (
+                    <div className="mt-2 space-y-1.5">
+                      <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10 md:border-amber-300/70 md:bg-amber-50/30">
+                        <span className="font-semibold text-foreground">Penalidade:</span>{" "}
+                        <span className="text-muted-foreground">{vigencia.penalidade || "Não cadastrada"}</span>{" "}
+                        <span className="text-muted-foreground">·</span>{" "}
+                        <span className="font-semibold text-foreground">Limite:</span>{" "}
+                        <span className="text-muted-foreground">{vigencia.qtd_ocorrencia} ocorrência(s)</span>
+                      </div>
+                      <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10 md:border-emerald-300/70 md:bg-emerald-50/30">
+                        <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}
+                        <span className="text-muted-foreground">{vigencia.valor_debito !== null ? `${reais(vigencia.valor_debito)} por Não fez` : "Não cadastrado"}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardHeader>
+
+                {vigenciaAberta && (
+                  <CardContent className="space-y-3">
+                    {gruposFilhos.map(({ filho, tarefas, registros }) => {
+                      const total = registros.length;
+                      const comDesconto = usaDesconto(filho, vigencia);
+                      const chaveFilho = `${vigencia.id}-${filho.id}`;
+                      const filhoAberto = filhosAbertos[chaveFilho] === true;
+                      return (
+                        <div key={filho.id} className="rounded-xl border">
+                          <button
+                            type="button"
+                            className="flex w-full cursor-pointer items-center justify-between gap-3 p-4 text-left"
+                            onClick={() => setFilhosAbertos((atual) => ({ ...atual, [chaveFilho]: !filhoAberto }))}
+                          >
+                            <div className="flex min-w-0 items-center gap-2">
+                              <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${filhoAberto ? "" : "-rotate-90"}`} />
+                              <h3 className="min-w-0 truncate text-lg font-bold">{filho.nome}</h3>
+                            </div>
+                            <span className="shrink-0 text-sm font-semibold tabular-nums">{comDesconto ? `Não fez: ${total}` : `Não fez: ${total} de ${vigencia.qtd_ocorrencia}`}</span>
+                          </button>
+
+                          {filhoAberto && (
+                            <div className="border-t p-4 pt-3">
+                              {comDesconto ? (
+                                <p className="text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}</p>
+                              ) : (
+                                <p className="text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
+                              )}
+                              <div className="mt-4 space-y-3">
+                                {tarefas.map((tarefa) => {
+                                  const registrosTarefa = ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id)).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                                  return (
+                                    <div key={tarefa.id} className="border-t pt-3">
+                                      <div className="flex flex-wrap justify-between gap-2">
+                                        <span className="font-semibold">{tarefa.t_tarefa?.nome}</span>
+                                        <span className="text-sm text-muted-foreground">{registrosTarefa.length} “Não fez”</span>
+                                      </div>
+                                      {registrosTarefa.length ? (
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                          {registrosTarefa.map((o) => <span key={o.id} className="rounded-md bg-muted px-2 py-1 text-xs tabular-nums">{fmtData(o.created_at)}</span>)}
+                                        </div>
+                                      ) : <p className="mt-2 text-xs text-muted-foreground">Nenhum registro de “Não fez”.</p>}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                )}
+              </Card>
+            </section>
+          );
+        })}
       </div>
     </>
   );
