@@ -25,7 +25,7 @@ import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
 
-export function OnboardingInicial() {
+export function OnboardingInicial({ forcarAberto = false, onFecharForcado }: { forcarAberto?: boolean; onFecharForcado?: () => void }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: filhos = [], isLoading: carregandoFilhos } = useFilhos();
@@ -63,7 +63,8 @@ export function OnboardingInicial() {
     atribuicoes.length === 0 ? 3 :
     -1;
 
-  const aberto = !carregando && etapa >= 0;
+  const configuracaoConcluida = etapa === -1;
+  const aberto = !carregando && (etapa >= 0 || forcarAberto);
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
   const tarefaAtual = tarefaSelecionada || (tarefas[0] ? String(tarefas[0].id) : "");
   const vigenciaAtual = vigenciaSelecionada || (vigenciasAtivas[0] ? String(vigenciasAtivas[0].id) : "");
@@ -230,7 +231,26 @@ export function OnboardingInicial() {
           ))}
         </div>
 
-        {etapa === 0 && (
+        {forcarAberto && configuracaoConcluida && (
+          <div className="space-y-4">
+            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span>Sua configuração inicial já está concluída. Filho, tarefa, vigência e associação já estão prontos.</span>
+            </div>
+            <p className="text-sm text-muted-foreground">Você já pode registrar e acompanhar os combinados normalmente em Ocorrências.</p>
+            <Button
+              className="w-full"
+              onClick={() => {
+                onFecharForcado?.();
+                navigate({ to: "/ocorrencias" });
+              }}
+            >
+              Ir para Ocorrências
+            </Button>
+          </div>
+        )}
+
+        {!configuracaoConcluida && etapa === 0 && (
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold">1. Cadastre seu primeiro filho</h3>
@@ -256,7 +276,7 @@ export function OnboardingInicial() {
           </div>
         )}
 
-        {etapa === 1 && (
+        {!configuracaoConcluida && etapa === 1 && (
           <div className="space-y-4">
             <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -276,7 +296,7 @@ export function OnboardingInicial() {
           </div>
         )}
 
-        {etapa === 2 && (
+        {!configuracaoConcluida && etapa === 2 && (
           <div className="space-y-4">
             <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -314,7 +334,7 @@ export function OnboardingInicial() {
           </div>
         )}
 
-        {etapa === 3 && (
+        {!configuracaoConcluida && etapa === 3 && (
           <div className="space-y-4">
             <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
