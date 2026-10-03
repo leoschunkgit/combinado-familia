@@ -59,7 +59,7 @@ export function OnboardingInicial() {
   const etapa =
     filhos.length === 0 ? 0 :
     tarefas.length === 0 ? 1 :
-    vigenciasAtivas.length === 0 ? 2 :
+    vigencias.length === 0 ? 2 :
     atribuicoes.length === 0 ? 3 :
     -1;
 
