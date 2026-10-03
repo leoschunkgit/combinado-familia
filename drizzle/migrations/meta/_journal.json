@@ -71,6 +71,13 @@
       "when": 1791050889579,
       "tag": "0009_apply_pending_access_and_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791051166529,
+      "tag": "0010_rotate_token_when_reactivating_child_access",
+      "breakpoints": true
     }
   ]
 }
