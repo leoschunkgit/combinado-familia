@@ -53,6 +53,7 @@ function AuthenticatedLayout() {
   const [etapa, setEtapa] = useState<number | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+  const [saindo, setSaindo] = useState(false);
 
   async function encerrar() {
     setAberto(false); setEtapa(null);
@@ -72,8 +73,13 @@ function AuthenticatedLayout() {
   function abrirGuia() { setEtapa(null); setAberto(true); }
 
   async function sair() {
-    setSalvando(true); await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut();
-    navigate({ to: "/", replace: true }); setSalvando(false);
+    setSaindo(true);
+    setSalvando(true);
+    setMenuMobileAberto(false);
+    await qc.cancelQueries();
+    await supabase.auth.signOut();
+    qc.clear();
+    navigate({ to: "/", replace: true });
   }
 
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
@@ -86,7 +92,7 @@ function AuthenticatedLayout() {
 
   return (
     <ActionLoadingProvider>
-      <OnboardingInicial />
+      {!saindo && <OnboardingInicial />}
       <div className="min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="flex items-center justify-between px-4 py-3 md:px-4 md:py-4">
