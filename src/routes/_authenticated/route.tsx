@@ -54,6 +54,7 @@ function AuthenticatedLayout() {
   const [salvando, setSalvando] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const [forcarOnboarding, setForcarOnboarding] = useState(false);
 
   async function encerrar() {
     setAberto(false); setEtapa(null);
@@ -74,6 +75,7 @@ function AuthenticatedLayout() {
       if (error) toast.error("Não foi possível salvar a conclusão da ajuda.");
     }
     await qc.invalidateQueries();
+    setForcarOnboarding(true);
   }
 
   function irParaEtapa(indice: number) {
@@ -104,7 +106,7 @@ function AuthenticatedLayout() {
 
   return (
     <ActionLoadingProvider>
-      {!saindo && <OnboardingInicial />}
+      {!saindo && <OnboardingInicial forcarAberto={forcarOnboarding} onFecharForcado={() => setForcarOnboarding(false)} />}
       <div className="min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="flex items-center justify-between px-4 py-3 md:px-4 md:py-4">
