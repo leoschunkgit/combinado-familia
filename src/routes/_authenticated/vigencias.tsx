@@ -15,7 +15,7 @@ import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
 import { VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
-import { descricaoPenalidade } from "@/lib/mesada";
+import { descricaoPenalidade, usaDesconto } from "@/lib/mesada";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 
@@ -187,10 +187,15 @@ function VigenciasPage() {
     }
 
     const totais = new Map<number, number>();
-    for (const item of vinculadas ?? []) totais.set(item.id_filho, (totais.get(item.id_filho) ?? 0) + item.qtd_nao_fez);
+    for (const item of vinculadas ?? []) {
+      const filho = filhos.find((f) => f.id === item.id_filho);
+      if (filho && !usaDesconto(filho, { valor_debito: Number(p.data.valor_debito.replace(",", ".")) })) {
+        totais.set(item.id_filho, (totais.get(item.id_filho) ?? 0) + item.qtd_nao_fez);
+      }
+    }
     const maiorTotal = Math.max(0, ...totais.values());
     if (p.data.qtd_ocorrencia < maiorTotal) {
-      toast.error(`O limite não pode ser menor que os ${maiorTotal} registros de “Não fez” já acumulados por um filho nesta vigência`);
+      toast.error(`O limite não pode ser menor que os ${maiorTotal} registros de “Não fez” já acumulados por um filho sem mesada nesta vigência`);
       return;
     }
 
@@ -218,7 +223,12 @@ function VigenciasPage() {
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
   const totaisNaEdicao = new Map<number, number>();
-  for (const a of vinculadasNaEdicao) totaisNaEdicao.set(a.id_filho, (totaisNaEdicao.get(a.id_filho) ?? 0) + a.qtd_nao_fez);
+  for (const a of vinculadasNaEdicao) {
+    const filho = filhos.find((f) => f.id === a.id_filho);
+    if (filho && !usaDesconto(filho, editando ? { valor_debito: edicao.valor_debito === "" ? null : Number(edicao.valor_debito.replace(",", ".")) } : { valor_debito: null })) {
+      totaisNaEdicao.set(a.id_filho, (totaisNaEdicao.get(a.id_filho) ?? 0) + a.qtd_nao_fez);
+    }
+  }
   const minimoNaEdicao = Math.max(1, ...totaisNaEdicao.values());
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) &&
     (new Date(o.created_at).getTime() < new Date(edicao.data_inicio).getTime() || new Date(o.created_at).getTime() > new Date(edicao.data_fim).getTime())) : [];
@@ -305,7 +315,7 @@ function VigenciasPage() {
             <div className="space-y-2"><Label htmlFor="editar-fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
             <EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" />
             <div className="space-y-2"><Label htmlFor="editar-limite">Quantidade de ocorrências <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="editar-limite" type="number" value={edicao.qtd_ocorrencia} onChange={(e) => setEdicao({ ...edicao, qtd_ocorrencia: e.target.value })} />
-              {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho nesta vigência.</p>}</div>
+              {minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho sem mesada nesta vigência.</p>}</div>
             {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
