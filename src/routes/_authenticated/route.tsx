@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ActionLoadingProvider } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
-import { useFilhos } from "@/lib/db";
+import { useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -52,6 +52,9 @@ function AuthenticatedLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { data: filhos = [] } = useFilhos();
+  const { data: tarefas = [] } = useTarefas();
+  const { data: vigencias = [] } = useVigencias();
+  const { data: atribuicoes = [] } = useFilhoTarefas();
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
   const [etapa, setEtapa] = useState<number | null>(null);
@@ -87,7 +90,8 @@ function AuthenticatedLayout() {
   }
 
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
-  const mostrarAtalhoLinkFilho = filhos.length > 0 && pathname !== "/filhos" && pathname !== "/link-filhos";
+  const configuracaoInicialConcluida = filhos.length > 0 && tarefas.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
+  const mostrarAtalhoLinkFilho = configuracaoInicialConcluida && pathname !== "/filhos" && pathname !== "/link-filhos";
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
