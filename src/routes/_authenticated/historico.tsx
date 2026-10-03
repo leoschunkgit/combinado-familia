@@ -121,7 +121,7 @@ function HistoricoPage() {
           <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
             <button
               type="button"
-              className="mb-3 flex w-full items-center gap-2 border-b pb-3 text-left text-lg font-bold"
+              className="mb-3 flex w-full cursor-pointer items-center gap-2 border-b pb-3 text-left text-lg font-bold"
               aria-expanded={vigenciaAberta}
               onClick={() => setVigenciasAbertas((atual) => ({ ...atual, [vigencia.id]: !vigenciaAberta }))}
             >
@@ -139,7 +139,7 @@ function HistoricoPage() {
                 <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
                   <button
                     type="button"
-                    className="mb-3 flex w-full items-center gap-2 text-left font-display font-bold text-foreground"
+                    className="mb-3 flex w-full cursor-pointer items-center gap-2 text-left font-display font-bold text-foreground"
                     aria-expanded={filhoAberto}
                     onClick={() => setFilhosAbertos((atual) => ({ ...atual, [chaveFilho]: !filhoAberto }))}
                   >
