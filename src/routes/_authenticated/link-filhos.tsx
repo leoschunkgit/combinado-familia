@@ -11,7 +11,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/link-filhos")({
   head: () => ({ meta: [
-    { title: "Link / Filhos — Combinado" },
+    { title: "Gerar Link / Filho — Combinado" },
     { name: "description", content: "Gerencie os links de acompanhamento dos filhos." },
   ] }),
   component: LinkFilhosPage,
@@ -85,7 +85,7 @@ function LinkFilhosPage() {
   }
 
   return <>
-    <PageHeader title="Link / Filhos" description="Gerencie os links de acompanhamento de cada filho." icon={<Link2 className="h-6 w-6" />} />
+    <PageHeader title="Gerar Link / Filho" description="Gerencie os links de acompanhamento de cada filho." icon={<Link2 className="h-6 w-6" />} />
     <div className="space-y-3">
       {filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}
       {filhos.map((f) => {
