@@ -175,7 +175,7 @@ function VigenciasPage() {
       <span className="font-medium">Legenda:</span>
       <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" />Em andamento</span>
       <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" />Finalizada</span>
-      <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Ainda não começou</span>
+      <span className="flex shrink-0 items-center gap-2 whitespace-nowrap"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Ainda não começou</span>
     </div>
     <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
       <Card><CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader><CardContent>
