@@ -188,15 +188,14 @@ function VigenciasPage() {
           return <div key={v.id} className="flex items-start gap-4 rounded-2xl border bg-card p-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-col items-start gap-1"><VigenciaStatus vigencia={v} /><p className="font-semibold">{fmtVigencia(v)}</p></div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-lg border bg-muted/20 px-3 py-2">
-                  <p className="text-xs font-semibold text-foreground">Penalidade</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{v.penalidade || "Não cadastrada"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Quantidade de “Não fez”: <span className="font-medium text-foreground">{v.qtd_ocorrencia}</span></p>
+              <div className="mt-3 space-y-2">
+                <div className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm">
+                  <p><span className="font-semibold text-foreground">Penalidade:</span> <span className="text-muted-foreground">{v.penalidade || "Não cadastrada"}</span></p>
+                  <p className="mt-0.5"><span className="font-semibold text-foreground">Quantidade de “Não fez”:</span> <span className="text-muted-foreground">{v.qtd_ocorrencia}</span></p>
                 </div>
-                <div className="rounded-lg border bg-muted/20 px-3 py-2">
-                  <p className="text-xs font-semibold text-foreground">Desconto da mesada</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Por cada “Não fez”: <span className="font-medium text-foreground">{v.valor_debito !== null ? reais(v.valor_debito) : "Não cadastrado"}</span></p>
+                <div className="w-full rounded-lg border bg-muted/20 px-3 py-2 text-sm">
+                  <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}
+                  <span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} por cada “Não fez”` : "Não cadastrado"}</span>
                 </div>
               </div>
             </div>
