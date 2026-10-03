@@ -61,6 +61,44 @@ export type Database = {
           },
         ]
       }
+      t_filho_acesso_publico: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: number
+          id_filho: number
+          id_usuario_pai: number
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_filho: number
+          id_usuario_pai: number
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_filho?: number
+          id_usuario_pai?: number
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_filho_acesso_publico_same_family_fk"
+            columns: ["id_usuario_pai", "id_filho"]
+            isOneToOne: true
+            referencedRelation: "t_filho"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
+        ]
+      }
       t_filho_tarefa: {
         Row: {
           created_at: string
@@ -121,6 +159,27 @@ export type Database = {
             referencedRelation: "t_vigencia"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "t_filho_tarefa_same_pai_filho_fk"
+            columns: ["id_usuario_pai", "id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
+          {
+            foreignKeyName: "t_filho_tarefa_same_pai_tarefa_fk"
+            columns: ["id_usuario_pai", "id_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_tarefa"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
+          {
+            foreignKeyName: "t_filho_tarefa_same_pai_vigencia_fk"
+            columns: ["id_usuario_pai", "id_vigencia"]
+            isOneToOne: false
+            referencedRelation: "t_vigencia"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
         ]
       }
       t_ocorrencia: {
@@ -152,6 +211,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "t_filho_tarefa"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_ocorrencia_same_pai_assignment_fk"
+            columns: ["id_usuario_pai", "id_filho_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_filho_tarefa"
+            referencedColumns: ["id_usuario_pai", "id"]
           },
         ]
       }
@@ -258,6 +324,32 @@ export type Database = {
     }
     Functions: {
       current_pai_id: { Args: never; Returns: number }
+      desativar_acesso_publico_filho: {
+        Args: { p_id_filho: number }
+        Returns: boolean
+      }
+      gerar_acesso_publico_filho: {
+        Args: { p_id_filho: number }
+        Returns: {
+          ativo: boolean
+          token: string
+        }[]
+      }
+      obter_acesso_publico_filho: {
+        Args: { p_id_filho: number }
+        Returns: {
+          ativo: boolean
+          token: string
+        }[]
+      }
+      obter_painel_publico_filho: { Args: { p_token: string }; Returns: Json }
+      regenerar_acesso_publico_filho: {
+        Args: { p_id_filho: number }
+        Returns: {
+          ativo: boolean
+          token: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
