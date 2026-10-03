@@ -134,10 +134,8 @@ export function OnboardingInicial() {
       return;
     }
 
-    const agoraMinuto = new Date();
-    agoraMinuto.setSeconds(0, 0);
-    if (inicio < agoraMinuto.getTime()) {
-      toast.error("A data/hora de início deve ser a atual ou futura");
+    if (inicio > Date.now()) {
+      toast.error("Para concluir o aprendizado agora, a vigência precisa começar agora ou antes");
       return;
     }
 
@@ -287,7 +285,7 @@ export function OnboardingInicial() {
             </div>
             <div>
               <h3 className="font-semibold">3. Crie uma vigência</h3>
-              <p className="mt-1 text-sm text-muted-foreground">A vigência deve começar no horário atual ou em uma data/hora futura. Para concluir o aprendizado agora, mantenha o início no horário atual.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Para seguir direto até Ocorrências, crie uma vigência que já esteja em andamento.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label>Data início *</Label><BrDateTimeField id="onboarding-inicio-vigencia" value={inicioVigencia} onChange={setInicioVigencia} /></div>
