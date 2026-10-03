@@ -133,13 +133,6 @@ function VigenciasPage() {
       const fora = (registros ?? []).filter((o) => { const d = new Date(o.created_at).getTime(); return d < novoInicio || d > novoFim; });
       if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} registro(s) de “Não fez” fora das novas datas. Ajuste ou remova esses registros em Ocorrências antes de salvar.`); return; }
     }
-    const totais = new Map<number, number>();
-    for (const item of vinculadas ?? []) {
-      const filho = filhos.find((f) => f.id === item.id_filho);
-      if (filho && !usaDesconto(filho, { valor_debito: Number(p.data.valor_debito.replace(",", ".")) })) totais.set(item.id_filho, (totais.get(item.id_filho) ?? 0) + item.qtd_nao_fez);
-    }
-    const maiorTotal = Math.max(0, ...totais.values());
-    if (p.data.qtd_ocorrencia < maiorTotal) { toast.error(`O limite não pode ser menor que os ${maiorTotal} registros de “Não fez” já acumulados por um filho sem mesada nesta vigência`); return; }
     const { error } = await supabase.from("t_vigencia").update({ ...p.data, ...dadosPenalidade(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência atualizada"); setEditando(null);
@@ -155,18 +148,6 @@ function VigenciasPage() {
   });
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
-  const totaisNaEdicao = new Map<number, number>();
-  for (const a of vinculadasNaEdicao) {
-    const filho = filhos.find((f) => f.id === a.id_filho);
-    if (filho && !usaDesconto(filho, editando ? { valor_debito: edicao.valor_debito === "" ? null : Number(edicao.valor_debito.replace(",", ".")) } : { valor_debito: null })) totaisNaEdicao.set(a.id_filho, (totaisNaEdicao.get(a.id_filho) ?? 0) + a.qtd_nao_fez);
-  }
-  const temVinculosNaEdicao = vinculadasNaEdicao.length > 0;
-  const temFilhoSemMesadaNaEdicao = vinculadasNaEdicao.some((a) => {
-    const filho = filhos.find((f) => f.id === a.id_filho);
-    return filho ? !(filho.tem_mesada_opcional === true && filho.valor_mesada !== null) : false;
-  });
-  const mostrarPenalidadeNaEdicao = !temVinculosNaEdicao || temFilhoSemMesadaNaEdicao;
-  const minimoNaEdicao = Math.max(1, ...totaisNaEdicao.values());
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (new Date(o.created_at).getTime() < new Date(edicao.data_inicio).getTime() || new Date(o.created_at).getTime() > new Date(edicao.data_fim).getTime())) : [];
 
   return <>
@@ -221,8 +202,7 @@ function VigenciasPage() {
       <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-3">
         <div className="space-y-1.5"><Label htmlFor="editar-inicio" className="text-sm">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
         <div className="space-y-1.5"><Label htmlFor="editar-fim" className="text-sm">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
-        <div className="[&_.space-y-3]:space-y-2 [&_.space-y-2]:space-y-1.5 [&_.p-3]:p-2.5 [&_input]:h-9 [&_label]:text-sm [&_p.text-xs]:text-[11px]"><EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" mostrarPenalidade={mostrarPenalidadeNaEdicao} /></div>
-        {mostrarPenalidadeNaEdicao && minimoNaEdicao > 1 && <p className="text-xs text-muted-foreground">Mínimo: {minimoNaEdicao}, já registrado por um filho sem mesada nesta vigência.</p>}
+        <div className="[&_.space-y-3]:space-y-2 [&_.space-y-2]:space-y-1.5 [&_.p-3]:p-2.5 [&_input]:h-9 [&_label]:text-sm [&_p.text-xs]:text-[11px]"><EscolhaPenalidade value={edicao} onChange={setEdicao} prefix="editar" /></div>
         {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} data(s) de “Não fez” fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Ocorrências</Link> antes de salvar.</p>}
         <DialogFooter className="pt-1"><Button type="button" variant="outline" size="sm" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" size="sm">Salvar alterações</Button></DialogFooter>
       </form>
