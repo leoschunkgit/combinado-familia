@@ -288,8 +288,8 @@ export function OnboardingInicial() {
               <p className="mt-1 text-sm text-muted-foreground">Para seguir direto até Ocorrências, crie uma vigência que já esteja em andamento.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2"><Label>Data início *</Label><BrDateTimeField value={inicioVigencia} onChange={setInicioVigencia} /></div>
-              <div className="space-y-2"><Label>Data fim *</Label><BrDateTimeField value={fimVigencia} onChange={setFimVigencia} /></div>
+              <div className="space-y-2"><Label>Data início *</Label><BrDateTimeField id="onboarding-inicio-vigencia" value={inicioVigencia} onChange={setInicioVigencia} /></div>
+              <div className="space-y-2"><Label>Data fim *</Label><BrDateTimeField id="onboarding-fim-vigencia" value={fimVigencia} onChange={setFimVigencia} /></div>
             </div>
             <div className="rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
               <div className="space-y-2">
