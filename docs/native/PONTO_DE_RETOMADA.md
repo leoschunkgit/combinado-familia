@@ -71,8 +71,8 @@ Antes de qualquer nova etapa, consultar também:
 - toda a implementação passou na bateria de CI Android
 
 ### Ainda obrigatório antes de considerar concluído
-1. Publicar a Edge Function `excluir-conta` pelo Lovable Cloud, que gerencia o backend atual.
-2. Confirmar que a função foi publicada no backend real.
+1. Edge Function `excluir-conta` publicada no Lovable Cloud. ✅
+2. Corrigir e validar os erros de compilação da prévia do Lovable.
 3. Criar uma conta descartável de teste.
 4. Testar a exclusão de ponta a ponta.
 5. Confirmar que:
