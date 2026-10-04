@@ -158,7 +158,10 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [x] Versão e versionCode base validados no GitHub Actions
 - [x] Rascunho de política de privacidade preparado
 - [x] URL pública da Política de Privacidade criada e validada no build: https://www.combinadofamilia.app/politica-de-privacidade
+- [x] URL pública de exclusão de conta criada e validada no build: https://www.combinadofamilia.app/exclusao-de-conta
 - [ ] Política de privacidade final revisada (contato + exclusão de conta/dados)
+- [ ] Canal oficial de solicitação de exclusão definido
+- [ ] Exclusão automática de conta/dados implementada e validada
 - [x] Guia de Data Safety preparado
 - [ ] Data Safety preenchido no Google Play Console
 - [x] Checklist de screenshots preparado
