@@ -148,3 +148,9 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 
 - Política de Privacidade pública criada em /politica-de-privacidade e validada no build
 - Revisão final da política ainda depende de definir contato oficial e fluxo de exclusão de conta/dados
+
+
+- Página pública de exclusão de conta criada em /exclusao-de-conta
+- Nova rota validada em build, APK, AAB, release, assinatura, Manifest, identidade e sync Android
+- Exclusão automática ainda não implementada
+- Canal oficial para solicitação de exclusão ainda precisa ser definido
