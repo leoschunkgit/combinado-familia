@@ -156,10 +156,14 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [ ] Finalizar assetlinks.json com o SHA-256 real
 - [ ] Gerar AAB de release assinado
 - [x] Versão e versionCode base validados no GitHub Actions
-- [ ] Política de privacidade
-- [ ] Data Safety preenchido
-- [ ] Screenshots
-- [ ] Descrição da loja
+- [x] Rascunho de política de privacidade preparado
+- [ ] Política de privacidade final publicada em URL pública
+- [x] Guia de Data Safety preparado
+- [ ] Data Safety preenchido no Google Play Console
+- [x] Checklist de screenshots preparado
+- [ ] Screenshots finais produzidos e enviados
+- [x] Descrição curta/completa e categoria preparadas
+- [ ] Textos finais revisados e enviados ao Google Play
 - [ ] Teste interno concluído
 - [ ] Publicação no Google Play concluída
 
