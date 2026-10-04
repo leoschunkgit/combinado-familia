@@ -176,3 +176,7 @@ O arquivo `PONTO_DE_RETOMADA.md` registra pendências que não podem ser esqueci
 
 - Lovable Cloud é o caminho de deploy do backend atual; não usar SUPABASE_ACCESS_TOKEN/GitHub Actions para publicar a função
 - Pendência obrigatória: publicar a Edge Function excluir-conta pelo Lovable Cloud e testar com conta descartável
+
+
+- Edge Function excluir-conta publicada com sucesso no Lovable Cloud
+- Ainda pendente: corrigir erros de compilação da prévia e testar exclusão ponta a ponta com conta descartável
