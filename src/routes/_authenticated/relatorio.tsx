@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
-import { CalendarRange, ChevronDown, ChevronsDownUp, ChevronsUpDown, FileDown, FileText, Search } from "lucide-react";
+import { CalendarRange, ChevronDown, ChevronsDownUp, ChevronsUpDown, FileDown, FileText, Search, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pick } from "@/components/Pick";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { VigenciaStatus } from "@/components/VigenciaStatus";
-import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias } from "@/lib/db";
-import { descricaoPenalidade, reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
+import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Ocorrencia } from "@/lib/db";
+import { descricaoPenalidade, reais, resumoMesada, usaDesconto } from "@/lib/mesada";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
@@ -31,6 +31,15 @@ function statusVigencia(v: { data_inicio: string; data_fim: string }) {
   return "Agendada";
 }
 
+function ehFez(o: Ocorrencia) { return o.tipo === "FEZ"; }
+function naoFez(o: Ocorrencia) { return o.tipo !== "FEZ"; }
+function bonus(o: Ocorrencia) {
+  if (o.tipo !== "FEZ") return "";
+  if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao;
+  if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor != null) return reais(o.bonificacao_valor);
+  return "";
+}
+
 function RelatorioPage() {
   const { data: vigencias = [], isLoading: loadingVigencias } = useVigencias();
   const { data: filhos = [], isLoading: loadingFilhos } = useFilhos();
@@ -42,255 +51,104 @@ function RelatorioPage() {
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort((a, b) => {
-    const aAndamento = andamento(a);
-    const bAndamento = andamento(b);
+    const aAndamento = andamento(a), bAndamento = andamento(b);
     if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
     return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
   }), [vigencias]);
 
-  // Mesma relação usada em Ocorrências: atribuição -> id_filho_tarefa -> ocorrência.
-  // Number() evita diferença de tipo entre IDs retornados em ambientes/dispositivos distintos.
   const relatorio = useMemo(() => vigenciasOrdenadas
     .filter((vigencia) => filtro.vig === "all" || Number(vigencia.id) === Number(filtro.vig))
     .map((vigencia) => ({
       vigencia,
-      filhos: filhos
-        .filter((filho) => filtro.filho === "all" || Number(filho.id) === Number(filtro.filho))
-        .map((filho) => {
-          const tarefas = atribuicoes.filter(
-            (r) => Number(r.id_vigencia) === Number(vigencia.id) && Number(r.id_filho) === Number(filho.id),
-          );
-
-          const registros = tarefas.flatMap((r) =>
-            ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(r.id)),
-          );
-
-          return { filho, tarefas, registros };
-        })
-        .filter(({ tarefas }) => tarefas.length > 0),
-    }))
-    .filter(({ filhos: itens }) => itens.length > 0), [vigenciasOrdenadas, filtro, filhos, atribuicoes, ocorrencias]);
+      filhos: filhos.filter((filho) => filtro.filho === "all" || Number(filho.id) === Number(filtro.filho)).map((filho) => {
+        const tarefas = atribuicoes.filter((r) => Number(r.id_vigencia) === Number(vigencia.id) && Number(r.id_filho) === Number(filho.id));
+        const registros = tarefas.flatMap((r) => ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(r.id)));
+        return { filho, tarefas, registros };
+      }).filter(({ tarefas }) => tarefas.length > 0),
+    })).filter(({ filhos: itens }) => itens.length > 0), [vigenciasOrdenadas, filtro, filhos, atribuicoes, ocorrencias]);
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const carregando = loadingVigencias || loadingFilhos || loadingAtribuicoes || loadingOcorrencias;
 
   function definirTudo(aberto: boolean) {
     setVigenciasAbertas(Object.fromEntries(relatorio.map(({ vigencia }) => [vigencia.id, aberto])));
-    setFilhosAbertos(Object.fromEntries(
-      relatorio.flatMap(({ vigencia, filhos: gruposFilhos }) =>
-        gruposFilhos.map(({ filho }) => [`${vigencia.id}-${filho.id}`, aberto]),
-      ),
-    ));
+    setFilhosAbertos(Object.fromEntries(relatorio.flatMap(({ vigencia, filhos: gruposFilhos }) => gruposFilhos.map(({ filho }) => [`${vigencia.id}-${filho.id}`, aberto]))));
   }
 
   function gerarPdf() {
     if (!relatorio.length) return;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const margem = 14;
-    const largura = 182;
+    const margem = 14, largura = 182;
     let y = 16;
-
     const pagina = () => { doc.addPage(); y = 16; };
     const precisa = (altura: number) => { if (y + altura > 282) pagina(); };
     const texto = (valor: string, x: number, larguraMax: number, tamanho = 9, negrito = false) => {
-      doc.setFont("helvetica", negrito ? "bold" : "normal");
-      doc.setFontSize(tamanho);
-      const linhas = doc.splitTextToSize(valor, larguraMax);
-      precisa(linhas.length * (tamanho * 0.42) + 2);
-      doc.text(linhas, x, y);
-      y += linhas.length * (tamanho * 0.42) + 2;
+      doc.setFont("helvetica", negrito ? "bold" : "normal"); doc.setFontSize(tamanho);
+      const linhas = doc.splitTextToSize(valor, larguraMax); precisa(linhas.length * (tamanho * 0.42) + 2);
+      doc.text(linhas, x, y); y += linhas.length * (tamanho * 0.42) + 2;
     };
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("Relatório de Combinados", margem, y);
-    y += 8;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text(`Gerado em ${fmtDataHora(new Date().toISOString())}`, margem, y);
-    y += 8;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.text("Relatório de Combinados", margem, y); y += 8;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text(`Gerado em ${fmtDataHora(new Date().toISOString())}`, margem, y); y += 8;
 
     for (const grupo of relatorio) {
-      precisa(28);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text("Vigência", margem, y);
-      y += 6;
+      precisa(28); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("Vigência", margem, y); y += 6;
       texto(fmtVigencia(grupo.vigencia), margem, largura, 11, true);
       texto(`Status: ${statusVigencia(grupo.vigencia)}`, margem, largura);
       texto(`Limite: ${grupo.vigencia.qtd_ocorrencia} ocorrência(s)`, margem, largura);
       texto(descricaoPenalidade(grupo.vigencia), margem, largura);
-
-      for (const grupoFilho of grupo.filhos) {
-        const { filho, tarefas, registros } = grupoFilho;
-        precisa(24);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text(`Filho: ${filho.nome}`, margem + 4, y);
-        y += 6;
-
-        const total = registros.length;
+      for (const { filho, tarefas, registros } of grupo.filhos) {
+        precisa(24); doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.text(`Filho: ${filho.nome}`, margem + 4, y); y += 6;
+        const totalNaoFez = registros.filter(naoFez).length, totalFez = registros.filter(ehFez).length;
         const comDesconto = usaDesconto(filho, grupo.vigencia);
-        texto(comDesconto ? `Não fez: ${total}` : `Não fez: ${total} de ${grupo.vigencia.qtd_ocorrencia}`, margem + 4, largura - 4, 9, true);
-        if (comDesconto) {
-          texto(`Mesada: ${reais(filho.valor_mesada ?? 0)} · ${resumoMesada(filho, grupo.vigencia, total)}`, margem + 4, largura - 4);
-        } else {
-          texto(`Penalidade escrita ao atingir o limite: ${grupo.vigencia.penalidade || "Não cadastrada"}`, margem + 4, largura - 4);
-        }
-
+        texto(`Fez: ${totalFez} · ${comDesconto ? `Não fez: ${totalNaoFez}` : `Não fez: ${totalNaoFez} de ${grupo.vigencia.qtd_ocorrencia}`}`, margem + 4, largura - 4, 9, true);
+        if (comDesconto) texto(`Mesada: ${reais(filho.valor_mesada ?? 0)} · ${resumoMesada(filho, grupo.vigencia, totalNaoFez)}`, margem + 4, largura - 4);
+        else texto(`Penalidade escrita ao atingir o limite: ${grupo.vigencia.penalidade || "Não cadastrada"}`, margem + 4, largura - 4);
         for (const tarefa of tarefas) {
-          const registrosTarefa = ocorrencias
-            .filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id))
-            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-          precisa(14);
-          texto(`Tarefa: ${tarefa.t_tarefa?.nome || "Tarefa"} · Não fez: ${registrosTarefa.length}`, margem + 8, largura - 8, 9, true);
-          if (!registrosTarefa.length) {
-            texto("Nenhum registro de “Não fez”.", margem + 12, largura - 12, 8);
-          } else {
-            for (const [i, registro] of registrosTarefa.entries()) {
-              const penalidade = !comDesconto && penalizadas.has(registro.id);
-              texto(`${i + 1}º não fez: ${fmtData(registro.created_at)}${penalidade ? " · Limite atingido" : ""}`, margem + 12, largura - 12, 8);
-            }
+          const registrosTarefa = ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id)).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          const fezTarefa = registrosTarefa.filter(ehFez), naoFezTarefa = registrosTarefa.filter(naoFez);
+          precisa(14); texto(`Tarefa: ${tarefa.t_tarefa?.nome || "Tarefa"} · Fez: ${fezTarefa.length} · Não fez: ${naoFezTarefa.length}`, margem + 8, largura - 8, 9, true);
+          if (!registrosTarefa.length) texto("Nenhum resultado registrado.", margem + 12, largura - 12, 8);
+          else for (const registro of registrosTarefa) {
+            const penalidade = registro.tipo !== "FEZ" && !comDesconto && penalizadas.has(registro.id);
+            const bonificacao = bonus(registro);
+            texto(`${registro.tipo === "FEZ" ? "Fez" : "Não fez"}: ${fmtData(registro.created_at)}${bonificacao ? ` · Bonificação: ${bonificacao}` : ""}${penalidade ? " · Limite atingido" : ""}`, margem + 12, largura - 12, 8);
           }
         }
         y += 3;
       }
       y += 4;
     }
-
     const totalPaginas = doc.getNumberOfPages();
-    for (let i = 1; i <= totalPaginas; i++) {
-      doc.setPage(i);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.text(`Combinado · Página ${i} de ${totalPaginas}`, margem, 290);
-    }
+    for (let i = 1; i <= totalPaginas; i++) { doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text(`Combinado · Página ${i} de ${totalPaginas}`, margem, 290); }
     doc.save(`relatorio-combinado-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
-  return (
-    <>
-      <PageHeader title="Relatório" description="Consulte os combinados completos por vigência e filho e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
-      <Card className="mb-6">
-        <CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_auto] md:items-end">
-          <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({
-            value: String(v.id),
-            label: fmtVigencia(v),
-            status: new Date(v.data_fim).getTime() < Date.now() ? "finalizada" as const : andamento(v) ? "andamento" as const : "futura" as const,
-          }))} />
-          <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
-          <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
-        </CardContent>
-      </Card>
-
-      <div className="mb-6 flex flex-wrap justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => definirTudo(true)} disabled={carregando || relatorio.length === 0}>
-          <ChevronsDownUp className="h-4 w-4" /> Expandir tudo
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => definirTudo(false)} disabled={carregando || relatorio.length === 0}>
-          <ChevronsUpDown className="h-4 w-4" /> Recolher tudo
-        </Button>
-        <Button onClick={gerarPdf} disabled={carregando || relatorio.length === 0}><FileDown className="h-4 w-4" /> Extrair PDF</Button>
-      </div>
-
-      {!carregando && relatorio.length === 0 && <EmptyState>Nenhuma informação encontrada para os filtros selecionados.</EmptyState>}
-
-      <div className="space-y-4">
-        {relatorio.map(({ vigencia, filhos: gruposFilhos }) => {
-          const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
-          return (
-            <section key={vigencia.id} aria-label={`Vigência ${fmtVigencia(vigencia)}`}>
-              <Card>
-                <CardHeader>
-                  <button
-                    type="button"
-                    className="flex w-full cursor-pointer items-start gap-2 text-left"
-                    onClick={() => setVigenciasAbertas((atual) => ({ ...atual, [vigencia.id]: !vigenciaAberta }))}
-                  >
-                    <ChevronDown className={`mt-0.5 h-5 w-5 shrink-0 transition-transform ${vigenciaAberta ? "" : "-rotate-90"}`} />
-                    <CalendarRange className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <CardTitle>{fmtVigencia(vigencia)}</CardTitle>
-                        <VigenciaStatus vigencia={vigencia} />
-                      </div>
-                    </div>
-                  </button>
-                  {vigenciaAberta && (
-                    <div className="mt-2 space-y-1.5">
-                      <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10 md:border-amber-300/70 md:bg-amber-50/30">
-                        <span className="font-semibold text-foreground">Penalidade:</span>{" "}
-                        <span className="text-muted-foreground">{vigencia.penalidade || "Não cadastrada"}</span>{" "}
-                        <span className="text-muted-foreground">·</span>{" "}
-                        <span className="font-semibold text-foreground">Limite:</span>{" "}
-                        <span className="text-muted-foreground">{vigencia.qtd_ocorrencia} ocorrência(s)</span>
-                      </div>
-                      <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10 md:border-emerald-300/70 md:bg-emerald-50/30">
-                        <span className="font-semibold text-foreground">Desconto da mesada:</span>{" "}
-                        <span className="text-muted-foreground">{vigencia.valor_debito !== null ? `${reais(vigencia.valor_debito)} por Não fez` : "Não cadastrado"}</span>
-                      </div>
-                    </div>
-                  )}
-                </CardHeader>
-
-                {vigenciaAberta && (
-                  <CardContent className="space-y-3">
-                    {gruposFilhos.map(({ filho, tarefas, registros }) => {
-                      const total = registros.length;
-                      const comDesconto = usaDesconto(filho, vigencia);
-                      const chaveFilho = `${vigencia.id}-${filho.id}`;
-                      const filhoAberto = filhosAbertos[chaveFilho] === true;
-                      return (
-                        <div key={filho.id} className="rounded-xl border">
-                          <button
-                            type="button"
-                            className="flex w-full cursor-pointer items-center justify-between gap-3 p-4 text-left"
-                            onClick={() => setFilhosAbertos((atual) => ({ ...atual, [chaveFilho]: !filhoAberto }))}
-                          >
-                            <div className="flex min-w-0 items-center gap-2">
-                              <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${filhoAberto ? "" : "-rotate-90"}`} />
-                              <h3 className="min-w-0 truncate text-lg font-bold">{filho.nome}</h3>
-                            </div>
-                            <span className="shrink-0 text-sm font-semibold tabular-nums">{comDesconto ? `Não fez: ${total}` : `Não fez: ${total} de ${vigencia.qtd_ocorrencia}`}</span>
-                          </button>
-
-                          {filhoAberto && (
-                            <div className="border-t p-4 pt-3">
-                              {comDesconto ? (
-                                <p className="text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, total)}</p>
-                              ) : (
-                                <p className="text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
-                              )}
-                              <div className="mt-4 space-y-3">
-                                {tarefas.map((tarefa) => {
-                                  const registrosTarefa = ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id)).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                                  return (
-                                    <div key={tarefa.id} className="border-t pt-3">
-                                      <div className="flex flex-wrap justify-between gap-2">
-                                        <span className="font-semibold">{tarefa.t_tarefa?.nome}</span>
-                                        <span className="text-sm text-muted-foreground">{registrosTarefa.length} “Não fez”</span>
-                                      </div>
-                                      {registrosTarefa.length ? (
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                          {registrosTarefa.map((o) => <span key={o.id} className="rounded-md bg-muted px-2 py-1 text-xs tabular-nums">{fmtData(o.created_at)}</span>)}
-                                        </div>
-                                      ) : <p className="mt-2 text-xs text-muted-foreground">Nenhum registro de “Não fez”.</p>}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                )}
-              </Card>
-            </section>
-          );
-        })}
-      </div>
-    </>
-  );
+  return <>
+    <PageHeader title="Relatório" description="Consulte os combinados completos por vigência e filho e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
+    <Card className="mb-6"><CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_auto] md:items-end">
+      <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({value:String(v.id),label:fmtVigencia(v),status:new Date(v.data_fim).getTime()<Date.now()?"finalizada" as const:andamento(v)?"andamento" as const:"futura" as const}))} />
+      <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
+      <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
+    </CardContent></Card>
+    <div className="mb-6 flex flex-wrap justify-end gap-2">
+      <Button variant="outline" size="sm" onClick={() => definirTudo(true)} disabled={carregando || !relatorio.length}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
+      <Button variant="outline" size="sm" onClick={() => definirTudo(false)} disabled={carregando || !relatorio.length}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
+      <Button onClick={gerarPdf} disabled={carregando || !relatorio.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>
+    </div>
+    {!carregando && !relatorio.length && <EmptyState>Nenhuma informação encontrada para os filtros selecionados.</EmptyState>}
+    <div className="space-y-4">{relatorio.map(({ vigencia, filhos: gruposFilhos }) => {
+      const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
+      return <section key={vigencia.id}><Card><CardHeader>
+        <button type="button" className="flex w-full cursor-pointer items-start gap-2 text-left" onClick={() => setVigenciasAbertas(a => ({...a,[vigencia.id]:!vigenciaAberta}))}><ChevronDown className={`mt-0.5 h-5 w-5 shrink-0 transition-transform ${vigenciaAberta?"":"-rotate-90"}`} /><CalendarRange className="mt-0.5 h-5 w-5 shrink-0 text-primary"/><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><CardTitle>{fmtVigencia(vigencia)}</CardTitle><VigenciaStatus vigencia={vigencia}/></div></div></button>
+        {vigenciaAberta && <div className="mt-2 space-y-1.5"><div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10"><b>Penalidade:</b> <span className="text-muted-foreground">{vigencia.penalidade||"Não cadastrada"} · </span><b>Limite:</b> <span className="text-muted-foreground">{vigencia.qtd_ocorrencia} ocorrência(s)</span></div><div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10"><b>Desconto da mesada:</b> <span className="text-muted-foreground">{vigencia.valor_debito!==null?`${reais(vigencia.valor_debito)} por Não fez`:"Não cadastrado"}</span></div></div>}
+      </CardHeader>{vigenciaAberta && <CardContent className="space-y-3">{gruposFilhos.map(({filho,tarefas,registros}) => {
+        const totalFez=registros.filter(ehFez).length,totalNaoFez=registros.filter(naoFez).length,comDesconto=usaDesconto(filho,vigencia),chave=`${vigencia.id}-${filho.id}`,aberto=filhosAbertos[chave]===true;
+        return <div key={filho.id} className="rounded-xl border"><button type="button" className="flex w-full cursor-pointer items-center justify-between gap-3 p-4 text-left" onClick={()=>setFilhosAbertos(a=>({...a,[chave]:!aberto}))}><div className="flex min-w-0 items-center gap-2"><ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${aberto?"":"-rotate-90"}`}/><h3 className="min-w-0 truncate text-lg font-bold">{filho.nome}</h3></div><div className="flex shrink-0 gap-3 text-sm font-semibold tabular-nums"><span className="text-green-700">Fez: {totalFez}</span><span>{comDesconto?`Não fez: ${totalNaoFez}`:`Não fez: ${totalNaoFez} de ${vigencia.qtd_ocorrencia}`}</span></div></button>
+        {aberto && <div className="border-t p-4 pt-3">{comDesconto?<p className="text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada??0)} · {resumoMesada(filho,vigencia,totalNaoFez)}</p>:<p className="text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade||"Não cadastrada"}</p>}<div className="mt-4 space-y-3">{tarefas.map(tarefa=>{
+          const rs=ocorrencias.filter(o=>Number(o.id_filho_tarefa)===Number(tarefa.id)).sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()),qFez=rs.filter(ehFez).length,qNao=rs.filter(naoFez).length;
+          return <div key={tarefa.id} className="border-t pt-3"><div className="flex flex-wrap justify-between gap-2"><span className="font-semibold">{tarefa.t_tarefa?.nome}</span><span className="text-sm text-muted-foreground">Fez: {qFez} · Não fez: {qNao}</span></div>{rs.length?<div className="mt-2 space-y-1.5">{rs.map(o=><div key={o.id} className="flex flex-wrap items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs tabular-nums">{o.tipo==="FEZ"?<ThumbsUp className="h-4 w-4 text-green-600"/>:<ThumbsDown className="h-4 w-4 text-destructive"/>}<span className="font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"}</span><span>· {fmtData(o.created_at)}</span>{bonus(o)&&<span>· Bonificação: {bonus(o)}</span>}{o.tipo!=="FEZ"&&!comDesconto&&penalizadas.has(o.id)&&<span className="font-semibold text-destructive">· Limite atingido</span>}</div>)}</div>:<p className="mt-2 text-xs text-muted-foreground">Nenhum resultado registrado.</p>}</div>;
+        })}</div></div>}</div>;
+      })}</CardContent>}</Card></section>;
+    })}</div>
+  </>;
 }
