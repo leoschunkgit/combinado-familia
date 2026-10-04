@@ -10,7 +10,7 @@ import { ActionLoadingProvider } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
 import { CheckinDiario } from "@/components/CheckinDiario";
 import { useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
-import { pendenciasDoDia } from "@/lib/notificacoes";
+import { pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -60,6 +60,7 @@ function AuthenticatedLayout() {
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const qc = useQueryClient();
+  const hoje = useDataBrasilAtual();
   const [aberto, setAberto] = useState(false);
   const [etapa, setEtapa] = useState<number | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -96,7 +97,7 @@ function AuthenticatedLayout() {
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
   const configuracaoInicialConcluida = filhos.length > 0 && tarefas.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
   const mostrarAtalhoLinkFilho = configuracaoInicialConcluida && pathname !== "/filhos" && pathname !== "/link-filhos";
-  const quantidadeNotificacoes = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias).length : 0;
+  const quantidadeNotificacoes = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")).length : 0;
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
