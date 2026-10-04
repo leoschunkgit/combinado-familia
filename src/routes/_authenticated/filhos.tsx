@@ -15,6 +15,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useVigencias, type Filho } from "@/lib/db";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
+import { getChildTrackingUrl } from "@/lib/app-runtime";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -118,7 +119,7 @@ function FilhosPage() {
   }
 
   function urlAcesso(token: string) {
-    return `${window.location.origin}/acompanhar/${token}`;
+    return getChildTrackingUrl(token);
   }
 
   async function copiarLink(token: string) {
