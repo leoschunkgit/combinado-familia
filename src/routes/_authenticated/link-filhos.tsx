@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { msgErro, useFilhos, type Filho } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
+import { getChildTrackingUrl } from "@/lib/app-runtime";
 
 export const Route = createFileRoute("/_authenticated/link-filhos")({
   head: () => ({ meta: [
@@ -67,7 +68,7 @@ function LinkFilhosPage() {
     toast.success("Acesso ao painel desativado");
   }
 
-  const urlAcesso = (token: string) => `${window.location.origin}/acompanhar/${token}`;
+  const urlAcesso = (token: string) => getChildTrackingUrl(token);
 
   async function copiarLink(token: string) {
     try { await navigator.clipboard.writeText(urlAcesso(token)); toast.success("Link copiado"); }
