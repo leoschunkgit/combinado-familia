@@ -65,6 +65,8 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 
 ## 3. Android — aparelho real
 
+- [x] APK de debug compilado com sucesso via Gradle no GitHub Actions
+
 ### Inicialização
 - [ ] Abre sem tela branca
 - [ ] Nome e ícone corretos
