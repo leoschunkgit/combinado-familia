@@ -79,6 +79,7 @@ Stack:
 - Capacitor Android sincronizado com sucesso
 - APK de debug compilado com sucesso via Gradle no GitHub Actions
 - AAB de debug compilado com sucesso via Gradle no GitHub Actions
+- AAB de release sem assinatura de produção gerado com sucesso no GitHub Actions
 
 ### Assets
 - Manifesto web
