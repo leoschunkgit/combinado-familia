@@ -152,7 +152,7 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 
 - Página pública de exclusão de conta criada em /exclusao-de-conta
 - Nova rota validada em build, APK, AAB, release, assinatura, Manifest, identidade e sync Android
-- Exclusão automática ainda não implementada
+- Fluxo automático de exclusão implementado no app e na Edge Function; falta publicar e testar no backend real
 - Canal oficial para solicitação de exclusão ainda precisa ser definido
 
 
@@ -172,3 +172,7 @@ Antes de iniciar qualquer nova etapa do app Android, consultar obrigatoriamente:
 - `docs/native/VALIDACAO.md`
 
 O arquivo `PONTO_DE_RETOMADA.md` registra pendências que não podem ser esquecidas, mesmo que a conversa anterior não esteja disponível. Nenhuma etapa deve ser considerada concluída se houver pendência obrigatória registrada ali.
+
+
+- A preparação do deploy do Supabase passou em toda a bateria de CI Android
+- Pendência obrigatória: configurar SUPABASE_ACCESS_TOKEN no GitHub e executar o deploy manual da Edge Function excluir-conta
