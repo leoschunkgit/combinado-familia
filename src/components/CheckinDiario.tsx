@@ -47,7 +47,10 @@ export function CheckinDiario() {
     const registradosHoje = new Set(
       ocorrencias.filter((o) => diaBR(o.created_at) === hoje).map((o) => o.id_filho_tarefa),
     );
-    return atribuicoes.filter((a) => ativas.has(a.id_vigencia) && !registradosHoje.has(a.id));
+
+    return atribuicoes.filter(
+      (a) => ativas.has(a.id_vigencia) && !registradosHoje.has(a.id),
+    );
   }, [vigencias, atribuicoes, ocorrencias, hoje]);
 
   const grupos = useMemo(() => {
@@ -167,8 +170,7 @@ export function CheckinDiario() {
       const { error } = await supabase.from("t_ocorrencia").insert({
         tipo: "FEZ",
         bonificacao_tipo: d.bonusTipo === "NENHUMA" ? null : d.bonusTipo,
-        bonificacao_descricao:
-          d.bonusTipo === "TEXTO" ? d.descricao.trim() : null,
+        bonificacao_descricao: d.bonusTipo === "TEXTO" ? d.descricao.trim() : null,
         bonificacao_valor: d.bonusTipo === "VALOR" ? valor : null,
         id_filho_tarefa: r.id,
         created_at: new Date(hoje + "T12:00:00-03:00").toISOString(),
@@ -178,9 +180,7 @@ export function CheckinDiario() {
       await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
       setFez(null);
       toast.success(
-        d.bonusTipo === "NENHUMA"
-          ? "Fez registrado"
-          : "Fez registrado com bonificação",
+        d.bonusTipo === "NENHUMA" ? "Fez registrado" : "Fez registrado com bonificação",
       );
     } catch (e) {
       toast.error(msgErro(e as { message?: string }));
@@ -201,7 +201,10 @@ export function CheckinDiario() {
 
         <div className="space-y-5">
           {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
-            const totalVigencia = gruposFilhos.reduce((soma, grupo) => soma + grupo.tarefas.length, 0);
+            const totalVigencia = gruposFilhos.reduce(
+              (soma, grupo) => soma + grupo.tarefas.length,
+              0,
+            );
 
             return (
               <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -250,7 +253,9 @@ export function CheckinDiario() {
                                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                     Tarefa
                                   </p>
-                                  <p className="mt-0.5 break-words font-semibold">{tarefa.t_tarefa?.nome}</p>
+                                  <p className="mt-0.5 break-words font-semibold">
+                                    {tarefa.t_tarefa?.nome}
+                                  </p>
                                 </div>
 
                                 {!editandoFez && (
@@ -288,93 +293,91 @@ export function CheckinDiario() {
 
                               {editandoFez && fez && (
                                 <div className="mt-4 space-y-4 rounded-lg border bg-muted/20 p-3 sm:p-4">
-                                <div className="space-y-2">
-                                  <Label>Bonificação opcional</Label>
-                                  <div className="grid grid-cols-3 gap-2">
+                                  <div className="space-y-2">
+                                    <Label>Bonificação opcional</Label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant={fez.bonusTipo === "NENHUMA" ? "default" : "outline"}
+                                        onClick={() => setFez({ ...fez, bonusTipo: "NENHUMA" })}
+                                      >
+                                        Nenhuma
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant={fez.bonusTipo === "TEXTO" ? "default" : "outline"}
+                                        onClick={() => setFez({ ...fez, bonusTipo: "TEXTO" })}
+                                      >
+                                        Escrita
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant={fez.bonusTipo === "VALOR" ? "default" : "outline"}
+                                        onClick={() => setFez({ ...fez, bonusTipo: "VALOR" })}
+                                      >
+                                        Valor
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  {fez.bonusTipo === "TEXTO" && (
+                                    <div className="space-y-2">
+                                      <Label>Bonificação escrita</Label>
+                                      <input
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={fez.descricao}
+                                        onChange={(e) => setFez({ ...fez, descricao: e.target.value })}
+                                      />
+                                    </div>
+                                  )}
+
+                                  {fez.bonusTipo === "VALOR" && (
+                                    <div className="space-y-2">
+                                      <Label>Valor da bonificação (R$)</Label>
+                                      <input
+                                        inputMode="decimal"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={fez.valor}
+                                        onChange={(e) => setFez({ ...fez, valor: e.target.value })}
+                                      />
+                                    </div>
+                                  )}
+
+                                  <div className="flex justify-end gap-2">
                                     <Button
                                       type="button"
+                                      variant="outline"
                                       size="sm"
-                                      variant={fez.bonusTipo === "NENHUMA" ? "default" : "outline"}
-                                      onClick={() => setFez({ ...fez, bonusTipo: "NENHUMA" })}
+                                      disabled={busy}
+                                      onClick={() => setFez(null)}
                                     >
-                                      Nenhuma
+                                      Cancelar
                                     </Button>
                                     <Button
                                       type="button"
                                       size="sm"
-                                      variant={fez.bonusTipo === "TEXTO" ? "default" : "outline"}
-                                      onClick={() => setFez({ ...fez, bonusTipo: "TEXTO" })}
+                                      disabled={busy}
+                                      onClick={() => void registrarFez(fez)}
                                     >
-                                      Escrita
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant={fez.bonusTipo === "VALOR" ? "default" : "outline"}
-                                      onClick={() => setFez({ ...fez, bonusTipo: "VALOR" })}
-                                    >
-                                      Valor
+                                      Salvar Fez
                                     </Button>
                                   </div>
                                 </div>
-
-                                {fez.bonusTipo === "TEXTO" && (
-                                  <div className="space-y-2">
-                                    <Label>Bonificação escrita</Label>
-                                    <input
-                                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                      value={fez.descricao}
-                                      onChange={(e) => setFez({ ...fez, descricao: e.target.value })}
-                                    />
-                                  </div>
-                                )}
-
-                                {fez.bonusTipo === "VALOR" && (
-                                  <div className="space-y-2">
-                                    <Label>Valor da bonificação (R$)</Label>
-                                    <input
-                                      inputMode="decimal"
-                                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                      value={fez.valor}
-                                      onChange={(e) => setFez({ ...fez, valor: e.target.value })}
-                                    />
-                                  </div>
-                                )}
-
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={busy}
-                                    onClick={() => setFez(null)}
-                                  >
-                                    Cancelar
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    disabled={busy}
-                                    onClick={() => void registrarFez(fez)}
-                                  >
-                                    Salvar Fez
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
+                              )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        );
-      })}
-    </div>
+                          );
+                        })}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
 
         <div className="text-center text-xs text-muted-foreground">
           {pendencias.length} {pendencias.length === 1 ? "tarefa pendente" : "tarefas pendentes"} hoje
