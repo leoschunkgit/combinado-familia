@@ -159,8 +159,8 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [x] Rascunho de política de privacidade preparado
 - [x] URL pública da Política de Privacidade criada e validada no build: https://www.combinadofamilia.app/politica-de-privacidade
 - [x] URL pública de exclusão de conta criada e validada no build: https://www.combinadofamilia.app/exclusao-de-conta
-- [ ] Política de privacidade final revisada (contato + exclusão de conta/dados)
-- [ ] Canal oficial de solicitação de exclusão definido
+- [x] Política de privacidade final revisada (contato + exclusão de conta/dados)
+- [x] Canal oficial de solicitação de exclusão definido: leoschunk@gmail.com
 - [x] Fluxo de exclusão de conta implementado e validado em build/APK/AAB/release/assinatura
 - [x] Edge Function excluir-conta publicada pelo Lovable Cloud no backend real
 - [x] Prévia/build do Lovable sem erros de compilação
