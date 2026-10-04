@@ -1,0 +1,81 @@
+name: Build Android Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-release:
+    name: Build unsigned release AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      VITE_PUBLIC_APP_URL: https://www.combinadofamilia.app
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build app bundle
+        run: npm run build:app
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Generate native assets
+        run: npm run app:assets
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x android/gradlew
+
+      - name: Build release AAB without production signing
+        working-directory: android
+        run: ./gradlew bundleRelease --stacktrace
+
+      - name: Verify release AAB
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAB="android/app/build/outputs/bundle/release/app-release.aab"
+          test -f "$AAB" || {
+            echo "::error::Release AAB was not generated"
+            find android/app/build/outputs -maxdepth 5 -type f 2>/dev/null | sort || true
+            exit 1
+          }
+          ls -lh "$AAB"
+
+      - name: Upload unsigned release AAB
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combinado-familia-release-unsigned-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
