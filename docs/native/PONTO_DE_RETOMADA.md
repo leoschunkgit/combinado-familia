@@ -66,21 +66,19 @@ Antes de qualquer nova etapa, consultar também:
   - filhos
   - responsável
   - usuário do Auth
-- workflow manual de deploy da Edge Function
-- workflow sem credenciais gravadas no repositório
+- Edge Function `excluir-conta` preparada no repositório
 - toda a implementação passou na bateria de CI Android
 
 ### Ainda obrigatório antes de considerar concluído
-1. Configurar no GitHub o secret `SUPABASE_ACCESS_TOKEN`.
-2. Executar manualmente o workflow `Deploy Supabase Edge Function`.
-3. Confirmar que a função `excluir-conta` foi publicada no backend real.
-4. Criar uma conta descartável de teste.
-5. Testar a exclusão de ponta a ponta.
-6. Confirmar que:
+1. Publicar a Edge Function `excluir-conta` pelo Lovable Cloud, que gerencia o backend atual.
+2. Confirmar que a função foi publicada no backend real.
+3. Criar uma conta descartável de teste.
+4. Testar a exclusão de ponta a ponta.
+5. Confirmar que:
    - todos os dados da conta foram removidos;
    - os links públicos antigos deixaram de funcionar;
    - o usuário excluído não consegue mais fazer login.
-7. Só depois marcar a exclusão de conta como concluída no checklist principal.
+6. Só depois marcar a exclusão de conta como concluída no checklist principal.
 
 ## Pendências Android que dependem do computador pessoal
 
