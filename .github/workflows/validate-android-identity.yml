@@ -1,0 +1,96 @@
+name: Validate Android Identity
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-identity:
+    name: Validate app ID, name and version
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      VITE_PUBLIC_APP_URL: https://www.combinadofamilia.app
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build app bundle
+        run: npm run build:app
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Validate Android identity
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          GRADLE="android/app/build.gradle"
+          STRINGS="android/app/src/main/res/values/strings.xml"
+
+          test -f "$GRADLE"
+          test -f "$STRINGS"
+
+          grep -q 'applicationId "app.combinadofamilia"' "$GRADLE" || {
+            echo "::error::applicationId is not app.combinadofamilia"
+            cat "$GRADLE"
+            exit 1
+          }
+
+          grep -q '<string name="app_name">Combinado Família</string>' "$STRINGS" || {
+            echo "::error::App name is not Combinado Família"
+            cat "$STRINGS"
+            exit 1
+          }
+
+          VERSION_CODE=$(sed -n 's/.*versionCode[[:space:]]\+\([0-9][0-9]*\).*/\1/p' "$GRADLE" | head -1)
+          VERSION_NAME=$(sed -n 's/.*versionName[[:space:]]\+"\([^"]*\)".*/\1/p' "$GRADLE" | head -1)
+
+          test -n "$VERSION_CODE" || {
+            echo "::error::versionCode not found"
+            exit 1
+          }
+
+          test -n "$VERSION_NAME" || {
+            echo "::error::versionName not found"
+            exit 1
+          }
+
+          echo "applicationId=app.combinadofamilia"
+          echo "appName=Combinado Família"
+          echo "versionCode=$VERSION_CODE"
+          echo "versionName=$VERSION_NAME"
+
+          {
+            echo "## Android identity"
+            echo "- applicationId: `app.combinadofamilia`"
+            echo "- appName: `Combinado Família`"
+            echo "- versionCode: `$VERSION_CODE`"
+            echo "- versionName: `$VERSION_NAME`"
+          } >> "$GITHUB_STEP_SUMMARY"
