@@ -194,3 +194,6 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 - relatório/PDF;
 - navegação mobile;
 - teste em aparelho real.
+
+
+- [x] Última bateria GitHub/Android após ajustes do Lovable concluída com sucesso: build, Capacitor, Manifest, identidade, APK, AAB, release e assinatura
