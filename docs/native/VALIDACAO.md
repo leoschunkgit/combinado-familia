@@ -214,3 +214,8 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 
 - [x] Textos finais da Google Play revisados e categoria definida: Criar os filhos (Parenting)
 - [ ] Textos finais inseridos/enviados no Google Play Console
+
+
+- [x] Roteiro final de screenshots da Google Play preparado (8 telas, 1080x1920)
+- [ ] Capturas finais produzidas com dados fictícios
+- [ ] Screenshots enviados ao Google Play Console
