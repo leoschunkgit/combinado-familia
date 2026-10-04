@@ -10,6 +10,8 @@ import { VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Ocorrencia } from "@/lib/db";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto } from "@/lib/mesada";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
+import { savePdfDocument } from "@/lib/pdf-export";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
   head: () => ({ meta: [
@@ -75,7 +77,7 @@ function RelatorioPage() {
     setFilhosAbertos(Object.fromEntries(relatorio.flatMap(({ vigencia, filhos: gruposFilhos }) => gruposFilhos.map(({ filho }) => [`${vigencia.id}-${filho.id}`, aberto]))));
   }
 
-  function gerarPdf() {
+  async function gerarPdf() {
     if (!relatorio.length) return;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const margem = 14, largura = 182;
@@ -120,7 +122,11 @@ function RelatorioPage() {
     }
     const totalPaginas = doc.getNumberOfPages();
     for (let i = 1; i <= totalPaginas; i++) { doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text(`Combinado · Página ${i} de ${totalPaginas}`, margem, 290); }
-    doc.save(`relatorio-combinado-${new Date().toISOString().slice(0, 10)}.pdf`);
+    try {
+      await savePdfDocument(doc, `relatorio-combinado-${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch {
+      toast.error("Não foi possível salvar ou compartilhar o PDF.");
+    }
   }
 
   return <>
@@ -133,7 +139,7 @@ function RelatorioPage() {
     <div className="mb-6 flex flex-wrap justify-end gap-2">
       <Button variant="outline" size="sm" onClick={() => definirTudo(true)} disabled={carregando || !relatorio.length}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
       <Button variant="outline" size="sm" onClick={() => definirTudo(false)} disabled={carregando || !relatorio.length}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
-      <Button onClick={gerarPdf} disabled={carregando || !relatorio.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>
+      <Button onClick={() => void gerarPdf()} disabled={carregando || !relatorio.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>
     </div>
     {!carregando && !relatorio.length && <EmptyState>Nenhuma informação encontrada para os filtros selecionados.</EmptyState>}
     <div className="space-y-4">{relatorio.map(({ vigencia, filhos: gruposFilhos }) => {
