@@ -70,16 +70,31 @@ Antes de qualquer nova etapa, consultar também:
 - Edge Function `excluir-conta` preparada no repositório
 - toda a implementação passou na bateria de CI Android
 
-### Ainda obrigatório antes de considerar concluído
-1. Edge Function `excluir-conta` publicada no Lovable Cloud. ✅
-2. Corrigir e validar os erros de compilação da prévia do Lovable.
-3. Criar uma conta descartável de teste.
-4. Testar a exclusão de ponta a ponta.
-5. Confirmar que:
-   - todos os dados da conta foram removidos;
-   - os links públicos antigos deixaram de funcionar;
-   - o usuário excluído não consegue mais fazer login.
-6. Só depois marcar a exclusão de conta como concluída no checklist principal.
+### Exclusão validada
+
+- Edge Function `excluir-conta` publicada no Lovable Cloud. ✅
+- Prévia/build do Lovable corrigida e sem erros. ✅
+- Autoteste de ponta a ponta executado com sucesso. ✅
+- Resultado: `AUTOTESTE_APROVADO`.
+- Confirmado:
+  - usuário do Auth removido;
+  - `t_usuario_pai` zerado;
+  - `t_filho` zerado;
+  - `t_tarefa` zerado;
+  - `t_vigencia` zerado;
+  - `t_filho_tarefa` zerado;
+  - `t_ocorrencia` zerado;
+  - `t_filho_acesso_publico` zerado;
+  - link público invalidado.
+
+### Limpeza ainda obrigatória
+
+- A função temporária `testar-exclusao-conta` continua publicada.
+- A remoção imediata foi bloqueada porque a versão mais recente do app TanStack ainda não está publicada.
+- Assim que a versão mais recente do app TanStack for publicada:
+  1. remover/despublicar `testar-exclusao-conta`;
+  2. manter publicada apenas `excluir-conta`;
+  3. atualizar checklist/status marcando a limpeza como concluída.
 
 ## Pendências Android que dependem do computador pessoal
 
