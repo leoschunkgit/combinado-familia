@@ -103,7 +103,7 @@ function AuthenticatedLayout() {
   return (
     <ActionLoadingProvider>
       {!saindo && <OnboardingInicial />}
-      {!saindo && pathname === "/inicio" && <CheckinDiario />}
+      {!saindo && configuracaoInicialConcluida && pathname === "/inicio" && <CheckinDiario />}
       <div className="native-safe-area min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="flex items-center justify-between px-4 py-3 md:px-4 md:py-4">
