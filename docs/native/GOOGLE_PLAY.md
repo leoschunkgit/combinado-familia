@@ -1,35 +1,89 @@
 # Google Play — preparação de publicação
 
+Atualizado em 04/10/2026.
+
 ## Identidade
-- Nome do app: Combinado Família
-- Package / App ID: app.combinadofamilia
-- Domínio oficial: https://www.combinadofamilia.app
 
-## Categoria sugerida
-Família / Produtividade
+- **Nome do app:** Combinado Família
+- **Package / App ID:** `app.combinadofamilia`
+- **Domínio oficial:** https://www.combinadofamilia.app
+- **Email de suporte:** leoschunk@gmail.com
 
-## Descrição curta sugerida
-Organize tarefas, combinados, mesada e acompanhamento dos filhos em um só lugar.
+## Categoria final recomendada
 
-## Descrição completa sugerida
-Combinado Família ajuda responsáveis a organizar tarefas, combinados e acompanhamentos do dia a dia familiar.
+### Categoria principal
+**Criar os filhos (Parenting)**
 
-Com o app, é possível cadastrar filhos, criar vigências, atribuir tarefas, registrar o que foi feito ou não foi feito, acompanhar penalidades e mesada, consultar histórico e gerar relatórios.
+Motivo: o foco principal do Combinado Família é ajudar responsáveis a organizar e acompanhar tarefas, combinados, responsabilidades e rotina dos filhos.
 
-Também é possível compartilhar um link de acompanhamento em modo somente leitura para que o filho veja suas tarefas, vigências e registros sem precisar de login.
+### Alternativa
+**Produtividade**
 
-Principais recursos:
+Usar apenas se, no momento do cadastro no Play Console, a estratégia de posicionamento mudar para destacar mais a organização de tarefas do que o acompanhamento familiar.
+
+## Nome na Google Play
+
+**Combinado Família**
+
+O nome está dentro do limite atual de 30 caracteres do Google Play.
+
+## Descrição breve final
+
+**Organize tarefas, combinados, mesada e rotina dos filhos em um só lugar.**
+
+A descrição está dentro do limite atual de 80 caracteres.
+
+## Descrição completa final
+
+**Combinado Família** ajuda responsáveis a organizar tarefas, combinados e o acompanhamento da rotina dos filhos de forma simples e organizada.
+
+Com o app, você pode cadastrar filhos, criar vigências, atribuir tarefas e registrar o que foi **Fez** ou **Não fez** em cada período.
+
+Também é possível acompanhar bonificações, penalidades e mesada, consultar o histórico das atividades e gerar relatórios em PDF.
+
+Para facilitar o acompanhamento, o responsável pode gerar um link individual para cada filho. Por esse link, o filho pode visualizar suas tarefas, vigências e registros em modo somente leitura, sem precisar fazer login.
+
+### Principais recursos
+
 - Cadastro e organização de filhos
 - Vigências com data e hora
 - Atribuição de tarefas
 - Registro de “Fez” e “Não fez”
-- Bonificações, penalidades e mesada
-- Histórico e filtros
+- Bonificações e penalidades
+- Controle de mesada e descontos
+- Histórico com filtros
 - Relatórios em PDF
-- Painel público do filho por link
-- Compartilhamento de links e arquivos
+- Painel de acompanhamento do filho por link
+- Compartilhamento de links e relatórios
 
-O Combinado Família foi pensado para facilitar acordos e rotinas familiares com uma visão simples e organizada.
+O Combinado Família foi criado para tornar os acordos familiares mais claros e facilitar o acompanhamento das responsabilidades do dia a dia.
+
+## Informações de contato da loja
+
+### Email
+**leoschunk@gmail.com**
+
+### Site
+**https://www.combinadofamilia.app**
+
+### Política de Privacidade
+**https://www.combinadofamilia.app/politica-de-privacidade**
+
+### Exclusão de conta
+**https://www.combinadofamilia.app/exclusao-de-conta**
+
+## Tags
+
+O Google Play permite até cinco tags. As tags devem ser escolhidas no Play Console entre as opções realmente disponíveis e precisam representar diretamente a experiência do app.
+
+Priorizar, se aparecerem como opções compatíveis:
+- família;
+- parentalidade;
+- organização;
+- tarefas;
+- rotina.
+
+Não selecionar tags apenas para ampliar alcance se elas não representarem claramente o produto.
 
 ## Materiais da loja
 
@@ -51,11 +105,13 @@ Capturar pelo menos:
 Preferir telas com dados fictícios e sem informações pessoais reais.
 
 ## Antes de publicar
+
 - Criar keystore de produção
 - Obter SHA-256
-- Finalizar assetlinks.json
+- Finalizar `assetlinks.json`
 - Gerar AAB de release assinado
 - Fazer teste interno na Play Store
-- Revisar política de privacidade
 - Preencher Data Safety no Play Console
-- Subir screenshots e descrição
+- Produzir e subir screenshots finais
+- Inserir os textos desta página na ficha da loja
+- Revisar a ficha final antes do envio
