@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { msgErro } from "@/lib/db";
+import { getAuthRedirectUrl } from "@/lib/app-runtime";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Combinado — Tarefas da família com regras claras" }, { name: "description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:title", content: "Combinado — Tarefas da família com regras claras" }, { property: "og:description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -62,7 +63,7 @@ function Index() {
     const email = emailRecuperacao.trim();
     if (!email || !z.string().email().safeParse(email).success) { toast.error("Informe um email válido."); return; }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/redefinir-senha" });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectUrl("/redefinir-senha") });
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Se esse email estiver cadastrado, você receberá um link para redefinir a senha.");
@@ -75,7 +76,7 @@ function Index() {
     const parsed = cadastroSchema.safeParse(cad);
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos"); return; }
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.senha, options: { emailRedirectTo: window.location.origin, data: { nome: parsed.data.nome } } });
+    const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.senha, options: { emailRedirectTo: getAuthRedirectUrl("/"), data: { nome: parsed.data.nome } } });
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
     // Com confirmações de email habilitadas, o Supabase pode devolver um usuário
