@@ -8,28 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
+import { dataBrasil, pendenciasDoDia } from "@/lib/notificacoes";
 import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 type FezDraft = { tarefa: FilhoTarefa; bonusTipo: BonusTipo; descricao: string; valor: string };
-
-function hojeBR() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}
-
-function diaBR(valor: string) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(valor));
-}
 
 export function CheckinDiario() {
   const qc = useQueryClient();
@@ -40,18 +23,12 @@ export function CheckinDiario() {
   const [dispensado, setDispensado] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
-  const hoje = hojeBR();
+  const hoje = dataBrasil();
 
-  const pendencias = useMemo(() => {
-    const ativas = new Set(vigencias.filter(vigenciaEmAndamento).map((v) => v.id));
-    const registradosHoje = new Set(
-      ocorrencias.filter((o) => diaBR(o.created_at) === hoje).map((o) => o.id_filho_tarefa),
-    );
-
-    return atribuicoes.filter(
-      (a) => ativas.has(a.id_vigencia) && !registradosHoje.has(a.id),
-    );
-  }, [vigencias, atribuicoes, ocorrencias, hoje]);
+  const pendencias = useMemo(
+    () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias),
+    [vigencias, atribuicoes, ocorrencias],
+  );
 
   const grupos = useMemo(() => {
     return vigencias
