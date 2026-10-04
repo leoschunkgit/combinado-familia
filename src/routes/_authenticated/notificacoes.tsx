@@ -3,7 +3,7 @@ import { Bell, CheckCircle2, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias } from "@/lib/db";
-import { pendenciasDoDia } from "@/lib/notificacoes";
+import { pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 
 export const Route = createFileRoute("/_authenticated/notificacoes")({
   component: Notificacoes,
@@ -14,7 +14,8 @@ function Notificacoes() {
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
-  const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias);
+  const hoje = useDataBrasilAtual();
+  const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
 
   const grupos = vigencias
     .map((vigencia) => ({
