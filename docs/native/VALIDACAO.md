@@ -222,3 +222,24 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 
 
 - [x] Página pública de exclusão revisada com fluxo real e contato oficial
+
+
+## 6. Resumo final — pendências por dependência
+
+### Google Play Console
+- [ ] Preencher/enviar Data Safety
+- [ ] Inserir textos finais da ficha da loja
+- [ ] Selecionar categoria/tags no Console
+- [ ] Produzir e enviar screenshots finais
+- [ ] Configurar e concluir teste interno
+- [ ] Publicar na Google Play
+
+### Computador pessoal / Android
+- [ ] Criar keystore de produção
+- [ ] Guardar keystore e senhas fora do repositório
+- [ ] Fazer backup seguro do keystore
+- [ ] Obter SHA-256
+- [ ] Finalizar assetlinks.json
+- [ ] Gerar AAB final assinado
+- [ ] Testar em aparelho real/emulador
+- [ ] Validar App Links e recursos nativos em execução
