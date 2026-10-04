@@ -90,8 +90,11 @@ function PoliticaPrivacidade() {
           <section>
             <h2 className="text-lg font-semibold">Contato</h2>
             <p className="mt-2">
-              O canal oficial de contato e suporte será publicado nesta página antes do envio da
-              versão final às lojas de aplicativos.
+              Para dúvidas, suporte ou solicitações relacionadas à privacidade e aos dados pessoais,
+              entre em contato pelo email{" "}
+              <a className="font-medium text-primary hover:underline" href="mailto:leoschunk@gmail.com">
+                leoschunk@gmail.com
+              </a>.
             </p>
           </section>
         </div>
