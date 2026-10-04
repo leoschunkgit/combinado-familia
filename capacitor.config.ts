@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: "app.combinadofamilia",
   appName: "Combinado Família",
   webDir: ".output/public",
-  loggingBehavior: "debug",
+  loggingBehavior: "none",
   android: {
     webContentsDebuggingEnabled: false,
   },
