@@ -6,6 +6,7 @@ Este arquivo é a referência oficial de continuidade do trabalho nativo Android
 Antes de qualquer nova etapa, consultar também:
 - `docs/native/VALIDACAO.md`
 - `docs/native/STATUS.md`
+- `docs/native/LOVABLE_DEPLOY_EXCLUSAO.md` enquanto a exclusão de conta estiver pendente
 
 ## Estado atual
 
