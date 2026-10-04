@@ -129,3 +129,17 @@ Antes de qualquer nova etapa, consultar também:
 5. Não considerar exclusão de conta concluída sem deploy real + teste com conta descartável.
 6. Sempre atualizar checklist/status após cada etapa validada.
 7. Preservar comportamento atual do app web e não reintroduzir CPF.
+
+
+## Validação mais recente
+
+- A prévia do Lovable foi corrigida e compilou sem erros.
+- A última bateria após os ajustes no Lovable também passou integralmente no GitHub/Android:
+  - build principal;
+  - Capacitor Android;
+  - Manifest;
+  - identidade;
+  - APK;
+  - AAB;
+  - release;
+  - assinatura.
