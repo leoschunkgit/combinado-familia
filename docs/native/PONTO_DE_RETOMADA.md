@@ -87,14 +87,12 @@ Antes de qualquer nova etapa, consultar também:
   - `t_filho_acesso_publico` zerado;
   - link público invalidado.
 
-### Limpeza ainda obrigatória
+### Limpeza concluída
 
-- A função temporária `testar-exclusao-conta` continua publicada.
-- A remoção imediata foi bloqueada porque a versão mais recente do app TanStack ainda não está publicada.
-- Assim que a versão mais recente do app TanStack for publicada:
-  1. remover/despublicar `testar-exclusao-conta`;
-  2. manter publicada apenas `excluir-conta`;
-  3. atualizar checklist/status marcando a limpeza como concluída.
+- Versão mais recente do app TanStack publicada. ✅
+- Função temporária `testar-exclusao-conta` removida/despublicada. ✅
+- Função real `excluir-conta` permanece publicada. ✅
+- Etapa de exclusão de conta concluída de ponta a ponta.
 
 ## Pendências Android que dependem do computador pessoal
 
