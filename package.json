@@ -14,7 +14,8 @@
     "app:sync": "npm run build:app && cap sync android",
     "app:open": "cap open android",
     "app:run": "npm run app:sync && cap run android",
-    "app:add:android": "cap add android"
+    "app:add:android": "cap add android",
+    "app:assets": "capacitor-assets generate"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -99,6 +100,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "8.1.5",
-    "@capacitor/cli": "8.5.2"
+    "@capacitor/cli": "8.5.2",
+    "@capacitor/assets": "3.0.5"
   }
 }
