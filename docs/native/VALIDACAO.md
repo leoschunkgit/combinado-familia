@@ -243,3 +243,11 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 - [ ] Gerar AAB final assinado
 - [ ] Testar em aparelho real/emulador
 - [ ] Validar App Links e recursos nativos em execução
+
+
+## 7. Fechamento antes do PC pessoal
+
+- [x] Limpeza final de documentação temporária concluída
+- [ ] Bateria final de 8 workflows Android concluída após as últimas alterações
+  - estado atual: todos os 8 checks foram disparados e estão na fila do GitHub Actions (`queued`), sem falha registrada
+  - commit validado: `493760b8b8454ebf50f8819fe356f319c135981b`
