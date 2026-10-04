@@ -80,6 +80,7 @@ Stack:
 - APK de debug compilado com sucesso via Gradle no GitHub Actions
 - AAB de debug compilado com sucesso via Gradle no GitHub Actions
 - AAB de release sem assinatura de produção gerado com sucesso no GitHub Actions
+- Pipeline de assinatura de release validado com chave temporária efêmera no GitHub Actions
 
 ### Assets
 - Manifesto web
