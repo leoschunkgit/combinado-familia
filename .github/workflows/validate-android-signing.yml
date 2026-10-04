@@ -1,6 +1,9 @@
 name: Validate Android Release Signing
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
