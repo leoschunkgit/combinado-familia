@@ -134,3 +134,13 @@ Mesmo com o código preparado, ainda precisam ser testados em build real:
 - ícone e splash
 
 Não considerar a versão nativa pronta para publicação antes desses testes.
+
+
+## Google Play — preparação já feita
+
+- Pacote de preparação da Google Play documentado
+- Rascunho de política de privacidade preparado
+- Guia de Data Safety preparado
+- Descrição curta/completa e categoria sugeridas
+- Checklist de screenshots preparado
+- Permanecem pendentes as ações que exigem Play Console, URL pública final, materiais finais e assinatura de produção
