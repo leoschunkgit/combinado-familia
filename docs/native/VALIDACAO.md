@@ -219,3 +219,6 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 - [x] Roteiro final de screenshots da Google Play preparado (8 telas, 1080x1920)
 - [ ] Capturas finais produzidas com dados fictícios
 - [ ] Screenshots enviados ao Google Play Console
+
+
+- [x] Página pública de exclusão revisada com fluxo real e contato oficial
