@@ -183,5 +183,8 @@ O arquivo `PONTO_DE_RETOMADA.md` registra pendências que não podem ser esqueci
 
 
 - AUTOTESTE_APROVADO: usuário Auth removido, tabelas vinculadas zeradas e link público invalidado
-- A função temporária testar-exclusao-conta ainda está publicada porque a remoção foi bloqueada enquanto a versão mais recente do app TanStack não estiver publicada
-- Próxima limpeza obrigatória: publicar a versão mais recente do app TanStack e então remover/despublicar testar-exclusao-conta, mantendo excluir-conta
+
+
+- Exclusão de conta concluída de ponta a ponta
+- Função temporária de autoteste foi removida/despublicada
+- Função real excluir-conta permanece publicada
