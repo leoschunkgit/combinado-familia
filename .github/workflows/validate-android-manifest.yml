@@ -1,0 +1,112 @@
+name: Validate Android Manifest
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-manifest:
+    name: Validate manifest and permissions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      VITE_PUBLIC_APP_URL: https://www.combinadofamilia.app
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build app bundle
+        run: npm run build:app
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Generate native assets
+        run: npm run app:assets
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Validate package, label and permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          STRINGS="android/app/src/main/res/values/strings.xml"
+
+          test -f "$MANIFEST"
+          test -f "$STRINGS"
+
+          echo "=== AndroidManifest.xml ==="
+          cat "$MANIFEST"
+
+          echo "=== strings.xml ==="
+          cat "$STRINGS"
+
+          grep -q 'package="app.combinadofamilia"' "$MANIFEST" || true
+          grep -q '<string name="app_name">Combinado Família</string>' "$STRINGS" || {
+            echo "::error::App name is not 'Combinado Família'"
+            exit 1
+          }
+
+          # Internet is expected for Supabase/web content.
+          if ! grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+            echo "::warning::INTERNET permission not explicitly present in app manifest; it may be merged from dependencies."
+          fi
+
+          FORBIDDEN_PERMISSIONS=(
+            "android.permission.CAMERA"
+            "android.permission.ACCESS_FINE_LOCATION"
+            "android.permission.ACCESS_COARSE_LOCATION"
+            "android.permission.RECORD_AUDIO"
+            "android.permission.READ_CONTACTS"
+            "android.permission.WRITE_CONTACTS"
+            "android.permission.READ_EXTERNAL_STORAGE"
+            "android.permission.WRITE_EXTERNAL_STORAGE"
+            "android.permission.READ_MEDIA_IMAGES"
+            "android.permission.READ_MEDIA_VIDEO"
+            "android.permission.READ_MEDIA_AUDIO"
+          )
+
+          for permission in "${FORBIDDEN_PERMISSIONS[@]}"; do
+            if grep -q "$permission" "$MANIFEST"; then
+              echo "::error::Unexpected permission found: $permission"
+              exit 1
+            fi
+          done
+
+          echo "Manifest validation passed."
+
+      - name: Upload generated manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-manifest-validation
+          path: |
+            android/app/src/main/AndroidManifest.xml
+            android/app/src/main/res/values/strings.xml
+          if-no-files-found: warn
+          retention-days: 7
