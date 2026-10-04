@@ -162,3 +162,13 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 
 - Preparado workflow manual de deploy da Edge Function excluir-conta, sem credenciais no repositório
 - Próximo bloqueio externo: configurar o secret GitHub SUPABASE_ACCESS_TOKEN e executar o deploy
+
+
+## Regra de retomada
+
+Antes de iniciar qualquer nova etapa do app Android, consultar obrigatoriamente:
+
+- `docs/native/PONTO_DE_RETOMADA.md`
+- `docs/native/VALIDACAO.md`
+
+O arquivo `PONTO_DE_RETOMADA.md` registra pendências que não podem ser esquecidas, mesmo que a conversa anterior não esteja disponível. Nenhuma etapa deve ser considerada concluída se houver pendência obrigatória registrada ali.
