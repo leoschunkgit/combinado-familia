@@ -77,6 +77,7 @@ Stack:
 - Assets nativos gerados no CI
 - Capacitor Android sincronizado com sucesso
 - APK de debug compilado com sucesso via Gradle no GitHub Actions
+- AAB de debug compilado com sucesso via Gradle no GitHub Actions
 
 ### Assets
 - Manifesto web
