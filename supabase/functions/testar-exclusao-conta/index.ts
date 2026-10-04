@@ -156,8 +156,14 @@ serve(async (req) => {
     const { data: authAfter } = await admin.auth.admin.getUserById(authUserId);
     checks.auth_removido = !authAfter.user;
 
+    const { count: paiCount, error: paiCountError } = await admin
+      .from("t_usuario_pai")
+      .select("*", { count: "exact", head: true })
+      .eq("id", paiId);
+    if (paiCountError) return fail("verificar_t_usuario_pai", paiCountError.message);
+    checks["t_usuario_pai_zerado"] = (paiCount ?? 0) === 0;
+
     const tables = [
-      "t_usuario_pai",
       "t_filho",
       "t_tarefa",
       "t_vigencia",
