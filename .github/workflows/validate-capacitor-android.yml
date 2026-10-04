@@ -1,0 +1,72 @@
+name: Validate Capacitor Android
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-android:
+    name: Generate and sync Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      VITE_PUBLIC_APP_URL: https://www.combinadofamilia.app
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build app bundle
+        run: npm run build:app
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Generate native assets
+        run: npm run app:assets
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Verify Android project
+        shell: bash
+        run: |
+          test -f android/app/src/main/AndroidManifest.xml || {
+            echo "::error::AndroidManifest.xml was not generated"
+            exit 1
+          }
+
+          test -f android/settings.gradle || test -f android/settings.gradle.kts || {
+            echo "::error::Android Gradle settings file was not generated"
+            exit 1
+          }
+
+          echo "Android project generated successfully."
+          find android/app/src/main -maxdepth 2 -type f | sort | head -50
+
+      - name: Upload generated Android project
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capacitor-android-project
+          path: android
+          if-no-files-found: error
+          retention-days: 7
