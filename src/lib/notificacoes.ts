@@ -1,6 +1,15 @@
 import type { FilhoTarefa, Ocorrencia, Vigencia } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 
+export function dataBrasil(valor: Date | string = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(typeof valor === "string" ? new Date(valor) : valor);
+}
+
 export function pendenciasDoDia(
   vigencias: Vigencia[],
   atribuicoes: FilhoTarefa[],
