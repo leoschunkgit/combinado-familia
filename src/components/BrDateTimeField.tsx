@@ -45,6 +45,8 @@ export function BrDateTimeField({
   value,
   onChange,
   id,
+  min,
+  max,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -95,6 +97,8 @@ export function BrDateTimeField({
       <input
         type="datetime-local"
         value={value}
+        min={min}
+        max={max}
         onChange={(e) => {
           if (e.target.value) onChange(e.target.value);
         }}
