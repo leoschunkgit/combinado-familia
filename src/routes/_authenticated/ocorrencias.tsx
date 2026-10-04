@@ -20,7 +20,7 @@ import { VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus
 
 export const Route=createFileRoute("/_authenticated/ocorrencias")({head:()=>({meta:[{title:"Ocorrências — Combinado"},{name:"description",content:"Registre e consulte as ocorrências de cada filho e tarefa por vigência."}]}),component:OcorrenciasPage});
 function localDate(value:Date){const pad=(n:number)=>String(n).padStart(2,"0");return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())}`;}
-const occurrenceDate=new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"short",year:"numeric"});
+const occurrenceDate=new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",year:"numeric"});
 type BonusTipo="NENHUMA"|"TEXTO"|"VALOR";
 type FezDraft={tarefa:FilhoTarefa;total:number;data:string;bonusTipo:BonusTipo;descricao:string;valor:string};
 type Troca={direcao:"PARA_FEZ"|"PARA_NAO_FEZ";tarefa:FilhoTarefa;total:number;ocorrencia:Ocorrencia;fez?:FezDraft};
