@@ -118,7 +118,7 @@ serve(async (req) => {
       .insert({
         id_usuario_pai: paiId,
         id_filho_tarefa: atribuicao.id,
-        tipo: "nao_fez",
+        tipo: "NAO_FEZ",
       });
     if (ocorrenciaError) return fail("criar_ocorrencia", ocorrenciaError.message);
 
