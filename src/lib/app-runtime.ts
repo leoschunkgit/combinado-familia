@@ -7,6 +7,7 @@
  * iOS Universal Links.
  */
 const DEFAULT_PUBLIC_WEB_ORIGIN = "https://www.combinadofamilia.app";
+const PUBLIC_APP_HOSTS = new Set(["combinadofamilia.app", "www.combinadofamilia.app"]);
 
 function normalizeOrigin(value: string): string {
   return value.replace(/\/+$/, "");
@@ -33,4 +34,14 @@ export function getAuthRedirectUrl(path = "/"): string {
 
 export function getChildTrackingUrl(token: string): string {
   return `${getPublicWebOrigin()}/acompanhar/${encodeURIComponent(token)}`;
+}
+
+export function getPublicRouteFromUrl(rawUrl: string): string | null {
+  try {
+    const url = new URL(rawUrl);
+    if (!PUBLIC_APP_HOSTS.has(url.hostname)) return null;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
 }
