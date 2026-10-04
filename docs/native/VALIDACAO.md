@@ -146,14 +146,14 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 ## 5. Publicação
 
 ### Google Play
-- [ ] App ID confirmado: app.combinadofamilia
+- [x] App ID confirmado: app.combinadofamilia (validado no GitHub Actions)
 - [ ] Criar keystore de produção no computador pessoal
 - [ ] Guardar keystore e senhas fora do repositório/GitHub
 - [ ] Fazer backup seguro do keystore
 - [ ] Obter SHA-256 da chave de assinatura
 - [ ] Finalizar assetlinks.json com o SHA-256 real
 - [ ] Gerar AAB de release assinado
-- [ ] Versão e versionCode definidos
+- [x] Versão e versionCode base validados no GitHub Actions
 - [ ] Política de privacidade
 - [ ] Data Safety preenchido
 - [ ] Screenshots
