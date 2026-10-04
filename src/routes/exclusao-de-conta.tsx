@@ -35,26 +35,36 @@ function ExclusaoConta() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">Como solicitar</h2>
+            <h2 className="text-lg font-semibold">Como excluir a conta</h2>
             <p className="mt-2">
-              O canal oficial para envio da solicitação será informado nesta página antes da
-              publicação definitiva do aplicativo nas lojas.
+              A exclusão pode ser iniciada diretamente pelo titular dentro do Combinado Família, em
+              “Minha conta” → “Excluir minha conta”. Para concluir, é necessário confirmar
+              explicitamente a operação digitando “EXCLUIR”.
+            </p>
+            <p className="mt-2">
+              Em caso de dificuldade para acessar a conta ou concluir a exclusão, entre em contato
+              pelo email{" "}
+              <a className="font-medium text-primary hover:underline" href="mailto:leoschunk@gmail.com">
+                leoschunk@gmail.com
+              </a>.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold">Confirmação de identidade</h2>
             <p className="mt-2">
-              Para proteger a conta, poderá ser necessário confirmar que a solicitação foi feita
-              pelo titular antes da exclusão.
+              A exclusão dentro do aplicativo exige que o usuário esteja autenticado na própria
+              conta e confirme explicitamente a operação.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">Prazo e retenção</h2>
+            <h2 className="text-lg font-semibold">O que acontece após a exclusão</h2>
             <p className="mt-2">
-              O prazo final de atendimento e eventuais hipóteses de retenção obrigatória serão
-              informados nesta página antes da publicação definitiva.
+              Quando a exclusão é concluída, a conta de autenticação e os dados vinculados à conta
+              são removidos do serviço, incluindo filhos, tarefas, vigências, atribuições,
+              ocorrências e links públicos de acompanhamento. Os links públicos anteriormente
+              gerados deixam de funcionar.
             </p>
           </section>
         </div>
