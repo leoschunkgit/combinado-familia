@@ -210,3 +210,7 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 
 
 - [x] Data Safety revisado e pronto para preenchimento no Play Console
+
+
+- [x] Textos finais da Google Play revisados e categoria definida: Criar os filhos (Parenting)
+- [ ] Textos finais inseridos/enviados no Google Play Console
