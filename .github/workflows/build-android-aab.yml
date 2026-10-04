@@ -1,0 +1,80 @@
+name: Build Android AAB
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-aab:
+    name: Build debug AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      VITE_PUBLIC_APP_URL: https://www.combinadofamilia.app
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build app bundle
+        run: npm run build:app
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Generate native assets
+        run: npm run app:assets
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug AAB
+        working-directory: android
+        run: ./gradlew bundleDebug --stacktrace
+
+      - name: Verify AAB
+        shell: bash
+        run: |
+          AAB="android/app/build/outputs/bundle/debug/app-debug.aab"
+          test -f "$AAB" || {
+            echo "::error::Debug AAB was not generated"
+            find android/app/build/outputs -maxdepth 5 -type f 2>/dev/null | sort || true
+            exit 1
+          }
+          ls -lh "$AAB"
+
+      - name: Upload debug AAB
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combinado-familia-debug-aab
+          path: android/app/build/outputs/bundle/debug/app-debug.aab
+          if-no-files-found: error
+          retention-days: 7
