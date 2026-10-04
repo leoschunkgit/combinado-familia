@@ -27,9 +27,9 @@ export function Pick({
           {allLabel && <SelectItem value="all">{allLabel}</SelectItem>}
           {options.map((o) => (
             <SelectItem key={o.value} value={o.value}>
-              <span className="flex items-center gap-2">
+              <span className="flex min-w-0 items-center gap-2">
                 {o.status && <span className={`h-2 w-2 shrink-0 rounded-full ${o.status === "andamento" ? "bg-green-300" : o.status === "finalizada" ? "bg-red-300" : "bg-gray-300"}`} aria-hidden="true" />}
-                <span>{o.label}</span>
+                <span className="min-w-0 truncate">{o.label}</span>
               </span>
             </SelectItem>
           ))}
