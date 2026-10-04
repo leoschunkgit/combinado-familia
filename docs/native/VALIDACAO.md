@@ -161,7 +161,9 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [x] URL pública de exclusão de conta criada e validada no build: https://www.combinadofamilia.app/exclusao-de-conta
 - [ ] Política de privacidade final revisada (contato + exclusão de conta/dados)
 - [ ] Canal oficial de solicitação de exclusão definido
-- [ ] Exclusão automática de conta/dados implementada e validada
+- [x] Fluxo de exclusão de conta implementado e validado em build/APK/AAB/release/assinatura
+- [ ] Edge Function excluir-conta publicada no backend real
+- [ ] Exclusão testada de ponta a ponta com conta descartável
 - [x] Guia de Data Safety preparado
 - [ ] Data Safety preenchido no Google Play Console
 - [x] Checklist de screenshots preparado
