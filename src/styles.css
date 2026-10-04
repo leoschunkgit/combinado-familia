@@ -124,3 +124,13 @@
     padding-bottom: max(1rem, var(--safe-area-bottom));
   }
 }
+
+
+/* Ajuda o WebView a manter campos focados visíveis acima do teclado virtual. */
+input,
+textarea,
+select,
+button[role="combobox"] {
+  scroll-margin-top: 5rem;
+  scroll-margin-bottom: 10rem;
+}
