@@ -73,6 +73,9 @@ Stack:
 ### Android
 - Botão/gesto Voltar preparado
 - Atualização dos dados ao voltar do segundo plano
+- Plataforma Android gerada com sucesso no GitHub Actions
+- Assets nativos gerados no CI
+- Capacitor Android sincronizado com sucesso
 
 ### Assets
 - Manifesto web
@@ -92,9 +95,7 @@ Stack:
 - Instalar Node/NPM
 - Instalar Git
 - Clonar o repositório
-- Gerar android/
 - Instalar Android Studio / SDK
-- Gerar assets nativos
 - Testar APK/AAB
 - Criar keystore
 - Descobrir SHA-256
@@ -118,7 +119,6 @@ Stack:
 ## Pontos que ainda precisam ser validados em execução
 
 Mesmo com o código preparado, ainda precisam ser testados em build real:
-- sincronização Capacitor
 - plugins nativos
 - comportamento de teclado
 - deep links
