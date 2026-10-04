@@ -71,6 +71,7 @@ Stack:
 - Ocorrências e Relatório ajustados para telas estreitas
 
 ### Android
+- Identidade Android validada no GitHub Actions (appId, nome e versão base)
 - Botão/gesto Voltar preparado
 - Atualização dos dados ao voltar do segundo plano
 - Plataforma Android gerada com sucesso no GitHub Actions
