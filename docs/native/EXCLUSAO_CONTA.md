@@ -70,3 +70,21 @@ A tela **Minha conta** ganhou uma área de risco com botão **Excluir minha cont
 - validar que o usuário não consegue mais efetuar login.
 
 Não testar inicialmente com a conta principal do projeto.
+
+
+## Deploy manual pelo GitHub Actions
+
+Foi preparado o workflow `.github/workflows/deploy-supabase-functions.yml`.
+
+Ele publica a função `excluir-conta` no projeto Supabase configurado no repositório e roda somente manualmente por `workflow_dispatch`.
+
+Para executar sem expor credenciais no código:
+
+1. criar no GitHub o secret `SUPABASE_ACCESS_TOKEN`;
+2. abrir **Actions > Deploy Supabase Edge Function**;
+3. clicar em **Run workflow**;
+4. aguardar o deploy concluir com sucesso.
+
+O workflow não contém token, senha ou service role key. O ambiente da Edge Function usa as variáveis reservadas do projeto Supabase.
+
+Depois do deploy, o teste deve ser feito primeiro com uma conta descartável.
