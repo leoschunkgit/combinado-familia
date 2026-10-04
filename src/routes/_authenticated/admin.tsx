@@ -1,21 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Save, UserCog } from "lucide-react";
+import { Save, Trash2, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { msgErro } from "@/lib/db";
 
 function Admin() {
   const router = useRouter();
+  const navigate = useNavigate();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [carregando, setCarregando] = useState(true);
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
+  const [textoConfirmacao, setTextoConfirmacao] = useState("");
+  const [excluindo, setExcluindo] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -51,12 +56,33 @@ function Admin() {
     else toast.success("Nome atualizado com sucesso.");
   }
 
+  async function excluirConta() {
+    if (textoConfirmacao.trim().toUpperCase() !== "EXCLUIR") {
+      toast.error('Digite "EXCLUIR" para confirmar.');
+      return;
+    }
+
+    setExcluindo(true);
+    const { error } = await supabase.functions.invoke("excluir-conta", { body: { confirmacao: true } });
+
+    if (error) {
+      setExcluindo(false);
+      toast.error("Não foi possível excluir a conta. Tente novamente.");
+      return;
+    }
+
+    await supabase.auth.signOut();
+    setConfirmarExclusao(false);
+    toast.success("Conta e dados excluídos.");
+    navigate({ to: "/", replace: true });
+  }
+
   if (carregando) return <div className="py-10 text-center text-muted-foreground">Carregando seus dados...</div>;
 
   return (
     <div className="space-y-6">
       <div><div className="flex items-center gap-2"><UserCog className="h-6 w-6 text-primary" /><h1 className="text-2xl font-bold">Minha conta</h1></div><p className="mt-1 text-muted-foreground">Consulte seus dados pessoais e atualize seu nome.</p></div>
-      <div className="max-w-xl">
+      <div className="max-w-xl space-y-6">
         <section className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className="text-lg font-semibold">Dados pessoais</h2>
           <p className="mb-5 mt-1 text-sm text-muted-foreground">Altere seu nome. O email é apenas para consulta.</p>
@@ -66,7 +92,46 @@ function Admin() {
             <Button type="submit" disabled={loading}><Save /> Salvar nome</Button>
           </form>
         </section>
+
+        <section className="rounded-xl border border-destructive/30 bg-card p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-destructive">Excluir conta</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Exclui permanentemente sua conta e os dados vinculados, incluindo filhos, tarefas, vigências, atribuições, ocorrências, histórico e links públicos.
+          </p>
+          <Button variant="destructive" className="mt-4" onClick={() => { setTextoConfirmacao(""); setConfirmarExclusao(true); }}>
+            <Trash2 /> Excluir minha conta
+          </Button>
+        </section>
       </div>
+
+      <Dialog open={confirmarExclusao} onOpenChange={(open) => { if (!excluindo) setConfirmarExclusao(open); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Excluir conta permanentemente?</DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. Seus dados e os dados da família vinculados à sua conta serão excluídos.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 py-2">
+            <Label htmlFor="confirmar-exclusao">Digite EXCLUIR para confirmar</Label>
+            <Input
+              id="confirmar-exclusao"
+              value={textoConfirmacao}
+              onChange={(e) => setTextoConfirmacao(e.target.value)}
+              autoComplete="off"
+              disabled={excluindo}
+            />
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setConfirmarExclusao(false)} disabled={excluindo}>Cancelar</Button>
+            <Button variant="destructive" onClick={excluirConta} disabled={excluindo || textoConfirmacao.trim().toUpperCase() !== "EXCLUIR"}>
+              {excluindo ? "Excluindo..." : "Excluir permanentemente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
