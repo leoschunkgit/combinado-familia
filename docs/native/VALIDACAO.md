@@ -197,3 +197,6 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 
 
 - [x] Última bateria GitHub/Android após ajustes do Lovable concluída com sucesso: build, Capacitor, Manifest, identidade, APK, AAB, release e assinatura
+
+
+- [x] Deploy real da excluir-conta confirmado pelo Lovable Cloud
