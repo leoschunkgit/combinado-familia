@@ -127,15 +127,15 @@ function Index() {
               <p className="mb-6 mt-1 text-muted-foreground">Acesse sua conta de responsável.</p>
               {recuperar ? (
                 <form onSubmit={recuperarSenha} className="space-y-4">
-                  <div className="space-y-2"><Label htmlFor="re">Email</Label><Input id="re" type="email" required autoFocus value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} placeholder="seu@email.com" /></div>
+                  <div className="space-y-2"><Label htmlFor="re">Email</Label><Input id="re" type="email" required autoFocus autoComplete="email" inputMode="email" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} placeholder="seu@email.com" /></div>
                   <p className="text-sm text-muted-foreground">Enviaremos um link para o email informado para você criar uma nova senha.</p>
                   <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? "Enviando..." : "Enviar link de recuperação"}</Button>
                   <Button type="button" variant="ghost" className="w-full" onClick={() => setRecuperar(false)} disabled={loading}>Voltar para entrar</Button>
                 </form>
               ) : (
                 <form onSubmit={entrar} className="space-y-4">
-                  <div className="space-y-2"><Label htmlFor="le">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="le" type="email" required value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} /></div>
-                  <div className="space-y-2"><Label htmlFor="ls">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ls" required value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} /></div>
+                  <div className="space-y-2"><Label htmlFor="le">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="le" type="email" required autoComplete="email" inputMode="email" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} /></div>
+                  <div className="space-y-2"><Label htmlFor="ls">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ls" required autoComplete="current-password" value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} /></div>
                   <div className="text-right"><button type="button" className="text-sm font-medium text-primary underline-offset-4 hover:underline" onClick={() => { setEmailRecuperacao(login.email); setRecuperar(true); }}>Esqueci minha senha</button></div>
                   <Button type="submit" className="w-full" size="lg" disabled={loading}>Entrar</Button>
                 </form>
@@ -144,10 +144,10 @@ function Index() {
             <TabsContent value="cadastrar">
               <h2 className="text-3xl font-bold">Cadastrar usuário</h2><p className="mb-6 mt-1 text-muted-foreground">Crie a conta do responsável pela família.</p>
               <form onSubmit={cadastrar} className="space-y-4">
-                <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
-                <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" type="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
-                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="space-y-1 pt-1 text-sm" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-success" : "text-muted-foreground"}`}>{ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{r.label}</li>; })}</ul></div>
-                <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
+                <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" type="email" autoComplete="email" inputMode="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="space-y-1 pt-1 text-sm" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-success" : "text-muted-foreground"}`}>{ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{r.label}</li>; })}</ul></div>
+                <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" autoComplete="new-password" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>Cadastrar</Button>
               </form>
             </TabsContent>
