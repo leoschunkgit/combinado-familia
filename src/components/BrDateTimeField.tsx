@@ -99,6 +99,8 @@ export function BrDateTimeField({
         value={value}
         min={min}
         max={max}
+        min={min}
+        max={max}
         onChange={(e) => {
           if (e.target.value) onChange(e.target.value);
         }}
