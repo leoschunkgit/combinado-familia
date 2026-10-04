@@ -139,11 +139,11 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 ## Google Play — preparação já feita
 
 - Pacote de preparação da Google Play documentado
-- Rascunho de política de privacidade preparado
+- Política de Privacidade final revisada e publicada
 - Guia de Data Safety preparado
-- Descrição curta/completa e categoria sugeridas
-- Checklist de screenshots preparado
-- Permanecem pendentes as ações que exigem Play Console, URL pública final, materiais finais e assinatura de produção
+- Descrição curta/completa final revisada e categoria definida
+- Roteiro final de 8 screenshots preparado
+- Permanecem pendentes apenas ações do Play Console, produção/upload dos screenshots e itens que dependem do computador pessoal/assinatura de produção
 
 
 - Política de Privacidade pública criada em /politica-de-privacidade e validada no build
@@ -188,3 +188,22 @@ O arquivo `PONTO_DE_RETOMADA.md` registra pendências que não podem ser esqueci
 - Exclusão de conta concluída de ponta a ponta
 - Função temporária de autoteste foi removida/despublicada
 - Função real excluir-conta permanece publicada
+
+
+## Google Play — pendências restantes por dependência
+
+### Play Console
+- preencher/enviar Data Safety
+- inserir textos finais
+- selecionar categoria/tags
+- enviar screenshots finais
+- configurar teste interno
+- publicar
+
+### Computador pessoal
+- criar e proteger keystore de produção
+- obter SHA-256
+- finalizar assetlinks.json
+- gerar AAB final assinado
+- testar em aparelho real/emulador
+- validar App Links e recursos nativos
