@@ -203,4 +203,7 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 
 
 - [x] AUTOTESTE_APROVADO: Auth removido, dados vinculados zerados e link público invalidado
-- [ ] Remover/despublicar a função temporária testar-exclusao-conta após publicar a versão mais recente do app TanStack
+- [x] Função temporária testar-exclusao-conta removida/despublicada; excluir-conta mantida
+
+
+- [x] Exclusão de conta concluída de ponta a ponta e função temporária de autoteste removida
