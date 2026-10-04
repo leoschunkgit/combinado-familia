@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
+import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
 
@@ -81,7 +81,12 @@ export function CheckinDiario(){
     <Dialog open={aberto} onOpenChange={o=>!o&&!busy&&setDispensado(true)}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle>Registro de hoje</DialogTitle><DialogDescription>Marque o resultado das tarefas de hoje. Itens já registrados não aparecem novamente.</DialogDescription></DialogHeader>
-        {atual&&<div className="space-y-4"><div className="rounded-xl border bg-muted/30 p-4"><p className="text-sm text-muted-foreground">{atual.t_filho?.nome}</p><p className="mt-1 text-lg font-semibold">{atual.t_tarefa?.nome}</p></div><div className="grid grid-cols-2 gap-3"><Button variant="outline" disabled={busy} onClick={()=>setFez({tarefa:atual,bonusTipo:"NENHUMA",descricao:"",valor:""})}><ThumbsUp className="h-5 w-5 text-green-600"/> Fez</Button><Button variant="destructive" disabled={busy} onClick={()=>void naoFez(atual)}><ThumbsDown className="h-5 w-5"/> Não fez</Button></div><p className="text-center text-xs text-muted-foreground">{pendencias.length} {pendencias.length===1?"tarefa pendente":"tarefas pendentes"} hoje</p></div>}
+        {atual&&<div className="space-y-4">
+          {atual.t_vigencia&&<div className="rounded-xl border bg-primary/5 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência atual</p><p className="mt-1 font-semibold">{fmtVigencia(atual.t_vigencia)}</p></div>}
+          <div className="rounded-xl border bg-muted/30 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Filho</p><p className="mt-1 text-lg font-semibold">{atual.t_filho?.nome}</p><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</p><p className="mt-1 font-medium">{atual.t_tarefa?.nome}</p></div>
+          <div className="grid grid-cols-2 gap-3"><Button variant="outline" disabled={busy} onClick={()=>setFez({tarefa:atual,bonusTipo:"NENHUMA",descricao:"",valor:""})}><ThumbsUp className="h-5 w-5 text-green-600"/> Fez</Button><Button variant="destructive" disabled={busy} onClick={()=>void naoFez(atual)}><ThumbsDown className="h-5 w-5"/> Não fez</Button></div>
+          <p className="text-center text-xs text-muted-foreground">{pendencias.length} {pendencias.length===1?"tarefa pendente":"tarefas pendentes"} hoje</p>
+        </div>}
         <DialogFooter><Button variant="ghost" disabled={busy} onClick={()=>setDispensado(true)}>Agora não</Button></DialogFooter>
       </DialogContent>
     </Dialog>
