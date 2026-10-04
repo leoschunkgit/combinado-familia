@@ -163,8 +163,8 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [ ] Canal oficial de solicitação de exclusão definido
 - [x] Fluxo de exclusão de conta implementado e validado em build/APK/AAB/release/assinatura
 - [x] Edge Function excluir-conta publicada pelo Lovable Cloud no backend real
-- [ ] Prévia/build do Lovable sem erros de compilação
-- [ ] Exclusão testada de ponta a ponta com conta descartável
+- [x] Prévia/build do Lovable sem erros de compilação
+- [x] Exclusão testada de ponta a ponta com conta descartável
 - [x] Guia de Data Safety preparado
 - [ ] Data Safety preenchido no Google Play Console
 - [x] Checklist de screenshots preparado
@@ -200,3 +200,7 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 
 
 - [x] Deploy real da excluir-conta confirmado pelo Lovable Cloud
+
+
+- [x] AUTOTESTE_APROVADO: Auth removido, dados vinculados zerados e link público invalidado
+- [ ] Remover/despublicar a função temporária testar-exclusao-conta após publicar a versão mais recente do app TanStack
