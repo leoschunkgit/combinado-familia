@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
-import { dataBrasil, pendenciasDoDia } from "@/lib/notificacoes";
+import { dataBrasil, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
@@ -23,11 +23,11 @@ export function CheckinDiario() {
   const [dispensado, setDispensado] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
-  const hoje = dataBrasil();
+  const hoje = useDataBrasilAtual();
 
   const pendencias = useMemo(
-    () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias),
-    [vigencias, atribuicoes, ocorrencias],
+    () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")),
+    [vigencias, atribuicoes, ocorrencias, hoje],
   );
 
   const grupos = useMemo(() => {
