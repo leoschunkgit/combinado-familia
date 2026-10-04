@@ -1,0 +1,21 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "PREENCHER_TEAM_ID.app.combinadofamilia"
+        ],
+        "components": [
+          {
+            "/": "/acompanhar/*",
+            "comment": "Painel público de acompanhamento do filho"
+          },
+          {
+            "/": "/redefinir-senha*",
+            "comment": "Recuperação de senha"
+          }
+        ]
+      }
+    ]
+  }
+}
