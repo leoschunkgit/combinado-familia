@@ -144,3 +144,7 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 - Descrição curta/completa e categoria sugeridas
 - Checklist de screenshots preparado
 - Permanecem pendentes as ações que exigem Play Console, URL pública final, materiais finais e assinatura de produção
+
+
+- Política de Privacidade pública criada em /politica-de-privacidade e validada no build
+- Revisão final da política ainda depende de definir contato oficial e fluxo de exclusão de conta/dados
