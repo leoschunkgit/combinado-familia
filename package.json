@@ -13,7 +13,8 @@
     "build:app": "vite build --config vite.config.app.ts --mode app",
     "app:sync": "npm run build:app && cap sync android",
     "app:open": "cap open android",
-    "app:run": "npm run app:sync && cap run android"
+    "app:run": "npm run app:sync && cap run android",
+    "app:add:android": "cap add android"
   },
   "overrides": {
     "rolldown": "1.2.1"
