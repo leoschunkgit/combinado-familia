@@ -76,6 +76,7 @@ Stack:
 - Plataforma Android gerada com sucesso no GitHub Actions
 - Assets nativos gerados no CI
 - Capacitor Android sincronizado com sucesso
+- APK de debug compilado com sucesso via Gradle no GitHub Actions
 
 ### Assets
 - Manifesto web
@@ -96,7 +97,7 @@ Stack:
 - Instalar Git
 - Clonar o repositório
 - Instalar Android Studio / SDK
-- Testar APK/AAB
+- Testar APK em aparelho/emulador
 - Criar keystore
 - Descobrir SHA-256
 - Finalizar assetlinks.json
