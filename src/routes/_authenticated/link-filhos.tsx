@@ -9,6 +9,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { msgErro, useFilhos, type Filho } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
+import { copyText, openExternalUrl, shareLink } from "@/lib/platform-actions";
 
 export const Route = createFileRoute("/_authenticated/link-filhos")({
   head: () => ({ meta: [
@@ -71,18 +72,18 @@ function LinkFilhosPage() {
   const urlAcesso = (token: string) => getChildTrackingUrl(token);
 
   async function copiarLink(token: string) {
-    try { await navigator.clipboard.writeText(urlAcesso(token)); toast.success("Link copiado"); }
+    try { await copyText(urlAcesso(token)); toast.success("Link copiado"); }
     catch { toast.error("Não foi possível copiar o link"); }
   }
 
   async function compartilharLink(filho: Filho, token: string) {
     const url = urlAcesso(token);
-    if (navigator.share) {
-      try { await navigator.share({ title: `Acompanhamento de ${filho.nome}`, text: "Acompanhe seus combinados no Combinado Família.", url }); } catch { /* cancelado */ }
-      return;
-    }
+    try {
+      const compartilhado = await shareLink({ title: `Acompanhamento de ${filho.nome}`, text: "Acompanhe seus combinados no Combinado Família.", url });
+      if (compartilhado) return;
+    } catch { return; }
     await copiarLink(token);
-    toast.info("O compartilhamento direto não está disponível neste navegador. O link foi copiado.");
+    toast.info("O compartilhamento direto não está disponível. O link foi copiado.");
   }
 
   return <>
@@ -109,7 +110,7 @@ function LinkFilhosPage() {
                 <div className="mt-3 flex max-w-full flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => void copiarLink(acesso.token)}><Copy className="mr-1.5 h-3.5 w-3.5" />Copiar link</Button>
                   <Button size="sm" variant="outline" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartilhar</Button>
-                  <Button size="sm" variant="ghost" onClick={() => window.open(urlAcesso(acesso.token), "_blank", "noopener,noreferrer")}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Abrir</Button>
+                  <Button size="sm" variant="ghost" onClick={() => void openExternalUrl(urlAcesso(acesso.token))}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Abrir</Button>
                 </div>
               </>}
               <div className="relative mt-2 max-w-full">
