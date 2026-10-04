@@ -1,0 +1,20 @@
+{
+  "name": "Combinado Família",
+  "short_name": "Combinado",
+  "description": "Gestão de tarefas, vigências e combinados da família.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf7ef",
+  "theme_color": "#315f4d",
+  "lang": "pt-BR",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "256x256",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}
