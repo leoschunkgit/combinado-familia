@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { AppDeepLinkListener } from "@/components/AppDeepLinkListener";
+import { AppResumeRefresh } from "@/components/AppResumeRefresh";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppDeepLinkListener />
+      <AppResumeRefresh />
       <Outlet />
       <Toaster richColors position="top-center" />
     </QueryClientProvider>
