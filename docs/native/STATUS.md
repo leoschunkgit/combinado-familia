@@ -24,6 +24,8 @@ Stack:
 - Build separado para app via `vite.config.app.ts`
 - Script `npm run build:app`
 - `webDir`: `.output/public`
+- Build SPA validado com sucesso no GitHub Actions
+- `.output/public/index.html` confirmado no CI
 
 ### Plataformas
 - Capacitor Core
@@ -90,8 +92,6 @@ Stack:
 - Instalar Node/NPM
 - Instalar Git
 - Clonar o repositório
-- npm install
-- npm run build:app
 - Gerar android/
 - Instalar Android Studio / SDK
 - Gerar assets nativos
@@ -118,8 +118,6 @@ Stack:
 ## Pontos que ainda precisam ser validados em execução
 
 Mesmo com o código preparado, ainda precisam ser testados em build real:
-- saída exata do build SPA
-- existência de .output/public/index.html
 - sincronização Capacitor
 - plugins nativos
 - comportamento de teclado
