@@ -163,6 +163,7 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [ ] Canal oficial de solicitação de exclusão definido
 - [x] Fluxo de exclusão de conta implementado e validado em build/APK/AAB/release/assinatura
 - [x] Workflow manual de deploy da Edge Function preparado sem credenciais no código
+- [x] Preparação do deploy Supabase validada na bateria de CI Android
 - [ ] GitHub secret SUPABASE_ACCESS_TOKEN configurado
 - [ ] Edge Function excluir-conta publicada no backend real
 - [ ] Exclusão testada de ponta a ponta com conta descartável
