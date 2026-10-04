@@ -27,9 +27,8 @@ export function getPublicWebOrigin(): string {
 }
 
 export function getAuthRedirectUrl(path = "/"): string {
-  const origin = getAppOrigin();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${origin}${normalizedPath}`;
+  return `${getPublicWebOrigin()}${normalizedPath}`;
 }
 
 export function getChildTrackingUrl(token: string): string {
