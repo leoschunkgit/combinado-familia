@@ -67,6 +67,7 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 
 - [x] APK de debug compilado com sucesso via Gradle no GitHub Actions
 - [x] AAB de debug compilado com sucesso via Gradle no GitHub Actions
+- [x] AAB de release sem assinatura de produção gerado com sucesso no GitHub Actions
 
 ### Inicialização
 - [ ] Abre sem tela branca
