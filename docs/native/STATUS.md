@@ -147,13 +147,13 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 
 
 - Política de Privacidade pública criada em /politica-de-privacidade e validada no build
-- Revisão final da política ainda depende de definir contato oficial e fluxo de exclusão de conta/dados
+- Política de Privacidade revisada com fluxo de exclusão validado e contato oficial definido
 
 
 - Página pública de exclusão de conta criada em /exclusao-de-conta
 - Nova rota validada em build, APK, AAB, release, assinatura, Manifest, identidade e sync Android
 - Fluxo automático de exclusão implementado, publicado e validado de ponta a ponta
-- Canal oficial para solicitação de exclusão ainda precisa ser definido
+- Canal oficial de suporte/privacidade definido: leoschunk@gmail.com
 
 
 - Fluxo de exclusão de conta passou em toda a bateria de CI: build, Capacitor, Manifest, identidade, APK, AAB, release e assinatura
