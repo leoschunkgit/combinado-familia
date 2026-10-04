@@ -16,6 +16,7 @@ import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useVigencias, type Fi
 import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
+import { copyText, openExternalUrl, shareLink } from "@/lib/platform-actions";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -123,18 +124,18 @@ function FilhosPage() {
   }
 
   async function copiarLink(token: string) {
-    try { await navigator.clipboard.writeText(urlAcesso(token)); toast.success("Link copiado"); }
+    try { await copyText(urlAcesso(token)); toast.success("Link copiado"); }
     catch { toast.error("Não foi possível copiar o link"); }
   }
 
   async function compartilharLink(filho: Filho, token: string) {
     const url = urlAcesso(token);
-    if (navigator.share) {
-      try { await navigator.share({ title: `Acompanhamento de ${filho.nome}`, text: `Acompanhe seus combinados no Combinado Família.`, url }); } catch { /* compartilhamento cancelado */ }
-      return;
-    }
+    try {
+      const compartilhado = await shareLink({ title: `Acompanhamento de ${filho.nome}`, text: "Acompanhe seus combinados no Combinado Família.", url });
+      if (compartilhado) return;
+    } catch { return; }
     await copiarLink(token);
-    toast.info("O compartilhamento direto não está disponível neste navegador. O link foi copiado.");
+    toast.info("O compartilhamento direto não está disponível. O link foi copiado.");
   }
 
   async function salvar(e: FormEvent) {
@@ -192,7 +193,7 @@ function FilhosPage() {
             <div className="flex min-w-0 items-center gap-2"><Link2 className="h-4 w-4 shrink-0 text-muted-foreground" /><p className="min-w-0 flex-1 text-sm font-medium">Gerar link acompanhamento</p><Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-expanded={painelAberto} aria-label={painelAberto ? `Fechar painel de acompanhamento de ${f.nome}` : `Abrir painel de acompanhamento de ${f.nome}`} onClick={() => setPaineisAbertos((v) => ({ ...v, [f.id]: !painelAberto }))}>{painelAberto ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}</Button></div>
             {painelAberto && <div className="mt-2 min-w-0 pl-6">{carregandoAcesso[f.id] ? <p className="text-xs text-muted-foreground">Carregando acesso...</p> : !acesso ? <><p className="text-xs text-muted-foreground">Permita que {f.nome} acompanhe tarefas e resultados sem fazer login.</p><Button size="sm" className="mt-3" onClick={() => void runAction(() => gerarLink(f))}>Gerar link</Button></> : <>
               <div className="flex items-center gap-1.5 text-xs"><span className={`h-2 w-2 shrink-0 rounded-full ${ativo ? "bg-green-500" : "bg-muted-foreground/50"}`} /><span className={ativo ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>{ativo ? "Acesso ativo" : "Acesso desativado"}</span></div>
-              {ativo && <><p className="mt-2 max-w-full break-all text-xs text-muted-foreground">{urlAcesso(acesso.token)}</p><div className="mt-3 flex min-w-0 flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void copiarLink(acesso.token)}><Copy className="mr-1.5 h-3.5 w-3.5" />Copiar link</Button><Button size="sm" variant="outline" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartilhar</Button><Button size="sm" variant="ghost" onClick={() => window.open(urlAcesso(acesso.token), "_blank", "noopener,noreferrer")}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Abrir</Button></div></>}
+              {ativo && <><p className="mt-2 max-w-full break-all text-xs text-muted-foreground">{urlAcesso(acesso.token)}</p><div className="mt-3 flex min-w-0 flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void copiarLink(acesso.token)}><Copy className="mr-1.5 h-3.5 w-3.5" />Copiar link</Button><Button size="sm" variant="outline" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartilhar</Button><Button size="sm" variant="ghost" onClick={() => void openExternalUrl(urlAcesso(acesso.token))}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Abrir</Button></div></>}
               <div className="relative mt-2 min-w-0 max-w-full"><Button size="sm" variant="ghost" className="max-w-full px-2 text-muted-foreground" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="mr-1 h-3.5 w-3.5" />Mais opções</Button>{maisOpcoes === f.id && <div className="mt-1 flex min-w-0 max-w-full flex-wrap gap-2 rounded-lg border bg-background p-2">{ativo ? <><Button size="sm" variant="ghost" onClick={() => setConfirmarDesativar(f)}>Desativar acesso</Button><Button size="sm" variant="ghost" onClick={() => setConfirmarNovoLink(f)}>Gerar novo link</Button></> : <div className="min-w-0 max-w-full"><Button size="sm" variant="ghost" onClick={() => void runAction(() => gerarLink(f))}>Gerar novo link</Button><p className="max-w-full break-words px-2 pb-1 text-xs text-muted-foreground">Será criado um novo endereço de acesso.</p></div>}</div>}</div>
             </>}</div>}
           </div>
