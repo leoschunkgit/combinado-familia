@@ -103,12 +103,12 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [ ] Link de host não autorizado é ignorado
 
 ### Segurança
-- [ ] Revisar AndroidManifest.xml
-- [ ] Sem câmera
-- [ ] Sem localização
-- [ ] Sem microfone
-- [ ] Sem contatos
-- [ ] Sem acesso desnecessário a fotos/arquivos
+- [x] Revisar AndroidManifest.xml (validado no GitHub Actions)
+- [x] Sem câmera (validado no GitHub Actions)
+- [x] Sem localização (validado no GitHub Actions)
+- [x] Sem microfone (validado no GitHub Actions)
+- [x] Sem contatos (validado no GitHub Actions)
+- [x] Sem acesso desnecessário a fotos/arquivos (validado no GitHub Actions)
 - [ ] Keystore fora do repositório
 
 ## 4. iPhone — aparelho real/TestFlight
