@@ -160,8 +160,6 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 - Ainda pendente: publicar a Edge Function excluir-conta e testar a exclusão real com uma conta descartável
 
 
-- Preparado workflow manual de deploy da Edge Function excluir-conta, sem credenciais no repositório
-- Próximo bloqueio externo: configurar o secret GitHub SUPABASE_ACCESS_TOKEN e executar o deploy
 
 
 ## Regra de retomada
@@ -174,5 +172,7 @@ Antes de iniciar qualquer nova etapa do app Android, consultar obrigatoriamente:
 O arquivo `PONTO_DE_RETOMADA.md` registra pendências que não podem ser esquecidas, mesmo que a conversa anterior não esteja disponível. Nenhuma etapa deve ser considerada concluída se houver pendência obrigatória registrada ali.
 
 
-- A preparação do deploy do Supabase passou em toda a bateria de CI Android
-- Pendência obrigatória: configurar SUPABASE_ACCESS_TOKEN no GitHub e executar o deploy manual da Edge Function excluir-conta
+
+
+- Lovable Cloud é o caminho de deploy do backend atual; não usar SUPABASE_ACCESS_TOKEN/GitHub Actions para publicar a função
+- Pendência obrigatória: publicar a Edge Function excluir-conta pelo Lovable Cloud e testar com conta descartável
