@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as ExclusaoDeContaRouteImport } from './routes/exclusao-de-conta'
+import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenticated/atribuicoes'
@@ -32,6 +34,16 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExclusaoDeContaRoute = ExclusaoDeContaRouteImport.update({
+  id: '/exclusao-de-conta',
+  path: '/exclusao-de-conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
+  id: '/politica-de-privacidade',
+  path: '/politica-de-privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
@@ -104,6 +116,8 @@ const AcompanharTokenRoute = AcompanharTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/exclusao-de-conta': typeof ExclusaoDeContaRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
@@ -120,6 +134,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/exclusao-de-conta': typeof ExclusaoDeContaRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
@@ -138,6 +154,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/exclusao-de-conta': typeof ExclusaoDeContaRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/atribuicoes': typeof AuthenticatedAtribuicoesRoute
@@ -156,6 +174,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/exclusao-de-conta'
+    | '/politica-de-privacidade'
     | '/redefinir-senha'
     | '/admin'
     | '/atribuicoes'
@@ -172,6 +192,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/exclusao-de-conta'
+    | '/politica-de-privacidade'
     | '/redefinir-senha'
     | '/admin'
     | '/atribuicoes'
@@ -189,6 +211,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/exclusao-de-conta'
+    | '/politica-de-privacidade'
     | '/redefinir-senha'
     | '/_authenticated/admin'
     | '/_authenticated/atribuicoes'
@@ -207,6 +231,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ExclusaoDeContaRoute: typeof ExclusaoDeContaRoute
+  PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   AcompanharTokenRoute: typeof AcompanharTokenRoute
 }
@@ -225,6 +251,20 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exclusao-de-conta': {
+      id: '/exclusao-de-conta'
+      path: '/exclusao-de-conta'
+      fullPath: '/exclusao-de-conta'
+      preLoaderRoute: typeof ExclusaoDeContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-de-privacidade': {
+      id: '/politica-de-privacidade'
+      path: '/politica-de-privacidade'
+      fullPath: '/politica-de-privacidade'
+      preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/redefinir-senha': {
@@ -355,6 +395,8 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ExclusaoDeContaRoute: ExclusaoDeContaRoute,
+  PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   AcompanharTokenRoute: AcompanharTokenRoute,
 }
