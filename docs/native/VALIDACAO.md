@@ -57,10 +57,10 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [x] npm install (validado no GitHub Actions)
 - [x] npm run build:app (validado no GitHub Actions)
 - [x] Confirmar .output/public/index.html (validado no GitHub Actions)
-- [ ] Gerar Android: npm run app:add:android
+- [x] Gerar Android: npm run app:add:android (validado no GitHub Actions)
 - [ ] Gerar iOS: npm run app:add:ios (Mac)
-- [ ] npm run app:assets
-- [ ] npm run app:sync:android
+- [x] npm run app:assets (validado no GitHub Actions)
+- [x] npm run app:sync:android (validado no GitHub Actions)
 - [ ] npm run app:sync:ios
 
 ## 3. Android — aparelho real
