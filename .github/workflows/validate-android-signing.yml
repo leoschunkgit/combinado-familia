@@ -39,7 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           STORE_PASS=$(openssl rand -hex 16)
-          KEY_PASS=$(openssl rand -hex 16)
+          KEY_PASS="$STORE_PASS"
           echo "STORE_PASS=$STORE_PASS" >> "$GITHUB_ENV"
           echo "KEY_PASS=$KEY_PASS" >> "$GITHUB_ENV"
           echo "KEY_ALIAS=combinado-ci" >> "$GITHUB_ENV"
