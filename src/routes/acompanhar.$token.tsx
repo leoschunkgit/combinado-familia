@@ -66,7 +66,7 @@ function PainelPublico() {
   const mesadaFinal = painel.filho.valor_mesada === null ? null : Math.max(0, painel.filho.valor_mesada - desconto);
   const resultados = tarefaDatas?.ocorrencias.filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ" || o.tipo === "PENALIDADE").sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
 
-  return <main className="min-h-screen bg-muted/20 px-3 py-5 sm:px-6 sm:py-8">
+  return <main className="native-safe-area min-h-screen bg-muted/20 px-3 py-5 sm:px-6 sm:py-8">
     <div className="mx-auto max-w-3xl space-y-4">
       <header className="rounded-2xl border bg-card p-5"><div className="flex items-center gap-2 font-display text-lg font-bold"><House className="h-5 w-5" /> combinado <span className="text-sm font-medium text-muted-foreground">família</span></div><h1 className="mt-5 text-2xl font-bold">Olá, {painel.filho.nome} 👋</h1><p className="mt-1 text-sm text-muted-foreground">Acompanhe aqui seus combinados. Este painel é somente para consulta.</p><p className="mt-2 break-words text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p></header>
 
