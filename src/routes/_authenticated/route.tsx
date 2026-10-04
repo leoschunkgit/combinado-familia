@@ -102,7 +102,7 @@ function AuthenticatedLayout() {
   return (
     <ActionLoadingProvider>
       {!saindo && <OnboardingInicial />}
-      <div className="min-h-screen md:flex">
+      <div className="native-safe-area min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="flex items-center justify-between px-4 py-3 md:px-4 md:py-4">
             <Link to="/inicio" className="flex items-center gap-2">
@@ -128,7 +128,7 @@ function AuthenticatedLayout() {
           <Outlet />
         </div></main>
 
-        {mostrarAtalhoLinkFilho && <Link to="/link-filhos" className="fixed bottom-5 right-5 z-30 inline-flex h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/75 px-4 text-sm font-medium text-primary-foreground shadow-lg backdrop-blur-sm transition-all hover:bg-primary/90 md:hidden" aria-label="Ir para Gerar Link / Filho"><Link2 className="h-4 w-4" />Link/Filho</Link>}
+        {mostrarAtalhoLinkFilho && <Link to="/link-filhos" className="native-safe-bottom fixed bottom-5 right-5 z-30 inline-flex h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/75 px-4 text-sm font-medium text-primary-foreground shadow-lg backdrop-blur-sm transition-all hover:bg-primary/90 md:hidden" aria-label="Ir para Gerar Link / Filho"><Link2 className="h-4 w-4" />Link/Filho</Link>}
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="fixed inset-y-0 left-0 z-50 w-[78vw] max-w-xs border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="flex items-center justify-between border-b p-3"><Link to="/inicio" className="flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
