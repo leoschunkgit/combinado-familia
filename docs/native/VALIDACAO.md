@@ -248,6 +248,6 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 ## 7. Fechamento antes do PC pessoal
 
 - [x] Limpeza final de documentação temporária concluída
-- [ ] Bateria final de 8 workflows Android concluída após as últimas alterações
-  - estado atual: todos os 8 checks foram disparados e estão na fila do GitHub Actions (`queued`), sem falha registrada
+- [x] Bateria final de 8 workflows Android concluída após as últimas alterações
+  - resultado: 8 de 8 checks concluídos com sucesso
   - commit validado: `493760b8b8454ebf50f8819fe356f319c135981b`
