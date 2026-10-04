@@ -86,6 +86,7 @@ Stack:
 
 ### Segurança
 - Política de permissões mínimas
+- AndroidManifest e permissões mínimas validados com sucesso no GitHub Actions
 - Sem câmera/localização/microfone/contatos/fotos por padrão
 - Templates de App Links e Universal Links
 - Checklist de publicação
