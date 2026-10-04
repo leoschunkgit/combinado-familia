@@ -108,17 +108,35 @@ Antes de qualquer nova etapa, consultar também:
 - testar App Links reais
 - testar teclado, PDF, plugins nativos, botão Voltar, ícone e splash em aparelho real
 
-## Pendências Google Play
+## Google Play — situação consolidada
 
-- finalizar Política de Privacidade
-- definir canal oficial de suporte/contato
-- finalizar fluxo de exclusão com teste real
-- preencher Data Safety no Play Console
-- produzir e enviar screenshots finais
-- revisar e enviar textos finais
-- subir AAB assinado
-- concluir teste interno
-- publicar na Google Play
+### Já pronto
+- Política de Privacidade final revisada
+- contato oficial definido: leoschunk@gmail.com
+- página pública de exclusão revisada
+- fluxo de exclusão validado de ponta a ponta
+- Data Safety revisado e documentado
+- textos finais da ficha da loja revisados
+- categoria definida: Criar os filhos (Parenting)
+- roteiro final de screenshots preparado
+
+### Depende do Google Play Console
+- preencher/enviar Data Safety
+- inserir textos finais da ficha da loja
+- selecionar categoria e tags disponíveis
+- enviar screenshots finais
+- configurar/testar teste interno
+- concluir publicação
+
+### Depende do computador pessoal
+- criar keystore de produção
+- guardar e fazer backup seguro do keystore
+- obter SHA-256 real
+- finalizar assetlinks.json
+- gerar AAB final assinado
+- testar o app em aparelho real/emulador
+- validar App Links, teclado, PDF, plugins nativos, botão Voltar, ícone e splash
+- subir o AAB assinado para o teste interno
 
 ## Pendências iOS futuras
 
