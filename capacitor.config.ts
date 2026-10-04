@@ -5,6 +5,16 @@ const config: CapacitorConfig = {
   appName: "Combinado Família",
   webDir: ".output/public",
   loggingBehavior: "none",
+  plugins: {
+    Keyboard: {
+      resize: "native",
+      resizeOnFullScreen: true,
+      autoBackdropColor: "auto",
+    },
+    StatusBar: {
+      style: "DARK",
+    },
+  },
   android: {
     webContentsDebuggingEnabled: false,
   },
