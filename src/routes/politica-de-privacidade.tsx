@@ -75,16 +75,23 @@ function PoliticaPrivacidade() {
           <section>
             <h2 className="text-lg font-semibold">Exclusão e atualização de dados</h2>
             <p className="mt-2">
-              A forma final de solicitação de exclusão de conta e dados será disponibilizada e
-              documentada antes da publicação definitiva nas lojas de aplicativos.
+              O responsável pode excluir a própria conta diretamente na área “Minha conta” do
+              Combinado Família. A exclusão exige confirmação explícita e remove a conta de
+              autenticação e os dados vinculados à conta, incluindo filhos, tarefas, vigências,
+              atribuições, ocorrências e links públicos de acompanhamento.
+            </p>
+            <p className="mt-2">
+              Após a exclusão, os links públicos anteriormente gerados para acompanhamento dos
+              filhos deixam de funcionar. O usuário também pode atualizar os dados disponíveis na
+              aplicação enquanto a conta estiver ativa.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold">Contato</h2>
             <p className="mt-2">
-              O canal oficial de contato e suporte será informado nesta página antes da publicação
-              definitiva nas lojas.
+              O canal oficial de contato e suporte será publicado nesta página antes do envio da
+              versão final às lojas de aplicativos.
             </p>
           </section>
         </div>
