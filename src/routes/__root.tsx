@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { AppDeepLinkListener } from "@/components/AppDeepLinkListener";
 import { AppResumeRefresh } from "@/components/AppResumeRefresh";
+import { AndroidBackButton } from "@/components/AndroidBackButton";
 
 function NotFoundComponent() {
   return (
@@ -140,6 +141,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AppDeepLinkListener />
       <AppResumeRefresh />
+      <AndroidBackButton />
       <Outlet />
       <Toaster richColors position="top-center" />
     </QueryClientProvider>
