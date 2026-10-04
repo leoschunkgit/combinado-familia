@@ -11,11 +11,18 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "build:app": "vite build --config vite.config.app.ts --mode app",
-    "app:sync": "npm run build:app && cap sync android",
-    "app:open": "cap open android",
-    "app:run": "npm run app:sync && cap run android",
+    "app:sync": "npm run app:sync:android",
+    "app:open": "npm run app:open:android",
+    "app:run": "npm run app:run:android",
     "app:add:android": "cap add android",
-    "app:assets": "capacitor-assets generate"
+    "app:assets": "capacitor-assets generate",
+    "app:add:ios": "cap add ios",
+    "app:sync:android": "npm run build:app && cap sync android",
+    "app:sync:ios": "npm run build:app && cap sync ios",
+    "app:open:android": "cap open android",
+    "app:open:ios": "cap open ios",
+    "app:run:android": "npm run app:sync:android && cap run android",
+    "app:run:ios": "npm run app:sync:ios && cap run ios"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -77,7 +84,8 @@
     "jspdf": "^4.0.0",
     "@capacitor/core": "8.5.2",
     "@capacitor/android": "8.5.2",
-    "@capacitor/app": "8.1.2"
+    "@capacitor/app": "8.1.2",
+    "@capacitor/ios": "8.5.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
