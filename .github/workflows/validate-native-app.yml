@@ -1,0 +1,62 @@
+name: Validate Native App Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-app:
+    name: Build app bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      VITE_PUBLIC_APP_URL: https://www.combinadofamilia.app
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build native web bundle
+        run: npm run build:app
+
+      - name: Verify Capacitor web output
+        shell: bash
+        run: |
+          test -f .output/public/index.html || {
+            echo "::error::.output/public/index.html was not generated"
+            find .output -maxdepth 3 -type f 2>/dev/null | sort || true
+            exit 1
+          }
+          echo "Native app web bundle generated successfully:"
+          ls -lh .output/public/index.html
+
+      - name: Upload native web bundle
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-web-bundle
+          path: .output/public
+          if-no-files-found: error
+          retention-days: 7
