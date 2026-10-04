@@ -207,3 +207,6 @@ Não publicar uma nova versão nativa sem repetir pelo menos:
 
 
 - [x] Exclusão de conta concluída de ponta a ponta e função temporária de autoteste removida
+
+
+- [x] Data Safety revisado e pronto para preenchimento no Play Console
