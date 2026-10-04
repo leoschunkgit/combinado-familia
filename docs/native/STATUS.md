@@ -154,3 +154,7 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 - Nova rota validada em build, APK, AAB, release, assinatura, Manifest, identidade e sync Android
 - Exclusão automática ainda não implementada
 - Canal oficial para solicitação de exclusão ainda precisa ser definido
+
+
+- Fluxo de exclusão de conta passou em toda a bateria de CI: build, Capacitor, Manifest, identidade, APK, AAB, release e assinatura
+- Ainda pendente: publicar a Edge Function excluir-conta e testar a exclusão real com uma conta descartável
