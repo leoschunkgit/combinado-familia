@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "build:app": "vite build --config vite.config.app.ts --mode app"
+    "build:app": "vite build --config vite.config.app.ts --mode app",
+    "app:sync": "npm run build:app && cap sync android",
+    "app:open": "cap open android",
+    "app:run": "npm run app:sync && cap run android"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -69,7 +72,9 @@
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
     "zod": "^3.25.76",
-    "jspdf": "^4.0.0"
+    "jspdf": "^4.0.0",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/android": "8.5.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -91,6 +96,7 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "8.1.5"
+    "vite": "8.1.5",
+    "@capacitor/cli": "8.5.2"
   }
 }
