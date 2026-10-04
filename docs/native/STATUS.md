@@ -152,12 +152,12 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 
 - Página pública de exclusão de conta criada em /exclusao-de-conta
 - Nova rota validada em build, APK, AAB, release, assinatura, Manifest, identidade e sync Android
-- Fluxo automático de exclusão implementado no app e na Edge Function; falta publicar e testar no backend real
+- Fluxo automático de exclusão implementado, publicado e validado de ponta a ponta
 - Canal oficial para solicitação de exclusão ainda precisa ser definido
 
 
 - Fluxo de exclusão de conta passou em toda a bateria de CI: build, Capacitor, Manifest, identidade, APK, AAB, release e assinatura
-- Ainda pendente: publicar a Edge Function excluir-conta e testar a exclusão real com uma conta descartável
+- Exclusão de conta validada de ponta a ponta com AUTOTESTE_APROVADO
 
 
 
@@ -175,8 +175,13 @@ O arquivo `PONTO_DE_RETOMADA.md` registra pendências que não podem ser esqueci
 
 
 - Lovable Cloud é o caminho de deploy do backend atual; não usar SUPABASE_ACCESS_TOKEN/GitHub Actions para publicar a função
-- Pendência obrigatória: publicar a Edge Function excluir-conta pelo Lovable Cloud e testar com conta descartável
+- Edge Function excluir-conta publicada e autoteste aprovado
 
 
 - Edge Function excluir-conta publicada com sucesso no Lovable Cloud
-- Ainda pendente: corrigir erros de compilação da prévia e testar exclusão ponta a ponta com conta descartável
+- Prévia corrigida e exclusão ponta a ponta aprovada
+
+
+- AUTOTESTE_APROVADO: usuário Auth removido, tabelas vinculadas zeradas e link público invalidado
+- A função temporária testar-exclusao-conta ainda está publicada porque a remoção foi bloqueada enquanto a versão mais recente do app TanStack não estiver publicada
+- Próxima limpeza obrigatória: publicar a versão mais recente do app TanStack e então remover/despublicar testar-exclusao-conta, mantendo excluir-conta
