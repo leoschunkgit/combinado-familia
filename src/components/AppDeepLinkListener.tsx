@@ -2,21 +2,7 @@ import { useEffect } from "react";
 import { App, type URLOpenListenerEvent } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { useRouter } from "@tanstack/react-router";
-
-const ALLOWED_HOSTS = new Set([
-  "combinadofamilia.app",
-  "www.combinadofamilia.app",
-]);
-
-function routeFromPublicUrl(rawUrl: string): string | null {
-  try {
-    const url = new URL(rawUrl);
-    if (!ALLOWED_HOSTS.has(url.hostname)) return null;
-    return `${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return null;
-  }
-}
+import { getPublicRouteFromUrl } from "@/lib/app-runtime";
 
 /**
  * Entrega Android App Links / iOS Universal Links ao TanStack Router.
@@ -29,7 +15,7 @@ export function AppDeepLinkListener() {
     if (!Capacitor.isNativePlatform()) return;
 
     const openRoute = (rawUrl: string) => {
-      const route = routeFromPublicUrl(rawUrl);
+      const route = getPublicRouteFromUrl(rawUrl);
       if (!route) return;
       router.history.push(route);
     };
