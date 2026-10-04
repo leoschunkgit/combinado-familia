@@ -158,3 +158,7 @@ Não considerar a versão nativa pronta para publicação antes desses testes.
 
 - Fluxo de exclusão de conta passou em toda a bateria de CI: build, Capacitor, Manifest, identidade, APK, AAB, release e assinatura
 - Ainda pendente: publicar a Edge Function excluir-conta e testar a exclusão real com uma conta descartável
+
+
+- Preparado workflow manual de deploy da Edge Function excluir-conta, sem credenciais no repositório
+- Próximo bloqueio externo: configurar o secret GitHub SUPABASE_ACCESS_TOKEN e executar o deploy
