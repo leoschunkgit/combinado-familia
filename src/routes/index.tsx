@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { msgErro } from "@/lib/db";
-import { getAuthRedirectUrl } from "@/lib/app-runtime";
+import { getAuthRedirectUrl, getPublicRouteFromUrl } from "@/lib/app-runtime";
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Combinado — Tarefas da família com regras claras" }, { name: "description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:title", content: "Combinado — Tarefas da família com regras claras" }, { property: "og:description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -47,7 +49,23 @@ function Index() {
   const [emailRecuperacao, setEmailRecuperacao] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate({ to: "/inicio" }); });
+    let ativo = true;
+
+    async function encaminharSessaoExistente() {
+      if (Capacitor.isNativePlatform()) {
+        const launch = await App.getLaunchUrl();
+        const launchRoute = launch?.url ? getPublicRouteFromUrl(launch.url) : null;
+        // O AppDeepLinkListener fará a navegação. Não deixe o redirect de login
+        // sobrescrever um link público recebido na abertura fria do app.
+        if (launchRoute && launchRoute !== "/") return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (ativo && data.session) navigate({ to: "/inicio" });
+    }
+
+    void encaminharSessaoExistente();
+    return () => { ativo = false; };
   }, [navigate]);
 
   async function entrar(e: FormEvent) {
