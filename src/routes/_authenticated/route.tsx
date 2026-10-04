@@ -2,14 +2,15 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CalendarRange, ClipboardCheck, History, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText } from "lucide-react";
+import { Bell, CalendarRange, ClipboardCheck, History, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ActionLoadingProvider } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
 import { CheckinDiario } from "@/components/CheckinDiario";
-import { useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
+import { pendenciasDoDia } from "@/lib/notificacoes";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/inicio", label: "Início", icon: Home },
+  { to: "/notificacoes", label: "Notificações", icon: Bell },
   { to: "/ocorrencias", label: "Ocorrências", icon: ClipboardCheck },
   { to: "/historico", label: "Histórico", icon: History },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
@@ -56,6 +58,7 @@ function AuthenticatedLayout() {
   const { data: tarefas = [] } = useTarefas();
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [] } = useFilhoTarefas();
+  const { data: ocorrencias = [] } = useOcorrencias();
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
   const [etapa, setEtapa] = useState<number | null>(null);
@@ -93,6 +96,7 @@ function AuthenticatedLayout() {
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
   const configuracaoInicialConcluida = filhos.length > 0 && tarefas.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
   const mostrarAtalhoLinkFilho = configuracaoInicialConcluida && pathname !== "/filhos" && pathname !== "/link-filhos";
+  const quantidadeNotificacoes = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias).length : 0;
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
@@ -111,7 +115,7 @@ function AuthenticatedLayout() {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span>
               <span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="-mt-1 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span></span>
             </Link>
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" className="relative md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
           </div>
 
           <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:gap-0.5 md:px-2.5">
