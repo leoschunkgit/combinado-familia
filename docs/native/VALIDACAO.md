@@ -157,7 +157,8 @@ Este checklist deve ser usado antes de publicar qualquer versão Android/iOS.
 - [ ] Gerar AAB de release assinado
 - [x] Versão e versionCode base validados no GitHub Actions
 - [x] Rascunho de política de privacidade preparado
-- [ ] Política de privacidade final publicada em URL pública
+- [x] URL pública da Política de Privacidade criada e validada no build: https://www.combinadofamilia.app/politica-de-privacidade
+- [ ] Política de privacidade final revisada (contato + exclusão de conta/dados)
 - [x] Guia de Data Safety preparado
 - [ ] Data Safety preenchido no Google Play Console
 - [x] Checklist de screenshots preparado
