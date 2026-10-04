@@ -199,73 +199,95 @@ export function CheckinDiario() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {grupos.map(({ vigencia, filhos: gruposFilhos }) => (
-            <section key={vigencia.id} className="space-y-4 rounded-xl border bg-card p-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Vigência atual
-                </p>
-                <p className="mt-1 font-semibold">{fmtVigencia(vigencia)}</p>
-              </div>
+        <div className="space-y-5">
+          {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
+            const totalVigencia = gruposFilhos.reduce((soma, grupo) => soma + grupo.tarefas.length, 0);
 
-              <div className="space-y-5">
-                {gruposFilhos.map(({ filho, tarefas }) => (
-                  <div key={filho.id} className="space-y-3">
-                    <div className="border-b pb-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Filho
+            return (
+              <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                <div className="border-b bg-primary/5 px-4 py-3 sm:px-5">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                        Vigência atual
                       </p>
-                      <p className="text-lg font-bold">{filho.nome}</p>
+                      <p className="mt-1 break-words font-semibold">{fmtVigencia(vigencia)}</p>
                     </div>
+                    <span className="w-fit shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
+                      {totalVigencia} {totalVigencia === 1 ? "pendência" : "pendências"}
+                    </span>
+                  </div>
+                </div>
 
-                    <div className="space-y-3">
-                      {tarefas.map((tarefa) => {
-                        const editandoFez = fez?.tarefa.id === tarefa.id;
+                <div className="space-y-4 p-3 sm:p-4">
+                  {gruposFilhos.map(({ filho, tarefas }) => (
+                    <article key={filho.id} className="overflow-hidden rounded-xl border bg-background">
+                      <div className="flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
+                            {filho.nome[0]?.toUpperCase()}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Filho
+                            </p>
+                            <p className="truncate text-base font-bold">{filho.nome}</p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                          {tarefas.length} {tarefas.length === 1 ? "tarefa" : "tarefas"}
+                        </span>
+                      </div>
 
-                        return (
-                          <div key={tarefa.id} className="rounded-lg border bg-muted/20 p-3">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div className="min-w-0">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                  Tarefa
-                                </p>
-                                <p className="break-words font-semibold">{tarefa.t_tarefa?.nome}</p>
+                      <div className="divide-y">
+                        {tarefas.map((tarefa) => {
+                          const editandoFez = fez?.tarefa.id === tarefa.id;
+
+                          return (
+                            <div key={tarefa.id} className="p-3 sm:p-4">
+                              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Tarefa
+                                  </p>
+                                  <p className="mt-0.5 break-words font-semibold">{tarefa.t_tarefa?.nome}</p>
+                                </div>
+
+                                {!editandoFez && (
+                                  <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={busy}
+                                      className="min-w-24"
+                                      onClick={() =>
+                                        setFez({
+                                          tarefa,
+                                          bonusTipo: "NENHUMA",
+                                          descricao: "",
+                                          valor: "",
+                                        })
+                                      }
+                                    >
+                                      <ThumbsUp className="h-4 w-4 text-green-600" />
+                                      Fez
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      disabled={busy}
+                                      className="min-w-24"
+                                      onClick={() => void registrarNaoFez(tarefa)}
+                                    >
+                                      <ThumbsDown className="h-4 w-4" />
+                                      Não fez
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
 
-                              {!editandoFez && (
-                                <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={busy}
-                                    onClick={() =>
-                                      setFez({
-                                        tarefa,
-                                        bonusTipo: "NENHUMA",
-                                        descricao: "",
-                                        valor: "",
-                                      })
-                                    }
-                                  >
-                                    <ThumbsUp className="h-4 w-4 text-green-600" />
-                                    Fez
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    disabled={busy}
-                                    onClick={() => void registrarNaoFez(tarefa)}
-                                  >
-                                    <ThumbsDown className="h-4 w-4" />
-                                    Não fez
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-
-                            {editandoFez && fez && (
-                              <div className="mt-4 space-y-4 border-t pt-4">
+                              {editandoFez && fez && (
+                                <div className="mt-4 space-y-4 rounded-lg border bg-muted/20 p-3 sm:p-4">
                                 <div className="space-y-2">
                                   <Label>Bonificação opcional</Label>
                                   <div className="grid grid-cols-3 gap-2">
@@ -340,16 +362,19 @@ export function CheckinDiario() {
                                 </div>
                               </div>
                             )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        );
+      })}
+    </div>
 
         <div className="text-center text-xs text-muted-foreground">
           {pendencias.length} {pendencias.length === 1 ? "tarefa pendente" : "tarefas pendentes"} hoje
