@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, CalendarRange, Copy, Link2, ListPlus, ListTodo, Plus, Users } from "lucide-react";
+import { ArrowLeft, CalendarRange, CheckCircle2, Copy, Link2, ListPlus, ListTodo, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -235,14 +235,26 @@ function CadastroUnicoPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Button type="button" variant={modo === "novo" ? "default" : "outline"} onClick={() => setModo("novo")}><Plus className="h-4 w-4" /> Montar novo lote</Button>
-        <Button type="button" variant={modo === "duplicar" ? "default" : "outline"} onClick={() => setModo("duplicar")}><Copy className="h-4 w-4" /> Duplicar vigência existente</Button>
+        <button type="button" onClick={() => setModo("novo")} className={`rounded-xl border p-4 text-left transition ${modo === "novo" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
+          <span className="flex items-center gap-3"><span className={`flex h-10 w-10 items-center justify-center rounded-lg ${modo === "novo" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><Plus className="h-5 w-5" /></span><span><span className="block font-semibold">Montar novo cadastro</span><span className="block text-xs text-muted-foreground">Filhos, tarefas, vigência e associações em lote</span></span></span>
+        </button>
+        <button type="button" onClick={() => setModo("duplicar")} className={`rounded-xl border p-4 text-left transition ${modo === "duplicar" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
+          <span className="flex items-center gap-3"><span className={`flex h-10 w-10 items-center justify-center rounded-lg ${modo === "duplicar" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><Copy className="h-5 w-5" /></span><span><span className="block font-semibold">Duplicar vigência</span><span className="block text-xs text-muted-foreground">Reaproveite regras e associações existentes</span></span></span>
+        </button>
       </div>
+
+      {modo === "novo" && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="rounded-xl border bg-card p-3"><p className="text-[11px] font-medium uppercase text-muted-foreground">Filhos</p><p className="mt-1 text-2xl font-bold">{filhosSelecionados.length}</p><p className="text-[11px] text-muted-foreground">selecionados</p></div>
+          <div className="rounded-xl border bg-card p-3"><p className="text-[11px] font-medium uppercase text-muted-foreground">Tarefas</p><p className="mt-1 text-2xl font-bold">{tarefasSelecionadas.length}</p><p className="text-[11px] text-muted-foreground">selecionadas</p></div>
+          <div className="rounded-xl border bg-card p-3"><p className="text-[11px] font-medium uppercase text-muted-foreground">Vigência</p><p className="mt-1 flex h-8 items-center">{vigenciaCriadaId ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <CalendarRange className="h-6 w-6 text-muted-foreground" />}</p><p className="text-[11px] text-muted-foreground">{vigenciaCriadaId ? "criada" : "pendente"}</p></div>
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3"><p className="text-[11px] font-medium uppercase text-primary">Associações</p><p className="mt-1 text-2xl font-bold text-primary">{totalCombinacoes}</p><p className="text-[11px] text-muted-foreground">previstas</p></div>
+        </div>
+      )}
 
       {modo === "novo" ? (
         <>
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> 1. Filhos</CardTitle></CardHeader>
+          <Card className="overflow-hidden"><CardHeader className="border-b bg-muted/20"><CardTitle className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">1</span><span className="flex items-center gap-2"><Users className="h-5 w-5" /> Filhos</span></CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
                 <div className="space-y-2"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
@@ -250,20 +262,18 @@ function CadastroUnicoPage() {
                 {temMesada && <div className="space-y-2"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
               </div>
               <Button onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar filho</Button>
-              {filhos.length > 0 && <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">{filhos.map((f) => <label key={f.id} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"><Checkbox checked={filhosSelecionados.includes(f.id)} onCheckedChange={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)} />{f.nome}</label>)}</div>}
+              {filhos.length > 0 && <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">{filhos.map((f) => { const selecionado = filhosSelecionados.includes(f.id); return <label key={f.id} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition ${selecionado ? "border-primary bg-primary/5 font-medium" : "hover:bg-muted/40"}`}><Checkbox checked={selecionado} onCheckedChange={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)} /><span className="min-w-0 flex-1 truncate">{f.nome}</span>{selecionado && <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />}</label>; })}</div>}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><ListTodo className="h-5 w-5" /> 2. Tarefas</CardTitle></CardHeader>
+          <Card className="overflow-hidden"><CardHeader className="border-b bg-muted/20"><CardTitle className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">2</span><span className="flex items-center gap-2"><ListTodo className="h-5 w-5" /> Tarefas</span></CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2"><Input value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Nome da tarefa" /><Button onClick={() => void runAction(cadastrarTarefa)}><Plus className="h-4 w-4" /> Adicionar</Button></div>
-              {tarefas.length > 0 && <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">{tarefas.map((t) => <label key={t.id} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"><Checkbox checked={tarefasSelecionadas.includes(t.id)} onCheckedChange={() => alternar(tarefasSelecionadas, setTarefasSelecionadas, t.id)} />{t.nome}</label>)}</div>}
+              {tarefas.length > 0 && <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">{tarefas.map((t) => { const selecionada = tarefasSelecionadas.includes(t.id); return <label key={t.id} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition ${selecionada ? "border-primary bg-primary/5 font-medium" : "hover:bg-muted/40"}`}><Checkbox checked={selecionada} onCheckedChange={() => alternar(tarefasSelecionadas, setTarefasSelecionadas, t.id)} /><span className="min-w-0 flex-1 truncate">{t.nome}</span>{selecionada && <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />}</label>; })}</div>}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><CalendarRange className="h-5 w-5" /> 3. Vigência</CardTitle></CardHeader>
+          <Card className="overflow-hidden"><CardHeader className="border-b bg-muted/20"><CardTitle className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">3</span><span className="flex items-center gap-2"><CalendarRange className="h-5 w-5" /> Vigência</span></CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2"><Label>Início</Label><BrDateTimeField id="lote-inicio" value={vigenciaDraft.data_inicio} onChange={(data_inicio) => setVigenciaDraft({ ...vigenciaDraft, data_inicio })} /></div>
@@ -278,25 +288,37 @@ function CadastroUnicoPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Link2 className="h-5 w-5" /> 4. Associações</CardTitle></CardHeader>
+          <Card className="overflow-hidden border-primary/20"><CardHeader className="border-b bg-primary/5"><CardTitle className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">4</span><span className="flex items-center gap-2"><Link2 className="h-5 w-5" /> Associações</span></CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-lg border bg-muted/30 p-3 text-sm">Selecionados: <strong>{filhosSelecionados.length}</strong> filho(s) × <strong>{tarefasSelecionadas.length}</strong> tarefa(s) = <strong>{totalCombinacoes}</strong> associação(ões).</div>
-              <Button onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}>Criar associações em lote</Button>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border bg-card p-3 text-center"><p className="text-2xl font-bold">{filhosSelecionados.length}</p><p className="text-xs text-muted-foreground">filho(s)</p></div>
+                <div className="rounded-lg border bg-card p-3 text-center"><p className="text-2xl font-bold">{tarefasSelecionadas.length}</p><p className="text-xs text-muted-foreground">tarefa(s)</p></div>
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-center"><p className="text-2xl font-bold text-primary">{totalCombinacoes}</p><p className="text-xs text-muted-foreground">associação(ões)</p></div>
+              </div>
+              {filhosSelecionados.length > 0 && tarefasSelecionadas.length > 0 && <div className="rounded-xl border bg-muted/20 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Resumo do lote</p>
+                <div className="space-y-2">{filhos.filter((f) => filhosSelecionados.includes(f.id)).map((f) => <div key={f.id} className="rounded-lg bg-background px-3 py-2 text-sm"><span className="font-semibold">{f.nome}</span><span className="text-muted-foreground"> receberá {tarefasSelecionadas.length} tarefa(s)</span></div>)}</div>
+              </div>}
+              <Button className="w-full sm:w-auto" onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Criar {totalCombinacoes || ""} associação(ões)</Button>
             </CardContent>
           </Card>
         </>
       ) : (
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Copy className="h-5 w-5" /> Duplicar vigência existente</CardTitle></CardHeader>
+        <Card className="overflow-hidden border-primary/20">
+          <CardHeader className="border-b bg-primary/5"><CardTitle className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Copy className="h-5 w-5" /></span><span>Duplicar vigência existente</span></CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <Pick label="Vigência modelo" value={modeloId} onChange={escolherModelo} options={vigenciasOrdenadas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: new Date(v.data_fim).getTime() < Date.now() ? "finalizada" as const : new Date(v.data_inicio).getTime() > Date.now() ? "futura" as const : "andamento" as const }))} />
             {modelo && (
               <>
-                <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-                  <p className="font-semibold">{fmtVigencia(modelo)}</p>
-                  <p className="mt-1 text-muted-foreground">{new Set(associacoesModelo.map((a) => a.id_filho)).size} filho(s), {new Set(associacoesModelo.map((a) => a.id_tarefa)).size} tarefa(s), {associacoesModelo.length} associação(ões).</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Fez, Não fez, bonificações, penalidades atingidas e contadores não serão copiados.</p>
+                <div className="rounded-xl border bg-muted/20 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência modelo</p>
+                  <p className="mt-1 font-semibold">{fmtVigencia(modelo)}</p>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold">{new Set(associacoesModelo.map((a) => a.id_filho)).size}</p><p className="text-[10px] text-muted-foreground">filhos</p></div>
+                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold">{new Set(associacoesModelo.map((a) => a.id_tarefa)).size}</p><p className="text-[10px] text-muted-foreground">tarefas</p></div>
+                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold text-primary">{associacoesModelo.length}</p><p className="text-[10px] text-muted-foreground">associações</p></div>
+                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">Somente a estrutura será copiada. Fez, Não fez, bonificações, penalidades atingidas e contadores começam zerados.</p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2"><Label>Novo início</Label><BrDateTimeField id="duplicar-lote-inicio" value={duplicacao.data_inicio} min={paraCampoDataHoraBrasil(new Date(new Date(modelo.data_fim).getTime() + 60_000).toISOString())} onChange={(data_inicio) => setDuplicacao({ ...duplicacao, data_inicio })} /></div>
