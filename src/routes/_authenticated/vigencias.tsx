@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
-import { compararVigencias, VigenciaStatus } from "@/components/VigenciaStatus";
+import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { reais, usaDesconto } from "@/lib/mesada";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -330,8 +330,9 @@ function VigenciasPage() {
       <div className="space-y-3">
         {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
         {vigenciasOrdenadas.map((v) => {
-          const finalizada = new Date(v.data_fim).getTime() < agora;
-          const emAndamento = new Date(v.data_inicio).getTime() <= agora && !finalizada;
+          const situacao = situacaoVigencia(v, agora);
+          const finalizada = situacao === "finalizada";
+          const emAndamento = situacao === "andamento";
           const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
           return <div key={v.id} className="rounded-2xl border bg-card p-4">
             <div className="flex items-start justify-between gap-3">
