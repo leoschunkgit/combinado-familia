@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppDeepLinkListener } from "@/components/AppDeepLinkListener";
 import { AppResumeRefresh } from "@/components/AppResumeRefresh";
 import { AndroidBackButton } from "@/components/AndroidBackButton";
+import { ActionLoadingProvider } from "@/components/ActionLoading";
 
 function NotFoundComponent() {
   return (
@@ -139,11 +140,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppDeepLinkListener />
-      <AppResumeRefresh />
-      <AndroidBackButton />
-      <Outlet />
-      <Toaster richColors position="top-center" />
+      <ActionLoadingProvider>
+        <AppDeepLinkListener />
+        <AppResumeRefresh />
+        <AndroidBackButton />
+        <Outlet />
+        <Toaster richColors position="top-center" />
+      </ActionLoadingProvider>
     </QueryClientProvider>
   );
 }
