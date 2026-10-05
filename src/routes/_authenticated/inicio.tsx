@@ -11,7 +11,7 @@ function Inicio() {
     { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
     { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
     { numero: "3", titulo: "Faça as atribuições", texto: "Associe os filhos às tarefas e defina as vigências dos combinados.", to: "/atribuicoes", icon: Link2 },
-    { numero: "4", titulo: "Registre as ocorrências", texto: "Marque quando um combinado não foi cumprido e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
+    { numero: "4", titulo: "Registre Fez / Não fez", texto: "Marque quando um combinado foi ou não foi cumprido e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
     { numero: "5", titulo: "Consulte o histórico", texto: "Veja o que aconteceu ao longo das vigências e acompanhe os registros.", to: "/historico", icon: History },
   ];
 
@@ -83,7 +83,7 @@ function Inicio() {
           <div>
             <h2 className="font-semibold">A primeira ação é cadastrar os filhos</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Depois disso, você poderá criar as tarefas, fazer as atribuições e definir as vigências. Quando estiver tudo configurado, as ocorrências ficam prontas para serem registradas e o histórico para ser consultado.
+              Depois disso, você poderá criar as tarefas, fazer as atribuições e definir as vigências. Quando estiver tudo configurado, os registros de Fez / Não fez ficam prontos para serem lançados e o histórico para ser consultado.
             </p>
           </div>
         </div>
