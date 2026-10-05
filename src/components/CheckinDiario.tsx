@@ -109,7 +109,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
     setBusy(true);
     try {
       const { error } = await supabase.from("t_ocorrencia").insert({
-        tipo: penalizado ? "PENALIDADE" : "NAO_FEZ",
+        tipo: "NAO_FEZ",
         bonificacao_tipo: null,
         bonificacao_descricao: null,
         bonificacao_valor: null,
