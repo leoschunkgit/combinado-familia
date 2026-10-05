@@ -72,7 +72,6 @@ function CadastroUnicoPage() {
   const [valorMesada, setValorMesada] = useState("");
   const [nomeTarefa, setNomeTarefa] = useState("");
   const [filhosSelecionados, setFilhosSelecionados] = useState<number[]>([]);
-  const [filhosCriadosNoFluxo, setFilhosCriadosNoFluxo] = useState<number[]>([]);
   const [filhosNovosPendentes, setFilhosNovosPendentes] = useState<FilhoNovoFluxo[]>([]);
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
   const [tarefasNovasPendentes, setTarefasNovasPendentes] = useState<TarefaNovaFluxo[]>([]);
@@ -137,7 +136,6 @@ function CadastroUnicoPage() {
 
       idsNovos = data.map((item) => item.id);
       setFilhosSelecionados((atuais) => [...new Set([...atuais, ...idsNovos])]);
-      setFilhosCriadosNoFluxo((atuais) => [...new Set([...atuais, ...idsNovos])]);
       setFilhosNovosPendentes([]);
       await qc.invalidateQueries({ queryKey: ["filhos"] });
     }
@@ -392,7 +390,6 @@ function CadastroUnicoPage() {
                     <div className="mt-2 divide-y rounded-lg border bg-background">
                       {filhos.map((f) => {
                         const selecionado = filhosSelecionados.includes(f.id);
-                        const criadoNoFluxo = filhosCriadosNoFluxo.includes(f.id);
                         return (
                           <label key={f.id} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/30">
                             <Checkbox checked={selecionado} onCheckedChange={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)} />
@@ -400,7 +397,6 @@ function CadastroUnicoPage() {
                             <span className="shrink-0 text-xs text-muted-foreground">
                               {f.tem_mesada && f.valor_mesada != null ? `R$ ${Number(f.valor_mesada).toFixed(2).replace(".", ",")}` : "Sem mesada"}
                             </span>
-                            {!criadoNoFluxo && <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">Já existia</span>}
                           </label>
                         );
                       })}
@@ -411,7 +407,6 @@ function CadastroUnicoPage() {
                           <span className="shrink-0 text-xs text-muted-foreground">
                             {f.tem_mesada && f.valor_mesada != null ? `R$ ${f.valor_mesada.toFixed(2).replace(".", ",")}` : "Sem mesada"}
                           </span>
-                          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Novo</span>
                         </div>
                       ))}
                     </div>
@@ -484,7 +479,6 @@ function CadastroUnicoPage() {
                         <div key={t.tempId} className="flex items-center gap-2.5 px-3 py-2 text-sm">
                           <Checkbox checked disabled />
                           <span className="min-w-0 flex-1 truncate font-medium">{t.nome}</span>
-                          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Nova</span>
                         </div>
                       ))}
                     </div>
