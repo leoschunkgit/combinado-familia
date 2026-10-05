@@ -230,24 +230,24 @@ function CadastroUnicoPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader title="Cadastro Fluxo" description="Cadastre vários filhos e tarefas em lote, crie associações e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <button type="button" onClick={() => setModo("novo")} className={`rounded-xl border p-4 text-left transition ${modo === "novo" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
+        <button type="button" onClick={() => setModo("novo")} className={`rounded-lg border p-3 text-left transition ${modo === "novo" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
           <span className="flex items-center gap-3"><span className={`flex h-10 w-10 items-center justify-center rounded-lg ${modo === "novo" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><Plus className="h-5 w-5" /></span><span><span className="block font-semibold">Montar novo cadastro</span><span className="block text-xs text-muted-foreground">Filhos, tarefas, vigência e associações em lote</span></span></span>
         </button>
-        <button type="button" onClick={() => setModo("duplicar")} className={`rounded-xl border p-4 text-left transition ${modo === "duplicar" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
+        <button type="button" onClick={() => setModo("duplicar")} className={`rounded-lg border p-3 text-left transition ${modo === "duplicar" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
           <span className="flex items-center gap-3"><span className={`flex h-10 w-10 items-center justify-center rounded-lg ${modo === "duplicar" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><Copy className="h-5 w-5" /></span><span><span className="block font-semibold">Duplicar vigência</span><span className="block text-xs text-muted-foreground">Reaproveite regras e associações existentes</span></span></span>
         </button>
       </div>
 
       {modo === "novo" ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {etapaNovo > 1 && (
             <Card className="overflow-hidden">
-              <CardContent className="flex items-center gap-3 p-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-4 w-4" /></span>
+              <CardContent className="flex items-center gap-2.5 px-3 py-2">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">1. Filhos</p>
                   <p className="truncate text-xs text-muted-foreground">{filhosSelecionados.length} filho(s) selecionado(s) para este fluxo</p>
@@ -259,24 +259,24 @@ function CadastroUnicoPage() {
 
           {etapaNovo === 1 && (
             <Card className="overflow-hidden border-primary/20">
-              <CardHeader className="border-b bg-primary/5 py-3"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span><span className="flex items-center gap-2"><Users className="h-4 w-4" /> Filhos</span></CardTitle></CardHeader>
-              <CardContent className="space-y-4 p-4">
-                <div className="rounded-lg border bg-muted/20 p-3">
+              <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span><span className="flex items-center gap-2"><Users className="h-4 w-4" /> Filhos</span></CardTitle></CardHeader>
+              <CardContent className="space-y-3 p-3.5">
+                <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar novo filho</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">Cadastre um novo filho e ele já será incluído neste fluxo.</p>
-                  <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
+                  <div className="mt-2 grid gap-2.5 md:grid-cols-[1fr_auto_auto] md:items-end">
                     <div className="space-y-1.5"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
                     <label className="flex h-10 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
                     {temMesada && <div className="space-y-1.5"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
                   </div>
-                  <Button className="mt-3" size="sm" onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar ao fluxo</Button>
+                  <Button className="mt-2" size="sm" onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar ao fluxo</Button>
                 </div>
 
                 {filhos.length > 0 && (
                   <div>
                     <p className="text-sm font-semibold">Usar filhos já cadastrados</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">Escolha quem participa deste fluxo. Isso não cria outro cadastro.</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    <div className="mt-2 grid gap-1.5 sm:grid-cols-2 md:grid-cols-3">
                       {filhos.map((f) => {
                         const selecionado = filhosSelecionados.includes(f.id);
                         return (
@@ -290,7 +290,7 @@ function CadastroUnicoPage() {
                   </div>
                 )}
 
-                <div className="flex justify-end border-t pt-3">
+                <div className="flex justify-end border-t pt-2.5">
                   <Button onClick={() => setEtapaNovo(2)} disabled={filhosSelecionados.length === 0}>Continuar para tarefas</Button>
                 </div>
               </CardContent>
@@ -299,8 +299,8 @@ function CadastroUnicoPage() {
 
           {etapaNovo > 2 && (
             <Card className="overflow-hidden">
-              <CardContent className="flex items-center gap-3 p-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-4 w-4" /></span>
+              <CardContent className="flex items-center gap-2.5 px-3 py-2">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
                 <div className="min-w-0 flex-1"><p className="text-sm font-semibold">2. Tarefas</p><p className="truncate text-xs text-muted-foreground">{tarefasSelecionadas.length} tarefa(s) selecionada(s)</p></div>
                 <Button variant="ghost" size="sm" onClick={() => setEtapaNovo(2)}>Editar</Button>
               </CardContent>
@@ -309,9 +309,9 @@ function CadastroUnicoPage() {
 
           {etapaNovo === 2 && (
             <Card className="overflow-hidden border-primary/20">
-              <CardHeader className="border-b bg-primary/5 py-3"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span><span className="flex items-center gap-2"><ListTodo className="h-4 w-4" /> Tarefas</span></CardTitle></CardHeader>
-              <CardContent className="space-y-4 p-4">
-                <div className="rounded-lg border bg-muted/20 p-3">
+              <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span><span className="flex items-center gap-2"><ListTodo className="h-4 w-4" /> Tarefas</span></CardTitle></CardHeader>
+              <CardContent className="space-y-3 p-3.5">
+                <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar nova tarefa</p>
                   <div className="mt-2 flex gap-2"><Input value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Nome da tarefa" /><Button size="sm" onClick={() => void runAction(cadastrarTarefa)}><Plus className="h-4 w-4" /> Adicionar ao fluxo</Button></div>
                 </div>
@@ -319,7 +319,7 @@ function CadastroUnicoPage() {
                   <div>
                     <p className="text-sm font-semibold">Usar tarefas já cadastradas</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">Selecione as tarefas que farão parte deste fluxo.</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    <div className="mt-2 grid gap-1.5 sm:grid-cols-2 md:grid-cols-3">
                       {tarefas.map((t) => {
                         const selecionada = tarefasSelecionadas.includes(t.id);
                         return <button type="button" key={t.id} onClick={() => alternar(tarefasSelecionadas, setTarefasSelecionadas, t.id)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition ${selecionada ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background hover:bg-muted/40"}`}><span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selecionada ? "border-primary bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{selecionada ? <CheckCircle2 className="h-3.5 w-3.5" /> : <ListTodo className="h-3 w-3" />}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{t.nome}</span><span className={`block text-[10px] ${selecionada ? "text-primary" : "text-muted-foreground"}`}>{selecionada ? "Selecionada para este fluxo" : "Selecionar para este fluxo"}</span></span></button>;
@@ -327,15 +327,15 @@ function CadastroUnicoPage() {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center justify-between border-t pt-3"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(1)}>Anterior</Button><Button onClick={() => setEtapaNovo(3)} disabled={tarefasSelecionadas.length === 0}>Continuar para vigência</Button></div>
+                <div className="flex items-center justify-between border-t pt-2.5"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(1)}>Anterior</Button><Button onClick={() => setEtapaNovo(3)} disabled={tarefasSelecionadas.length === 0}>Continuar para vigência</Button></div>
               </CardContent>
             </Card>
           )}
 
           {etapaNovo > 3 && (
             <Card className="overflow-hidden">
-              <CardContent className="flex items-center gap-3 p-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-4 w-4" /></span>
+              <CardContent className="flex items-center gap-2.5 px-3 py-2">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
                 <div className="min-w-0 flex-1"><p className="text-sm font-semibold">3. Vigência</p><p className="truncate text-xs text-muted-foreground">Vigência criada para este fluxo</p></div>
               </CardContent>
             </Card>
@@ -343,8 +343,8 @@ function CadastroUnicoPage() {
 
           {etapaNovo === 3 && (
             <Card className="overflow-hidden border-primary/20">
-              <CardHeader className="border-b bg-primary/5 py-3"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span><span className="flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Vigência</span></CardTitle></CardHeader>
-              <CardContent className="space-y-3 p-4">
+              <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span><span className="flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Vigência</span></CardTitle></CardHeader>
+              <CardContent className="space-y-3 p-3.5">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5"><Label>Início</Label><BrDateTimeField id="lote-inicio" value={vigenciaDraft.data_inicio} onChange={(data_inicio) => setVigenciaDraft({ ...vigenciaDraft, data_inicio })} /></div>
                   <div className="space-y-1.5"><Label>Fim</Label><BrDateTimeField id="lote-fim" value={vigenciaDraft.data_fim} min={vigenciaDraft.data_inicio} onChange={(data_fim) => setVigenciaDraft({ ...vigenciaDraft, data_fim })} /></div>
@@ -354,25 +354,25 @@ function CadastroUnicoPage() {
                   <div className="space-y-1.5"><Label>Quantidade de “Não fez”</Label><Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} /></div>
                   <div className="space-y-1.5"><Label>Desconto por “Não fez”</Label><CurrencyInput value={vigenciaDraft.valor_debito} onValueChange={(valor_debito) => setVigenciaDraft({ ...vigenciaDraft, valor_debito })} /></div>
                 </div>
-                <div className="flex items-center justify-between border-t pt-3"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(2)}>Anterior</Button><Button onClick={() => void runAction(criarVigencia)}>Criar vigência e continuar</Button></div>
+                <div className="flex items-center justify-between border-t pt-2.5"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(2)}>Anterior</Button><Button onClick={() => void runAction(criarVigencia)}>Criar vigência e continuar</Button></div>
               </CardContent>
             </Card>
           )}
 
           {etapaNovo === 4 && (
             <Card className="overflow-hidden border-primary/20">
-              <CardHeader className="border-b bg-primary/5 py-3"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">4</span><span className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Associações</span></CardTitle></CardHeader>
-              <CardContent className="space-y-3 p-4">
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <div className="rounded-lg border bg-card p-2 text-center"><p className="text-xl font-bold">{filhosSelecionados.length}</p><p className="text-[11px] text-muted-foreground">filho(s)</p></div>
-                  <div className="rounded-lg border bg-card p-2 text-center"><p className="text-xl font-bold">{tarefasSelecionadas.length}</p><p className="text-[11px] text-muted-foreground">tarefa(s)</p></div>
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-2 text-center"><p className="text-xl font-bold text-primary">{totalCombinacoes}</p><p className="text-[11px] text-muted-foreground">associação(ões)</p></div>
+              <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">4</span><span className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Associações</span></CardTitle></CardHeader>
+              <CardContent className="space-y-3 p-3.5">
+                <div className="grid gap-1.5 sm:grid-cols-3">
+                  <div className="rounded-lg border bg-card px-2 py-1.5 text-center"><p className="text-xl font-bold">{filhosSelecionados.length}</p><p className="text-[11px] text-muted-foreground">filho(s)</p></div>
+                  <div className="rounded-lg border bg-card px-2 py-1.5 text-center"><p className="text-xl font-bold">{tarefasSelecionadas.length}</p><p className="text-[11px] text-muted-foreground">tarefa(s)</p></div>
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-2 py-1.5 text-center"><p className="text-xl font-bold text-primary">{totalCombinacoes}</p><p className="text-[11px] text-muted-foreground">associação(ões)</p></div>
                 </div>
-                <div className="rounded-lg border bg-muted/20 p-3">
+                <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Resumo</p>
                   <div className="space-y-1.5">{filhos.filter((f) => filhosSelecionados.includes(f.id)).map((f) => <div key={f.id} className="rounded-md bg-background px-3 py-2 text-sm"><span className="font-semibold">{f.nome}</span><span className="text-muted-foreground"> receberá {tarefasSelecionadas.length} tarefa(s)</span></div>)}</div>
                 </div>
-                <div className="flex justify-end border-t pt-3"><Button onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Criar {totalCombinacoes} associação(ões)</Button></div>
+                <div className="flex justify-end border-t pt-2.5"><Button onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Criar {totalCombinacoes} associação(ões)</Button></div>
               </CardContent>
             </Card>
           )}
