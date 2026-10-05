@@ -25,3 +25,4 @@
 - [x] Validar desconto máximo contra mesada ao atribuir e ao editar filho ou vigência, sem depender da ordem de cadastro.
 - [x] Corrigir o contexto de processamento compartilhado para evitar tela em branco nas páginas autenticadas.
 - [x] Remover referências ao CPF inexistente da conta e do primeiro acesso; permitir editar apenas nome, mostrar email e corrigir troca de senha.
+- [ ] Aplicar, em ordem e sem alterações, as migrations 0021, 0022 e 0023.
