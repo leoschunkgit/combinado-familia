@@ -61,6 +61,7 @@ function CadastroUnicoPage() {
   const [valorMesada, setValorMesada] = useState("");
   const [nomeTarefa, setNomeTarefa] = useState("");
   const [filhosSelecionados, setFilhosSelecionados] = useState<number[]>([]);
+  const [filhosCriadosNoFluxo, setFilhosCriadosNoFluxo] = useState<number[]>([]);
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
   const [vigenciaDraft, setVigenciaDraft] = useState<VigenciaDraft>(() => vigenciaInicial());
   const [vigenciaCriadaId, setVigenciaCriadaId] = useState<number | null>(null);
@@ -90,6 +91,7 @@ function CadastroUnicoPage() {
     }).select("id").single();
     if (error || !data) { toast.error(msgErro(error)); return; }
     setFilhosSelecionados((atuais) => [...new Set([...atuais, data.id])]);
+    setFilhosCriadosNoFluxo((atuais) => [...new Set([...atuais, data.id])]);
     setNomeFilho(""); setTemMesada(false); setValorMesada("");
     await qc.invalidateQueries({ queryKey: ["filhos"] });
     toast.success("Filho adicionado ao lote");
@@ -274,16 +276,20 @@ function CadastroUnicoPage() {
 
                 {filhos.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold">Usar filhos já cadastrados</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">Escolha quem participa deste fluxo. Isso não cria outro cadastro.</p>
-                    <div className="mt-2 grid gap-1.5 sm:grid-cols-2 md:grid-cols-3">
+                    <p className="text-sm font-semibold">Filhos</p>
+                    <div className="mt-2 divide-y rounded-lg border bg-background">
                       {filhos.map((f) => {
                         const selecionado = filhosSelecionados.includes(f.id);
+                        const criadoNoFluxo = filhosCriadosNoFluxo.includes(f.id);
                         return (
-                          <button type="button" key={f.id} onClick={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition ${selecionado ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background hover:bg-muted/40"}`}>
-                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selecionado ? "border-primary bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{selecionado ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Users className="h-3 w-3" />}</span>
-                            <span className="min-w-0 flex-1"><span className="block truncate font-medium">{f.nome}</span><span className={`block text-[10px] ${selecionado ? "text-primary" : "text-muted-foreground"}`}>{selecionado ? "Selecionado para este fluxo" : "Selecionar para este fluxo"}</span></span>
-                          </button>
+                          <label key={f.id} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/30">
+                            <Checkbox checked={selecionado} onCheckedChange={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)} />
+                            <span className="min-w-0 flex-1 truncate font-medium">{f.nome}</span>
+                            <span className="shrink-0 text-xs text-muted-foreground">
+                              {f.tem_mesada && f.valor_mesada != null ? `R$ ${Number(f.valor_mesada).toFixed(2).replace(".", ",")}` : "Sem mesada"}
+                            </span>
+                            {!criadoNoFluxo && <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">Já existia</span>}
+                          </label>
                         );
                       })}
                     </div>
