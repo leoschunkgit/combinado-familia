@@ -30,6 +30,7 @@ const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
 export function OnboardingInicial() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const { data: filhos = [], isLoading: carregandoFilhos } = useFilhos();
   const { data: tarefas = [], isLoading: carregandoTarefas } = useTarefas();
   const { data: vigencias = [], isLoading: carregandoVigencias } = useVigencias();
@@ -295,7 +296,7 @@ export function OnboardingInicial() {
                 <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
               </div>
             )}
-            <Button className="w-full" disabled={salvando} onClick={() => void cadastrarFilho()}>
+            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarFilho)}>
               {salvando ? "Salvando..." : "Cadastrar filho e continuar"}
             </Button>
           </div>
@@ -315,7 +316,7 @@ export function OnboardingInicial() {
               <Label htmlFor="onboarding-tarefa">Nome da tarefa *</Label>
               <Input id="onboarding-tarefa" autoFocus value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Ex.: Arrumar a cama" />
             </div>
-            <Button className="w-full" disabled={salvando} onClick={() => void cadastrarTarefa()}>
+            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarTarefa)}>
               {salvando ? "Salvando..." : "Cadastrar tarefa e continuar"}
             </Button>
           </div>
@@ -353,7 +354,7 @@ export function OnboardingInicial() {
                 <p className="text-xs text-muted-foreground">Usado para filhos com mesada.</p>
               </div>
             </div>
-            <Button className="w-full" disabled={salvando} onClick={() => void cadastrarVigencia()}>
+            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarVigencia)}>
               {salvando ? "Salvando..." : vigenciaEmCorrecaoId !== null ? "Salvar correção e voltar para associação" : "Cadastrar vigência e continuar"}
             </Button>
           </div>
@@ -376,7 +377,7 @@ export function OnboardingInicial() {
               <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirVigencia}>
                 Voltar para corrigir vigência
               </Button>
-              <Button className="w-full" disabled={salvando} onClick={() => void cadastrarAssociacao()}>
+              <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarAssociacao)}>
                 {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
               </Button>
             </div>
