@@ -23,7 +23,15 @@ export const Route = createFileRoute("/_authenticated")({
     if (!pai) {
       const meta = user.user_metadata ?? {};
       nome = (meta["nome"] as string) || user.email?.split("@")[0] || "Responsável";
-      await supabase.from("t_usuario_pai").insert({ nome, email: user.email ?? "" });
+      const { data: criado, error: criarErro } = await supabase
+        .from("t_usuario_pai")
+        .insert({ nome, email: user.email ?? "" })
+        .select("id, nome")
+        .single();
+      if (criarErro || !criado) {
+        throw new Error("Não foi possível preparar os dados da conta do responsável.");
+      }
+      nome = criado.nome;
     }
     return { user, nomePai: nome ?? "" };
   },
