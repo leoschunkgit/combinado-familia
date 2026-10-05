@@ -41,8 +41,9 @@ function Notificacoes() {
     ...anteriores,
   ].sort((a, b) => b.data.localeCompare(a.data));
 
-  const gruposAnteriores = vigencias
+  const gruposAnteriores = [...vigencias]
     .filter(vigenciaEmAndamento)
+    .sort((a, b) => new Date(a.data_inicio).getTime() - new Date(b.data_inicio).getTime())
     .map((vigencia) => ({
       vigencia,
       filhos: filhos.map((filho) => ({
