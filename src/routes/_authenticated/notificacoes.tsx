@@ -28,7 +28,6 @@ function Notificacoes() {
   const hoje = useDataBrasilAtual();
   const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
   const dataAtual = hoje.split("-").reverse().join("/");
-  const quantidadeNotificacoes = new Set(pendencias.map((p) => p.id_filho)).size;
   const anteriores = pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
 
   const gruposAnteriores = vigencias
@@ -116,19 +115,20 @@ function Notificacoes() {
         </div>
       ) : (
         <>
-          <div className="rounded-2xl border bg-primary/5 p-4">
-            <p className="text-sm font-semibold">{quantidadeNotificacoes} {quantidadeNotificacoes === 1 ? "notificação pendente" : "notificações pendentes"} hoje</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Cada filho com pelo menos uma tarefa de hoje sem Fez ou Não fez gera uma notificação.
-            </p>
-          </div>
-
           <div className="space-y-5">
             {grupos.map(({ vigencia, filhos: gruposFilhos }) => (
               <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card">
                 <div className="border-b bg-muted/30 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência</p>
-                  <p className="mt-1 font-semibold">{fmtVigencia(vigencia)}</p>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência</p>
+                      <p className="mt-1 font-semibold">{fmtVigencia(vigencia)}</p>
+                    </div>
+                    <div className="shrink-0 text-left sm:text-right">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
+                      <p className="mt-1 text-sm font-semibold">{dataAtual}</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="divide-y">
