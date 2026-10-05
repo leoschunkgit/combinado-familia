@@ -324,7 +324,7 @@ function VigenciasPage() {
                 <Button variant="ghost" size="icon" onClick={() => abrirDuplicacao(v)} title="Duplicar vigência" aria-label="Duplicar vigência"><Copy className="h-4 w-4" /></Button>
                 {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
-                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : emAndamento && temAtribuicoes ? "Esta vigência está em andamento e tem atribuições, por isso não pode ser excluída." : undefined}><Button variant="ghost" size="icon" disabled={finalizada || (emAndamento && temAtribuicoes)} onClick={() => setConfirmarExclusao(v.id)}><Trash2 className="h-4 w-4" /></Button></BlockedAction>
+                <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência"><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
             <div className="mt-2 space-y-1.5">
