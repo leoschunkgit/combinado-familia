@@ -39,8 +39,8 @@ const schema = z.object({
   valor_mesada: z.string(),
 }).refine((v) => !v.tem_mesada || v.valor_mesada.trim() !== "", {
   message: "Informe o valor da mesada ao marcar ‘Tem mesada’", path: ["valor_mesada"],
-}).refine((v) => !v.tem_mesada || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_mesada) && Number(v.valor_mesada.replace(",", ".")) <= 9999999999.99), {
-  message: "Informe um valor válido com até duas casas decimais", path: ["valor_mesada"],
+}).refine((v) => !v.tem_mesada || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_mesada) && Number(v.valor_mesada.replace(",", ".")) > 0 && Number(v.valor_mesada.replace(",", ".")) <= 9999999999.99), {
+  message: "Informe um valor maior que zero, com até duas casas decimais", path: ["valor_mesada"],
 });
 
 type FilhoForm = z.input<typeof schema>;
