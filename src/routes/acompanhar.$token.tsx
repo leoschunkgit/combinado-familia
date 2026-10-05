@@ -69,7 +69,7 @@ function PainelPublico() {
   const qtdNaoFez = tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo !== "FEZ").length, 0);
   const qtdFez = tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length, 0);
   const descontoUnitario = Number(vigenciaAtual?.valor_debito ?? 0);
-  const desconto = painel.filho.tem_mesada ? qtdNaoFez * descontoUnitario : 0;
+  const desconto = painel.filho.tem_mesada ? Math.min(painel.filho.valor_mesada ?? 0, qtdNaoFez * descontoUnitario) : 0;
   const mesadaFinal = painel.filho.valor_mesada === null ? null : Math.max(0, painel.filho.valor_mesada - desconto);
   const resultados = tarefaDatas?.ocorrencias.filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ" || o.tipo === "PENALIDADE").sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
 
