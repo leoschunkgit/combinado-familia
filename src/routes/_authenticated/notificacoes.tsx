@@ -54,7 +54,16 @@ function Notificacoes() {
     .filter((g) => g.filhos.length > 0);
 
   function totalNaoFez(r: FilhoTarefa) {
-    return atribuicoes.filter((a) => a.id_filho === r.id_filho && a.id_vigencia === r.id_vigencia).reduce((s, a) => s + a.qtd_nao_fez, 0);
+    return ocorrencias.filter(
+      (o) =>
+        o.tipo !== "FEZ" &&
+        o.t_filho_tarefa?.id_filho === r.id_filho &&
+        o.t_filho_tarefa?.id_vigencia === r.id_vigencia,
+    ).length;
+  }
+
+  function totalNaoFezTarefa(r: FilhoTarefa) {
+    return ocorrencias.filter((o) => o.tipo !== "FEZ" && o.id_filho_tarefa === r.id).length;
   }
 
   async function registrarNaoFezAnterior(r: FilhoTarefa, data: string) {
@@ -68,7 +77,7 @@ function Notificacoes() {
     try {
       const { error } = await supabase.from("t_ocorrencia").insert({ tipo: penalizado ? "PENALIDADE" : "NAO_FEZ", bonificacao_tipo: null, bonificacao_descricao: null, bonificacao_valor: null, id_filho_tarefa: r.id, created_at: new Date(data + "T12:00:00-03:00").toISOString() });
       if (error) throw error;
-      const u = await supabase.from("t_filho_tarefa").update({ qtd_nao_fez: r.qtd_nao_fez + 1, feito: penalizado ? "N" : null }).eq("id", r.id);
+      const u = await supabase.from("t_filho_tarefa").update({ qtd_nao_fez: totalNaoFezTarefa(r) + 1, feito: penalizado ? "N" : null }).eq("id", r.id);
       if (u.error) throw u.error;
       if (penalizado) {
         const g = await supabase.from("t_filho_tarefa").update({ feito: "N" }).eq("id_filho", r.id_filho).eq("id_vigencia", r.id_vigencia);
