@@ -333,6 +333,20 @@ export type Database = {
     }
     Functions: {
       current_pai_id: { Args: never; Returns: number }
+      duplicar_vigencia_com_atribuicoes: {
+        Args: {
+          p_data_fim: string
+          p_data_inicio: string
+          p_modelo_id: number
+          p_penalidade: string
+          p_qtd_ocorrencia: number
+          p_valor_debito: number
+        }
+        Returns: {
+          id_vigencia: number
+          qtd_atribuicoes: number
+        }[]
+      }
       desativar_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: boolean
