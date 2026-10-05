@@ -12,7 +12,7 @@ function Inicio() {
     { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
     { numero: "3", titulo: "Faça as atribuições", texto: "Associe os filhos às tarefas e defina as vigências dos combinados.", to: "/atribuicoes", icon: Link2 },
     { numero: "4", titulo: "Registre Fez / Não fez", texto: "Marque quando um combinado foi ou não foi cumprido e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
-    { numero: "5", titulo: "Consulte o histórico", texto: "Veja o que aconteceu ao longo das vigências e acompanhe os registros.", to: "/historico", icon: History },
+    { numero: "5", titulo: "Relatório / Histórico", texto: "Veja o que aconteceu ao longo das vigências, acompanhe os registros e gere relatórios.", to: "/relatorio", icon: History },
   ];
 
   return (
