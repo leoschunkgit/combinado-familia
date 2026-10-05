@@ -14,7 +14,7 @@ import { BlockedAction } from "@/components/BlockedAction";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
-import { compararVigencias, VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
+import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -148,11 +148,7 @@ function AtribuicoesPage() {
   const statusVigencia = (v: (typeof vigencias)[number]) => ({
     value: String(v.id),
     label: fmtVigencia(v),
-    status: new Date(v.data_fim).getTime() < Date.now()
-      ? "finalizada" as const
-      : vigenciaEmAndamento(v)
-        ? "andamento" as const
-        : "futura" as const,
+    status: situacaoVigencia(v),
   });
 
   return (
