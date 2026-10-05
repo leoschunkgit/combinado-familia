@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -46,6 +46,36 @@ const schema = z.object({
 
 type VigenciaForm = { data_inicio: string; data_fim: string; penalidade: string; valor_debito: string; qtd_ocorrencia: string };
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", penalidade: "", valor_debito: "", qtd_ocorrencia: "3" };
+
+function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, base: VigenciaForm = vazio): VigenciaForm {
+  if (vigencias.length === 0) {
+    const inicio = new Date();
+    const fim = new Date(inicio);
+    fim.setMonth(fim.getMonth() + 1);
+    return {
+      ...base,
+      data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
+      data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
+    };
+  }
+
+  const maiorFim = vigencias.reduce((maior, vigencia) => {
+    const fim = new Date(vigencia.data_fim).getTime();
+    return fim > maior ? fim : maior;
+  }, Number.NEGATIVE_INFINITY);
+
+  const inicio = new Date(maiorFim);
+  inicio.setDate(inicio.getDate() + 1);
+
+  const fim = new Date(inicio);
+  fim.setMonth(fim.getMonth() + 1);
+
+  return {
+    ...base,
+    data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
+    data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
+  };
+}
 const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
 const diaCampo = (valor: string) => valor.slice(0, 10);
 const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) => ({ tipo_penalidade: "texto", penalidade: v.penalidade, valor_debito: Number(v.valor_debito.replace(",", ".")) });
@@ -88,6 +118,12 @@ function VigenciasPage() {
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
+  useEffect(() => {
+    if (!form.data_inicio && !form.data_fim) {
+      setForm((atual) => sugerirPeriodoVigencia(vigencias, atual));
+    }
+  }, [vigencias, form.data_inicio, form.data_fim]);
+
   function conflitaComVigenciaExistente(inicioCampo: string, fimCampo: string, ignorarId?: number) {
     const inicio = new Date(inicioCampo).getTime();
     const fim = new Date(fimCampo).getTime();
@@ -109,7 +145,9 @@ function VigenciasPage() {
     }
     const { error } = await supabase.from("t_vigencia").insert({ ...p.data, ...dadosPenalidade(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) });
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Vigência cadastrada"); setForm(vazio); qc.invalidateQueries({ queryKey: ["vigencias"] });
+    toast.success("Vigência cadastrada");
+    setForm(vazio);
+    qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
   async function finalizar(id: number) {
