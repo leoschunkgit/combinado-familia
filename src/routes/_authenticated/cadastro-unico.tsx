@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { CalendarRange, CheckCircle2, Copy, Link2, ListPlus, ListTodo, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -332,8 +332,6 @@ function CadastroUnicoPage() {
           </CardContent>
         </Card>
       )}
-
-      <div className="flex justify-end"><Link to="/inicio" className="text-sm text-muted-foreground underline">Sair do Cadastro Fluxo</Link></div>
     </div>
   );
 }
