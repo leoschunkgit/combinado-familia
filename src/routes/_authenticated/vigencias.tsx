@@ -88,10 +88,25 @@ function VigenciasPage() {
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
+  function conflitaComVigenciaExistente(inicioCampo: string, fimCampo: string, ignorarId?: number) {
+    const inicio = new Date(inicioCampo).getTime();
+    const fim = new Date(fimCampo).getTime();
+    return vigencias.some((v) => {
+      if (ignorarId !== undefined && v.id === ignorarId) return false;
+      const existenteInicio = new Date(v.data_inicio).getTime();
+      const existenteFim = new Date(v.data_fim).getTime();
+      return inicio <= existenteFim && fim >= existenteInicio;
+    });
+  }
+
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
+    if (conflitaComVigenciaExistente(p.data.data_inicio, p.data.data_fim)) {
+      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
+      return;
+    }
     const { error } = await supabase.from("t_vigencia").insert({ ...p.data, ...dadosPenalidade(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) });
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada"); setForm(vazio); qc.invalidateQueries({ queryKey: ["vigencias"] });
@@ -144,6 +159,10 @@ function VigenciasPage() {
     const fimOriginal = new Date(duplicando.data_fim).getTime();
     if (novoInicio <= fimOriginal) {
       toast.error("A nova vigência deve começar depois do término da vigência original");
+      return;
+    }
+    if (conflitaComVigenciaExistente(p.data.data_inicio, p.data.data_fim)) {
+      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
       return;
     }
 
