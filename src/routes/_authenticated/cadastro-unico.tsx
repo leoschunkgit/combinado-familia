@@ -265,12 +265,12 @@ function CadastroUnicoPage() {
               <CardContent className="space-y-3 p-3.5">
                 <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar novo filho</p>
-                                    <div className="mt-2 grid gap-2.5 md:grid-cols-[1fr_auto_auto] md:items-end">
-                    <div className="space-y-1.5"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
-                    <label className="flex h-10 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
-                    {temMesada && <div className="space-y-1.5"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
+                                    <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <div className="w-full space-y-1.5 sm:w-52"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
+                    <label className="flex h-10 shrink-0 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
+                    {temMesada && <div className="w-full space-y-1.5 sm:w-32"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
+                    <Button className="h-10 shrink-0" size="sm" onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar</Button>
                   </div>
-                  <Button className="mt-2" size="sm" onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar ao fluxo</Button>
                 </div>
 
                 {filhos.length > 0 && (
