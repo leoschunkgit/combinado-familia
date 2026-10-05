@@ -23,6 +23,7 @@ import {
   useVigencias,
 } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
+import { erroLimiteMesada } from "@/lib/limite-mesada";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
 
@@ -53,16 +54,18 @@ export function OnboardingInicial() {
   const [filhoSelecionado, setFilhoSelecionado] = useState("");
   const [tarefaSelecionada, setTarefaSelecionada] = useState("");
   const [vigenciaSelecionada, setVigenciaSelecionada] = useState("");
+  const [vigenciaEmCorrecaoId, setVigenciaEmCorrecaoId] = useState<number | null>(null);
 
   const carregando = carregandoFilhos || carregandoTarefas || carregandoVigencias || carregandoAtribuicoes;
   const vigenciasAtivas = vigencias.filter(vigenciaEmAndamento);
 
-  const etapa =
+  const etapaBase =
     filhos.length === 0 ? 0 :
     tarefas.length === 0 ? 1 :
     vigencias.length === 0 ? 2 :
     atribuicoes.length === 0 ? 3 :
     -1;
+  const etapa = vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
 
   const aberto = !carregando && etapa >= 0;
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
@@ -122,6 +125,21 @@ export function OnboardingInicial() {
     await qc.invalidateQueries({ queryKey: ["tarefas"] });
   }
 
+  function voltarParaCorrigirVigencia() {
+    const vigencia = vigencias.find((v) => String(v.id) === vigenciaAtual);
+    if (!vigencia) {
+      toast.error("Selecione uma vigência para corrigir.");
+      return;
+    }
+
+    setVigenciaEmCorrecaoId(vigencia.id);
+    setInicioVigencia(paraCampoDataHoraBrasil(vigencia.data_inicio));
+    setFimVigencia(paraCampoDataHoraBrasil(vigencia.data_fim));
+    setPenalidade(vigencia.penalidade ?? "");
+    setQuantidade(String(vigencia.qtd_ocorrencia));
+    setDesconto(vigencia.valor_debito === null ? "" : vigencia.valor_debito.toFixed(2).replace(".", ","));
+  }
+
   async function cadastrarVigencia() {
     if (!inicioVigencia || !fimVigencia) {
       toast.error("Informe o início e o fim da vigência");
@@ -158,15 +176,27 @@ export function OnboardingInicial() {
     }
 
     const valorDebito = Number(desconto.replace(",", "."));
+    const filhoDoOnboarding = filhos.find((filho) => String(filho.id) === filhoAtual) ?? filhos[0];
+    if (filhoDoOnboarding) {
+      const erroMesada = erroLimiteMesada(filhoDoOnboarding, { valor_debito: valorDebito, qtd_ocorrencia: qtd });
+      if (erroMesada) {
+        toast.error(erroMesada);
+        return;
+      }
+    }
+
     setSalvando(true);
-    const { error } = await supabase.from("t_vigencia").insert({
+    const payload = {
       data_inicio: paraIsoDataHoraBrasil(inicioVigencia),
       data_fim: paraIsoDataHoraBrasil(fimVigencia),
       penalidade: textoPenalidade,
       qtd_ocorrencia: qtd,
       tipo_penalidade: "texto",
       valor_debito: valorDebito,
-    });
+    };
+    const { error } = vigenciaEmCorrecaoId === null
+      ? await supabase.from("t_vigencia").insert(payload)
+      : await supabase.from("t_vigencia").update(payload).eq("id", vigenciaEmCorrecaoId);
     setSalvando(false);
 
     if (error) {
@@ -174,7 +204,9 @@ export function OnboardingInicial() {
       return;
     }
 
-    toast.success("Vigência cadastrada. Falta só fazer a associação.");
+    const corrigiu = vigenciaEmCorrecaoId !== null;
+    setVigenciaEmCorrecaoId(null);
+    toast.success(corrigiu ? "Vigência corrigida. Agora conclua a associação." : "Vigência cadastrada. Falta só fazer a associação.");
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
@@ -182,6 +214,17 @@ export function OnboardingInicial() {
     if (!filhoAtual || !tarefaAtual || !vigenciaAtual) {
       toast.error("Selecione o filho, a tarefa e a vigência");
       return;
+    }
+
+    const filho = filhos.find((item) => String(item.id) === filhoAtual);
+    const vigencia = vigencias.find((item) => String(item.id) === vigenciaAtual);
+    if (filho && vigencia) {
+      const erroMesada = erroLimiteMesada(filho, vigencia);
+      if (erroMesada) {
+        toast.error(erroMesada);
+        voltarParaCorrigirVigencia();
+        return;
+      }
     }
 
     setSalvando(true);
@@ -285,7 +328,7 @@ export function OnboardingInicial() {
               <span>Filho e tarefa prontos. Agora defina o período e as regras do combinado.</span>
             </div>
             <div>
-              <h3 className="font-semibold">3. Crie uma vigência</h3>
+              <h3 className="font-semibold">{vigenciaEmCorrecaoId !== null ? "3. Corrija a vigência" : "3. Crie uma vigência"}</h3>
               <p className="mt-1 text-sm text-muted-foreground">Para seguir direto até Fez / Não fez, crie uma vigência que já esteja em andamento.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -311,7 +354,7 @@ export function OnboardingInicial() {
               </div>
             </div>
             <Button className="w-full" disabled={salvando} onClick={() => void cadastrarVigencia()}>
-              {salvando ? "Salvando..." : "Cadastrar vigência e continuar"}
+              {salvando ? "Salvando..." : vigenciaEmCorrecaoId !== null ? "Salvar correção e voltar para associação" : "Cadastrar vigência e continuar"}
             </Button>
           </div>
         )}
@@ -329,9 +372,14 @@ export function OnboardingInicial() {
             <Pick label="Filho" required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <Pick label="Tarefa" required value={tarefaAtual} onChange={setTarefaSelecionada} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
             <Pick label="Vigência" required value={vigenciaAtual} onChange={setVigenciaSelecionada} options={vigenciasAtivas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: "andamento" as const }))} />
-            <Button className="w-full" disabled={salvando} onClick={() => void cadastrarAssociacao()}>
-              {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
-            </Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirVigencia}>
+                Voltar para corrigir vigência
+              </Button>
+              <Button className="w-full" disabled={salvando} onClick={() => void cadastrarAssociacao()}>
+                {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
