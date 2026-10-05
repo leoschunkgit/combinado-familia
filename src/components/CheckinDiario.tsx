@@ -25,7 +25,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
   const { data: ocorrencias = [], isLoading: carregandoOcorrencias } = useOcorrencias();
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
-  const [filhosAbertos, setFilhosAbertos] = useState<Set<string> | null>(null);
+  const [filhosAbertos, setFilhosAbertos] = useState<Set<string>>(new Set());
   const hoje = useDataBrasilAtual();
   const pendenciasHoje = useMemo(
     () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")),
@@ -184,15 +184,11 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
   const chavesFilhos = grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
     gruposFilhos.map(({ filho }) => `${vigencia.id}|${filho.id}`),
   );
-  const primeiraChaveFilho = chavesFilhos[0] ?? null;
-  const filhoAberto = (chave: string) =>
-    filhosAbertos === null ? chave === primeiraChaveFilho : filhosAbertos.has(chave);
+  const filhoAberto = (chave: string) => filhosAbertos.has(chave);
 
   function alternarFilho(chave: string) {
     setFilhosAbertos((atual) => {
-      const base = atual === null
-        ? new Set(primeiraChaveFilho ? [primeiraChaveFilho] : [])
-        : new Set(atual);
+      const base = new Set(atual);
       if (base.has(chave)) base.delete(chave);
       else base.add(chave);
       return base;
@@ -269,7 +265,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                           </div>
                         </div>
                         <span className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted-foreground">
-                          {tarefas.length} {tarefas.length === 1 ? "tarefa" : "tarefas"}
+                          {tarefas.length} {tarefas.length === 1 ? "pendência" : "pendências"}
                           {abertoFilho ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </span>
                       </button>
@@ -416,9 +412,6 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
           })}
         </div>
 
-        <div className="text-center text-xs text-muted-foreground">
-          {pendencias.length} {pendencias.length === 1 ? "pendência" : "pendências"} sem marcação
-        </div>
 
         <DialogFooter className="border-t pt-4">
           <Button
