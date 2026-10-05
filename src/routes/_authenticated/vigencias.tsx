@@ -46,6 +46,8 @@ const schema = z.object({
 
 type VigenciaForm = { data_inicio: string; data_fim: string; penalidade: string; valor_debito: string; qtd_ocorrencia: string };
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", penalidade: "", valor_debito: "", qtd_ocorrencia: "3" };
+const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
+const diaCampo = (valor: string) => valor.slice(0, 10);
 const dadosPenalidade = (v: Pick<VigenciaForm, "penalidade" | "valor_debito">) => ({ tipo_penalidade: "texto", penalidade: v.penalidade, valor_debito: Number(v.valor_debito.replace(",", ".")) });
 
 function EscolhaPenalidade({ value, onChange, prefix, mostrarPenalidade = true }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string; mostrarPenalidade?: boolean }) {
@@ -131,7 +133,8 @@ function VigenciasPage() {
     if (idsVinculadas.length) {
       const { data: registros, error: registrosErro } = await supabase.from("t_ocorrencia").select("id, created_at").in("id_filho_tarefa", idsVinculadas);
       if (registrosErro) { toast.error(msgErro(registrosErro)); return; }
-      const fora = (registros ?? []).filter((o) => { const d = new Date(o.created_at).getTime(); return d < novoInicio || d > novoFim; });
+      const novoInicioDia = diaCampo(p.data.data_inicio); const novoFimDia = diaCampo(p.data.data_fim);
+      const fora = (registros ?? []).filter((o) => { const d = diaBrasil(o.created_at); return d < novoInicioDia || d > novoFimDia; });
       if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} registro(s) de Fez/Não fez fora das novas datas. Ajuste ou remova esses registros em Fez / Não fez antes de salvar.`); return; }
     }
     const { error } = await supabase.from("t_vigencia").update({ ...p.data, ...dadosPenalidade(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
@@ -149,7 +152,7 @@ function VigenciasPage() {
   });
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
-  const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (new Date(o.created_at).getTime() < new Date(edicao.data_inicio).getTime() || new Date(o.created_at).getTime() > new Date(edicao.data_fim).getTime())) : [];
+  const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (diaBrasil(o.created_at) < diaCampo(edicao.data_inicio) || diaBrasil(o.created_at) > diaCampo(edicao.data_fim))) : [];
 
   return <>
     <PageHeader title="Vigências" description="Defina o período, a penalidade e o desconto da mesada." icon={<CalendarRange className="h-6 w-6" />} />
