@@ -265,8 +265,7 @@ function CadastroUnicoPage() {
               <CardContent className="space-y-3 p-3.5">
                 <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar novo filho</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Cadastre um novo filho e ele já será incluído neste fluxo.</p>
-                  <div className="mt-2 grid gap-2.5 md:grid-cols-[1fr_auto_auto] md:items-end">
+                                    <div className="mt-2 grid gap-2.5 md:grid-cols-[1fr_auto_auto] md:items-end">
                     <div className="space-y-1.5"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
                     <label className="flex h-10 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
                     {temMesada && <div className="space-y-1.5"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
