@@ -276,7 +276,7 @@ function CadastroUnicoPage() {
 
                 {filhos.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold">Filhos</p>
+                    <p className="text-sm font-semibold">Marque abaixo quem participa do fluxo</p>
                     <div className="mt-2 divide-y rounded-lg border bg-background">
                       {filhos.map((f) => {
                         const selecionado = filhosSelecionados.includes(f.id);
