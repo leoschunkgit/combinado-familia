@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
   head: () => ({ meta: [
-    { title: "Relatório — Combinado" },
+    { title: "Relatório / Histórico — Combinado" },
     { name: "description", content: "Consulte e extraia em PDF os combinados por vigência e filho." },
   ] }),
   component: RelatorioPage,
@@ -131,7 +131,7 @@ function RelatorioPage() {
   }
 
   return <>
-    <PageHeader title="Relatório" description="Consulte os combinados completos por vigência e filho e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
+    <PageHeader title="Relatório / Histórico" description="Consulte o histórico completo por vigência, filho e tarefa e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
     <Card className="mb-6"><CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
       <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({value:String(v.id),label:fmtVigencia(v),status:new Date(v.data_fim).getTime()<Date.now()?"finalizada" as const:andamento(v)?"andamento" as const:"futura" as const}))} />
       <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
