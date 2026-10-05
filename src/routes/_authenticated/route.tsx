@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ClipboardCheck, History, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText } from "lucide-react";
+import { Bell, CalendarRange, ClipboardCheck, History, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, TriangleAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import { ActionLoadingProvider } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
 import { CheckinDiario } from "@/components/CheckinDiario";
 import { useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
-import { pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
+import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -66,6 +66,7 @@ function AuthenticatedLayout() {
   const [salvando, setSalvando] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
 
   async function encerrar() {
     setAberto(false); setEtapa(null);
@@ -97,7 +98,10 @@ function AuthenticatedLayout() {
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
   const configuracaoInicialConcluida = filhos.length > 0 && tarefas.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
   const mostrarAtalhoLinkFilho = configuracaoInicialConcluida && pathname !== "/filhos" && pathname !== "/link-filhos";
-  const pendenciasHoje = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")) : [];
+  const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
+  const pendenciasHoje = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
+  const pendenciasPassadas = configuracaoInicialConcluida ? pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
+  const totalPendencias = pendenciasHoje.length + pendenciasPassadas.length;
   const quantidadeNotificacoes = new Set(pendenciasHoje.map((p) => p.id_filho)).size;
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
@@ -109,7 +113,7 @@ function AuthenticatedLayout() {
   return (
     <ActionLoadingProvider>
       {!saindo && <OnboardingInicial />}
-      {!saindo && configuracaoInicialConcluida && pathname === "/inicio" && <CheckinDiario />}
+      {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="native-safe-area min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="flex items-center justify-between px-4 py-3 md:px-4 md:py-4">
@@ -132,6 +136,20 @@ function AuthenticatedLayout() {
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
+          {configuracaoInicialConcluida && totalPendencias > 0 && (
+            <section className="mb-6 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
+              <div className="flex min-w-0 items-start gap-3">
+                <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <div className="min-w-0">
+                  <p className="font-semibold">Há lançamentos pendentes nesta vigência.</p>
+                  <p className="mt-0.5 text-sm text-amber-800">Existem dias e tarefas que ainda precisam ser marcados como Fez ou Não fez.</p>
+                </div>
+              </div>
+              <Button type="button" size="sm" variant="outline" className="shrink-0 border-amber-300 bg-white/70 hover:bg-white" onClick={() => setModalPendenciasAberto(true)}>
+                Ver pendências
+              </Button>
+            </section>
+          )}
           {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Button variant="ghost" size="icon" onClick={encerrar} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? encerrar() : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={encerrar} disabled={salvando}>Pular guia</Button></div></section>}
           <Outlet />
         </div></main>
