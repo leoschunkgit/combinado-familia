@@ -13,7 +13,6 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BlockedAction } from "@/components/BlockedAction";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
-import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 import { VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
 
@@ -76,12 +75,6 @@ function AtribuicoesPage() {
     if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
     const periodoSelecionado = vigencias.find((v) => v.id === Number(vig));
     if (!periodoSelecionado || new Date(periodoSelecionado.data_fim).getTime() < Date.now()) { toast.error("Não é possível criar atribuições em uma vigência finalizada"); return; }
-    const escolhido = filhos.find((f) => f.id === Number(filho));
-    const periodo = vigencias.find((v) => v.id === Number(vig));
-    if (escolhido && periodo) {
-      const erro = erroLimiteMesada(escolhido, periodo);
-      if (erro) { toast.error(erro); return; }
-    }
     const novos = tarefasSelecionadas
       .map((id_tarefa) => ({ id_vigencia: +vig, id_filho: +filho, id_tarefa }))
       .filter((it) => {
@@ -100,14 +93,6 @@ function AtribuicoesPage() {
       const periodo = vigencias.find((v) => v.id === item.id_vigencia);
       return !periodo || new Date(periodo.data_fim).getTime() < Date.now();
     })) { toast.error("Não é possível criar atribuições em uma vigência finalizada"); return; }
-    for (const item of itens) {
-      const escolhido = filhos.find((f) => f.id === item.id_filho);
-      const periodo = vigencias.find((v) => v.id === item.id_vigencia);
-      if (escolhido && periodo) {
-        const erro = erroLimiteMesada(escolhido, periodo);
-        if (erro) { toast.error(erro); return; }
-      }
-    }
     setSaving(true);
     const { error } = await supabase.from("t_filho_tarefa").insert(itens);
     setSaving(false);
