@@ -290,9 +290,11 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                   <p className="mt-0.5 break-words font-semibold">
                                     {tarefa.t_tarefa?.nome}
                                   </p>
-                                  <p className="mt-1 text-xs text-muted-foreground">
-                                    {data.split("-").reverse().join("/")}
-                                  </p>
+                                  <div className="mt-2">
+                                    <span className="inline-flex items-center rounded-md border bg-primary/5 px-2.5 py-1 text-sm font-bold tabular-nums text-primary">
+                                      {data.split("-").reverse().join("/")}
+                                    </span>
+                                  </div>
                                 </div>
 
                                 {!editandoFez && (
