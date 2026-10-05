@@ -14,13 +14,14 @@ import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 type FezDraft = { tarefa: FilhoTarefa; data: string; bonusTipo: BonusTipo; descricao: string; valor: string };
 
-export function CheckinDiario() {
+type CheckinDiarioProps = { open: boolean; onOpenChange: (open: boolean) => void };
+
+export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
   const qc = useQueryClient();
   const { data: filhos = [] } = useFilhos();
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [], isLoading: carregandoAtribuicoes } = useFilhoTarefas();
   const { data: ocorrencias = [], isLoading: carregandoOcorrencias } = useOcorrencias();
-  const [dispensado, setDispensado] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Set<string> | null>(null);
@@ -61,9 +62,9 @@ export function CheckinDiario() {
   }, [vigencias, filhos, pendencias]);
 
   const aberto =
+    open &&
     !carregandoAtribuicoes &&
     !carregandoOcorrencias &&
-    !dispensado &&
     pendencias.length > 0;
 
   function totalNaoFez(r: FilhoTarefa) {
@@ -207,7 +208,7 @@ export function CheckinDiario() {
 
 
   return (
-    <Dialog open={aberto} onOpenChange={(open) => !open && !busy && setDispensado(true)}>
+    <Dialog open={aberto} onOpenChange={(novoEstado) => !busy && onOpenChange(novoEstado)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Pendências</DialogTitle>
@@ -419,8 +420,8 @@ export function CheckinDiario() {
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" disabled={busy} onClick={() => setDispensado(true)}>
-            Agora não
+          <Button variant="ghost" disabled={busy} onClick={() => onOpenChange(false)}>
+            Fechar
           </Button>
         </DialogFooter>
       </DialogContent>
