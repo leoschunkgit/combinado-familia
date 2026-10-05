@@ -148,6 +148,34 @@
       "when": 1791243687062,
       "tag": "0020_sync_occurrence_derived_state",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791244019519,
+      "tag": "0021_derive_penalty_from_occurrences",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791244032266,
+      "tag": "0022_allow_account_cascade_with_validities",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791244043461,
+      "tag": "0023_guard_nao_fez_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791244054446,
+      "tag": "0024_allow_occurrence_cascade_delete",
+      "breakpoints": true
     }
   ]
 }
