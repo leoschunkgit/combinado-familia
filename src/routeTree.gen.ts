@@ -20,6 +20,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFilhosRouteImport } from './routes/_authenticated/filhos'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedLinkFilhosRouteImport } from './routes/_authenticated/link-filhos'
+import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedOcorrenciasRouteImport } from './routes/_authenticated/ocorrencias'
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
@@ -81,6 +82,12 @@ const AuthenticatedLinkFilhosRoute = AuthenticatedLinkFilhosRouteImport.update({
   path: '/link-filhos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotificacoesRoute =
+  AuthenticatedNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOcorrenciasRoute =
   AuthenticatedOcorrenciasRouteImport.update({
     id: '/ocorrencias',
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/filhos': typeof AuthenticatedFilhosRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/link-filhos': typeof AuthenticatedLinkFilhosRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/ocorrencias': typeof AuthenticatedOcorrenciasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
   '/filhos': typeof AuthenticatedFilhosRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/link-filhos': typeof AuthenticatedLinkFilhosRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/ocorrencias': typeof AuthenticatedOcorrenciasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -155,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/filhos': typeof AuthenticatedFilhosRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/link-filhos': typeof AuthenticatedLinkFilhosRoute
+  '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/ocorrencias': typeof AuthenticatedOcorrenciasRoute
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/filhos'
     | '/inicio'
     | '/link-filhos'
+    | '/notificacoes'
     | '/ocorrencias'
     | '/relatorio'
     | '/tarefas'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/filhos'
     | '/inicio'
     | '/link-filhos'
+    | '/notificacoes'
     | '/ocorrencias'
     | '/relatorio'
     | '/tarefas'
@@ -209,6 +221,7 @@ export interface FileRouteTypes {
     | '/_authenticated/filhos'
     | '/_authenticated/inicio'
     | '/_authenticated/link-filhos'
+    | '/_authenticated/notificacoes'
     | '/_authenticated/ocorrencias'
     | '/_authenticated/relatorio'
     | '/_authenticated/tarefas'
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLinkFilhosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notificacoes': {
+      id: '/_authenticated/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ocorrencias': {
       id: '/_authenticated/ocorrencias'
       path: '/ocorrencias'
@@ -349,6 +369,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFilhosRoute: typeof AuthenticatedFilhosRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedLinkFilhosRoute: typeof AuthenticatedLinkFilhosRoute
+  AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedOcorrenciasRoute: typeof AuthenticatedOcorrenciasRoute
   AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
@@ -362,6 +383,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFilhosRoute: AuthenticatedFilhosRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedLinkFilhosRoute: AuthenticatedLinkFilhosRoute,
+  AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedOcorrenciasRoute: AuthenticatedOcorrenciasRoute,
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,

@@ -85,6 +85,27 @@
       "when": 1791054173205,
       "tag": "0011_public_dashboard_responsavel",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791229135333,
+      "tag": "0012_fix_validity_date_guard_without_occurrences",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791229151530,
+      "tag": "0013_tie_validity_date_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791229166692,
+      "tag": "0014_align_occurrence_day_with_validity",
+      "breakpoints": true
     }
   ]
 }
