@@ -131,7 +131,7 @@ function AuthenticatedLayout() {
   ]).size;
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
-    <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
+    <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
       <UserCog className={mobile ? "h-5 w-5" : "h-4 w-4"} /> Minha conta
     </Link>
   );
@@ -141,31 +141,31 @@ function AuthenticatedLayout() {
       {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="native-safe-area min-h-screen md:flex">
-        <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
-          <div className="relative flex items-center px-4 py-3 md:px-4 md:py-4">
+        <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-56 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
+          <div className="relative flex items-center px-4 py-3 md:px-2.5 md:py-2.5">
             <Button variant="ghost" size="icon" className="relative z-10 md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
             <Link to="/inicio" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 md:static md:translate-x-0">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span>
-              <span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="-mt-1 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span></span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground md:h-7 md:w-7"><Home className="h-4 w-4 md:h-3.5 md:w-3.5" /></span>
+              <span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold md:text-base">Combinado</span><span className="-mt-1 text-[11px] font-semibold tracking-wide text-muted-foreground md:text-[10px]">família</span></span>
             </Link>
           </div>
 
-          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-2 md:pb-1">
-            <Link to="/cadastro-unico" className="mb-1.5 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[13px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100" activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}>
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"><ListPlus className="h-4 w-4" /></span>
-              <span className="min-w-0"><span className="block">Cadastro único</span><span className="block text-[10px] font-medium opacity-75">Cadastre tudo em um só fluxo</span></span>
+          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-1.5 md:pb-1">
+            <Link to="/cadastro-unico" className="mb-1 flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100" activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"><ListPlus className="h-3.5 w-3.5" /></span>
+              <span className="min-w-0"><span className="block">Cadastro único</span><span className="block text-[8px] font-medium leading-tight opacity-75">Cadastre tudo em um só fluxo</span></span>
             </Link>
-            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1.5">
-              <p className="mb-0.5 px-2 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
-              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-2.5 rounded-md px-2 py-1 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-3.5 w-3.5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
+            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1">
+              <p className="mb-0 px-1.5 text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
+              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-2 rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-3 w-3" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
             </div>)}
             <div className="mt-auto border-t pt-2">
-              <Button variant="ghost" className="h-auto w-full justify-start gap-3 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
+              <Button variant="ghost" className="h-auto w-full justify-start gap-2 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
               <ContaLink />
             </div>
           </nav>
-          <div className="hidden shrink-0 p-1.5 md:block md:w-64">
-            <div className="rounded-md bg-muted px-2.5 py-1"><p className="text-[9px] leading-tight text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold leading-tight">{nomePai}</p><Button variant="outline" size="sm" className="mt-1 h-6 w-full text-[10px]" onClick={() => void runAction(sair)}><LogOut className="h-3 w-3" /> Sair</Button></div>
+          <div className="hidden shrink-0 p-1 md:block md:w-56">
+            <div className="rounded-md bg-muted px-2 py-0.5"><p className="text-[8px] leading-tight text-muted-foreground">Conectado como</p><p className="truncate text-[10px] font-semibold leading-tight">{nomePai}</p><Button variant="outline" size="sm" className="mt-0.5 h-5 w-full text-[9px]" onClick={() => void runAction(sair)}><LogOut className="h-3 w-3" /> Sair</Button></div>
             <p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p>
           </div>
         </aside>
@@ -202,7 +202,7 @@ function AuthenticatedLayout() {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><ListPlus className="h-5 w-5" /></span>
               <span><span className="block">Cadastro único</span><span className="block text-[10px] font-medium opacity-75">Cadastre tudo em um só fluxo</span></span>
             </Link>
-            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1.5">
+            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1">
               <p className="mb-0.5 px-2.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
               <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
             </div>)}
