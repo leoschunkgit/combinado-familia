@@ -164,14 +164,6 @@ export const paraCampoDataHoraBrasil = (d: string) => {
 export const paraIsoDataHoraBrasil = (valor: string) =>
   new Date(valor + ":00-03:00").toISOString();
 
-export const maskCpf = (v: string) =>
-  v
-    .replace(/\D/g, "")
-    .slice(0, 11)
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-
 export const maskCelular = (v: string) =>
   v
     .replace(/\D/g, "")
