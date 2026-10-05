@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
-import { VigenciaStatus } from "@/components/VigenciaStatus";
+import { compararVigencias, VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
 import { reais, usaDesconto } from "@/lib/mesada";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -306,16 +306,7 @@ function VigenciasPage() {
   }
 
   const agora = Date.now();
-  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
-    const inicioA = new Date(a.data_inicio).getTime();
-    const inicioB = new Date(b.data_inicio).getTime();
-    const fimA = new Date(a.data_fim).getTime();
-    const fimB = new Date(b.data_fim).getTime();
-    const statusA = inicioA <= agora && fimA >= agora ? 0 : inicioA > agora ? 1 : 2;
-    const statusB = inicioB <= agora && fimB >= agora ? 0 : inicioB > agora ? 1 : 2;
-    if (statusA !== statusB) return statusA - statusB;
-    return statusA === 2 ? inicioB - inicioA : inicioA - inicioB;
-  });
+  const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (diaBrasil(o.created_at) < diaCampo(edicao.data_inicio) || diaBrasil(o.created_at) > diaCampo(edicao.data_fim))) : [];
