@@ -93,7 +93,7 @@ function Notificacoes() {
     <div className="space-y-6">
       <PageHeader
         title="Notificações"
-        description="Veja o que ainda precisa ser registrado hoje."
+        description="Veja os dias da vigência que ainda precisam de marcação."
         icon={<Bell className="h-6 w-6" />}
       />
 
@@ -152,7 +152,6 @@ function Notificacoes() {
             </div>
           ))}
         </section>
-      )}
       )}
     </div>
   );
