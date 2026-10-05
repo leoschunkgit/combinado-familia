@@ -5,7 +5,7 @@ export function ocorrenciasPenalizadas(ocorrencias: Ocorrencia[], vigencias: Vig
   const limites = new Map(vigencias.map((v) => [v.id, v.qtd_ocorrencia]));
   const totais = new Map<string, number>();
   const ids = new Set<number>();
-  for (const ocorrencia of [...ocorrencias].sort((a, b) => a.id - b.id)) {
+  for (const ocorrencia of [...ocorrencias].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime() || a.id - b.id)) {
     if (ocorrencia.tipo === "FEZ") continue;
     const vinculo = ocorrencia.t_filho_tarefa;
     if (!vinculo) continue;
