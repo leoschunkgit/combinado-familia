@@ -62,10 +62,6 @@ function Notificacoes() {
     ).length;
   }
 
-  function totalNaoFezTarefa(r: FilhoTarefa) {
-    return ocorrencias.filter((o) => o.tipo !== "FEZ" && o.id_filho_tarefa === r.id).length;
-  }
-
   async function registrarNaoFezAnterior(r: FilhoTarefa, data: string) {
     const v = r.t_vigencia; if (!v || !vigenciaEmAndamento(v)) return;
     const filho = filhos.find((x) => x.id === r.id_filho);
@@ -77,12 +73,7 @@ function Notificacoes() {
     try {
       const { error } = await supabase.from("t_ocorrencia").insert({ tipo: penalizado ? "PENALIDADE" : "NAO_FEZ", bonificacao_tipo: null, bonificacao_descricao: null, bonificacao_valor: null, id_filho_tarefa: r.id, created_at: new Date(data + "T12:00:00-03:00").toISOString() });
       if (error) throw error;
-      const u = await supabase.from("t_filho_tarefa").update({ qtd_nao_fez: totalNaoFezTarefa(r) + 1, feito: penalizado ? "N" : null }).eq("id", r.id);
-      if (u.error) throw u.error;
-      if (penalizado) {
-        const g = await supabase.from("t_filho_tarefa").update({ feito: "N" }).eq("id_filho", r.id_filho).eq("id_vigencia", r.id_vigencia);
-        if (g.error) throw g.error;
-      }
+
       await Promise.all([qc.invalidateQueries({queryKey:["ocorrencias"]}), qc.invalidateQueries({queryKey:["filho_tarefas"]})]);
       if (comDesconto && filho) toast.success(`Não fez registrado · Desconto acumulado: ${reais(valorDebitado(filho, v, novo))}`);
       else if (penalizado) toast.warning(`Limite atingido! Penalidade: ${v.penalidade}`);
