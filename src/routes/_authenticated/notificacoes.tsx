@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCircle2, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Bell, CheckCircle2, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ function Notificacoes() {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [fezAnterior, setFezAnterior] = useState<FezAnterior | null>(null);
+  const [filhosAbertos, setFilhosAbertos] = useState<Set<string> | null>(null);
   const hoje = useDataBrasilAtual();
   const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
   const anteriores = pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
@@ -89,6 +90,33 @@ function Notificacoes() {
 
 
 
+  const chavesFilhos = gruposAnteriores.flatMap(({ vigencia, filhos: gruposFilhos }) =>
+    gruposFilhos.map(({ filho }) => `${vigencia.id}|${filho.id}`),
+  );
+  const primeiraChaveFilho = chavesFilhos[0] ?? null;
+  const filhoAberto = (chave: string) =>
+    filhosAbertos === null ? chave === primeiraChaveFilho : filhosAbertos.has(chave);
+
+  function alternarFilho(chave: string) {
+    setFilhosAbertos((atual) => {
+      const base = atual === null
+        ? new Set(primeiraChaveFilho ? [primeiraChaveFilho] : [])
+        : new Set(atual);
+      if (base.has(chave)) base.delete(chave);
+      else base.add(chave);
+      return base;
+    });
+  }
+
+  function expandirTodos() {
+    setFilhosAbertos(new Set(chavesFilhos));
+  }
+
+  function recolherTodos() {
+    setFilhosAbertos(new Set());
+  }
+
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -107,9 +135,19 @@ function Notificacoes() {
         </div>
       ) : (
         <section className="space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold">Pendências</h2>
-            <p className="text-sm text-muted-foreground">Dias desta vigência que ainda não têm nenhuma marcação.</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Pendências</h2>
+              <p className="text-sm text-muted-foreground">Dias desta vigência que ainda não têm nenhuma marcação.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={expandirTodos}>
+                <ChevronsDown className="h-4 w-4" /> Expandir todos
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={recolherTodos}>
+                <ChevronsUp className="h-4 w-4" /> Recolher todos
+              </Button>
+            </div>
           </div>
           {gruposAnteriores.map(({ vigencia, filhos: gruposFilhos }) => (
             <div key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card">
@@ -118,10 +156,19 @@ function Notificacoes() {
                 <p className="mt-1 font-semibold">{fmtVigencia(vigencia)}</p>
               </div>
               <div className="divide-y">
-                {gruposFilhos.map(({ filho, itens }) => (
+                {gruposFilhos.map(({ filho, itens }) => {
+                  const chaveFilho = `${vigencia.id}|${filho.id}`;
+                  const abertoFilho = filhoAberto(chaveFilho);
+                  return (
                   <div key={filho.id} className="p-4">
-                    <p className="font-bold">{filho.nome}</p>
-                    <div className="mt-2 space-y-2">
+                    <button type="button" className="flex w-full items-center justify-between gap-3 text-left" onClick={() => alternarFilho(chaveFilho)} aria-expanded={abertoFilho}>
+                      <span className="font-bold">{filho.nome}</span>
+                      <span className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted-foreground">
+                        {itens.length} {itens.length === 1 ? "pendência" : "pendências"}
+                        {abertoFilho ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </span>
+                    </button>
+                    {abertoFilho && <div className="mt-2 space-y-2">
                       {itens.map(({ tarefa, data }) => {
                         const chave = tarefa.id + "|" + data;
                         const editando = fezAnterior && (fezAnterior.tarefa.id + "|" + fezAnterior.data) === chave;
@@ -145,9 +192,10 @@ function Notificacoes() {
                           </div>}
                         </div>
                       })}
-                    </div>
+                    </div>}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
