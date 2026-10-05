@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, CalendarRange, CheckCircle2, Copy, Link2, ListPlus, ListTodo, Plus, Users } from "lucide-react";
+import { CalendarRange, CheckCircle2, Copy, Link2, ListPlus, ListTodo, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -229,10 +229,7 @@ function CadastroUnicoPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <PageHeader title="Cadastro Fluxo" description="Cadastre vários filhos e tarefas em lote, crie associações e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
-        <Button variant="outline" size="sm" onClick={() => navigate({ to: "/inicio" })}><ArrowLeft className="h-4 w-4" /> Voltar</Button>
-      </div>
+      <PageHeader title="Cadastro Fluxo" description="Cadastre vários filhos e tarefas em lote, crie associações e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <button type="button" onClick={() => setModo("novo")} className={`rounded-xl border p-4 text-left transition ${modo === "novo" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
