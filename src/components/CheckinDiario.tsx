@@ -8,11 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
-import { dataBrasil, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
+import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
-type FezDraft = { tarefa: FilhoTarefa; bonusTipo: BonusTipo; descricao: string; valor: string };
+type FezDraft = { tarefa: FilhoTarefa; data: string; bonusTipo: BonusTipo; descricao: string; valor: string };
 
 export function CheckinDiario() {
   const qc = useQueryClient();
@@ -24,11 +24,22 @@ export function CheckinDiario() {
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
   const hoje = useDataBrasilAtual();
-  const dataAtual = hoje.split("-").reverse().join("/");
-
-  const pendencias = useMemo(
+  const pendenciasHoje = useMemo(
     () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")),
     [vigencias, atribuicoes, ocorrencias, hoje],
+  );
+
+  const pendenciasPassadas = useMemo(
+    () => pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")),
+    [vigencias, atribuicoes, ocorrencias, hoje],
+  );
+
+  const pendencias = useMemo(
+    () => [
+      ...pendenciasHoje.map((tarefa) => ({ tarefa, data: hoje })),
+      ...pendenciasPassadas,
+    ].sort((a, b) => b.data.localeCompare(a.data)),
+    [pendenciasHoje, pendenciasPassadas, hoje],
   );
 
   const grupos = useMemo(() => {
@@ -40,7 +51,7 @@ export function CheckinDiario() {
           .map((filho) => ({
             filho,
             tarefas: pendencias.filter(
-              (p) => p.id_vigencia === vigencia.id && p.id_filho === filho.id,
+              (p) => p.tarefa.id_vigencia === vigencia.id && p.tarefa.id_filho === filho.id,
             ),
           }))
           .filter((grupo) => grupo.tarefas.length > 0),
@@ -60,7 +71,7 @@ export function CheckinDiario() {
       .reduce((s, a) => s + a.qtd_nao_fez, 0);
   }
 
-  async function registrarNaoFez(r: FilhoTarefa) {
+  async function registrarNaoFez(r: FilhoTarefa, data: string) {
     const v = r.t_vigencia;
     if (!v || !vigenciaEmAndamento(v)) return;
 
@@ -84,7 +95,7 @@ export function CheckinDiario() {
         bonificacao_descricao: null,
         bonificacao_valor: null,
         id_filho_tarefa: r.id,
-        created_at: new Date(hoje + "T12:00:00-03:00").toISOString(),
+        created_at: new Date(data + "T12:00:00-03:00").toISOString(),
       });
       if (error) throw error;
 
@@ -151,7 +162,7 @@ export function CheckinDiario() {
         bonificacao_descricao: d.bonusTipo === "TEXTO" ? d.descricao.trim() : null,
         bonificacao_valor: d.bonusTipo === "VALOR" ? valor : null,
         id_filho_tarefa: r.id,
-        created_at: new Date(hoje + "T12:00:00-03:00").toISOString(),
+        created_at: new Date(d.data + "T12:00:00-03:00").toISOString(),
       });
       if (error) throw error;
 
@@ -171,9 +182,9 @@ export function CheckinDiario() {
     <Dialog open={aberto} onOpenChange={(open) => !open && !busy && setDispensado(true)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Registro de hoje</DialogTitle>
+          <DialogTitle>Pendências</DialogTitle>
           <DialogDescription>
-            Marque Fez ou Não fez para as tarefas pendentes de hoje. Você pode fazer tudo aqui sem fechar o modal.
+            Marque Fez ou Não fez nos dias desta vigência que ainda não têm nenhuma marcação.
           </DialogDescription>
         </DialogHeader>
 
@@ -194,15 +205,9 @@ export function CheckinDiario() {
                       </p>
                       <p className="mt-1 break-words font-semibold">{fmtVigencia(vigencia)}</p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <div className="text-left sm:text-right">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
-                        <p className="text-sm font-semibold">{dataAtual}</p>
-                      </div>
-                      <span className="w-fit rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
-                        {totalVigencia} {totalVigencia === 1 ? "pendência" : "pendências"}
-                      </span>
-                    </div>
+                    <span className="w-fit rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
+                      {totalVigencia} {totalVigencia === 1 ? "pendência" : "pendências"}
+                    </span>
                   </div>
                 </div>
 
@@ -227,11 +232,11 @@ export function CheckinDiario() {
                       </div>
 
                       <div className="divide-y">
-                        {tarefas.map((tarefa) => {
-                          const editandoFez = fez?.tarefa.id === tarefa.id;
+                        {tarefas.map(({ tarefa, data }) => {
+                          const editandoFez = fez?.tarefa.id === tarefa.id && fez.data === data;
 
                           return (
-                            <div key={tarefa.id} className="p-3 sm:p-4">
+                            <div key={`${tarefa.id}|${data}`} className="p-3 sm:p-4">
                               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                                 <div className="min-w-0">
                                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -239,6 +244,9 @@ export function CheckinDiario() {
                                   </p>
                                   <p className="mt-0.5 break-words font-semibold">
                                     {tarefa.t_tarefa?.nome}
+                                  </p>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {data.split("-").reverse().join("/")}
                                   </p>
                                 </div>
 
@@ -252,6 +260,7 @@ export function CheckinDiario() {
                                       onClick={() =>
                                         setFez({
                                           tarefa,
+                                          data,
                                           bonusTipo: "NENHUMA",
                                           descricao: "",
                                           valor: "",
@@ -266,7 +275,7 @@ export function CheckinDiario() {
                                       variant="destructive"
                                       disabled={busy}
                                       className="min-w-24"
-                                      onClick={() => void registrarNaoFez(tarefa)}
+                                      onClick={() => void registrarNaoFez(tarefa, data)}
                                     >
                                       <ThumbsDown className="h-4 w-4" />
                                       Não fez
@@ -364,7 +373,7 @@ export function CheckinDiario() {
         </div>
 
         <div className="text-center text-xs text-muted-foreground">
-          {pendencias.length} {pendencias.length === 1 ? "tarefa pendente" : "tarefas pendentes"} hoje
+          {pendencias.length} {pendencias.length === 1 ? "pendência" : "pendências"} sem marcação
         </div>
 
         <DialogFooter>
