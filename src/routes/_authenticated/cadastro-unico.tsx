@@ -80,11 +80,12 @@ function CadastroUnicoPage() {
   const [modeloId, setModeloId] = useState("");
   const [duplicacao, setDuplicacao] = useState<VigenciaDraft>(() => vigenciaInicial());
   const [etapaNovo, setEtapaNovo] = useState<1 | 2 | 3 | 4>(1);
+  const [tarefasPorFilho, setTarefasPorFilho] = useState<Record<number, number[]>>({});
 
   const vigenciasOrdenadas = [...vigencias].sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime());
   const modelo = vigencias.find((v) => v.id === Number(modeloId));
   const associacoesModelo = useMemo(() => atribuicoes.filter((a) => a.id_vigencia === Number(modeloId)), [atribuicoes, modeloId]);
-  const totalCombinacoes = filhosSelecionados.length * tarefasSelecionadas.length;
+  const totalCombinacoes = filhosSelecionados.reduce((total, idFilho) => total + (tarefasPorFilho[idFilho]?.length ?? 0), 0);
 
   const alternar = (lista: number[], setLista: (v: number[]) => void, id: number) =>
     setLista(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]);
@@ -224,6 +225,7 @@ function CadastroUnicoPage() {
     const { data, error } = await supabase.from("t_vigencia").insert(payload).select("id").single();
     if (error || !data) { toast.error(msgErro(error)); return; }
     setVigenciaCriadaId(data.id);
+    setTarefasPorFilho(Object.fromEntries(filhosSelecionados.map((idFilho) => [idFilho, [...tarefasSelecionadas]])));
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
     setEtapaNovo(4);
     toast.success("Vigência criada para este lote");
@@ -246,10 +248,10 @@ function CadastroUnicoPage() {
 
     const existentes = new Set(atribuicoes.map((a) => `${a.id_vigencia}|${a.id_filho}|${a.id_tarefa}`));
     const novos = filhosSelecionados.flatMap((id_filho) =>
-      tarefasSelecionadas.map((id_tarefa) => ({ id_vigencia: vigenciaCriadaId, id_filho, id_tarefa }))
+      (tarefasPorFilho[id_filho] ?? []).map((id_tarefa) => ({ id_vigencia: vigenciaCriadaId, id_filho, id_tarefa }))
     ).filter((x) => !existentes.has(`${x.id_vigencia}|${x.id_filho}|${x.id_tarefa}`));
 
-    if (!novos.length) { toast.info("Todas essas associações já existem"); return; }
+    if (!novos.length) { toast.error("Selecione ao menos uma associação entre filho e tarefa"); return; }
     const { error } = await supabase.from("t_filho_tarefa").insert(novos);
     if (error) { toast.error(msgErro(error)); return; }
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
@@ -522,16 +524,65 @@ function CadastroUnicoPage() {
             <Card className="overflow-hidden border-primary/20">
               <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">4</span><span className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Associações</span></CardTitle></CardHeader>
               <CardContent className="space-y-3 p-3.5">
-                <div className="grid gap-1.5 sm:grid-cols-3">
-                  <div className="rounded-lg border bg-card px-2 py-1.5 text-center"><p className="text-xl font-bold">{filhosSelecionados.length}</p><p className="text-[11px] text-muted-foreground">filho(s)</p></div>
-                  <div className="rounded-lg border bg-card px-2 py-1.5 text-center"><p className="text-xl font-bold">{tarefasSelecionadas.length}</p><p className="text-[11px] text-muted-foreground">tarefa(s)</p></div>
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 px-2 py-1.5 text-center"><p className="text-xl font-bold text-primary">{totalCombinacoes}</p><p className="text-[11px] text-muted-foreground">associação(ões)</p></div>
+                <p className="text-sm text-muted-foreground">Escolha quais tarefas pertencem a cada filho.</p>
+
+                <div className="space-y-2">
+                  {filhos.filter((f) => filhosSelecionados.includes(f.id)).map((filho) => {
+                    const selecionadas = tarefasPorFilho[filho.id] ?? [];
+                    const todasSelecionadas = tarefasSelecionadas.length > 0 && tarefasSelecionadas.every((id) => selecionadas.includes(id));
+
+                    return (
+                      <div key={filho.id} className="overflow-hidden rounded-lg border bg-background">
+                        <div className="flex items-center justify-between gap-3 border-b bg-muted/20 px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold">{filho.nome}</p>
+                            <p className="text-[11px] text-muted-foreground">{selecionadas.length} tarefa(s) selecionada(s)</p>
+                          </div>
+                          <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs">
+                            <Checkbox
+                              checked={todasSelecionadas}
+                              onCheckedChange={() =>
+                                setTarefasPorFilho((atual) => ({
+                                  ...atual,
+                                  [filho.id]: todasSelecionadas ? [] : [...tarefasSelecionadas],
+                                }))
+                              }
+                            />
+                            <span>{todasSelecionadas ? "Desmarcar todas" : "Selecionar todas"}</span>
+                          </label>
+                        </div>
+
+                        <div className="divide-y">
+                          {tarefas.filter((t) => tarefasSelecionadas.includes(t.id)).map((tarefa) => {
+                            const marcada = selecionadas.includes(tarefa.id);
+                            return (
+                              <label key={tarefa.id} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/30">
+                                <Checkbox
+                                  checked={marcada}
+                                  onCheckedChange={() =>
+                                    setTarefasPorFilho((atual) => {
+                                      const atuais = atual[filho.id] ?? [];
+                                      return {
+                                        ...atual,
+                                        [filho.id]: marcada ? atuais.filter((id) => id !== tarefa.id) : [...atuais, tarefa.id],
+                                      };
+                                    })
+                                  }
+                                />
+                                <span className="min-w-0 flex-1 truncate">{tarefa.nome}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="rounded-lg border bg-muted/20 p-2.5">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Resumo</p>
-                  <div className="space-y-1.5">{filhos.filter((f) => filhosSelecionados.includes(f.id)).map((f) => <div key={f.id} className="rounded-md bg-background px-3 py-2 text-sm"><span className="font-semibold">{f.nome}</span><span className="text-muted-foreground"> receberá {tarefasSelecionadas.length} tarefa(s)</span></div>)}</div>
+
+                <div className="flex items-center justify-between border-t pt-2.5">
+                  <p className="text-xs text-muted-foreground">{totalCombinacoes} associação(ões) selecionada(s)</p>
+                  <Button onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
                 </div>
-                <div className="flex justify-end border-t pt-2.5"><Button onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Criar {totalCombinacoes} associação(ões)</Button></div>
               </CardContent>
             </Card>
           )}
