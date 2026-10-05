@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ChevronsUpDown, Link2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ChevronsUpDown, Link2, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,8 +44,6 @@ function AtribuicoesPage() {
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
   const [itens, setItens] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
-  const [editando, setEditando] = useState<FilhoTarefa | null>(null);
-  const [edicao, setEdicao] = useState({ vig: "", filho: "", tarefa: "" });
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filtroVig, setFiltroVig] = useState("all");
   const [filtroFilho, setFiltroFilho] = useState("all");
@@ -118,12 +116,28 @@ function AtribuicoesPage() {
     const alvo = existentes.find((item) => item.id === id);
     if (!alvo) return;
     const periodo = vigencias.find((v) => v.id === alvo.id_vigencia);
-    if (!periodo || !vigenciaEmAndamento(periodo)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
-    const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", alvo.id_filho).eq("id_vigencia", alvo.id_vigencia);
-    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
-    const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
-    if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
-    if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível excluir a atribuição."); return; }
+    if (!periodo) return;
+
+    const agora = Date.now();
+    const futura = new Date(periodo.data_inicio).getTime() > agora;
+    const finalizada = new Date(periodo.data_fim).getTime() < agora;
+
+    if (finalizada) {
+      toast.error("Atribuições de vigências finalizadas não podem ser excluídas");
+      return;
+    }
+
+    if (!futura) {
+      const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", alvo.id_filho).eq("id_vigencia", alvo.id_vigencia);
+      if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
+      const ids = (atribuicoes ?? []).map((item) => item.id);
+      if (ids.length > 0) {
+        const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", ids);
+        if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
+        if (count) { toast.error("Este filho já tem registros de Fez/Não fez nesta vigência. Não é possível excluir a atribuição."); return; }
+      }
+    }
+
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
@@ -131,40 +145,6 @@ function AtribuicoesPage() {
 
   function alternarTarefa(id: number) {
     setTarefasSelecionadas((atuais) => atuais.includes(id) ? atuais.filter((x) => x !== id) : [...atuais, id]);
-  }
-
-  function abrirEdicao(item: FilhoTarefa) {
-    setEditando(item);
-    setEdicao({ vig: String(item.id_vigencia), filho: String(item.id_filho), tarefa: String(item.id_tarefa) });
-  }
-
-  async function salvarEdicao() {
-    if (!editando || !edicao.vig || !edicao.filho || !edicao.tarefa) return;
-    const periodoOriginal = vigencias.find((v) => v.id === editando.id_vigencia);
-    const periodoNovo = vigencias.find((v) => v.id === Number(edicao.vig));
-    if (!periodoOriginal || !vigenciaEmAndamento(periodoOriginal) || !periodoNovo || !vigenciaEmAndamento(periodoNovo)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
-    const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", editando.id_filho).eq("id_vigencia", editando.id_vigencia);
-    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
-    const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", (atribuicoes ?? []).map((item) => item.id));
-    if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
-    if (count) { toast.error("Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar a atribuição."); return; }
-    const atualizada = { id_vigencia: +edicao.vig, id_filho: +edicao.filho, id_tarefa: +edicao.tarefa };
-    const escolhido = filhos.find((f) => f.id === atualizada.id_filho);
-    const periodo = vigencias.find((v) => v.id === atualizada.id_vigencia);
-    if (escolhido && periodo) {
-      const erro = erroLimiteMesada(escolhido, periodo);
-      if (erro) { toast.error(erro); return; }
-    }
-    const duplicada = existentes.some((item) => item.id !== editando.id && item.id_vigencia === atualizada.id_vigencia && item.id_filho === atualizada.id_filho && item.id_tarefa === atualizada.id_tarefa);
-    if (duplicada) { toast.error("Essa atribuição já existe"); return; }
-    setSaving(true);
-    const { error } = await supabase.from("t_filho_tarefa").update(atualizada).eq("id", editando.id);
-    setSaving(false);
-    if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Atribuição atualizada");
-    setEditando(null);
-    qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    qc.invalidateQueries({ queryKey: ["ocorrencias"] });
   }
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
@@ -316,12 +296,25 @@ function AtribuicoesPage() {
                                       <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-0.5">
-                                      <BlockedAction reason={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) ? "Ações só podem ser feitas em uma vigência em andamento." : temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser editada." : undefined}>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label={`Editar atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Pencil className="h-3.5 w-3.5" /></Button>
-                                      </BlockedAction>
-                                      <BlockedAction reason={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) ? "Ações só podem ser feitas em uma vigência em andamento." : temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser excluída." : undefined}>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Trash2 className="h-3.5 w-3.5" /></Button>
-                                      </BlockedAction>
+                                      {(() => {
+                                        const periodo = e.t_vigencia;
+                                        const agora = Date.now();
+                                        const futura = Boolean(periodo && new Date(periodo.data_inicio).getTime() > agora);
+                                        const finalizada = Boolean(periodo && new Date(periodo.data_fim).getTime() < agora);
+                                        const bloqueadaPorHistorico = !futura && temHistorico(e);
+                                        const motivo = !periodo
+                                          ? "Vigência não encontrada."
+                                          : finalizada
+                                            ? "Atribuições de vigências finalizadas não podem ser excluídas."
+                                            : bloqueadaPorHistorico
+                                              ? "Este filho já tem registros de Fez/Não fez nesta vigência; a atribuição não pode ser excluída."
+                                              : undefined;
+                                        return (
+                                          <BlockedAction reason={motivo}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={Boolean(motivo)} onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Trash2 className="h-3.5 w-3.5" /></Button>
+                                          </BlockedAction>
+                                        );
+                                      })()}
                                     </div>
                                   </div>
                                 ))}
@@ -346,20 +339,7 @@ function AtribuicoesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Editar atribuição</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <Pick required label="Vigência" value={edicao.vig} onChange={(v) => setEdicao({ ...edicao, vig: v })} options={vigenciasOrdenadas.map(statusVigencia)} />
-            <Pick required label="Filho" value={edicao.filho} onChange={(v) => setEdicao({ ...edicao, filho: v })} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
-            <Pick required label="Tarefa" value={edicao.tarefa} onChange={(v) => setEdicao({ ...edicao, tarefa: v })} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
-            <Button type="button" disabled={saving} onClick={() => { void runAction(salvarEdicao); }}><Check className="h-4 w-4" /> Salvar alterações</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </>
   );
 }
