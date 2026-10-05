@@ -395,7 +395,7 @@ function CadastroUnicoPage() {
                             <Checkbox checked={selecionado} onCheckedChange={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)} />
                             <span className="min-w-0 flex-1 truncate font-medium">{f.nome}</span>
                             <span className="shrink-0 text-xs text-muted-foreground">
-                              {f.tem_mesada && f.valor_mesada != null ? `R$ ${Number(f.valor_mesada).toFixed(2).replace(".", ",")}` : "Sem mesada"}
+                              Mesada: {f.tem_mesada && f.valor_mesada != null ? `R$ ${Number(f.valor_mesada).toFixed(2).replace(".", ",")}` : "Sem mesada"}
                             </span>
                           </label>
                         );
@@ -405,7 +405,7 @@ function CadastroUnicoPage() {
                           <Checkbox checked disabled />
                           <span className="min-w-0 flex-1 truncate font-medium">{f.nome}</span>
                           <span className="shrink-0 text-xs text-muted-foreground">
-                            {f.tem_mesada && f.valor_mesada != null ? `R$ ${f.valor_mesada.toFixed(2).replace(".", ",")}` : "Sem mesada"}
+                            Mesada: {f.tem_mesada && f.valor_mesada != null ? `R$ ${f.valor_mesada.toFixed(2).replace(".", ",")}` : "Sem mesada"}
                           </span>
                         </div>
                       ))}
