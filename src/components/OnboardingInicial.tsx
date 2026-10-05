@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,7 +28,12 @@ import { useActionLoading } from "@/components/ActionLoading";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
 
-export function OnboardingInicial() {
+type OnboardingInicialProps = {
+  manualOpen?: boolean;
+  onManualOpenChange?: (open: boolean) => void;
+};
+
+export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: OnboardingInicialProps) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
@@ -38,6 +43,7 @@ export function OnboardingInicial() {
   const { data: atribuicoes = [], isLoading: carregandoAtribuicoes } = useFilhoTarefas();
 
   const [salvando, setSalvando] = useState(false);
+  const [etapaManual, setEtapaManual] = useState(0);
 
   const [nomeFilho, setNomeFilho] = useState("");
   const [temMesada, setTemMesada] = useState(false);
@@ -67,12 +73,17 @@ export function OnboardingInicial() {
     vigencias.length === 0 ? 2 :
     atribuicoes.length === 0 ? 3 :
     -1;
-  const etapa = vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
+  const modoManual = manualOpen;
+  const etapa = modoManual ? etapaManual : (vigenciaEmCorrecaoId !== null ? 2 : etapaBase);
 
-  const aberto = !carregando && etapa >= 0;
+  const aberto = !carregando && (modoManual || etapa >= 0);
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
   const tarefaAtual = tarefaSelecionada || (tarefas[0] ? String(tarefas[0].id) : "");
   const vigenciaAtual = vigenciaSelecionada || (vigenciasAtivas[0] ? String(vigenciasAtivas[0].id) : "");
+
+  useEffect(() => {
+    if (manualOpen) setVigenciaEmCorrecaoId(null);
+  }, [manualOpen]);
 
   async function cadastrarFilho() {
     const nome = nomeFilho.trim();
@@ -87,7 +98,7 @@ export function OnboardingInicial() {
     }
 
     setSalvando(true);
-    const { error } = await supabase.from("t_filho").insert({
+    const { data: criado, error } = await supabase.from("t_filho").insert({
       nome,
       email: null,
       celular: null,
@@ -95,7 +106,7 @@ export function OnboardingInicial() {
       tem_mesada: temMesada,
       tem_mesada_opcional: temMesada ? true : null,
       valor_mesada: temMesada ? Number(valorMesada.replace(",", ".")) : null,
-    });
+    }).select("id").single();
     setSalvando(false);
 
     if (error) {
@@ -103,8 +114,10 @@ export function OnboardingInicial() {
       return;
     }
 
+    if (criado?.id) setFilhoSelecionado(String(criado.id));
     toast.success("Filho cadastrado. Vamos para a próxima etapa.");
     await qc.invalidateQueries({ queryKey: ["filhos"] });
+    if (modoManual) setEtapaManual(1);
   }
 
   async function cadastrarTarefa() {
@@ -115,7 +128,7 @@ export function OnboardingInicial() {
     }
 
     setSalvando(true);
-    const { error } = await supabase.from("t_tarefa").insert({ nome });
+    const { data: criada, error } = await supabase.from("t_tarefa").insert({ nome }).select("id").single();
     setSalvando(false);
 
     if (error) {
@@ -123,8 +136,10 @@ export function OnboardingInicial() {
       return;
     }
 
+    if (criada?.id) setTarefaSelecionada(String(criada.id));
     toast.success("Tarefa cadastrada. Vamos para a próxima etapa.");
     await qc.invalidateQueries({ queryKey: ["tarefas"] });
+    if (modoManual) setEtapaManual(2);
   }
 
   function voltarParaCorrigirVigencia() {
@@ -196,9 +211,10 @@ export function OnboardingInicial() {
       tipo_penalidade: "texto",
       valor_debito: valorDebito,
     };
-    const { error } = vigenciaEmCorrecaoId === null
-      ? await supabase.from("t_vigencia").insert(payload)
-      : await supabase.from("t_vigencia").update(payload).eq("id", vigenciaEmCorrecaoId);
+    const resultado = vigenciaEmCorrecaoId === null
+      ? await supabase.from("t_vigencia").insert(payload).select("id").single()
+      : await supabase.from("t_vigencia").update(payload).eq("id", vigenciaEmCorrecaoId).select("id").single();
+    const { data: vigenciaSalva, error } = resultado;
     setSalvando(false);
 
     if (error) {
@@ -207,9 +223,11 @@ export function OnboardingInicial() {
     }
 
     const corrigiu = vigenciaEmCorrecaoId !== null;
+    if (vigenciaSalva?.id) setVigenciaSelecionada(String(vigenciaSalva.id));
     setVigenciaEmCorrecaoId(null);
     toast.success(corrigiu ? "Vigência corrigida. Agora conclua a associação." : "Vigência cadastrada. Falta só fazer a associação.");
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
+    if (modoManual) setEtapaManual(3);
   }
 
   async function cadastrarAssociacao() {
@@ -243,25 +261,37 @@ export function OnboardingInicial() {
     }
 
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    toast.success("Configuração inicial concluída!");
-    navigate({ to: "/ocorrencias" });
+    toast.success(modoManual ? "Cadastro único concluído!" : "Configuração inicial concluída!");
+    if (modoManual) {
+      setEtapaManual(0);
+      setNomeFilho("");
+      setNomeTarefa("");
+      setFilhoSelecionado("");
+      setTarefaSelecionada("");
+      setVigenciaSelecionada("");
+      onManualOpenChange?.(false);
+    } else {
+      navigate({ to: "/ocorrencias" });
+    }
   }
 
   return (
-    <Dialog open={aberto}>
+    <Dialog open={aberto} onOpenChange={(open) => { if (modoManual && !open) onManualOpenChange?.(false); }}>
       <DialogContent
-        className="max-h-[92vh] max-w-lg overflow-y-auto rounded-xl [&>button]:hidden"
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
+        className={`max-h-[92vh] max-w-lg overflow-y-auto rounded-xl ${modoManual ? "" : "[&>button]:hidden"}`}
+        onEscapeKeyDown={(e) => { if (!modoManual) e.preventDefault(); }}
+        onPointerDownOutside={(e) => { if (!modoManual) e.preventDefault(); }}
+        onInteractOutside={(e) => { if (!modoManual) e.preventDefault(); }}
       >
         <DialogHeader>
           <div className="mb-2 inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            Primeiros passos · aprendizado do sistema
+            {modoManual ? "Cadastro único" : "Primeiros passos · aprendizado do sistema"}
           </div>
-          <DialogTitle>Aprenda o Combinado Família configurando seu primeiro combinado</DialogTitle>
+          <DialogTitle>{modoManual ? "Cadastre tudo em um único fluxo" : "Aprenda o Combinado Família configurando seu primeiro combinado"}</DialogTitle>
           <DialogDescription>
-            Este passo a passo ensina, na prática, como o sistema funciona. Você fará os cadastros essenciais na ordem correta e, ao terminar, seguirá direto para Fez / Não fez.
+            {modoManual
+              ? "Cadastre filho, tarefa, vigência e associação em sequência. Você pode fechar e reabrir pelo menu sem perder o que já foi salvo."
+              : "Este passo a passo ensina, na prática, como o sistema funciona. Você fará os cadastros essenciais na ordem correta e, ao terminar, seguirá direto para Fez / Não fez."}
           </DialogDescription>
         </DialogHeader>
 
@@ -382,6 +412,13 @@ export function OnboardingInicial() {
                 {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
               </Button>
             </div>
+          </div>
+        )}
+        {modoManual && (
+          <div className="flex justify-end border-t pt-3">
+            <Button type="button" variant="ghost" disabled={salvando} onClick={() => onManualOpenChange?.(false)}>
+              <X className="h-4 w-4" /> Fechar
+            </Button>
           </div>
         )}
       </DialogContent>
