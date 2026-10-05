@@ -15,12 +15,11 @@ import { Pick } from "@/components/Pick";
 import { PageHeader } from "@/components/PageHeader";
 import { useActionLoading } from "@/components/ActionLoading";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
-import { erroLimiteMesada } from "@/lib/limite-mesada";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
     { title: "Cadastro Fluxo — Combinado" },
-    { name: "description", content: "Cadastre filhos, tarefas, vigência e associações em um único fluxo." },
+    { name: "description", content: "Cadastre filhos, tarefas, vigência e atribuições em um único fluxo." },
   ] }),
   component: CadastroUnicoPage,
 });
@@ -256,19 +255,11 @@ function CadastroUnicoPage() {
   }
 
   async function criarAssociacoes() {
-    if (!vigenciaCriadaId) { toast.error("Crie a vigência antes das associações"); return; }
+    if (!vigenciaCriadaId) { toast.error("Crie a vigência antes das atribuições"); return; }
     if (!filhosSelecionados.length || !tarefasSelecionadas.length) { toast.error("Selecione ao menos um filho e uma tarefa"); return; }
 
     const vigencia = vigencias.find((v) => v.id === vigenciaCriadaId);
     if (!vigencia) { toast.error("Aguarde a atualização da vigência e tente novamente"); return; }
-
-    for (const id of filhosSelecionados) {
-      const filho = filhos.find((f) => f.id === id);
-      if (filho) {
-        const erro = erroLimiteMesada(filho, vigencia);
-        if (erro) { toast.error(`${filho.nome}: ${erro}`); return; }
-      }
-    }
 
     const existentes = new Set(atribuicoes.map((a) => `${a.id_vigencia}|${a.id_filho}|${a.id_tarefa}`));
     const novos = filhosSelecionados.flatMap((id_filho) =>
@@ -368,13 +359,13 @@ function CadastroUnicoPage() {
       qc.invalidateQueries({ queryKey: ["vigencias"] }),
       qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
     ]);
-    toast.success(`Nova vigência criada com ${associacoesModelo.length} associação(ões) copiadas e zeradas`);
+    toast.success(`Nova vigência criada com ${associacoesModelo.length} atribuição(ões) copiadas e zeradas`);
     navigate({ to: "/vigencias" });
   }
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Cadastro Fluxo" description="Cadastre vários filhos e tarefas em lote, crie associações e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
+      <PageHeader title="Cadastro Fluxo" description="Cadastre vários filhos e tarefas em lote, crie atribuições e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
 
       <div className="max-w-sm">
         <Pick
@@ -624,7 +615,7 @@ function CadastroUnicoPage() {
                 </div>
 
                 <div className="flex items-center justify-between border-t pt-2.5">
-                  <p className="text-xs text-muted-foreground">{totalCombinacoes} associação(ões) selecionada(s)</p>
+                  <p className="text-xs text-muted-foreground">{totalCombinacoes} atribuição(ões) selecionada(s)</p>
                   <Button onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
                 </div>
               </CardContent>
@@ -644,7 +635,7 @@ function CadastroUnicoPage() {
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold">{new Set(associacoesModelo.map((a) => a.id_filho)).size}</p><p className="text-[10px] text-muted-foreground">filhos</p></div>
                     <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold">{new Set(associacoesModelo.map((a) => a.id_tarefa)).size}</p><p className="text-[10px] text-muted-foreground">tarefas</p></div>
-                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold text-primary">{associacoesModelo.length}</p><p className="text-[10px] text-muted-foreground">associações</p></div>
+                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold text-primary">{associacoesModelo.length}</p><p className="text-[10px] text-muted-foreground">atribuições</p></div>
                   </div>
                   <p className="mt-3 text-xs text-muted-foreground">Somente a estrutura será copiada. Fez, Não fez, bonificações, penalidades atingidas e contadores começam zerados.</p>
                 </div>
@@ -657,7 +648,7 @@ function CadastroUnicoPage() {
                   <div className="space-y-2"><Label>Quantidade de “Não fez”</Label><Input type="number" min="1" max="31" value={duplicacao.qtd_ocorrencia} onChange={(e) => setDuplicacao({ ...duplicacao, qtd_ocorrencia: e.target.value })} /></div>
                   <div className="space-y-2"><Label>Desconto por “Não fez”</Label><CurrencyInput value={duplicacao.valor_debito} onValueChange={(valor_debito) => setDuplicacao({ ...duplicacao, valor_debito })} /></div>
                 </div>
-                <Button onClick={() => void runAction(duplicarVigencia)}><Copy className="h-4 w-4" /> Criar nova vigência com associações</Button>
+                <Button onClick={() => void runAction(duplicarVigencia)}><Copy className="h-4 w-4" /> Criar nova vigência com atribuições</Button>
               </>
             )}
           </CardContent>
