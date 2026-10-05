@@ -113,6 +113,27 @@
       "when": 1791242221589,
       "tag": "0015_reset_and_consolidate_business_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791242874697,
+      "tag": "0016_consolidate_public_child_dashboard",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791242889921,
+      "tag": "0017_consolidate_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791242904216,
+      "tag": "0018_consolidate_child_public_access",
+      "breakpoints": true
     }
   ]
 }
