@@ -15,6 +15,7 @@ import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { reais, usaDesconto, valorDebitado } from "@/lib/mesada";
 import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
+import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/notificacoes")({
   component: Notificacoes,
@@ -28,6 +29,7 @@ function Notificacoes() {
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const [busy, setBusy] = useState(false);
   const [fezAnterior, setFezAnterior] = useState<FezAnterior | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Set<string>>(new Set());
@@ -207,7 +209,7 @@ function Notificacoes() {
                                       <Button size="sm" variant="outline" disabled={busy} className={`min-w-24 ${botaoFezClass}`} onClick={() => setFezAnterior({ tarefa, data, bonusTipo: "NENHUMA", descricao: "", valor: "" })}>
                                         <ThumbsUp className="h-4 w-4 text-green-600" /> Fez
                                       </Button>
-                                      <Button size="sm" variant="outline" disabled={busy} className={`min-w-24 ${botaoNaoFezClass}`} onClick={() => void registrarNaoFezAnterior(tarefa, data)}>
+                                      <Button size="sm" variant="outline" disabled={busy} className={`min-w-24 ${botaoNaoFezClass}`} onClick={() => void runAction(() => registrarNaoFezAnterior(tarefa, data))}>
                                         <ThumbsDown className="h-4 w-4 text-red-600" /> Não fez
                                       </Button>
                                     </div>
@@ -244,7 +246,7 @@ function Notificacoes() {
 
                                     <div className="flex justify-end gap-2">
                                       <Button size="sm" variant="outline" disabled={busy} onClick={() => setFezAnterior(null)}>Cancelar</Button>
-                                      <Button size="sm" disabled={busy} onClick={() => void registrarFezAnterior(fezAnterior)}>Salvar Fez</Button>
+                                      <Button size="sm" disabled={busy} onClick={() => void runAction(() => registrarFezAnterior(fezAnterior))}>Salvar Fez</Button>
                                     </div>
                                   </div>
                                 )}
