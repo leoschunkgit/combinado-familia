@@ -103,7 +103,10 @@ function AuthenticatedLayout() {
   const pendenciasHoje = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
   const pendenciasPassadas = configuracaoInicialConcluida ? pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
   const totalPendencias = pendenciasHoje.length + pendenciasPassadas.length;
-  const quantidadeNotificacoes = new Set(pendenciasHoje.map((p) => p.id_filho)).size;
+  const quantidadeNotificacoes = new Set([
+    ...pendenciasHoje.map((p) => p.id_filho),
+    ...pendenciasPassadas.map((p) => p.tarefa.id_filho),
+  ]).size;
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
