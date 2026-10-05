@@ -148,6 +148,13 @@
       "when": 1791243687062,
       "tag": "0020_sync_occurrence_derived_state",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791244019519,
+      "tag": "0021_derive_penalty_from_occurrences",
+      "breakpoints": true
     }
   ]
 }
