@@ -55,21 +55,17 @@ function TarefasPage() {
     const invalida = nomes.find((item) => item.length < 2 || item.length > 150);
     if (invalida) { toast.error(`A tarefa "${invalida}" deve ter entre 2 e 150 caracteres`); return; }
 
-    let salvas = 0;
-    for (const tarefa of nomes) {
-      const { error } = await supabase.from("t_tarefa").insert({ nome: tarefa });
-      if (error) {
-        toast.error(`Erro ao cadastrar "${tarefa}": ${msgErro(error)}`);
-        break;
-      }
-      salvas += 1;
+    const { error } = await supabase.from("t_tarefa").insert(
+      nomes.map((tarefa) => ({ nome: tarefa })),
+    );
+    if (error) {
+      toast.error(msgErro(error));
+      return;
     }
 
-    if (salvas > 0) {
-      toast.success(`${salvas} tarefa(s) cadastrada(s)`);
-      if (salvas === nomes.length) setLote("");
-      qc.invalidateQueries({ queryKey: ["tarefas"] });
-    }
+    toast.success(`${nomes.length} tarefa(s) cadastrada(s)`);
+    setLote("");
+    qc.invalidateQueries({ queryKey: ["tarefas"] });
   }
 
   async function excluir(id: number) {
