@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useVigencias, type Filho } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos, type Filho } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
 import { copyText, openExternalUrl, shareLink } from "@/lib/platform-actions";
@@ -66,8 +66,6 @@ function FilhosPage() {
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const { data: filhos = [] } = useFilhos();
-  const { data: atribuicoes = [] } = useFilhoTarefas();
-  const { data: vigencias = [] } = useVigencias();
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Filho | null>(null);
