@@ -169,6 +169,13 @@
       "when": 1791244043461,
       "tag": "0023_guard_nao_fez_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791244054446,
+      "tag": "0024_allow_occurrence_cascade_delete",
+      "breakpoints": true
     }
   ]
 }
