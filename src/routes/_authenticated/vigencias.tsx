@@ -379,7 +379,6 @@ function VigenciasPage() {
               <BrDateTimeField
                 id="duplicar-inicio"
                 value={duplicacao.data_inicio}
-                min={duplicacao.data_inicio}
                 onChange={(data_inicio) => setDuplicacao({ ...duplicacao, data_inicio })}
               />
               <p className="text-xs text-muted-foreground">Sugestão automática baseada no fim da última vigência cadastrada.</p>
