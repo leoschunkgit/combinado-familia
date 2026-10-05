@@ -6,7 +6,7 @@ import { Bell, CalendarRange, ClipboardCheck, LayoutDashboard, ListTodo, LogOut,
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ActionLoadingProvider } from "@/components/ActionLoading";
+import { useActionLoading } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
 import { CheckinDiario } from "@/components/CheckinDiario";
 import { useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
@@ -61,6 +61,7 @@ function AuthenticatedLayout() {
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const hoje = useDataBrasilAtual();
   const [aberto, setAberto] = useState(false);
   const [etapa, setEtapa] = useState<number | null>(null);
@@ -115,7 +116,7 @@ function AuthenticatedLayout() {
   );
 
   return (
-    <ActionLoadingProvider>
+    <>
       {!saindo && <OnboardingInicial />}
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="native-safe-area min-h-screen md:flex">
@@ -134,7 +135,7 @@ function AuthenticatedLayout() {
             <ContaLink />
           </nav>
           <div className="hidden shrink-0 p-2 md:block md:w-64">
-            <div className="rounded-md bg-muted px-2.5 py-1.5"><p className="text-[9px] leading-tight text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold leading-tight">{nomePai}</p><Button variant="outline" size="sm" className="mt-1 h-7 w-full text-[11px]" onClick={sair}><LogOut className="h-3 w-3" /> Sair</Button></div>
+            <div className="rounded-md bg-muted px-2.5 py-1.5"><p className="text-[9px] leading-tight text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold leading-tight">{nomePai}</p><Button variant="outline" size="sm" className="mt-1 h-7 w-full text-[11px]" onClick={() => void runAction(sair)}><LogOut className="h-3 w-3" /> Sair</Button></div>
             <p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p>
           </div>
         </aside>
@@ -154,7 +155,7 @@ function AuthenticatedLayout() {
               </Button>
             </section>
           )}
-          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Button variant="ghost" size="icon" onClick={encerrar} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? encerrar() : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={encerrar} disabled={salvando}>Pular guia</Button></div></section>}
+          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Button variant="ghost" size="icon" onClick={() => void runAction(encerrar)} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? encerrar() : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button></div></section>}
           <Outlet />
         </div></main>
 
@@ -166,8 +167,8 @@ function AuthenticatedLayout() {
           <div className="fixed bottom-3 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="rounded-lg bg-muted p-2.5"><p className="text-[10px] text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-2 h-8 w-full text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
 
-        <Dialog open={aberto} onOpenChange={(open) => { if (!open) void encerrar(); }}><DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-lg"><DialogHeader><DialogTitle>Boas-vindas ao Combinado</DialogTitle><DialogDescription>Um caminho simples para começar a organizar os combinados da família.</DialogDescription></DialogHeader><ol className="space-y-2 py-2">{ETAPAS.map((item, index) => <li key={item.to} className="flex gap-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span><span className="self-center font-medium">{item.title}</span></li>)}</ol><div className="flex flex-wrap justify-end gap-2"><Button variant="ghost" onClick={encerrar} disabled={salvando}>Pular guia</Button><Button onClick={() => irParaEtapa(0)}>Começar <ArrowRight /></Button></div></DialogContent></Dialog>
+        <Dialog open={aberto} onOpenChange={(open) => { if (!open) void runAction(encerrar); }}><DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-lg"><DialogHeader><DialogTitle>Boas-vindas ao Combinado</DialogTitle><DialogDescription>Um caminho simples para começar a organizar os combinados da família.</DialogDescription></DialogHeader><ol className="space-y-2 py-2">{ETAPAS.map((item, index) => <li key={item.to} className="flex gap-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span><span className="self-center font-medium">{item.title}</span></li>)}</ol><div className="flex flex-wrap justify-end gap-2"><Button variant="ghost" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button><Button onClick={() => irParaEtapa(0)}>Começar <ArrowRight /></Button></div></DialogContent></Dialog>
       </div>
-    </ActionLoadingProvider>
+    </>
   );
 }
