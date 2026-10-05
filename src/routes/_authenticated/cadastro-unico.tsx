@@ -13,7 +13,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { Pick } from "@/components/Pick";
 import { PageHeader } from "@/components/PageHeader";
-import { compararVigencias } from "@/components/VigenciaStatus";
+import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 
@@ -627,7 +627,7 @@ function CadastroUnicoPage() {
         <Card className="overflow-hidden border-primary/20">
           <CardHeader className="border-b bg-primary/5"><CardTitle className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Copy className="h-5 w-5" /></span><span>Duplicar vigência existente</span></CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <Pick label="Vigência modelo" value={modeloId} onChange={escolherModelo} options={vigenciasOrdenadas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: new Date(v.data_fim).getTime() < Date.now() ? "finalizada" as const : new Date(v.data_inicio).getTime() > Date.now() ? "futura" as const : "andamento" as const }))} />
+            <Pick label="Vigência modelo" value={modeloId} onChange={escolherModelo} options={vigenciasOrdenadas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: situacaoVigencia(v) }))} />
             {modelo && (
               <>
                 <div className="rounded-xl border bg-muted/20 p-4">
