@@ -153,7 +153,7 @@ function AuthenticatedLayout() {
           <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-1.5 md:pb-1">
             <Link to="/cadastro-unico" className="mb-1 flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100" activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}>
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"><ListPlus className="h-3.5 w-3.5" /></span>
-              <span className="min-w-0"><span className="block">Cadastro fluxo</span><span className="block text-[8px] font-medium leading-tight opacity-75">Cadastre tudo em um só fluxo</span></span>
+              <span className="min-w-0"><span className="block">Cadastro Fluxo</span><span className="block text-[8px] font-medium leading-tight opacity-75">Cadastre tudo em um só fluxo</span></span>
             </Link>
             {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1">
               <p className="mb-0 px-1.5 text-[8px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
@@ -183,7 +183,7 @@ function AuthenticatedLayout() {
           {!pathname.startsWith("/cadastro-unico") && (
             <section className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950 shadow-sm">
               <ListPlus className="h-4 w-4 shrink-0 text-amber-600" />
-              <p className="min-w-0 flex-1 truncate text-sm font-semibold">Cadastro fluxo</p>
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold">Cadastro Fluxo</p>
               <Button type="button" size="sm" variant="outline" className="h-8 shrink-0 border-amber-300 bg-white/70 px-3 text-xs hover:bg-white" onClick={() => navigate({ to: "/cadastro-unico" })}>
                 Acessar
               </Button>
@@ -200,7 +200,7 @@ function AuthenticatedLayout() {
           <nav className="flex flex-col p-2 pb-28">
             <Link to="/cadastro-unico" onClick={() => setMenuMobileAberto(false)} className="mb-2 flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><ListPlus className="h-5 w-5" /></span>
-              <span><span className="block">Cadastro fluxo</span><span className="block text-[10px] font-medium opacity-75">Cadastre tudo em um só fluxo</span></span>
+              <span><span className="block">Cadastro Fluxo</span><span className="block text-[10px] font-medium opacity-75">Cadastre tudo em um só fluxo</span></span>
             </Link>
             {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1">
               <p className="mb-0.5 px-2.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
