@@ -81,7 +81,7 @@ export function OnboardingInicial() {
       return;
     }
 
-    if (temMesada && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0)) {
+    if (temMesada && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
       toast.error("Informe um valor de mesada válido");
       return;
     }
@@ -152,8 +152,8 @@ export function OnboardingInicial() {
 
     const inicio = new Date(inicioVigencia).getTime();
     const fim = new Date(fimVigencia).getTime();
-    if (Number.isNaN(inicio) || Number.isNaN(fim) || fim < inicio) {
-      toast.error("A data final deve ser igual ou posterior à data inicial");
+    if (Number.isNaN(inicio) || Number.isNaN(fim) || fim <= inicio) {
+      toast.error("A data/hora fim deve ser posterior à data/hora início");
       return;
     }
 
@@ -167,6 +167,10 @@ export function OnboardingInicial() {
       toast.error("Informe a penalidade");
       return;
     }
+    if (textoPenalidade.length > 200) {
+      toast.error("A penalidade deve ter no máximo 200 caracteres");
+      return;
+    }
 
     const qtd = Number(quantidade);
     if (!Number.isInteger(qtd) || qtd < 1 || qtd > 31) {
@@ -174,12 +178,23 @@ export function OnboardingInicial() {
       return;
     }
 
-    if (!/^\d+(?:[,.]\d{1,2})?$/.test(desconto) || Number(desconto.replace(",", ".")) <= 0) {
+    if (!/^\d+(?:[,.]\d{1,2})?$/.test(desconto) || Number(desconto.replace(",", ".")) <= 0 || Number(desconto.replace(",", ".")) > 9999999999.99) {
       toast.error("Informe um valor de desconto válido");
       return;
     }
 
     const valorDebito = Number(desconto.replace(",", "."));
+
+    const conflito = vigencias.some((vigencia) => {
+      if (vigenciaEmCorrecaoId !== null && vigencia.id === vigenciaEmCorrecaoId) return false;
+      const existenteInicio = new Date(vigencia.data_inicio).getTime();
+      const existenteFim = new Date(vigencia.data_fim).getTime();
+      return inicio <= existenteFim && fim >= existenteInicio;
+    });
+    if (conflito) {
+      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
+      return;
+    }
 
     setSalvando(true);
     const payload = {
