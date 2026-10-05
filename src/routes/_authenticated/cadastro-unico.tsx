@@ -318,20 +318,32 @@ function CadastroUnicoPage() {
               <CardContent className="space-y-3 p-3.5">
                 <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar nova tarefa</p>
-                  <div className="mt-2 flex gap-2"><Input value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Nome da tarefa" /><Button size="sm" onClick={() => void runAction(cadastrarTarefa)}><Plus className="h-4 w-4" /> Adicionar ao fluxo</Button></div>
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <div className="w-full space-y-1.5 sm:w-72">
+                      <Label>Nome da tarefa</Label>
+                      <Input value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Nome da tarefa" />
+                    </div>
+                    <Button className="h-10 shrink-0" size="sm" onClick={() => void runAction(cadastrarTarefa)}><Plus className="h-4 w-4" /> Adicionar</Button>
+                  </div>
                 </div>
+
                 {tarefas.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold">Usar tarefas já cadastradas</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">Selecione as tarefas que farão parte deste fluxo.</p>
-                    <div className="mt-2 grid gap-1.5 sm:grid-cols-2 md:grid-cols-3">
+                    <p className="text-sm font-semibold">Marque abaixo quais tarefas participam do fluxo</p>
+                    <div className="mt-2 divide-y rounded-lg border bg-background">
                       {tarefas.map((t) => {
                         const selecionada = tarefasSelecionadas.includes(t.id);
-                        return <button type="button" key={t.id} onClick={() => alternar(tarefasSelecionadas, setTarefasSelecionadas, t.id)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition ${selecionada ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background hover:bg-muted/40"}`}><span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${selecionada ? "border-primary bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{selecionada ? <CheckCircle2 className="h-3.5 w-3.5" /> : <ListTodo className="h-3 w-3" />}</span><span className="min-w-0 flex-1"><span className="block truncate font-medium">{t.nome}</span><span className={`block text-[10px] ${selecionada ? "text-primary" : "text-muted-foreground"}`}>{selecionada ? "Selecionada para este fluxo" : "Selecionar para este fluxo"}</span></span></button>;
+                        return (
+                          <label key={t.id} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/30">
+                            <Checkbox checked={selecionada} onCheckedChange={() => alternar(tarefasSelecionadas, setTarefasSelecionadas, t.id)} />
+                            <span className="min-w-0 flex-1 truncate font-medium">{t.nome}</span>
+                          </label>
+                        );
                       })}
                     </div>
                   </div>
                 )}
+
                 <div className="flex items-center justify-between border-t pt-2.5"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(1)}>Anterior</Button><Button onClick={() => setEtapaNovo(3)} disabled={tarefasSelecionadas.length === 0}>Continuar para vigência</Button></div>
               </CardContent>
             </Card>
