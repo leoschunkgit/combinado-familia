@@ -144,16 +144,11 @@ function AuthenticatedLayout() {
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
           {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/notificacoes" && (
-            <section className="mb-6 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
-              <div className="flex min-w-0 items-start gap-3">
-                <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-                <div className="min-w-0">
-                  <p className="font-semibold">Há lançamentos pendentes nesta vigência.</p>
-                  <p className="mt-0.5 text-sm text-amber-800">Existem dias e tarefas que ainda precisam ser marcados como Fez ou Não fez.</p>
-                </div>
-              </div>
-              <Button type="button" size="sm" variant="outline" className="shrink-0 border-amber-300 bg-white/70 hover:bg-white" onClick={() => setModalPendenciasAberto(true)}>
-                Ver pendências
+            <section className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950 shadow-sm" role="status" aria-live="polite">
+              <TriangleAlert className="h-4 w-4 shrink-0 text-amber-600" />
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold">“Fez” ou “Não fez” pendentes</p>
+              <Button type="button" size="sm" variant="outline" className="h-8 shrink-0 border-amber-300 bg-white/70 px-3 text-xs hover:bg-white" onClick={() => setModalPendenciasAberto(true)}>
+                Resolver
               </Button>
             </section>
           )}
