@@ -123,10 +123,32 @@ function VigenciasPage() {
 
   async function excluir(id: number) {
     const vigencia = vigencias.find((v) => v.id === id);
-    if (vigencia && new Date(vigencia.data_fim).getTime() < Date.now()) { toast.error("Vigências finalizadas não podem ser excluídas"); return; }
+    if (!vigencia) return;
+
+    const agora = Date.now();
+    const inicio = new Date(vigencia.data_inicio).getTime();
+    const fim = new Date(vigencia.data_fim).getTime();
+    const finalizada = fim < agora;
+    const futura = inicio > agora;
+
+    if (finalizada) {
+      toast.error("Vigências finalizadas não podem ser excluídas");
+      return;
+    }
+
     const { count, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id", { count: "exact", head: true }).eq("id_vigencia", id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
-    if (count) { toast.error("Esta vigência tem atribuições e não pode ser excluída"); return; }
+
+    if (count && !futura) {
+      toast.error("Esta vigência está em andamento e tem atribuições, por isso não pode ser excluída");
+      return;
+    }
+
+    if (count && futura) {
+      const { error: erroAtribuicoes } = await supabase.from("t_filho_tarefa").delete().eq("id_vigencia", id);
+      if (erroAtribuicoes) { toast.error(msgErro(erroAtribuicoes)); return; }
+    }
+
     const { error } = await supabase.from("t_vigencia").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
@@ -280,7 +302,7 @@ function VigenciasPage() {
                 <Button variant="ghost" size="icon" onClick={() => abrirDuplicacao(v)} title="Duplicar vigência" aria-label="Duplicar vigência"><Copy className="h-4 w-4" /></Button>
                 {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
-                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}><Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)}><Trash2 className="h-4 w-4" /></Button></BlockedAction>
+                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : emAndamento && temAtribuicoes ? "Esta vigência está em andamento e tem atribuições, por isso não pode ser excluída." : undefined}><Button variant="ghost" size="icon" disabled={finalizada || (emAndamento && temAtribuicoes)} onClick={() => setConfirmarExclusao(v.id)}><Trash2 className="h-4 w-4" /></Button></BlockedAction>
               </div>
             </div>
             <div className="mt-2 space-y-1.5">
