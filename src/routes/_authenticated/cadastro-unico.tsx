@@ -553,7 +553,7 @@ function CadastroUnicoPage() {
 
           {etapaNovo === 4 && (
             <Card className="overflow-hidden border-primary/20">
-              <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">4</span><span className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Associações</span></CardTitle></CardHeader>
+              <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">4</span><span className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Atribuições</span></CardTitle></CardHeader>
               <CardContent className="space-y-3 p-3.5">
                 <p className="text-sm text-muted-foreground">Escolha quais tarefas pertencem a cada filho.</p>
 
@@ -567,9 +567,8 @@ function CadastroUnicoPage() {
                         <div className="flex items-center justify-between gap-3 border-b bg-muted/20 px-3 py-2">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold">{filho.nome}</p>
-                            <p className="text-[11px] text-muted-foreground">{selecionadas.length} tarefa(s) selecionada(s)</p>
                           </div>
-                          <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs">
+                          <label className="flex shrink-0 cursor-pointer items-center gap-2.5 text-xs">
                             <Checkbox
                               checked={todasSelecionadas}
                               onCheckedChange={() =>
