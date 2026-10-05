@@ -136,7 +136,7 @@ function AuthenticatedLayout() {
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
-          {configuracaoInicialConcluida && totalPendencias > 0 && (
+          {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/notificacoes" && (
             <section className="mb-6 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
               <div className="flex min-w-0 items-start gap-3">
                 <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
