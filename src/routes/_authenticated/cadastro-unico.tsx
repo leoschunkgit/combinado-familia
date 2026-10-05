@@ -124,9 +124,24 @@ function CadastroUnicoPage() {
     return null;
   }
 
+  function conflitaComVigenciaExistente(inicioCampo: string, fimCampo: string, ignorarId?: number) {
+    const inicio = new Date(inicioCampo).getTime();
+    const fim = new Date(fimCampo).getTime();
+    return vigencias.some((v) => {
+      if (ignorarId !== undefined && v.id === ignorarId) return false;
+      const existenteInicio = new Date(v.data_inicio).getTime();
+      const existenteFim = new Date(v.data_fim).getTime();
+      return inicio <= existenteFim && fim >= existenteInicio;
+    });
+  }
+
   async function criarVigencia() {
     const erro = validarVigencia(vigenciaDraft);
     if (erro) { toast.error(erro); return; }
+    if (conflitaComVigenciaExistente(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)) {
+      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
+      return;
+    }
     const payload = {
       data_inicio: paraIsoDataHoraBrasil(vigenciaDraft.data_inicio),
       data_fim: paraIsoDataHoraBrasil(vigenciaDraft.data_fim),
@@ -197,6 +212,10 @@ function CadastroUnicoPage() {
     const fimModelo = new Date(modelo.data_fim).getTime();
     if (novoInicio <= fimModelo) {
       toast.error("A nova vigência deve começar depois do término da vigência modelo");
+      return;
+    }
+    if (conflitaComVigenciaExistente(duplicacao.data_inicio, duplicacao.data_fim)) {
+      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
       return;
     }
 
