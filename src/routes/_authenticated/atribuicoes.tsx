@@ -108,14 +108,12 @@ function AtribuicoesPage() {
     }
 
     if (!futura) {
-      const { data: atribuicoes, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id").eq("id_filho", alvo.id_filho).eq("id_vigencia", alvo.id_vigencia);
-      if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
-      const ids = (atribuicoes ?? []).map((item) => item.id);
-      if (ids.length > 0) {
-        const { count, error: historicoErro } = await supabase.from("t_ocorrencia").select("id", { count: "exact", head: true }).in("id_filho_tarefa", ids);
-        if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
-        if (count) { toast.error("Este filho já tem registros de Fez/Não fez nesta vigência. Não é possível excluir a atribuição."); return; }
-      }
+      const { count, error: historicoErro } = await supabase
+        .from("t_ocorrencia")
+        .select("id", { count: "exact", head: true })
+        .eq("id_filho_tarefa", alvo.id);
+      if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
+      if (count) { toast.error("Esta atribuição já tem registros de Fez/Não fez e não pode ser excluída."); return; }
     }
 
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
@@ -128,7 +126,7 @@ function AtribuicoesPage() {
   }
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
-  const temHistorico = (item: FilhoTarefa) => existentes.some((outra) => outra.id_filho === item.id_filho && outra.id_vigencia === item.id_vigencia && ocorrencias.some((o) => o.id_filho_tarefa === outra.id));
+  const temHistorico = (item: FilhoTarefa) => ocorrencias.some((o) => o.id_filho_tarefa === item.id);
   const filtradas = existentes.filter((item) =>
     (filtroVig === "all" || item.id_vigencia === Number(filtroVig)) &&
     (filtroFilho === "all" || item.id_filho === Number(filtroFilho)) &&
@@ -287,7 +285,7 @@ function AtribuicoesPage() {
                                           : finalizada
                                             ? "Atribuições de vigências finalizadas não podem ser excluídas."
                                             : bloqueadaPorHistorico
-                                              ? "Este filho já tem registros de Fez/Não fez nesta vigência; a atribuição não pode ser excluída."
+                                              ? "Esta atribuição já tem registros de Fez/Não fez e não pode ser excluída."
                                               : undefined;
                                         return (
                                           <BlockedAction reason={motivo}>
