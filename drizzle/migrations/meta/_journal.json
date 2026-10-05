@@ -162,6 +162,13 @@
       "when": 1791244032266,
       "tag": "0022_allow_account_cascade_with_validities",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791244043461,
+      "tag": "0023_guard_nao_fez_limit",
+      "breakpoints": true
     }
   ]
 }
