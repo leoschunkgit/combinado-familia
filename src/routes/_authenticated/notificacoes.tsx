@@ -17,6 +17,7 @@ function Notificacoes() {
   const hoje = useDataBrasilAtual();
   const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
   const dataAtual = hoje.split("-").reverse().join("/");
+  const quantidadeNotificacoes = new Set(pendencias.map((p) => p.id_filho)).size;
 
   const grupos = vigencias
     .map((vigencia) => ({
@@ -51,9 +52,9 @@ function Notificacoes() {
       ) : (
         <>
           <div className="rounded-2xl border bg-primary/5 p-4">
-            <p className="text-sm font-semibold">1 notificação pendente hoje</p>
+            <p className="text-sm font-semibold">{quantidadeNotificacoes} {quantidadeNotificacoes === 1 ? "notificação pendente" : "notificações pendentes"} hoje</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Existe pelo menos uma tarefa de hoje ainda sem Fez ou Não fez.
+              Cada filho com pelo menos uma tarefa de hoje sem Fez ou Não fez gera uma notificação.
             </p>
           </div>
 
