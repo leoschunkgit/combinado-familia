@@ -24,6 +24,7 @@ import {
 } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { erroLimiteMesada } from "@/lib/limite-mesada";
+import { useActionLoading } from "@/components/ActionLoading";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
 
