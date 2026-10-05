@@ -96,12 +96,12 @@ export function useDataBrasilAtual() {
       }).formatToParts(agora);
       const mapa = Object.fromEntries(partes.map((p) => [p.type, p.value]));
       const hojeLocal = new Date(
-        Number(mapa.year),
-        Number(mapa.month) - 1,
-        Number(mapa.day),
-        Number(mapa.hour),
-        Number(mapa.minute),
-        Number(mapa.second),
+        Number(mapa["year"]),
+        Number(mapa["month"]) - 1,
+        Number(mapa["day"]),
+        Number(mapa["hour"]),
+        Number(mapa["minute"]),
+        Number(mapa["second"]),
       );
       const proximaMeiaNoite = new Date(hojeLocal);
       proximaMeiaNoite.setDate(proximaMeiaNoite.getDate() + 1);
