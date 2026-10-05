@@ -14,7 +14,7 @@ import { BlockedAction } from "@/components/BlockedAction";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
-import { VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
+import { compararVigencias, VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -48,17 +48,7 @@ function AtribuicoesPage() {
   const [filtroFilho, setFiltroFilho] = useState("all");
   const [filtroTarefa, setFiltroTarefa] = useState("all");
 
-  const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
-    const agora = Date.now();
-    const inicioA = new Date(a.data_inicio).getTime();
-    const inicioB = new Date(b.data_inicio).getTime();
-    const fimA = new Date(a.data_fim).getTime();
-    const fimB = new Date(b.data_fim).getTime();
-    const statusA = inicioA <= agora && fimA >= agora ? 0 : inicioA > agora ? 1 : 2;
-    const statusB = inicioB <= agora && fimB >= agora ? 0 : inicioB > agora ? 1 : 2;
-    if (statusA !== statusB) return statusA - statusB;
-    return statusA === 2 ? inicioB - inicioA : inicioA - inicioB;
-  });
+  const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
 
   const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
   const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && new Date(vigenciaSelecionada.data_fim).getTime() < Date.now());
