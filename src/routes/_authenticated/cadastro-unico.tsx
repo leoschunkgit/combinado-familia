@@ -57,6 +57,29 @@ const vigenciaInicial = (): VigenciaDraft => {
   };
 };
 
+function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, atual: VigenciaDraft): VigenciaDraft {
+  if (vigencias.length === 0) return atual;
+
+  const maiorFim = vigencias.reduce((maior, vigencia) => {
+    const fim = new Date(vigencia.data_fim).getTime();
+    return fim > maior ? fim : maior;
+  }, Number.NEGATIVE_INFINITY);
+
+  if (!Number.isFinite(maiorFim)) return atual;
+
+  const inicio = new Date(maiorFim);
+  inicio.setDate(inicio.getDate() + 1);
+
+  const fim = new Date(inicio);
+  fim.setMonth(fim.getMonth() + 1);
+
+  return {
+    ...atual,
+    data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
+    data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
+  };
+}
+
 function CadastroUnicoPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -177,6 +200,7 @@ function CadastroUnicoPage() {
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
     }
 
+    setVigenciaDraft((atual) => sugerirPeriodoVigencia(vigencias, atual));
     setEtapaNovo(3);
   }
 
