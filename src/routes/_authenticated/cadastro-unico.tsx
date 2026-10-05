@@ -329,38 +329,24 @@ function CadastroUnicoPage() {
       return;
     }
 
-    const { data: nova, error: erroVigencia } = await supabase.from("t_vigencia").insert({
-      data_inicio: paraIsoDataHoraBrasil(duplicacao.data_inicio),
-      data_fim: paraIsoDataHoraBrasil(duplicacao.data_fim),
-      penalidade: duplicacao.penalidade.trim(),
-      qtd_ocorrencia: Number(duplicacao.qtd_ocorrencia),
-      tipo_penalidade: "texto",
-      valor_debito: Number(duplicacao.valor_debito.replace(",", ".")),
-    }).select("id").single();
+    const { data, error } = await supabase.rpc("duplicar_vigencia_com_atribuicoes", {
+      p_modelo_id: modelo.id,
+      p_data_inicio: paraIsoDataHoraBrasil(duplicacao.data_inicio),
+      p_data_fim: paraIsoDataHoraBrasil(duplicacao.data_fim),
+      p_penalidade: duplicacao.penalidade.trim(),
+      p_qtd_ocorrencia: Number(duplicacao.qtd_ocorrencia),
+      p_valor_debito: Number(duplicacao.valor_debito.replace(",", ".")),
+    });
 
-    if (erroVigencia || !nova) { toast.error(msgErro(erroVigencia)); return; }
+    if (error) { toast.error(msgErro(error)); return; }
 
-    if (associacoesModelo.length > 0) {
-      const novasAtribuicoes = associacoesModelo.map((a) => ({
-        id_vigencia: nova.id,
-        id_filho: a.id_filho,
-        id_tarefa: a.id_tarefa,
-        qtd_nao_fez: 0,
-        feito: null,
-      }));
-      const { error: erroAtribuicoes } = await supabase.from("t_filho_tarefa").insert(novasAtribuicoes);
-      if (erroAtribuicoes) {
-        await supabase.from("t_vigencia").delete().eq("id", nova.id);
-        toast.error(msgErro(erroAtribuicoes));
-        return;
-      }
-    }
+    const qtdCopiada = data?.[0]?.qtd_atribuicoes ?? 0;
 
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["vigencias"] }),
       qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
     ]);
-    toast.success(`Nova vigência criada com ${associacoesModelo.length} atribuição(ões) copiadas e zeradas`);
+    toast.success(`Nova vigência criada com ${qtdCopiada} atribuição(ões) copiadas e zeradas`);
     navigate({ to: "/vigencias" });
   }
 
