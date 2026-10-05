@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/PageHeader";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa } from "@/lib/db";
@@ -188,7 +189,7 @@ function Notificacoes() {
                               </SelectContent>
                             </Select>
                             {fezAnterior.bonusTipo==="TEXTO" && <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.descricao} onChange={e=>setFezAnterior({...fezAnterior,descricao:e.target.value})}/>}
-                            {fezAnterior.bonusTipo==="VALOR" && <input inputMode="decimal" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.valor} onChange={e=>setFezAnterior({...fezAnterior,valor:e.target.value})}/>}
+                            {fezAnterior.bonusTipo==="VALOR" && <CurrencyInput value={fezAnterior.valor} onValueChange={valor=>setFezAnterior({...fezAnterior,valor})}/>}
                             <div className="flex justify-end gap-2"><Button size="sm" variant="outline" onClick={()=>setFezAnterior(null)}>Cancelar</Button><Button size="sm" disabled={busy} onClick={()=>void registrarFezAnterior(fezAnterior)}>Salvar Fez</Button></div>
                           </div>}
                         </div>
