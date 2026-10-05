@@ -13,6 +13,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { Pick } from "@/components/Pick";
 import { PageHeader } from "@/components/PageHeader";
+import { compararVigencias } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 
@@ -104,7 +105,7 @@ function CadastroUnicoPage() {
   const [etapaNovo, setEtapaNovo] = useState<1 | 2 | 3 | 4>(1);
   const [tarefasPorFilho, setTarefasPorFilho] = useState<Record<number, number[]>>({});
 
-  const vigenciasOrdenadas = [...vigencias].sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime());
+  const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
   const modelo = vigencias.find((v) => v.id === Number(modeloId));
   const associacoesModelo = useMemo(() => atribuicoes.filter((a) => a.id_vigencia === Number(modeloId)), [atribuicoes, modeloId]);
   const totalCombinacoes = filhosSelecionados.reduce((total, idFilho) => total + (tarefasPorFilho[idFilho]?.length ?? 0), 0);
