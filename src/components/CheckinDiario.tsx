@@ -10,6 +10,7 @@ import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, 
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
+import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 type FezDraft = { tarefa: FilhoTarefa; data: string; bonusTipo: BonusTipo; descricao: string; valor: string };
@@ -298,7 +299,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                       size="sm"
                                       variant="outline"
                                       disabled={busy}
-                                      className="min-w-24"
+                                      className={`min-w-24 ${botaoFezClass}`}
                                       onClick={() =>
                                         setFez({
                                           tarefa,
@@ -314,12 +315,12 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      variant="destructive"
+                                      variant="outline"
                                       disabled={busy}
-                                      className="min-w-24"
+                                      className={`min-w-24 ${botaoNaoFezClass}`}
                                       onClick={() => void registrarNaoFez(tarefa, data)}
                                     >
-                                      <ThumbsDown className="h-4 w-4" />
+                                      <ThumbsDown className="h-4 w-4 text-red-600" />
                                       Não fez
                                     </Button>
                                   </div>
