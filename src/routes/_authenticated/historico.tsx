@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AlertTriangle, CalendarRange, ChevronDown, ChevronsDownUp, ChevronsUpDown, History, Search, ThumbsDown } from "lucide-react";
+import { AlertTriangle, CalendarRange, ChevronDown, ChevronsDownUp, ChevronsUpDown, History, Search, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -135,6 +135,10 @@ function HistoricoPage() {
                  const chaveFilho = `${vigencia.id}-${filho.id}`;
                  const filhoAberto = filhosAbertos[chaveFilho] === true;
                  const comDesconto = usaDesconto(filho, vigencia);
+                 const registrosNaoFez = registros
+                   .filter((o) => o.tipo !== "FEZ")
+                   .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                 const ordemNaoFez = new Map(registrosNaoFez.map((o, index) => [o.id, index + 1]));
                  return (
                 <section key={filho.id} aria-label={`Filho ${filho.nome}`}>
                   <button
@@ -148,14 +152,16 @@ function HistoricoPage() {
                   </button>
                   {filhoAberto && <>
                    {comDesconto ? (
-                     <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registros.length)}</p>
+                     <p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada ?? 0)} · {resumoMesada(filho, vigencia, registrosNaoFez.length)}</p>
                    ) : (
                      <p className="mb-3 text-sm font-medium">Penalidade ao atingir o limite: {vigencia.penalidade || "Não cadastrada"}</p>
                    )}
                   <div className="grid gap-3">
-                     {[...registros].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((o, indice) => {
+                     {[...registros].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((o) => {
                       const ft = o.t_filho_tarefa;
-                      const penalidade = !comDesconto && penalizadas.has(o.id);
+                      const fez = o.tipo === "FEZ";
+                      const penalidade = !fez && !comDesconto && penalizadas.has(o.id);
+                      const numeroNaoFez = fez ? 0 : (ordemNaoFez.get(o.id) ?? 0);
                       return (
                         <div
                           key={o.id}
@@ -166,9 +172,13 @@ function HistoricoPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="font-medium">{ft?.t_tarefa?.nome}</p>
-                               {penalidade ? (
+                              {fez ? (
+                                <Badge className="border-green-200 bg-green-100 text-green-700 hover:bg-green-100">
+                                  <ThumbsUp className="mr-1 h-3 w-3" /> Fez
+                                </Badge>
+                              ) : penalidade ? (
                                 <Badge variant="destructive">
-                                    <AlertTriangle className="mr-1 h-3 w-3" /> Penalidade atingida
+                                  <AlertTriangle className="mr-1 h-3 w-3" /> Penalidade atingida
                                 </Badge>
                               ) : (
                                 <Badge className="border-red-200 bg-red-100 text-red-700 hover:bg-red-100">
@@ -176,11 +186,26 @@ function HistoricoPage() {
                                 </Badge>
                               )}
                             </div>
-                              {comDesconto ? (
-                               <p className="mt-1 text-sm font-medium tabular-nums text-foreground">Desconto: {reais(valorDebitado(filho, vigencia, indice + 1) - valorDebitado(filho, vigencia, indice))} · Mesada após este registro: {reais(Math.max(0, (filho.valor_mesada ?? 0) - valorDebitado(filho, vigencia, indice + 1)))}</p>
-                             ) : penalidade && (
+                            {fez ? (
+                              <>
+                                {o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao && (
+                                  <p className="mt-1 text-sm font-medium text-green-700">
+                                    Bonificação: {o.bonificacao_descricao}
+                                  </p>
+                                )}
+                                {o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null && (
+                                  <p className="mt-1 text-sm font-medium tabular-nums text-green-700">
+                                    Bonificação: {reais(o.bonificacao_valor)}
+                                  </p>
+                                )}
+                              </>
+                            ) : comDesconto ? (
+                              <p className="mt-1 text-sm font-medium tabular-nums text-foreground">
+                                Desconto: {reais(valorDebitado(filho, vigencia, numeroNaoFez) - valorDebitado(filho, vigencia, Math.max(0, numeroNaoFez - 1)))} · Mesada após este registro: {reais(Math.max(0, (filho.valor_mesada ?? 0) - valorDebitado(filho, vigencia, numeroNaoFez)))}
+                              </p>
+                            ) : penalidade && (
                               <p className="mt-1 text-sm font-medium text-destructive">
-                                  {vigencia.penalidade}
+                                {vigencia.penalidade}
                               </p>
                             )}
                           </div>
