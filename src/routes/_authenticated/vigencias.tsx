@@ -232,47 +232,28 @@ function VigenciasPage() {
       return;
     }
 
-    const origem = atribuicoes.filter((a) => a.id_vigencia === duplicando.id);
+    const { data, error } = await supabase.rpc("duplicar_vigencia_com_atribuicoes", {
+      p_modelo_id: duplicando.id,
+      p_data_inicio: paraIso(p.data.data_inicio),
+      p_data_fim: paraIso(p.data.data_fim),
+      p_penalidade: p.data.penalidade.trim(),
+      p_qtd_ocorrencia: Number(p.data.qtd_ocorrencia),
+      p_valor_debito: Number(p.data.valor_debito.replace(",", ".")),
+    });
 
-    const { data: nova, error: erroVigencia } = await supabase
-      .from("t_vigencia")
-      .insert({
-        ...p.data,
-        ...dadosPenalidade(p.data),
-        data_inicio: paraIso(p.data.data_inicio),
-        data_fim: paraIso(p.data.data_fim),
-      })
-      .select("id")
-      .single();
-
-    if (erroVigencia || !nova) {
-      toast.error(msgErro(erroVigencia));
+    if (error) {
+      toast.error(msgErro(error));
       return;
     }
 
-    if (origem.length > 0) {
-      const novasAtribuicoes = origem.map((a) => ({
-        id_vigencia: nova.id,
-        id_filho: a.id_filho,
-        id_tarefa: a.id_tarefa,
-        qtd_nao_fez: 0,
-        feito: null,
-      }));
-
-      const { error: erroAtribuicoes } = await supabase.from("t_filho_tarefa").insert(novasAtribuicoes);
-      if (erroAtribuicoes) {
-        await supabase.from("t_vigencia").delete().eq("id", nova.id);
-        toast.error(msgErro(erroAtribuicoes));
-        return;
-      }
-    }
+    const qtdCopiada = data?.[0]?.qtd_atribuicoes ?? 0;
 
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["vigencias"] }),
       qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
       qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
     ]);
-    toast.success(`Vigência duplicada com ${origem.length} atribuição(ões), todas zeradas`);
+    toast.success(`Vigência duplicada com ${qtdCopiada} atribuição(ões), todas zeradas`);
     setDuplicando(null);
   }
 
