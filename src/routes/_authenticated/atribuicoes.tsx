@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
+import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 
@@ -36,7 +36,6 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
-  const { data: ocorrencias = [] } = useOcorrencias();
   const [vig, setVig] = useState("");
   const [filho, setFilho] = useState("");
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
@@ -125,7 +124,6 @@ function AtribuicoesPage() {
   }
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
-  const temHistorico = (item: FilhoTarefa) => ocorrencias.some((o) => o.id_filho_tarefa === item.id);
   const filtradas = existentes.filter((item) =>
     (filtroVig === "all" || item.id_vigencia === Number(filtroVig)) &&
     (filtroFilho === "all" || item.id_filho === Number(filtroFilho)) &&
