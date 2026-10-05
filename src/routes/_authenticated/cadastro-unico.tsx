@@ -32,6 +32,11 @@ type FilhoNovoFluxo = {
   tem_mesada: boolean;
   valor_mesada: number | null;
 };
+
+type TarefaNovaFluxo = {
+  tempId: number;
+  nome: string;
+};
 type VigenciaDraft = {
   data_inicio: string;
   data_fim: string;
@@ -70,6 +75,7 @@ function CadastroUnicoPage() {
   const [filhosCriadosNoFluxo, setFilhosCriadosNoFluxo] = useState<number[]>([]);
   const [filhosNovosPendentes, setFilhosNovosPendentes] = useState<FilhoNovoFluxo[]>([]);
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
+  const [tarefasNovasPendentes, setTarefasNovasPendentes] = useState<TarefaNovaFluxo[]>([]);
   const [vigenciaDraft, setVigenciaDraft] = useState<VigenciaDraft>(() => vigenciaInicial());
   const [vigenciaCriadaId, setVigenciaCriadaId] = useState<number | null>(null);
   const [modeloId, setModeloId] = useState("");
@@ -138,15 +144,40 @@ function CadastroUnicoPage() {
     setEtapaNovo(2);
   }
 
-  async function cadastrarTarefa() {
+  function adicionarTarefaAoFluxo() {
     const nome = nomeTarefa.trim();
     if (nome.length < 2 || nome.length > 150) { toast.error("Informe um nome de tarefa entre 2 e 150 caracteres"); return; }
-    const { data, error } = await supabase.from("t_tarefa").insert({ nome }).select("id").single();
-    if (error || !data) { toast.error(msgErro(error)); return; }
-    setTarefasSelecionadas((atuais) => [...new Set([...atuais, data.id])]);
+
+    setTarefasNovasPendentes((atuais) => [
+      ...atuais,
+      { tempId: Date.now() + atuais.length, nome },
+    ]);
     setNomeTarefa("");
-    await qc.invalidateQueries({ queryKey: ["tarefas"] });
-    toast.success("Tarefa adicionada ao lote");
+  }
+
+  async function concluirEtapaTarefas() {
+    if (tarefasSelecionadas.length === 0 && tarefasNovasPendentes.length === 0) {
+      toast.error("Selecione ou adicione pelo menos uma tarefa");
+      return;
+    }
+
+    let idsNovos: number[] = [];
+
+    if (tarefasNovasPendentes.length > 0) {
+      const { data, error } = await supabase
+        .from("t_tarefa")
+        .insert(tarefasNovasPendentes.map((tarefa) => ({ nome: tarefa.nome })))
+        .select("id");
+
+      if (error || !data) { toast.error(msgErro(error)); return; }
+
+      idsNovos = data.map((item) => item.id);
+      setTarefasSelecionadas((atuais) => [...new Set([...atuais, ...idsNovos])]);
+      setTarefasNovasPendentes([]);
+      await qc.invalidateQueries({ queryKey: ["tarefas"] });
+    }
+
+    setEtapaNovo(3);
   }
 
   function validarVigencia(draft: VigenciaDraft) {
@@ -397,11 +428,11 @@ function CadastroUnicoPage() {
                       <Label>Nome da tarefa</Label>
                       <Input value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Nome da tarefa" />
                     </div>
-                    <Button className="h-10 shrink-0" size="sm" onClick={() => void runAction(cadastrarTarefa)}><Plus className="h-4 w-4" /> Adicionar</Button>
+                    <Button className="h-10 shrink-0" size="sm" onClick={adicionarTarefaAoFluxo}><Plus className="h-4 w-4" /> Adicionar</Button>
                   </div>
                 </div>
 
-                {tarefas.length > 0 && (
+                {(tarefas.length > 0 || tarefasNovasPendentes.length > 0) && (
                   <div>
                     <p className="text-sm font-semibold">Marque abaixo quais tarefas participam do fluxo</p>
                     <div className="mt-2 divide-y rounded-lg border bg-background">
@@ -414,11 +445,18 @@ function CadastroUnicoPage() {
                           </label>
                         );
                       })}
+                      {tarefasNovasPendentes.map((t) => (
+                        <div key={t.tempId} className="flex items-center gap-2.5 px-3 py-2 text-sm">
+                          <Checkbox checked disabled />
+                          <span className="min-w-0 flex-1 truncate font-medium">{t.nome}</span>
+                          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Nova</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t pt-2.5"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(1)}>Anterior</Button><Button onClick={() => setEtapaNovo(3)} disabled={tarefasSelecionadas.length === 0}>Continuar para vigência</Button></div>
+                <div className="flex items-center justify-between border-t pt-2.5"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(1)}>Anterior</Button><Button onClick={() => void runAction(concluirEtapaTarefas)} disabled={tarefasSelecionadas.length === 0 && tarefasNovasPendentes.length === 0}>Continuar para vigência</Button></div>
               </CardContent>
             </Card>
           )}
