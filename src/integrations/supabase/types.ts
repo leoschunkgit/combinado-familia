@@ -352,6 +352,10 @@ export type Database = {
         }[]
       }
       obter_painel_publico_filho: { Args: { p_token: string }; Returns: Json }
+      recalcular_estado_atribuicao: {
+        Args: { p_id: number }
+        Returns: undefined
+      }
       regenerar_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: {
