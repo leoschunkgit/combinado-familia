@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ChevronsDown, ChevronsUp, ChevronsUpDown, Link2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronsUpDown, Link2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,6 @@ import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTa
 import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 import { VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
-import { CollapseChevron } from "@/components/CollapseChevron";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   head: () => ({ meta: [
@@ -51,8 +50,6 @@ function AtribuicoesPage() {
   const [filtroVig, setFiltroVig] = useState("all");
   const [filtroFilho, setFiltroFilho] = useState("all");
   const [filtroTarefa, setFiltroTarefa] = useState("all");
-  const [vigenciasAbertas, setVigenciasAbertas] = useState<Set<number>>(new Set());
-  const [filhosAbertos, setFilhosAbertos] = useState<Set<string>>(new Set());
 
   const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
     const aAndamento = vigenciaEmAndamento(a);
@@ -190,35 +187,6 @@ function AtribuicoesPage() {
     }))
     .filter((grupo) => grupo.filhos.length > 0);
 
-  const chavesVigencias = grupos.map((grupo) => grupo.vigencia.id);
-  const chavesFilhos = grupos.flatMap((grupo) => grupo.filhos.map((filhoGrupo) => `${grupo.vigencia.id}|${filhoGrupo.filho.id}`));
-
-  function alternarVigencia(id: number) {
-    setVigenciasAbertas((atuais) => {
-      const proximo = new Set(atuais);
-      if (proximo.has(id)) proximo.delete(id); else proximo.add(id);
-      return proximo;
-    });
-  }
-
-  function alternarFilho(chave: string) {
-    setFilhosAbertos((atuais) => {
-      const proximo = new Set(atuais);
-      if (proximo.has(chave)) proximo.delete(chave); else proximo.add(chave);
-      return proximo;
-    });
-  }
-
-  function expandirTodos() {
-    setVigenciasAbertas(new Set(chavesVigencias));
-    setFilhosAbertos(new Set(chavesFilhos));
-  }
-
-  function recolherTodos() {
-    setVigenciasAbertas(new Set());
-    setFilhosAbertos(new Set());
-  }
-
   const statusVigencia = (v: (typeof vigencias)[number]) => ({
     value: String(v.id),
     label: fmtVigencia(v),
@@ -308,18 +276,12 @@ function AtribuicoesPage() {
         <EmptyState>Nenhuma atribuição encontrada para estes filtros.</EmptyState>
       ) : (
         <div className="space-y-4">
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={expandirTodos}><ChevronsDown className="h-4 w-4" /> Expandir todos</Button>
-            <Button type="button" variant="outline" size="sm" onClick={recolherTodos}><ChevronsUp className="h-4 w-4" /> Recolher todos</Button>
-          </div>
           {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
-            const vigenciaAberta = vigenciasAbertas.has(vigencia.id);
             const totalVigencia = gruposFilhos.reduce((soma, grupo) => soma + grupo.atribuicoes.length, 0);
             return (
               <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card">
-                <button type="button" className="flex w-full items-center justify-between gap-3 border-b bg-primary/5 px-4 py-3 text-left sm:px-5" onClick={() => alternarVigencia(vigencia.id)} aria-expanded={vigenciaAberta}>
+                <div className="flex w-full items-center justify-between gap-3 border-b bg-primary/5 px-4 py-3 text-left sm:px-5">
                   <div className="flex min-w-0 items-start gap-3">
-                    <CollapseChevron open={vigenciaAberta} className="mt-0.5 shrink-0 text-primary" />
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-wide text-primary">Vigência</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -331,26 +293,22 @@ function AtribuicoesPage() {
                   <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
                     {totalVigencia} {totalVigencia === 1 ? "tarefa" : "tarefas"}
                   </span>
-                </button>
-                {vigenciaAberta && (
-                  <div className="divide-y">
+                </div>
+                <div className="divide-y">
                     {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
                       const chave = `${vigencia.id}|${filhoItem.id}`;
-                      const filhoAberto = filhosAbertos.has(chave);
                       return (
                         <div key={chave}>
-                          <button type="button" className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5" onClick={() => alternarFilho(chave)} aria-expanded={filhoAberto}>
+                          <div className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5">
                             <div className="flex min-w-0 items-center gap-3">
-                              <CollapseChevron open={filhoAberto} className="shrink-0" />
                               <div className="min-w-0">
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
                                 <p className="truncate font-bold">{filhoItem.nome}</p>
                               </div>
                             </div>
                             <span className="shrink-0 text-xs font-medium text-muted-foreground">{atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}</span>
-                          </button>
-                          {filhoAberto && (
-                            <div className="border-t bg-muted/10 px-3 py-2 sm:px-5">
+                          </div>
+                          <div className="border-t bg-muted/10 px-3 py-2 sm:px-5">
                               <div className="divide-y rounded-lg border bg-background">
                                 {atribuicoesFilho.map((e) => (
                                   <div key={e.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 sm:px-4">
@@ -369,12 +327,10 @@ function AtribuicoesPage() {
                                 ))}
                               </div>
                             </div>
-                          )}
                         </div>
                       );
                     })}
                   </div>
-                )}
               </section>
             );
           })}
