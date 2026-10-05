@@ -29,7 +29,7 @@ const data = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "Americ
 const dinheiro = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 function status(v: Vigencia) { const agora = Date.now(), ini = new Date(v.data_inicio).getTime(), fim = new Date(v.data_fim).getTime(); return agora < ini ? "Futura" : agora <= fim ? "Em andamento" : "Finalizada"; }
 const corStatus = (s: string) => s === "Em andamento" ? "bg-green-400" : s === "Finalizada" ? "bg-red-300" : "bg-gray-300";
-function bonus(o: Ocorrencia) { if (o.tipo !== "FEZ") return null; if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao; if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null) return dinheiro(Number(o.bonificacao_valor)); return null; }
+function bonus(o: Ocorrencia) { if (o.tipo !== "FEZ") return null; if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao; if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null) return dinheiro(Number(o.bonificacao_valor)); return "Sem bonificação"; }
 
 function PainelPublico() {
   const { token } = Route.useParams();
