@@ -71,7 +71,7 @@ function Notificacoes() {
     const novo = total + 1, penalizado = !comDesconto && novo >= v.qtd_ocorrencia;
     setBusy(true);
     try {
-      const { error } = await supabase.from("t_ocorrencia").insert({ tipo: penalizado ? "PENALIDADE" : "NAO_FEZ", bonificacao_tipo: null, bonificacao_descricao: null, bonificacao_valor: null, id_filho_tarefa: r.id, created_at: new Date(data + "T12:00:00-03:00").toISOString() });
+      const { error } = await supabase.from("t_ocorrencia").insert({ tipo: "NAO_FEZ", bonificacao_tipo: null, bonificacao_descricao: null, bonificacao_valor: null, id_filho_tarefa: r.id, created_at: new Date(data + "T12:00:00-03:00").toISOString() });
       if (error) throw error;
 
       await Promise.all([qc.invalidateQueries({queryKey:["ocorrencias"]}), qc.invalidateQueries({queryKey:["filho_tarefas"]})]);
