@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,12 +28,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
 
-type OnboardingInicialProps = {
-  manualOpen?: boolean;
-  onManualOpenChange?: (open: boolean) => void;
-};
-
-export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: OnboardingInicialProps) {
+export function OnboardingInicial() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
@@ -43,7 +38,6 @@ export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: On
   const { data: atribuicoes = [], isLoading: carregandoAtribuicoes } = useFilhoTarefas();
 
   const [salvando, setSalvando] = useState(false);
-  const [etapaManual, setEtapaManual] = useState(0);
 
   const [nomeFilho, setNomeFilho] = useState("");
   const [temMesada, setTemMesada] = useState(false);
@@ -73,17 +67,13 @@ export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: On
     vigencias.length === 0 ? 2 :
     atribuicoes.length === 0 ? 3 :
     -1;
-  const modoManual = manualOpen;
-  const etapa = modoManual ? etapaManual : (vigenciaEmCorrecaoId !== null ? 2 : etapaBase);
+  const etapa = vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
 
-  const aberto = !carregando && (modoManual || etapa >= 0);
+  const aberto = !carregando && etapa >= 0;
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
   const tarefaAtual = tarefaSelecionada || (tarefas[0] ? String(tarefas[0].id) : "");
   const vigenciaAtual = vigenciaSelecionada || (vigenciasAtivas[0] ? String(vigenciasAtivas[0].id) : "");
 
-  useEffect(() => {
-    if (manualOpen) setVigenciaEmCorrecaoId(null);
-  }, [manualOpen]);
 
   async function cadastrarFilho() {
     const nome = nomeFilho.trim();
@@ -117,7 +107,6 @@ export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: On
     if (criado?.id) setFilhoSelecionado(String(criado.id));
     toast.success("Filho cadastrado. Vamos para a próxima etapa.");
     await qc.invalidateQueries({ queryKey: ["filhos"] });
-    if (modoManual) setEtapaManual(1);
   }
 
   async function cadastrarTarefa() {
@@ -139,7 +128,6 @@ export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: On
     if (criada?.id) setTarefaSelecionada(String(criada.id));
     toast.success("Tarefa cadastrada. Vamos para a próxima etapa.");
     await qc.invalidateQueries({ queryKey: ["tarefas"] });
-    if (modoManual) setEtapaManual(2);
   }
 
   function voltarParaCorrigirVigencia() {
@@ -227,7 +215,6 @@ export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: On
     setVigenciaEmCorrecaoId(null);
     toast.success(corrigiu ? "Vigência corrigida. Agora conclua a associação." : "Vigência cadastrada. Falta só fazer a associação.");
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
-    if (modoManual) setEtapaManual(3);
   }
 
   async function cadastrarAssociacao() {
@@ -261,37 +248,25 @@ export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: On
     }
 
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    toast.success(modoManual ? "Cadastro único concluído!" : "Configuração inicial concluída!");
-    if (modoManual) {
-      setEtapaManual(0);
-      setNomeFilho("");
-      setNomeTarefa("");
-      setFilhoSelecionado("");
-      setTarefaSelecionada("");
-      setVigenciaSelecionada("");
-      onManualOpenChange?.(false);
-    } else {
-      navigate({ to: "/ocorrencias" });
-    }
+    toast.success("Configuração inicial concluída!");
+    navigate({ to: "/ocorrencias" });
   }
 
   return (
-    <Dialog open={aberto} onOpenChange={(open) => { if (modoManual && !open) onManualOpenChange?.(false); }}>
+    <Dialog open={aberto}>
       <DialogContent
-        className={`max-h-[92vh] max-w-lg overflow-y-auto rounded-xl ${modoManual ? "" : "[&>button]:hidden"}`}
-        onEscapeKeyDown={(e) => { if (!modoManual) e.preventDefault(); }}
-        onPointerDownOutside={(e) => { if (!modoManual) e.preventDefault(); }}
-        onInteractOutside={(e) => { if (!modoManual) e.preventDefault(); }}
+        className="max-h-[92vh] max-w-lg overflow-y-auto rounded-xl [&>button]:hidden"
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <div className="mb-2 inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            {modoManual ? "Cadastro único" : "Primeiros passos · aprendizado do sistema"}
+            Primeiros passos · aprendizado do sistema
           </div>
-          <DialogTitle>{modoManual ? "Cadastre tudo em um único fluxo" : "Aprenda o Combinado Família configurando seu primeiro combinado"}</DialogTitle>
+          <DialogTitle>Aprenda o Combinado Família configurando seu primeiro combinado</DialogTitle>
           <DialogDescription>
-            {modoManual
-              ? "Cadastre filho, tarefa, vigência e associação em sequência. Você pode fechar e reabrir pelo menu sem perder o que já foi salvo."
-              : "Este passo a passo ensina, na prática, como o sistema funciona. Você fará os cadastros essenciais na ordem correta e, ao terminar, seguirá direto para Fez / Não fez."}
+            Este passo a passo ensina, na prática, como o sistema funciona. Você fará os cadastros essenciais na ordem correta e, ao terminar, seguirá direto para Fez / Não fez.
           </DialogDescription>
         </DialogHeader>
 
@@ -412,13 +387,6 @@ export function OnboardingInicial({ manualOpen = false, onManualOpenChange }: On
                 {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
               </Button>
             </div>
-          </div>
-        )}
-        {modoManual && (
-          <div className="flex justify-end border-t pt-3">
-            <Button type="button" variant="ghost" disabled={salvando} onClick={() => onManualOpenChange?.(false)}>
-              <X className="h-4 w-4" /> Fechar
-            </Button>
           </div>
         )}
       </DialogContent>
