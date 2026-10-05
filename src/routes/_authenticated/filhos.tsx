@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useVigencias, type Filho } from "@/lib/db";
-import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
 import { copyText, openExternalUrl, shareLink } from "@/lib/platform-actions";
@@ -59,7 +58,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
     <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label></div>
-    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} /><p className="text-xs text-muted-foreground">Ao cadastrar uma mesada, a penalidade será um desconto na mesada por “Não fez”, até o limite da vigência. Sem mesada cadastrada, vale a penalidade escrita.</p></div>}
+    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} /><p className="text-xs text-muted-foreground">Ao cadastrar uma mesada, cada “Não fez” gera o desconto definido na vigência. Sem mesada cadastrada, vale a penalidade escrita.</p></div>}
   </>;
 }
 
@@ -164,10 +163,6 @@ function FilhosPage() {
   async function salvarEdicao(e: FormEvent) {
     e.preventDefault(); if (!editando) return;
     const p = schema.safeParse(edicao); if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
-    const novoFilho = { nome: p.data.nome, ...dadosExtras(p.data) };
-    for (const idVigencia of new Set(atribuicoes.filter((a) => a.id_filho === editando.id).map((a) => a.id_vigencia))) {
-      const vigencia = vigencias.find((v) => v.id === idVigencia); if (vigencia) { const erro = erroLimiteMesada(novoFilho, vigencia); if (erro) { toast.error(erro); return; } }
-    }
     setSaving(true);
     const { error } = await supabase.from("t_filho").update({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) }).eq("id", editando.id);
     setSaving(false); if (error) { toast.error(msgErro(error)); return; }
