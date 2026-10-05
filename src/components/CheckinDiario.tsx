@@ -24,6 +24,7 @@ export function CheckinDiario() {
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
   const hoje = useDataBrasilAtual();
+  const dataAtual = hoje.split("-").reverse().join("/");
 
   const pendencias = useMemo(
     () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")),
@@ -193,9 +194,15 @@ export function CheckinDiario() {
                       </p>
                       <p className="mt-1 break-words font-semibold">{fmtVigencia(vigencia)}</p>
                     </div>
-                    <span className="w-fit shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
-                      {totalVigencia} {totalVigencia === 1 ? "pendência" : "pendências"}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <div className="text-left sm:text-right">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
+                        <p className="text-sm font-semibold">{dataAtual}</p>
+                      </div>
+                      <span className="w-fit rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
+                        {totalVigencia} {totalVigencia === 1 ? "pendência" : "pendências"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
