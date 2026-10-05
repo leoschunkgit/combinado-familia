@@ -7,6 +7,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, useFilhos, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
+import { compararVigencias } from "@/components/VigenciaStatus";
 import { reais, usaDesconto, valorDebitado } from "@/lib/mesada";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({head:()=>({meta:[{title:"Dashboard — Combinado"},{name:"description",content:"Visão resumida de Fez, Não fez, penalidades e descontos."}]}),component:DashboardPage});
@@ -15,7 +16,7 @@ function mesAno(data:string){return new Intl.DateTimeFormat("pt-BR",{month:"shor
 function DashboardPage(){
  const {data:vigencias=[]}=useVigencias(),{data:filhos=[]}=useFilhos(),{data:tarefas=[]}=useTarefas(),{data:ocorrencias=[],isLoading}=useOcorrencias();
  const [f,setF]=useState({vig:"all",filho:"all"}),[filtro,setFiltro]=useState(f);
- const vigenciasOrdenadas=[...vigencias].sort((a,b)=>{const agora=Date.now(),ia=new Date(a.data_inicio).getTime(),ib=new Date(b.data_inicio).getTime(),fa=new Date(a.data_fim).getTime(),fb=new Date(b.data_fim).getTime(),sa=ia<=agora&&fa>=agora?0:ia>agora?1:2,sb=ib<=agora&&fb>=agora?0:ib>agora?1:2;if(sa!==sb)return sa-sb;return sa===2?ib-ia:ia-ib;});
+ const vigenciasOrdenadas=[...vigencias].sort(compararVigencias);
  const lista=useMemo(()=>ocorrencias.filter(o=>{const ft=o.t_filho_tarefa;return ft&&(filtro.vig==="all"||ft.id_vigencia===Number(filtro.vig))&&(filtro.filho==="all"||ft.id_filho===Number(filtro.filho));}),[ocorrencias,filtro]);
  const listaFez=lista.filter(o=>o.tipo==="FEZ"),listaNaoFez=lista.filter(o=>o.tipo!=="FEZ");
  const totalBonusValor=listaFez.reduce((s,o)=>s+Number(o.bonificacao_valor??0),0);
