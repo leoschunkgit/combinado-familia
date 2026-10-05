@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ClipboardCheck, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, TriangleAlert } from "lucide-react";
+import { Bell, CalendarRange, ClipboardCheck, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, TriangleAlert, ListPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -69,6 +69,7 @@ function AuthenticatedLayout() {
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
+  const [cadastroUnicoAberto, setCadastroUnicoAberto] = useState(false);
 
   async function encerrar() {
     setAberto(false); setEtapa(null);
@@ -117,7 +118,7 @@ function AuthenticatedLayout() {
 
   return (
     <>
-      {!saindo && <OnboardingInicial />}
+      {!saindo && <OnboardingInicial manualOpen={cadastroUnicoAberto} onManualOpenChange={setCadastroUnicoAberto} />}
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="native-safe-area min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
@@ -131,6 +132,7 @@ function AuthenticatedLayout() {
 
           <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:gap-0.5 md:px-2.5">
             {NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-3 rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-4 w-4" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}
+            <Button variant="ghost" className="h-auto w-full justify-start gap-3 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground" onClick={() => setCadastroUnicoAberto(true)}><ListPlus className="h-4 w-4" /> Cadastro único</Button>
             <Button variant="ghost" className="h-auto w-full justify-start gap-3 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
             <ContaLink />
           </nav>
@@ -163,7 +165,7 @@ function AuthenticatedLayout() {
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
-          <nav className="flex flex-col gap-0.5 p-2.5 pb-36">{NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}<Button variant="ghost" className="mt-1 justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></nav>
+          <nav className="flex flex-col gap-0.5 p-2.5 pb-36">{NAV.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}<Button variant="ghost" className="mt-1 justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); setCadastroUnicoAberto(true); }}><ListPlus className="h-5 w-5" /> Cadastro único</Button><Button variant="ghost" className="justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></nav>
           <div className="fixed bottom-3 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="rounded-lg bg-muted p-2.5"><p className="text-[10px] text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-2 h-8 w-full text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
 
