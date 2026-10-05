@@ -50,24 +50,22 @@ serve(async (req) => {
     }
 
     if (pai) {
-      const idPai = pai.id;
+      // As relações da família usam ON DELETE CASCADE:
+      // pai -> filhos/tarefas/vigências/atribuições
+      // atribuições -> ocorrências
+      // filhos -> acessos públicos.
+      // Assim, uma única exclusão no banco remove a família inteira de forma atômica.
+      const { data: paiExcluido, error: deletePaiError } = await admin
+        .from("t_usuario_pai")
+        .delete()
+        .eq("id", pai.id)
+        .eq("auth_user_id", user.id)
+        .select("id")
+        .maybeSingle();
 
-      const deletes = [
-        ["t_ocorrencia", admin.from("t_ocorrencia").delete().eq("id_usuario_pai", idPai)],
-        ["t_filho_acesso_publico", admin.from("t_filho_acesso_publico").delete().eq("id_usuario_pai", idPai)],
-        ["t_filho_tarefa", admin.from("t_filho_tarefa").delete().eq("id_usuario_pai", idPai)],
-        ["t_vigencia", admin.from("t_vigencia").delete().eq("id_usuario_pai", idPai)],
-        ["t_tarefa", admin.from("t_tarefa").delete().eq("id_usuario_pai", idPai)],
-        ["t_filho", admin.from("t_filho").delete().eq("id_usuario_pai", idPai)],
-        ["t_usuario_pai", admin.from("t_usuario_pai").delete().eq("id", idPai)],
-      ] as const;
-
-      for (const [table, promise] of deletes) {
-        const { error } = await promise;
-        if (error) {
-          console.error(`Erro ao excluir ${table}:`, error);
-          return json({ error: "Não foi possível excluir todos os dados da conta" }, 500);
-        }
+      if (deletePaiError || !paiExcluido) {
+        console.error("Erro ao excluir dados da família:", deletePaiError);
+        return json({ error: "Não foi possível excluir todos os dados da conta" }, 500);
       }
     }
 
