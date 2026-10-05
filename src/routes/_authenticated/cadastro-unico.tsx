@@ -266,7 +266,7 @@ function CadastroUnicoPage() {
       (tarefasPorFilho[id_filho] ?? []).map((id_tarefa) => ({ id_vigencia: vigenciaCriadaId, id_filho, id_tarefa }))
     ).filter((x) => !existentes.has(`${x.id_vigencia}|${x.id_filho}|${x.id_tarefa}`));
 
-    if (!novos.length) { toast.error("Selecione ao menos uma associação entre filho e tarefa"); return; }
+    if (!novos.length) { toast.error("Selecione ao menos uma atribuição entre filho e tarefa"); return; }
     const { error } = await supabase.from("t_filho_tarefa").insert(novos);
     if (error) { toast.error(msgErro(error)); return; }
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
