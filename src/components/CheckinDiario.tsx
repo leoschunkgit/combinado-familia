@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -419,8 +419,15 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
           {pendencias.length} {pendencias.length === 1 ? "pendência" : "pendências"} sem marcação
         </div>
 
-        <DialogFooter>
-          <Button variant="ghost" disabled={busy} onClick={() => onOpenChange(false)}>
+        <DialogFooter className="border-t pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            className="min-w-28"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
             Fechar
           </Button>
         </DialogFooter>
