@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
@@ -27,6 +28,13 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
   const [fez, setFez] = useState<FezDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Set<string>>(new Set());
   const hoje = useDataBrasilAtual();
+
+  useEffect(() => {
+    if (open) {
+      setFilhosAbertos(new Set());
+      setFez(null);
+    }
+  }, [open]);
   const pendenciasHoje = useMemo(
     () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")),
     [vigencias, atribuicoes, ocorrencias, hoje],
@@ -327,32 +335,19 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                 <div className="mt-4 space-y-4 rounded-lg border bg-muted/20 p-3 sm:p-4">
                                   <div className="space-y-2">
                                     <Label>Bonificação opcional</Label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant={fez.bonusTipo === "NENHUMA" ? "default" : "outline"}
-                                        onClick={() => setFez({ ...fez, bonusTipo: "NENHUMA" })}
-                                      >
-                                        Nenhuma
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant={fez.bonusTipo === "TEXTO" ? "default" : "outline"}
-                                        onClick={() => setFez({ ...fez, bonusTipo: "TEXTO" })}
-                                      >
-                                        Escrita
-                                      </Button>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant={fez.bonusTipo === "VALOR" ? "default" : "outline"}
-                                        onClick={() => setFez({ ...fez, bonusTipo: "VALOR" })}
-                                      >
-                                        Valor
-                                      </Button>
-                                    </div>
+                                    <Select
+                                      value={fez.bonusTipo}
+                                      onValueChange={(valor) => setFez({ ...fez, bonusTipo: valor as BonusTipo })}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="NENHUMA">Nenhuma</SelectItem>
+                                        <SelectItem value="TEXTO">Escrita</SelectItem>
+                                        <SelectItem value="VALOR">Valor</SelectItem>
+                                      </SelectContent>
+                                    </Select>
                                   </div>
 
                                   {fez.bonusTipo === "TEXTO" && (
