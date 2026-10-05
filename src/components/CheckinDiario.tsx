@@ -90,10 +90,6 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
     ).length;
   }
 
-  function totalNaoFezTarefa(r: FilhoTarefa) {
-    return ocorrencias.filter((o) => o.tipo !== "FEZ" && o.id_filho_tarefa === r.id).length;
-  }
-
   async function registrarNaoFez(r: FilhoTarefa, data: string) {
     const v = r.t_vigencia;
     if (!v || !vigenciaEmAndamento(v)) return;
@@ -121,21 +117,6 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
         created_at: new Date(data + "T12:00:00-03:00").toISOString(),
       });
       if (error) throw error;
-
-      const atualizacao = await supabase
-        .from("t_filho_tarefa")
-        .update({ qtd_nao_fez: totalNaoFezTarefa(r) + 1, feito: penalizado ? "N" : null })
-        .eq("id", r.id);
-      if (atualizacao.error) throw atualizacao.error;
-
-      if (penalizado) {
-        const grupo = await supabase
-          .from("t_filho_tarefa")
-          .update({ feito: "N" })
-          .eq("id_filho", r.id_filho)
-          .eq("id_vigencia", r.id_vigencia);
-        if (grupo.error) throw grupo.error;
-      }
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
