@@ -31,6 +31,51 @@ export function pendenciasDoDia(
 }
 
 
+
+export type PendenciaAnterior = {
+  tarefa: FilhoTarefa;
+  data: string;
+};
+
+function proximoDiaBrasil(data: string) {
+  const d = new Date(data + "T12:00:00-03:00");
+  d.setDate(d.getDate() + 1);
+  return dataBrasil(d);
+}
+
+export function pendenciasAnteriores(
+  vigencias: Vigencia[],
+  atribuicoes: FilhoTarefa[],
+  ocorrencias: Ocorrencia[],
+  agora = new Date(),
+): PendenciaAnterior[] {
+  const hoje = dataBrasil(agora);
+  const vigenciasAtivas = vigencias.filter(vigenciaEmAndamento);
+  const idsAtivos = new Set(vigenciasAtivas.map((v) => v.id));
+  const vigenciaPorId = new Map(vigenciasAtivas.map((v) => [v.id, v]));
+  const registros = new Set(
+    ocorrencias.map((o) => `${o.id_filho_tarefa}|${dataBrasil(o.created_at)}`),
+  );
+
+  const resultado: PendenciaAnterior[] = [];
+
+  for (const tarefa of atribuicoes) {
+    if (!idsAtivos.has(tarefa.id_vigencia)) continue;
+    const vigencia = vigenciaPorId.get(tarefa.id_vigencia);
+    if (!vigencia) continue;
+
+    let data = dataBrasil(vigencia.data_inicio);
+    while (data < hoje) {
+      if (!registros.has(`${tarefa.id}|${data}`)) {
+        resultado.push({ tarefa, data });
+      }
+      data = proximoDiaBrasil(data);
+    }
+  }
+
+  return resultado.sort((a, b) => b.data.localeCompare(a.data));
+}
+
 export function useDataBrasilAtual() {
   const [dataAtual, setDataAtual] = useState(() => dataBrasil());
 
