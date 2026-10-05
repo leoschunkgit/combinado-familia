@@ -129,7 +129,7 @@ function AuthenticatedLayout() {
 
   return (
     <>
-      {!saindo && <OnboardingInicial />}
+      {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="native-safe-area min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
