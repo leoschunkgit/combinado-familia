@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { BlockedAction } from "@/components/BlockedAction";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -270,25 +269,7 @@ function AtribuicoesPage() {
                                       <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-0.5">
-                                      {(() => {
-                                        const periodo = e.t_vigencia;
-                                        const agora = Date.now();
-                                        const futura = Boolean(periodo && new Date(periodo.data_inicio).getTime() > agora);
-                                        const finalizada = Boolean(periodo && new Date(periodo.data_fim).getTime() < agora);
-                                        const bloqueadaPorHistorico = !futura && temHistorico(e);
-                                        const motivo = !periodo
-                                          ? "Vigência não encontrada."
-                                          : finalizada
-                                            ? "Atribuições de vigências finalizadas não podem ser excluídas."
-                                            : bloqueadaPorHistorico
-                                              ? "Esta atribuição já tem registros de Fez/Não fez e não pode ser excluída."
-                                              : undefined;
-                                        return (
-                                          <BlockedAction reason={motivo}>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={Boolean(motivo)} onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Trash2 className="h-3.5 w-3.5" /></Button>
-                                          </BlockedAction>
-                                        );
-                                      })()}
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                                     </div>
                                   </div>
                                 ))}
