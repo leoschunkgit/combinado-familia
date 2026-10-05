@@ -308,19 +308,19 @@ function AtribuicoesPage() {
                             </div>
                             <span className="shrink-0 text-xs font-medium text-muted-foreground">{atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}</span>
                           </div>
-                          <div className="border-t bg-muted/10 px-3 py-2 sm:px-5">
-                              <div className="divide-y rounded-lg border bg-background">
+                          <div className="border-t bg-muted/10 px-2 py-1.5 sm:px-3">
+                              <div className="divide-y rounded-md border bg-background">
                                 {atribuicoesFilho.map((e) => (
-                                  <div key={e.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 sm:px-4">
+                                  <div key={e.id} className="grid min-h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-1.5 sm:px-3">
                                     <div className="min-w-0">
-                                      <p className="break-words text-sm font-medium">{e.t_tarefa?.nome}</p>
+                                      <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
                                     </div>
-                                    <div className="flex shrink-0 items-center gap-1">
+                                    <div className="flex shrink-0 items-center gap-0.5">
                                       <BlockedAction reason={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) ? "Ações só podem ser feitas em uma vigência em andamento." : temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser editada." : undefined}>
-                                        <Button variant="ghost" size="icon" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label={`Editar atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Pencil className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => abrirEdicao(e)} aria-label={`Editar atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Pencil className="h-3.5 w-3.5" /></Button>
                                       </BlockedAction>
                                       <BlockedAction reason={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) ? "Ações só podem ser feitas em uma vigência em andamento." : temHistorico(e) ? "Este filho já tem um registro de Não fez nesta vigência; a atribuição não pode ser excluída." : undefined}>
-                                        <Button variant="ghost" size="icon" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Trash2 className="h-4 w-4" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!e.t_vigencia || !vigenciaEmAndamento(e.t_vigencia) || temHistorico(e)} onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                                       </BlockedAction>
                                     </div>
                                   </div>
