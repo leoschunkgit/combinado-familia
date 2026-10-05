@@ -420,14 +420,20 @@ export function OnboardingInicial() {
             <Pick label="Filho" required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <Pick label="Tarefa" required value={tarefaAtual} onChange={setTarefaSelecionada} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
             <Pick label="Vigência" required value={vigenciaAtual} onChange={setVigenciaSelecionada} options={vigenciasAtivas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: "andamento" as const }))} />
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirVigencia}>
-                Voltar para corrigir vigência
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirFilho}>
+                <ArrowLeft className="h-4 w-4" /> Filho
               </Button>
-              <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarAssociacao)}>
-                {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
+              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirTarefa}>
+                <ArrowLeft className="h-4 w-4" /> Tarefa
+              </Button>
+              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirVigencia}>
+                <ArrowLeft className="h-4 w-4" /> Vigência
               </Button>
             </div>
+            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarAssociacao)}>
+              {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
+            </Button>
           </div>
         )}
       </DialogContent>
