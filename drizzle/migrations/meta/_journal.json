@@ -92,6 +92,13 @@
       "when": 1791229135333,
       "tag": "0012_fix_validity_date_guard_without_occurrences",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791229151530,
+      "tag": "0013_tie_validity_date_rules",
+      "breakpoints": true
     }
   ]
 }
