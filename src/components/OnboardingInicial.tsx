@@ -23,7 +23,6 @@ import {
   useVigencias,
 } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
-import { erroLimiteMesada } from "@/lib/limite-mesada";
 import { useActionLoading } from "@/components/ActionLoading";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
@@ -181,14 +180,6 @@ export function OnboardingInicial() {
     }
 
     const valorDebito = Number(desconto.replace(",", "."));
-    const filhoDoOnboarding = filhos.find((filho) => String(filho.id) === filhoAtual) ?? filhos[0];
-    if (filhoDoOnboarding) {
-      const erroMesada = erroLimiteMesada(filhoDoOnboarding, { valor_debito: valorDebito, qtd_ocorrencia: qtd });
-      if (erroMesada) {
-        toast.error(erroMesada);
-        return;
-      }
-    }
 
     setSalvando(true);
     const payload = {
@@ -221,17 +212,6 @@ export function OnboardingInicial() {
     if (!filhoAtual || !tarefaAtual || !vigenciaAtual) {
       toast.error("Selecione o filho, a tarefa e a vigência");
       return;
-    }
-
-    const filho = filhos.find((item) => String(item.id) === filhoAtual);
-    const vigencia = vigencias.find((item) => String(item.id) === vigenciaAtual);
-    if (filho && vigencia) {
-      const erroMesada = erroLimiteMesada(filho, vigencia);
-      if (erroMesada) {
-        toast.error(erroMesada);
-        voltarParaCorrigirVigencia();
-        return;
-      }
     }
 
     setSalvando(true);
