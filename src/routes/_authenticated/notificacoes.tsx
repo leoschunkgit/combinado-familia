@@ -27,7 +27,7 @@ function Notificacoes() {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [fezAnterior, setFezAnterior] = useState<FezAnterior | null>(null);
-  const [filhosAbertos, setFilhosAbertos] = useState<Set<string> | null>(null);
+  const [filhosAbertos, setFilhosAbertos] = useState<Set<string>>(new Set());
   const hoje = useDataBrasilAtual();
   const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
   const anteriores = pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
@@ -94,15 +94,11 @@ function Notificacoes() {
   const chavesFilhos = gruposAnteriores.flatMap(({ vigencia, filhos: gruposFilhos }) =>
     gruposFilhos.map(({ filho }) => `${vigencia.id}|${filho.id}`),
   );
-  const primeiraChaveFilho = chavesFilhos[0] ?? null;
-  const filhoAberto = (chave: string) =>
-    filhosAbertos === null ? chave === primeiraChaveFilho : filhosAbertos.has(chave);
+  const filhoAberto = (chave: string) => filhosAbertos.has(chave);
 
   function alternarFilho(chave: string) {
     setFilhosAbertos((atual) => {
-      const base = atual === null
-        ? new Set(primeiraChaveFilho ? [primeiraChaveFilho] : [])
-        : new Set(atual);
+      const base = new Set(atual);
       if (base.has(chave)) base.delete(chave);
       else base.add(chave);
       return base;
