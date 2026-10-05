@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import { Label } from "@/components/ui/label";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { Pick } from "@/components/Pick";
@@ -248,7 +249,7 @@ export function OnboardingInicial() {
             {temMesada && (
               <div className="space-y-2">
                 <Label htmlFor="onboarding-valor-mesada">Valor da mesada (R$) *</Label>
-                <Input id="onboarding-valor-mesada" inputMode="decimal" value={valorMesada} onChange={(e) => setValorMesada(e.target.value)} placeholder="100,00" />
+                <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
               </div>
             )}
             <Button className="w-full" disabled={salvando} onClick={() => void cadastrarFilho()}>
@@ -305,7 +306,7 @@ export function OnboardingInicial() {
             <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
               <div className="space-y-2">
                 <Label htmlFor="onboarding-desconto">Desconto por cada “Não fez” na mesada (R$) *</Label>
-                <Input id="onboarding-desconto" inputMode="decimal" value={desconto} onChange={(e) => setDesconto(e.target.value)} placeholder="20,00" />
+                <CurrencyInput id="onboarding-desconto" value={desconto} onValueChange={setDesconto} placeholder="R$ 20,00" />
                 <p className="text-xs text-muted-foreground">Usado para filhos com mesada.</p>
               </div>
             </div>
