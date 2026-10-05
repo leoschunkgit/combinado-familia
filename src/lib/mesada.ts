@@ -2,7 +2,7 @@ import type { Filho, Vigencia } from "@/lib/db";
 
 export const reais = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-export function valorDebitado(filho: Pick<Filho, "valor_mesada">, vigencia: Pick<Vigencia, "valor_debito" | "qtd_ocorrencia">, total: number) {
+export function valorDebitado(filho: Pick<Filho, "valor_mesada">, vigencia: Pick<Vigencia, "valor_debito">, total: number) {
   const centavos = Math.round((vigencia.valor_debito ?? 0) * 100) * Math.max(total, 0);
   return Math.min(Math.round((filho.valor_mesada ?? 0) * 100), centavos) / 100;
 }
