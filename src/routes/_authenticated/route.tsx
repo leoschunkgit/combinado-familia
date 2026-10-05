@@ -30,30 +30,39 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
-const NAV_DIA_A_DIA = [
-  { to: "/inicio", label: "Início", icon: Home },
-  { to: "/ocorrencias", label: "Fez / Não fez", icon: ClipboardCheck },
-  { to: "/notificacoes", label: "Notificações", icon: Bell },
-] as const;
+type NavItem = {
+  to: "/inicio" | "/ocorrencias" | "/notificacoes" | "/filhos" | "/tarefas" | "/vigencias" | "/atribuicoes" | "/link-filhos" | "/dashboard" | "/relatorio";
+  label: string;
+  icon: typeof Home;
+};
 
-const NAV_CONFIGURACAO = [
-  { to: "/filhos", label: "Filhos", icon: Users },
-  { to: "/tarefas", label: "Tarefas", icon: ListTodo },
-  { to: "/vigencias", label: "Vigências", icon: CalendarRange },
-  { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
-  { to: "/link-filhos", label: "Gerar Link / Filho", icon: Link2 },
-] as const;
-
-const NAV_ACOMPANHAMENTO = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/relatorio", label: "Relatório / Histórico", icon: FileText },
-] as const;
-
-const NAV_GRUPOS = [
-  { titulo: "Dia a dia", itens: NAV_DIA_A_DIA },
-  { titulo: "Configuração", itens: NAV_CONFIGURACAO },
-  { titulo: "Acompanhamento", itens: NAV_ACOMPANHAMENTO },
-] as const;
+const NAV_GRUPOS: { titulo: string; itens: NavItem[] }[] = [
+  {
+    titulo: "Dia a dia",
+    itens: [
+      { to: "/inicio", label: "Início", icon: Home },
+      { to: "/ocorrencias", label: "Fez / Não fez", icon: ClipboardCheck },
+      { to: "/notificacoes", label: "Notificações", icon: Bell },
+    ],
+  },
+  {
+    titulo: "Configuração",
+    itens: [
+      { to: "/filhos", label: "Filhos", icon: Users },
+      { to: "/tarefas", label: "Tarefas", icon: ListTodo },
+      { to: "/vigencias", label: "Vigências", icon: CalendarRange },
+      { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
+      { to: "/link-filhos", label: "Gerar Link / Filho", icon: Link2 },
+    ],
+  },
+  {
+    titulo: "Acompanhamento",
+    itens: [
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/relatorio", label: "Relatório / Histórico", icon: FileText },
+    ],
+  },
+];
 
 const ETAPAS = [
   { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se marcar ‘Tem mesada’, preencha também o valor: nesse caso, a penalidade será descontada da mesada." },
@@ -141,14 +150,14 @@ function AuthenticatedLayout() {
             </Link>
           </div>
 
-          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-2.5">
-            <Link to="/cadastro-unico" className="mb-2 flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100" activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}>
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"><ListPlus className="h-4 w-4" /></span>
+          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-2 md:pb-1">
+            <Link to="/cadastro-unico" className="mb-1.5 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[13px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100" activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"><ListPlus className="h-4 w-4" /></span>
               <span className="min-w-0"><span className="block">Cadastro único</span><span className="block text-[10px] font-medium opacity-75">Cadastre tudo em um só fluxo</span></span>
             </Link>
-            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-2">
-              <p className="mb-0.5 px-2.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
-              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-3 rounded-md px-2.5 py-1 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-4 w-4" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
+            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1.5">
+              <p className="mb-0.5 px-2 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
+              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-2.5 rounded-md px-2 py-1 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-3.5 w-3.5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
             </div>)}
             <div className="mt-auto border-t pt-2">
               <Button variant="ghost" className="h-auto w-full justify-start gap-3 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
@@ -188,14 +197,14 @@ function AuthenticatedLayout() {
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
-          <nav className="flex flex-col p-2.5 pb-32">
+          <nav className="flex flex-col p-2 pb-28">
             <Link to="/cadastro-unico" onClick={() => setMenuMobileAberto(false)} className="mb-2 flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><ListPlus className="h-5 w-5" /></span>
               <span><span className="block">Cadastro único</span><span className="block text-[10px] font-medium opacity-75">Cadastre tudo em um só fluxo</span></span>
             </Link>
-            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-2">
-              <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
-              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
+            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1.5">
+              <p className="mb-0.5 px-2.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70">{grupo.titulo}</p>
+              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
             </div>)}
             <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></div>
           </nav>
