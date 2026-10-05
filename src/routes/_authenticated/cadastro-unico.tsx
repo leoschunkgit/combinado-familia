@@ -90,17 +90,6 @@ function CadastroUnicoPage() {
   const alternar = (lista: number[], setLista: (v: number[]) => void, id: number) =>
     setLista(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]);
 
-  function alternarTodosFilhos() {
-    const idsExistentes = filhos.map((f) => f.id);
-    const todosSelecionados = idsExistentes.length > 0 && idsExistentes.every((id) => filhosSelecionados.includes(id));
-    setFilhosSelecionados(todosSelecionados ? filhosSelecionados.filter((id) => !idsExistentes.includes(id)) : [...new Set([...filhosSelecionados, ...idsExistentes])]);
-  }
-
-  function alternarTodasTarefas() {
-    const idsExistentes = tarefas.map((t) => t.id);
-    const todasSelecionadas = idsExistentes.length > 0 && idsExistentes.every((id) => tarefasSelecionadas.includes(id));
-    setTarefasSelecionadas(todasSelecionadas ? tarefasSelecionadas.filter((id) => !idsExistentes.includes(id)) : [...new Set([...tarefasSelecionadas, ...idsExistentes])]);
-  }
 
   function adicionarFilhoAoFluxo() {
     const nome = nomeFilho.trim();
@@ -385,9 +374,16 @@ function CadastroUnicoPage() {
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold">Marque abaixo quem participa do fluxo</p>
                       {filhos.length > 0 && (
-                        <button type="button" onClick={alternarTodosFilhos} className="shrink-0 text-xs font-medium text-primary hover:underline">
-                          {filhos.every((f) => filhosSelecionados.includes(f.id)) ? "Desmarcar todos" : "Selecionar todos"}
-                        </button>
+                        <div className="flex shrink-0 items-center gap-3 text-xs">
+                          <label className="flex cursor-pointer items-center gap-1.5">
+                            <input type="radio" name="todos-filhos" checked={filhos.every((f) => filhosSelecionados.includes(f.id))} onChange={() => setFilhosSelecionados([...new Set([...filhosSelecionados, ...filhos.map((f) => f.id)])])} />
+                            <span>Selecionar todos</span>
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-1.5">
+                            <input type="radio" name="todos-filhos" checked={filhos.length > 0 && filhos.every((f) => !filhosSelecionados.includes(f.id))} onChange={() => setFilhosSelecionados(filhosSelecionados.filter((id) => !filhos.some((f) => f.id === id)))} />
+                            <span>Desmarcar todos</span>
+                          </label>
+                        </div>
                       )}
                     </div>
                     <div className="mt-2 divide-y rounded-lg border bg-background">
@@ -456,9 +452,16 @@ function CadastroUnicoPage() {
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold">Marque abaixo quais tarefas participam do fluxo</p>
                       {tarefas.length > 0 && (
-                        <button type="button" onClick={alternarTodasTarefas} className="shrink-0 text-xs font-medium text-primary hover:underline">
-                          {tarefas.every((t) => tarefasSelecionadas.includes(t.id)) ? "Desmarcar todos" : "Selecionar todos"}
-                        </button>
+                        <div className="flex shrink-0 items-center gap-3 text-xs">
+                          <label className="flex cursor-pointer items-center gap-1.5">
+                            <input type="radio" name="todas-tarefas" checked={tarefas.every((t) => tarefasSelecionadas.includes(t.id))} onChange={() => setTarefasSelecionadas([...new Set([...tarefasSelecionadas, ...tarefas.map((t) => t.id)])])} />
+                            <span>Selecionar todos</span>
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-1.5">
+                            <input type="radio" name="todas-tarefas" checked={tarefas.length > 0 && tarefas.every((t) => !tarefasSelecionadas.includes(t.id))} onChange={() => setTarefasSelecionadas(tarefasSelecionadas.filter((id) => !tarefas.some((t) => t.id === id)))} />
+                            <span>Desmarcar todos</span>
+                          </label>
+                        </div>
                       )}
                     </div>
                     <div className="mt-2 divide-y rounded-lg border bg-background">
