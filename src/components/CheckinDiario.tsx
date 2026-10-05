@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ export function CheckinDiario() {
   const [dispensado, setDispensado] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
+  const [filhosAbertos, setFilhosAbertos] = useState<Set<string> | null>(null);
   const hoje = useDataBrasilAtual();
   const pendenciasHoje = useMemo(
     () => pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00")),
@@ -178,6 +179,33 @@ export function CheckinDiario() {
     }
   }
 
+  const chavesFilhos = grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
+    gruposFilhos.map(({ filho }) => `${vigencia.id}|${filho.id}`),
+  );
+  const primeiraChaveFilho = chavesFilhos[0] ?? null;
+  const filhoAberto = (chave: string) =>
+    filhosAbertos === null ? chave === primeiraChaveFilho : filhosAbertos.has(chave);
+
+  function alternarFilho(chave: string) {
+    setFilhosAbertos((atual) => {
+      const base = atual === null
+        ? new Set(primeiraChaveFilho ? [primeiraChaveFilho] : [])
+        : new Set(atual);
+      if (base.has(chave)) base.delete(chave);
+      else base.add(chave);
+      return base;
+    });
+  }
+
+  function expandirTodos() {
+    setFilhosAbertos(new Set(chavesFilhos));
+  }
+
+  function recolherTodos() {
+    setFilhosAbertos(new Set());
+  }
+
+
   return (
     <Dialog open={aberto} onOpenChange={(open) => !open && !busy && setDispensado(true)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
@@ -187,6 +215,15 @@ export function CheckinDiario() {
             Marque Fez ou Não fez nos dias desta vigência que ainda não têm nenhuma marcação.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={expandirTodos}>
+            <ChevronsDown className="h-4 w-4" /> Expandir todos
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={recolherTodos}>
+            <ChevronsUp className="h-4 w-4" /> Recolher todos
+          </Button>
+        </div>
 
         <div className="space-y-5">
           {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
@@ -212,9 +249,12 @@ export function CheckinDiario() {
                 </div>
 
                 <div className="space-y-4 p-3 sm:p-4">
-                  {gruposFilhos.map(({ filho, tarefas }) => (
+                  {gruposFilhos.map(({ filho, tarefas }) => {
+                    const chaveFilho = `${vigencia.id}|${filho.id}`;
+                    const abertoFilho = filhoAberto(chaveFilho);
+                    return (
                     <article key={filho.id} className="overflow-hidden rounded-xl border bg-background">
-                      <div className="flex items-center justify-between gap-3 border-b bg-muted/40 px-4 py-3">
+                      <button type="button" className="flex w-full items-center justify-between gap-3 border-b bg-muted/40 px-4 py-3 text-left" onClick={() => alternarFilho(chaveFilho)} aria-expanded={abertoFilho}>
                         <div className="flex min-w-0 items-center gap-3">
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
                             {filho.nome[0]?.toUpperCase()}
@@ -226,12 +266,13 @@ export function CheckinDiario() {
                             <p className="truncate text-base font-bold">{filho.nome}</p>
                           </div>
                         </div>
-                        <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                        <span className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted-foreground">
                           {tarefas.length} {tarefas.length === 1 ? "tarefa" : "tarefas"}
+                          {abertoFilho ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </span>
-                      </div>
+                      </button>
 
-                      <div className="divide-y">
+                      {abertoFilho && <div className="divide-y">
                         {tarefas.map(({ tarefa, data }) => {
                           const editandoFez = fez?.tarefa.id === tarefa.id && fez.data === data;
 
@@ -363,9 +404,10 @@ export function CheckinDiario() {
                             </div>
                           );
                         })}
-                      </div>
+                      </div>}
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             );
