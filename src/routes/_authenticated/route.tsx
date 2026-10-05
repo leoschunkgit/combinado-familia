@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/inicio", label: "Início", icon: Home },
   { to: "/notificacoes", label: "Notificações", icon: Bell },
-  { to: "/ocorrencias", label: "Ocorrências", icon: ClipboardCheck },
+  { to: "/ocorrencias", label: "Fez / Não fez", icon: ClipboardCheck },
   { to: "/historico", label: "Histórico", icon: History },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
   { to: "/filhos", label: "Filhos", icon: Users },
@@ -47,7 +47,7 @@ const ETAPAS = [
   { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
   { to: "/vigencias", label: "Vigências", title: "Defina o período e as regras", rule: "Escolha as datas, o limite de ‘Não fez’, a penalidade escrita e o desconto por ocorrência. Com mesada, aplica-se o desconto; sem mesada, a penalidade escrita ao atingir o limite." },
   { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Depois que houver um ‘Não fez’ para esse filho na vigência, as atribuições não poderão ser editadas ou excluídas." },
-  { to: "/ocorrencias", label: "Ocorrências", title: "Acompanhe os combinados", rule: "Registre ‘Não fez’ na data em que aconteceu. O limite soma todas as tarefas do mesmo filho na vigência; você pode consultar as datas e penalidades no Histórico." },
+  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre ‘Não fez’ na data em que aconteceu. O limite soma todas as tarefas do mesmo filho na vigência; você pode consultar as datas e penalidades no Histórico." },
 ] as const;
 
 function AuthenticatedLayout() {
