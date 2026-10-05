@@ -262,10 +262,14 @@ function VigenciasPage() {
 
   const agora = Date.now();
   const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
-    const aAndamento = new Date(a.data_inicio).getTime() <= agora && new Date(a.data_fim).getTime() >= agora;
-    const bAndamento = new Date(b.data_inicio).getTime() <= agora && new Date(b.data_fim).getTime() >= agora;
-    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
-    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
+    const inicioA = new Date(a.data_inicio).getTime();
+    const inicioB = new Date(b.data_inicio).getTime();
+    const fimA = new Date(a.data_fim).getTime();
+    const fimB = new Date(b.data_fim).getTime();
+    const statusA = inicioA <= agora && fimA >= agora ? 0 : inicioA > agora ? 1 : 2;
+    const statusB = inicioB <= agora && fimB >= agora ? 0 : inicioB > agora ? 1 : 2;
+    if (statusA !== statusB) return statusA - statusB;
+    return statusA === 2 ? inicioB - inicioA : inicioA - inicioB;
   });
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
