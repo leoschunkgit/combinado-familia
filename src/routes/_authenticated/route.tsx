@@ -171,10 +171,10 @@ function AuthenticatedLayout() {
               </Button>
             </section>
           )}
-          <section className="mb-4 flex items-center gap-2 rounded-lg border bg-card px-3 py-2 shadow-sm">
-            <ListPlus className="h-4 w-4 shrink-0 text-primary" />
+          <section className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950 shadow-sm">
+            <ListPlus className="h-4 w-4 shrink-0 text-amber-600" />
             <p className="min-w-0 flex-1 truncate text-sm font-semibold">Cadastro único</p>
-            <Button type="button" size="sm" variant="outline" className="h-8 shrink-0 px-3 text-xs" onClick={() => navigate({ to: "/cadastro-unico" })}>
+            <Button type="button" size="sm" variant="outline" className="h-8 shrink-0 border-amber-300 bg-white/70 px-3 text-xs hover:bg-white" onClick={() => navigate({ to: "/cadastro-unico" })}>
               Acessar
             </Button>
           </section>
