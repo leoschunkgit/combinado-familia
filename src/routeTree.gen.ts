@@ -16,6 +16,7 @@ import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenticated/atribuicoes'
+import { Route as AuthenticatedCadastroUnicoRouteImport } from './routes/_authenticated/cadastro-unico'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFilhosRouteImport } from './routes/_authenticated/filhos'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
@@ -60,6 +61,12 @@ const AuthenticatedAtribuicoesRoute =
   AuthenticatedAtribuicoesRouteImport.update({
     id: '/atribuicoes',
     path: '/atribuicoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCadastroUnicoRoute =
+  AuthenticatedCadastroUnicoRouteImport.update({
+    id: '/cadastro-unico',
+    path: '/cadastro-unico',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/inicio': typeof AuthenticatedInicioRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/inicio': typeof AuthenticatedInicioRoute
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/atribuicoes': typeof AuthenticatedAtribuicoesRoute
+  '/_authenticated/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/filhos': typeof AuthenticatedFilhosRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/admin'
     | '/atribuicoes'
+    | '/cadastro-unico'
     | '/dashboard'
     | '/filhos'
     | '/inicio'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/admin'
     | '/atribuicoes'
+    | '/cadastro-unico'
     | '/dashboard'
     | '/filhos'
     | '/inicio'
@@ -217,6 +229,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/_authenticated/admin'
     | '/_authenticated/atribuicoes'
+    | '/_authenticated/cadastro-unico'
     | '/_authenticated/dashboard'
     | '/_authenticated/filhos'
     | '/_authenticated/inicio'
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/atribuicoes'
       fullPath: '/atribuicoes'
       preLoaderRoute: typeof AuthenticatedAtribuicoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastro-unico': {
+      id: '/_authenticated/cadastro-unico'
+      path: '/cadastro-unico'
+      fullPath: '/cadastro-unico'
+      preLoaderRoute: typeof AuthenticatedCadastroUnicoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -365,6 +385,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAtribuicoesRoute: typeof AuthenticatedAtribuicoesRoute
+  AuthenticatedCadastroUnicoRoute: typeof AuthenticatedCadastroUnicoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFilhosRoute: typeof AuthenticatedFilhosRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
@@ -379,6 +400,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAtribuicoesRoute: AuthenticatedAtribuicoesRoute,
+  AuthenticatedCadastroUnicoRoute: AuthenticatedCadastroUnicoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFilhosRoute: AuthenticatedFilhosRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
@@ -404,13 +426,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
