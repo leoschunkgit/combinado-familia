@@ -14,6 +14,7 @@ import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
 import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
+import { useActionLoading } from "@/components/ActionLoading";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 type FezDraft = { tarefa: FilhoTarefa; data: string; bonusTipo: BonusTipo; descricao: string; valor: string };
@@ -22,6 +23,7 @@ type CheckinDiarioProps = { open: boolean; onOpenChange: (open: boolean) => void
 
 export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
   const qc = useQueryClient();
+  const { runAction } = useActionLoading();
   const { data: filhos = [] } = useFilhos();
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [], isLoading: carregandoAtribuicoes } = useFilhoTarefas();
@@ -323,7 +325,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                       variant="outline"
                                       disabled={busy}
                                       className={`min-w-24 ${botaoNaoFezClass}`}
-                                      onClick={() => void registrarNaoFez(tarefa, data)}
+                                      onClick={() => void runAction(() => registrarNaoFez(tarefa, data))}
                                     >
                                       <ThumbsDown className="h-4 w-4 text-red-600" />
                                       Não fez
@@ -386,7 +388,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                       type="button"
                                       size="sm"
                                       disabled={busy}
-                                      onClick={() => void registrarFez(fez)}
+                                      onClick={() => void runAction(() => registrarFez(fez))}
                                     >
                                       Salvar Fez
                                     </Button>
