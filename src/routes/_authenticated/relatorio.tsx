@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pick } from "@/components/Pick";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { VigenciaStatus } from "@/components/VigenciaStatus";
+import { compararVigencias, VigenciaStatus } from "@/components/VigenciaStatus";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, useTarefas, type Ocorrencia } from "@/lib/db";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto } from "@/lib/mesada";
@@ -54,17 +54,7 @@ function RelatorioPage() {
   const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
 
-  const vigenciasOrdenadas = useMemo(() => [...vigencias].sort((a, b) => {
-    const agora = Date.now();
-    const inicioA = new Date(a.data_inicio).getTime();
-    const inicioB = new Date(b.data_inicio).getTime();
-    const fimA = new Date(a.data_fim).getTime();
-    const fimB = new Date(b.data_fim).getTime();
-    const statusA = inicioA <= agora && fimA >= agora ? 0 : inicioA > agora ? 1 : 2;
-    const statusB = inicioB <= agora && fimB >= agora ? 0 : inicioB > agora ? 1 : 2;
-    if (statusA !== statusB) return statusA - statusB;
-    return statusA === 2 ? inicioB - inicioA : inicioA - inicioB;
-  }), [vigencias]);
+  const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
 
   const relatorio = useMemo(() => vigenciasOrdenadas
     .filter((vigencia) => filtro.vig === "all" || Number(vigencia.id) === Number(filtro.vig))
