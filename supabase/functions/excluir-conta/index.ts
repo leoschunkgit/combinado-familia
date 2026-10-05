@@ -29,6 +29,17 @@ serve(async (req) => {
       return json({ error: "Sessão inválida" }, 401);
     }
 
+    let body: { confirmacao?: boolean } = {};
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Confirmação inválida" }, 400);
+    }
+
+    if (body.confirmacao !== true) {
+      return json({ error: "Confirmação explícita obrigatória" }, 400);
+    }
+
     const token = authorization.slice("Bearer ".length);
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
