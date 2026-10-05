@@ -40,7 +40,7 @@ const schema = z.object({
 })
 .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })
 .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })
-.refine((v) => new Date(v.data_fim).getTime() >= new Date(v.data_inicio).getTime(), "A data/hora fim deve ser igual ou posterior à data/hora início")
+.refine((v) => new Date(v.data_fim).getTime() > new Date(v.data_inicio).getTime(), "A data/hora fim deve ser posterior à data/hora início")
 .refine((v) => v.penalidade.length >= 2, { message: "Informe a penalidade", path: ["penalidade"] })
 .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
@@ -124,7 +124,7 @@ function VigenciasPage() {
     const p = schema.safeParse(edicao);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     const novoInicio = new Date(p.data.data_inicio).getTime(); const novoFim = new Date(p.data.data_fim).getTime();
-    if (novoFim < novoInicio) { toast.error("A data/hora fim deve ser igual ou posterior à data/hora início"); return; }
+    if (novoFim <= novoInicio) { toast.error("A data/hora fim deve ser posterior à data/hora início"); return; }
     const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho, qtd_nao_fez").eq("id_vigencia", editando.id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     const idsVinculadas = (vinculadas ?? []).map((item) => item.id);
