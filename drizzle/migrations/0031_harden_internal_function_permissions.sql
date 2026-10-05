@@ -20,6 +20,7 @@ REVOKE ALL ON FUNCTION public.handle_new_auth_user() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.touch_filho_acesso_publico_updated_at() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.guard_assignment_history() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.guard_validity_history() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.guard_validity_overlap() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.guard_occurrence_active_validity() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.recalcular_estado_atribuicao(bigint) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.recalcular_estado_atribuicao_trigger() FROM PUBLIC;
