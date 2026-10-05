@@ -75,7 +75,7 @@ function AtribuicoesPage() {
   function adicionar() {
     if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
     const periodoSelecionado = vigencias.find((v) => v.id === Number(vig));
-    if (!periodoSelecionado || !vigenciaEmAndamento(periodoSelecionado)) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
+    if (!periodoSelecionado || new Date(periodoSelecionado.data_fim).getTime() < Date.now()) { toast.error("Não é possível criar atribuições em uma vigência finalizada"); return; }
     const escolhido = filhos.find((f) => f.id === Number(filho));
     const periodo = vigencias.find((v) => v.id === Number(vig));
     if (escolhido && periodo) {
@@ -98,8 +98,8 @@ function AtribuicoesPage() {
     if (itens.length === 0) { toast.error("Adicione ao menos uma atribuição"); return; }
     if (itens.some((item) => {
       const periodo = vigencias.find((v) => v.id === item.id_vigencia);
-      return !periodo || !vigenciaEmAndamento(periodo);
-    })) { toast.error("Ações só podem ser feitas em uma vigência em andamento"); return; }
+      return !periodo || new Date(periodo.data_fim).getTime() < Date.now();
+    })) { toast.error("Não é possível criar atribuições em uma vigência finalizada"); return; }
     for (const item of itens) {
       const escolhido = filhos.find((f) => f.id === item.id_filho);
       const periodo = vigencias.find((v) => v.id === item.id_vigencia);
@@ -222,10 +222,10 @@ function AtribuicoesPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && vigenciaEmAndamento(v))}><Plus className="h-4 w-4" /> Adicionar</Button>
+            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && new Date(v.data_fim).getTime() >= Date.now())}><Plus className="h-4 w-4" /> Adicionar</Button>
           </div>
           {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
-          {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Não é possível fazer atribuições para uma vigência que ainda não foi iniciada.</p>}
+          {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Esta vigência ainda vai começar. Você pode preparar e ajustar as atribuições normalmente.</p>}
           {itens.length > 0 && (
             <div className="rounded-xl border">
               <Table>
@@ -245,7 +245,7 @@ function AtribuicoesPage() {
               </Table>
             </div>
           )}
-           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && vigenciaEmAndamento(v)))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
+           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && new Date(v.data_fim).getTime() >= Date.now()))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
         </CardContent>
       </Card>
 
