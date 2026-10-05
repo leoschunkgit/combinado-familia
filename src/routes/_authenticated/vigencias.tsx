@@ -288,6 +288,7 @@ function VigenciasPage() {
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     const novoInicio = new Date(p.data.data_inicio).getTime(); const novoFim = new Date(p.data.data_fim).getTime();
     if (novoFim <= novoInicio) { toast.error("A data/hora fim deve ser posterior à data/hora início"); return; }
+    if (conflitaComVigenciaExistente(p.data.data_inicio, p.data.data_fim, editando.id)) { toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo."); return; }
     const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho, qtd_nao_fez").eq("id_vigencia", editando.id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     const idsVinculadas = (vinculadas ?? []).map((item) => item.id);
