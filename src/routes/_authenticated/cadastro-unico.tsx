@@ -371,11 +371,10 @@ function CadastroUnicoPage() {
                   <div>
                     <p className="text-sm font-semibold">Marque abaixo quem participa do fluxo</p>
                     {filhos.length > 0 && (
-                      <label className="mt-1.5 flex w-fit cursor-pointer items-center gap-1.5 pl-3 text-xs">
-                        <input
-                          type="checkbox"
+                      <label className="mt-1.5 flex w-fit cursor-pointer items-center gap-2.5 pl-3 text-xs">
+                        <Checkbox
                           checked={filhos.every((f) => filhosSelecionados.includes(f.id))}
-                          onChange={() => {
+                          onCheckedChange={() => {
                             const todosSelecionados = filhos.every((f) => filhosSelecionados.includes(f.id));
                             setFilhosSelecionados(
                               todosSelecionados
@@ -449,11 +448,10 @@ function CadastroUnicoPage() {
                   <div>
                     <p className="text-sm font-semibold">Marque abaixo quais tarefas participam do fluxo</p>
                     {tarefas.length > 0 && (
-                      <label className="mt-1.5 flex w-fit cursor-pointer items-center gap-1.5 pl-3 text-xs">
-                        <input
-                          type="checkbox"
+                      <label className="mt-1.5 flex w-fit cursor-pointer items-center gap-2.5 pl-3 text-xs">
+                        <Checkbox
                           checked={tarefas.every((t) => tarefasSelecionadas.includes(t.id))}
-                          onChange={() => {
+                          onCheckedChange={() => {
                             const todasSelecionadas = tarefas.every((t) => tarefasSelecionadas.includes(t.id));
                             setTarefasSelecionadas(
                               todasSelecionadas
