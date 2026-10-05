@@ -279,7 +279,21 @@ function CadastroUnicoPage() {
     const { error } = await supabase.from("t_filho_tarefa").insert(novos);
     if (error) { toast.error(msgErro(error)); return; }
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    toast.success(`${novos.length} associação(ões) criada(s)`);
+
+    setNomeFilho("");
+    setTemMesada(false);
+    setValorMesada("");
+    setFilhosSelecionados([]);
+    setFilhosNovosPendentes([]);
+    setNomeTarefa("");
+    setTarefasSelecionadas([]);
+    setTarefasNovasPendentes([]);
+    setVigenciaDraft(vigenciaInicial());
+    setVigenciaCriadaId(null);
+    setTarefasPorFilho({});
+    setEtapaNovo(1);
+
+    toast.success("Cadastro Fluxo finalizado com sucesso");
   }
 
   function escolherModelo(value: string) {
