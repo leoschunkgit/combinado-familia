@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, CheckCircle2, Pencil, Trash2 } from "lucide-react";
+import { CalendarRange, CheckCircle2, Copy, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +83,8 @@ function VigenciasPage() {
   const [edicao, setEdicao] = useState(form);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [confirmarFinalizacao, setConfirmarFinalizacao] = useState<number | null>(null);
+  const [duplicando, setDuplicando] = useState<Vigencia | null>(null);
+  const [duplicacao, setDuplicacao] = useState<VigenciaForm>(vazio);
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
@@ -113,6 +115,80 @@ function VigenciasPage() {
     const { error } = await supabase.from("t_vigencia").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
+  }
+
+  function abrirDuplicacao(v: Vigencia) {
+    const inicioOriginal = new Date(v.data_inicio).getTime();
+    const fimOriginal = new Date(v.data_fim).getTime();
+    const duracao = Math.max(60_000, fimOriginal - inicioOriginal);
+    const novoInicioDate = new Date(fimOriginal + 60_000);
+    const novoFimDate = new Date(novoInicioDate.getTime() + duracao);
+    setDuplicando(v);
+    setDuplicacao({
+      data_inicio: paraCampo(novoInicioDate.toISOString()),
+      data_fim: paraCampo(novoFimDate.toISOString()),
+      penalidade: v.penalidade ?? "",
+      valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","),
+      qtd_ocorrencia: String(v.qtd_ocorrencia),
+    });
+  }
+
+  async function duplicarVigencia(e: FormEvent) {
+    e.preventDefault();
+    if (!duplicando) return;
+
+    const p = schema.safeParse(duplicacao);
+    if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
+
+    const novoInicio = new Date(p.data.data_inicio).getTime();
+    const fimOriginal = new Date(duplicando.data_fim).getTime();
+    if (novoInicio <= fimOriginal) {
+      toast.error("A nova vigência deve começar depois do término da vigência original");
+      return;
+    }
+
+    const origem = atribuicoes.filter((a) => a.id_vigencia === duplicando.id);
+
+    const { data: nova, error: erroVigencia } = await supabase
+      .from("t_vigencia")
+      .insert({
+        ...p.data,
+        ...dadosPenalidade(p.data),
+        data_inicio: paraIso(p.data.data_inicio),
+        data_fim: paraIso(p.data.data_fim),
+      })
+      .select("id")
+      .single();
+
+    if (erroVigencia || !nova) {
+      toast.error(msgErro(erroVigencia));
+      return;
+    }
+
+    if (origem.length > 0) {
+      const novasAtribuicoes = origem.map((a) => ({
+        id_vigencia: nova.id,
+        id_filho: a.id_filho,
+        id_tarefa: a.id_tarefa,
+        qtd_nao_fez: 0,
+        feito: null,
+      }));
+
+      const { error: erroAtribuicoes } = await supabase.from("t_filho_tarefa").insert(novasAtribuicoes);
+      if (erroAtribuicoes) {
+        await supabase.from("t_vigencia").delete().eq("id", nova.id);
+        toast.error(msgErro(erroAtribuicoes));
+        return;
+      }
+    }
+
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["vigencias"] }),
+      qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
+      qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
+    ]);
+    toast.success(`Vigência duplicada com ${origem.length} associação(ões), todas zeradas`);
+    setDuplicando(null);
   }
 
   function abrirEdicao(v: Vigencia) {
@@ -182,6 +258,7 @@ function VigenciasPage() {
                 <div className="flex flex-col items-start gap-1"><VigenciaStatus vigencia={v} /><p className="font-semibold">{fmtVigencia(v)}</p></div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={() => abrirDuplicacao(v)} title="Duplicar vigência" aria-label="Duplicar vigência"><Copy className="h-4 w-4" /></Button>
                 {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser excluídas." : temAtribuicoes ? "Esta vigência tem atribuições e não pode ser excluída." : undefined}><Button variant="ghost" size="icon" disabled={finalizada || temAtribuicoes} onClick={() => setConfirmarExclusao(v.id)}><Trash2 className="h-4 w-4" /></Button></BlockedAction>
@@ -200,6 +277,50 @@ function VigenciasPage() {
         })}
       </div>
     </div>
+
+    <Dialog open={Boolean(duplicando)} onOpenChange={(open) => !open && setDuplicando(null)}>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Duplicar vigência</DialogTitle>
+        </DialogHeader>
+        {duplicando && (
+          <form onSubmit={(e) => { void runAction(() => duplicarVigencia(e)); }} className="space-y-4">
+            <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+              <p className="font-semibold">Vigência original</p>
+              <p className="mt-1 text-muted-foreground">{fmtVigencia(duplicando)}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Serão copiadas {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_filho)).size} pessoa(s), {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_tarefa)).size} tarefa(s) e {atribuicoes.filter((a) => a.id_vigencia === duplicando.id).length} associação(ões).
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Fez, Não fez, bonificações, penalidades atingidas e contadores não serão copiados.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="duplicar-inicio">Novo início <span className="text-destructive" aria-hidden="true">*</span></Label>
+              <BrDateTimeField
+                id="duplicar-inicio"
+                value={duplicacao.data_inicio}
+                min={paraCampo(new Date(new Date(duplicando.data_fim).getTime() + 60_000).toISOString())}
+                onChange={(data_inicio) => setDuplicacao({ ...duplicacao, data_inicio })}
+              />
+              <p className="text-xs text-muted-foreground">A nova vigência só pode começar depois do fim da vigência original.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="duplicar-fim">Novo fim <span className="text-destructive" aria-hidden="true">*</span></Label>
+              <BrDateTimeField
+                id="duplicar-fim"
+                value={duplicacao.data_fim}
+                min={duplicacao.data_inicio || paraCampo(new Date(new Date(duplicando.data_fim).getTime() + 60_000).toISOString())}
+                onChange={(data_fim) => setDuplicacao({ ...duplicacao, data_fim })}
+              />
+            </div>
+            <EscolhaPenalidade value={duplicacao} onChange={setDuplicacao} prefix="duplicar" />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDuplicando(null)}>Cancelar</Button>
+              <Button type="submit"><Copy className="h-4 w-4" /> Criar nova vigência</Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
     <Dialog open={confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}><DialogContent><DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader><p>Tem certeza que deseja finalizar esta vigência?</p><p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button><Button onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir esta vigência?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent className="max-h-[92vh] overflow-y-auto p-4 sm:max-w-lg sm:p-5"><DialogHeader className="space-y-0.5"><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
