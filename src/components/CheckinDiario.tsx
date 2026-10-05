@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { CollapseChevron } from "@/components/CollapseChevron";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
@@ -272,7 +273,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                         </div>
                         <span className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted-foreground">
                           {tarefas.length} {tarefas.length === 1 ? "pendência" : "pendências"}
-                          {abertoFilho ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          <CollapseChevron open={abertoFilho} className="h-6 w-6" />
                         </span>
                       </button>
 
