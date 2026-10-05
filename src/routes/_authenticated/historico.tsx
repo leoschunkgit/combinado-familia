@@ -198,6 +198,11 @@ function HistoricoPage() {
                                     Bonificação: {reais(o.bonificacao_valor)}
                                   </p>
                                 )}
+                                {o.bonificacao_tipo === null && (
+                                  <p className="mt-1 text-sm text-muted-foreground">
+                                    Sem bonificação
+                                  </p>
+                                )}
                               </>
                             ) : comDesconto ? (
                               <p className="mt-1 text-sm font-medium tabular-nums text-foreground">
