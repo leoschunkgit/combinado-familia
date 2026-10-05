@@ -193,11 +193,17 @@ function VigenciasPage() {
   }
 
   function abrirDuplicacao(v: Vigencia) {
-    const inicioOriginal = new Date(v.data_inicio).getTime();
-    const fimOriginal = new Date(v.data_fim).getTime();
-    const duracao = Math.max(60_000, fimOriginal - inicioOriginal);
-    const novoInicioDate = new Date(fimOriginal + 60_000);
-    const novoFimDate = new Date(novoInicioDate.getTime() + duracao);
+    const maiorFim = vigencias.reduce((maior, vigencia) => {
+      const fim = new Date(vigencia.data_fim).getTime();
+      return fim > maior ? fim : maior;
+    }, Number.NEGATIVE_INFINITY);
+
+    const novoInicioDate = Number.isFinite(maiorFim) ? new Date(maiorFim) : new Date(v.data_fim);
+    novoInicioDate.setDate(novoInicioDate.getDate() + 1);
+
+    const novoFimDate = new Date(novoInicioDate);
+    novoFimDate.setMonth(novoFimDate.getMonth() + 1);
+
     setDuplicando(v);
     setDuplicacao({
       data_inicio: paraCampo(novoInicioDate.toISOString()),
@@ -381,17 +387,17 @@ function VigenciasPage() {
               <BrDateTimeField
                 id="duplicar-inicio"
                 value={duplicacao.data_inicio}
-                min={paraCampo(new Date(new Date(duplicando.data_fim).getTime() + 60_000).toISOString())}
+                min={duplicacao.data_inicio}
                 onChange={(data_inicio) => setDuplicacao({ ...duplicacao, data_inicio })}
               />
-              <p className="text-xs text-muted-foreground">A nova vigência só pode começar depois do fim da vigência original.</p>
+              <p className="text-xs text-muted-foreground">Sugestão automática baseada no fim da última vigência cadastrada.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="duplicar-fim">Novo fim <span className="text-destructive" aria-hidden="true">*</span></Label>
               <BrDateTimeField
                 id="duplicar-fim"
                 value={duplicacao.data_fim}
-                min={duplicacao.data_inicio || paraCampo(new Date(new Date(duplicando.data_fim).getTime() + 60_000).toISOString())}
+                min={duplicacao.data_inicio}
                 onChange={(data_fim) => setDuplicacao({ ...duplicacao, data_fim })}
               />
             </div>
