@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pick } from "@/components/Pick";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { compararVigencias, VigenciaStatus } from "@/components/VigenciaStatus";
+import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, useTarefas, type Ocorrencia } from "@/lib/db";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto } from "@/lib/mesada";
@@ -22,16 +22,11 @@ export const Route = createFileRoute("/_authenticated/relatorio")({
   component: RelatorioPage,
 });
 
-function andamento(v: { data_inicio: string; data_fim: string }) {
-  const agora = Date.now();
-  return new Date(v.data_inicio).getTime() <= agora && new Date(v.data_fim).getTime() >= agora;
-}
+function andamento(v: { data_inicio: string; data_fim: string }) { return situacaoVigencia(v) === "andamento"; }
 
 function statusVigencia(v: { data_inicio: string; data_fim: string }) {
-  const agora = Date.now();
-  if (new Date(v.data_fim).getTime() < agora) return "Finalizada";
-  if (new Date(v.data_inicio).getTime() <= agora) return "Em andamento";
-  return "Irá começar";
+  const status = situacaoVigencia(v);
+  return status === "andamento" ? "Em andamento" : status === "finalizada" ? "Finalizada" : "Irá começar";
 }
 
 function ehFez(o: Ocorrencia) { return o.tipo === "FEZ"; }
