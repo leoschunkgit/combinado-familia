@@ -272,7 +272,7 @@ function VigenciasPage() {
       qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
       qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
     ]);
-    toast.success(`Vigência duplicada com ${origem.length} associação(ões), todas zeradas`);
+    toast.success(`Vigência duplicada com ${origem.length} atribuição(ões), todas zeradas`);
     setDuplicando(null);
   }
 
@@ -379,7 +379,7 @@ function VigenciasPage() {
               <p className="font-semibold">Vigência original</p>
               <p className="mt-1 text-muted-foreground">{fmtVigencia(duplicando)}</p>
               <p className="mt-2 text-xs text-muted-foreground">
-                Serão copiadas {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_filho)).size} pessoa(s), {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_tarefa)).size} tarefa(s) e {atribuicoes.filter((a) => a.id_vigencia === duplicando.id).length} associação(ões).
+                Serão copiadas {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_filho)).size} pessoa(s), {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_tarefa)).size} tarefa(s) e {atribuicoes.filter((a) => a.id_vigencia === duplicando.id).length} atribuição(ões).
               </p>
               <p className="mt-1 text-xs text-muted-foreground">Fez, Não fez, bonificações, penalidades atingidas e contadores não serão copiados.</p>
             </div>
