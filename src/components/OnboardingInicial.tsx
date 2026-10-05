@@ -25,7 +25,7 @@ import {
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 
-const PASSOS = ["Filho", "Tarefa", "Vigência", "Associação"] as const;
+const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 
 export function OnboardingInicial() {
   const navigate = useNavigate();
@@ -204,7 +204,7 @@ export function OnboardingInicial() {
     const corrigiu = vigenciaEmCorrecaoId !== null;
     if (vigenciaSalva?.id) setVigenciaSelecionada(String(vigenciaSalva.id));
     setVigenciaEmCorrecaoId(null);
-    toast.success(corrigiu ? "Vigência corrigida. Agora conclua a associação." : "Vigência cadastrada. Falta só fazer a associação.");
+    toast.success(corrigiu ? "Vigência corrigida. Agora conclua a atribuição." : "Vigência cadastrada. Falta só fazer a atribuição.");
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
@@ -341,7 +341,7 @@ export function OnboardingInicial() {
               </div>
             </div>
             <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarVigencia)}>
-              {salvando ? "Salvando..." : vigenciaEmCorrecaoId !== null ? "Salvar correção e voltar para associação" : "Cadastrar vigência e continuar"}
+              {salvando ? "Salvando..." : vigenciaEmCorrecaoId !== null ? "Salvar correção e voltar para atribuição" : "Cadastrar vigência e continuar"}
             </Button>
           </div>
         )}
@@ -353,7 +353,7 @@ export function OnboardingInicial() {
               <span>Você já aprendeu a criar filho, tarefa e vigência. Agora vamos ligar tudo.</span>
             </div>
             <div>
-              <h3 className="font-semibold">4. Faça a primeira associação</h3>
+              <h3 className="font-semibold">4. Faça a primeira atribuição</h3>
               <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência. Depois disso, o sistema estará pronto para registrar Fez / Não fez.</p>
             </div>
             <Pick label="Filho" required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
