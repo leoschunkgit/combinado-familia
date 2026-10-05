@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pick } from "@/components/Pick";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { VigenciaStatus } from "@/components/VigenciaStatus";
-import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Ocorrencia } from "@/lib/db";
+import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, useTarefas, type Ocorrencia } from "@/lib/db";
 import { descricaoPenalidade, reais, resumoMesada, usaDesconto } from "@/lib/mesada";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { savePdfDocument } from "@/lib/pdf-export";
@@ -46,8 +46,9 @@ function RelatorioPage() {
   const { data: vigencias = [], isLoading: loadingVigencias } = useVigencias();
   const { data: filhos = [], isLoading: loadingFilhos } = useFilhos();
   const { data: atribuicoes = [], isLoading: loadingAtribuicoes } = useFilhoTarefas();
+  const { data: tarefasCadastradas = [] } = useTarefas();
   const { data: ocorrencias = [], isLoading: loadingOcorrencias } = useOcorrencias();
-  const [f, setF] = useState({ vig: "all", filho: "all" });
+  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
   const [filtro, setFiltro] = useState(f);
   const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
@@ -63,7 +64,7 @@ function RelatorioPage() {
     .map((vigencia) => ({
       vigencia,
       filhos: filhos.filter((filho) => filtro.filho === "all" || Number(filho.id) === Number(filtro.filho)).map((filho) => {
-        const tarefas = atribuicoes.filter((r) => Number(r.id_vigencia) === Number(vigencia.id) && Number(r.id_filho) === Number(filho.id));
+        const tarefas = atribuicoes.filter((r) => Number(r.id_vigencia) === Number(vigencia.id) && Number(r.id_filho) === Number(filho.id) && (filtro.tarefa === "all" || Number(r.id_tarefa) === Number(filtro.tarefa)));
         const registros = tarefas.flatMap((r) => ocorrencias.filter((o) => Number(o.id_filho_tarefa) === Number(r.id)));
         return { filho, tarefas, registros };
       }).filter(({ tarefas }) => tarefas.length > 0),
@@ -131,9 +132,10 @@ function RelatorioPage() {
 
   return <>
     <PageHeader title="Relatório" description="Consulte os combinados completos por vigência e filho e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
-    <Card className="mb-6"><CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_auto] md:items-end">
+    <Card className="mb-6"><CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
       <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({value:String(v.id),label:fmtVigencia(v),status:new Date(v.data_fim).getTime()<Date.now()?"finalizada" as const:andamento(v)?"andamento" as const:"futura" as const}))} />
       <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
+      <Pick label="Tarefa" value={f.tarefa} onChange={(v) => setF({ ...f, tarefa: v })} allLabel="Todas" options={tarefasCadastradas.map((t) => ({ value: String(t.id), label: t.nome }))} />
       <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
     </CardContent></Card>
     <div className="mb-6 flex flex-wrap justify-end gap-2">
