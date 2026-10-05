@@ -31,7 +31,7 @@ function statusVigencia(v: { data_inicio: string; data_fim: string }) {
   const agora = Date.now();
   if (new Date(v.data_fim).getTime() < agora) return "Finalizada";
   if (new Date(v.data_inicio).getTime() <= agora) return "Em andamento";
-  return "Agendada";
+  return "Irá começar";
 }
 
 function ehFez(o: Ocorrencia) { return o.tipo === "FEZ"; }
