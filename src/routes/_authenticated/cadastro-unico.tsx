@@ -286,11 +286,18 @@ function CadastroUnicoPage() {
     setModeloId(value);
     const v = vigencias.find((item) => item.id === Number(value));
     if (!v) return;
-    const inicio = new Date(v.data_inicio).getTime();
-    const fim = new Date(v.data_fim).getTime();
-    const duracao = Math.max(60_000, fim - inicio);
-    const novoInicio = new Date(fim + 60_000);
-    const novoFim = new Date(novoInicio.getTime() + duracao);
+
+    const maiorFim = vigencias.reduce((maior, vigencia) => {
+      const fim = new Date(vigencia.data_fim).getTime();
+      return fim > maior ? fim : maior;
+    }, Number.NEGATIVE_INFINITY);
+
+    const novoInicio = Number.isFinite(maiorFim) ? new Date(maiorFim) : new Date(v.data_fim);
+    novoInicio.setDate(novoInicio.getDate() + 1);
+
+    const novoFim = new Date(novoInicio);
+    novoFim.setMonth(novoFim.getMonth() + 1);
+
     setDuplicacao({
       data_inicio: paraCampoDataHoraBrasil(novoInicio.toISOString()),
       data_fim: paraCampoDataHoraBrasil(novoFim.toISOString()),
