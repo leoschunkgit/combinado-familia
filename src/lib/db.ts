@@ -104,13 +104,14 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
-  [/Desconto máximo da vigência supera a mesada do filho/i, "O desconto por ocorrência multiplicado pelo limite da vigência supera a mesada do filho. Ajuste os valores antes de salvar"],
-  [/Filho sem valor de mesada cadastrado para esta vigência|Há filho sem valor de mesada cadastrado nesta vigência/i, "Para usar desconto da mesada, todos os filhos atribuídos precisam ter um valor de mesada cadastrado"],
-  [/Mesada vinculada a vigência com desconto não pode ser removida/i, "Não é possível retirar o valor da mesada enquanto o filho estiver atribuído a uma vigência com desconto"],
-  [/Filho com Não fez nesta vigência/i, "Este filho já tem registros de ‘Não fez’ nesta vigência. Não é possível editar ou excluir a atribuição"],
-  [/Vigência com atribuições não pode ser excluída/i, "Esta vigência tem atribuições e não pode ser excluída"],
-  [/Limite menor que o número de Não fez/i, "O limite não pode ser menor que os registros de ‘Não fez’ já acumulados por um filho"],
-  [/Há datas de Não fez fora do novo período/i, "Há datas de ‘Não fez’ fora do novo período. Corrija-as em Ocorrências"],
+  [/Atribuicao com Fez\/Nao fez nao pode ser excluida diretamente|Atribuição com Fez\/Não fez não pode ser excluída diretamente/i, "Esta atribuição já tem registros de Fez/Não fez e não pode ser excluída"],
+  [/Atribuicao com Fez\/Nao fez nao pode ser editada|Atribuição com Fez\/Não fez não pode ser editada/i, "Esta atribuição já tem registros de Fez/Não fez e não pode ser alterada"],
+  [/Vigência com atribuições não pode ser excluída|Vigencia com atribuicoes nao pode ser excluida/i, "Esta vigência tem atribuições e não pode ser excluída"],
+  [/Há registros de Fez\/Não fez fora do novo período da vigência|Ha registros de Fez\/Nao fez fora do novo periodo da vigencia/i, "Há registros de Fez/Não fez fora do novo período. Corrija-os antes de salvar"],
+  [/Já existe uma vigência nesse período|Ja existe uma vigencia nesse periodo/i, "Já existe uma vigência nesse período. As vigências não podem se sobrepor"],
+  [/Fez\/Não fez só pode ser alterado em vigência em andamento|Fez\/Nao fez so pode ser alterado em vigencia em andamento/i, "Fez/Não fez só pode ser alterado em vigência em andamento"],
+  [/A data do Fez\/Não fez deve estar dentro da vigência|A data do Fez\/Nao fez deve estar dentro da vigencia/i, "A data do Fez/Não fez deve estar dentro da vigência"],
+  [/Não é permitido registrar Fez\/Não fez em data futura|Nao e permitido registrar Fez\/Nao fez em data futura/i, "Não é permitido registrar Fez/Não fez em data futura"],
   [/invalid login credentials/i, "Email ou senha incorretos"],
   [/email not confirmed/i, "Confirme seu email antes de entrar"],
   [/user already registered|already been registered/i, "Este email já está cadastrado"],
