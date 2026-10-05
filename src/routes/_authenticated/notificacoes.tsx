@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCircle2, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Bell, CheckCircle2, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { CollapseChevron } from "@/components/CollapseChevron";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/PageHeader";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa } from "@/lib/db";
@@ -179,7 +180,7 @@ function Notificacoes() {
                           </div>
                           <span className="flex shrink-0 items-center gap-2 text-xs font-medium text-muted-foreground">
                             {itens.length} {itens.length === 1 ? "pendência" : "pendências"}
-                            {abertoFilho ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            <CollapseChevron open={abertoFilho} className="h-6 w-6" />
                           </span>
                         </button>
 
