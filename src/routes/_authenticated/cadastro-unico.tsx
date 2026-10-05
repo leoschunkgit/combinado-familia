@@ -109,14 +109,18 @@ function CadastroUnicoPage() {
   }
 
   function validarVigencia(draft: VigenciaDraft) {
-    if (!draft.data_inicio || !draft.data_fim) return "Informe início e fim da vigência";
-    const inicio = new Date(draft.data_inicio).getTime();
-    const fim = new Date(draft.data_fim).getTime();
-    if (!Number.isFinite(inicio) || !Number.isFinite(fim) || fim <= inicio) return "A data/hora fim deve ser posterior ao início";
+    if (!draft.data_inicio) return "Informe a data de início";
+    if (!draft.data_fim) return "Informe a data de fim";
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft.data_inicio) || Number.isNaN(new Date(draft.data_inicio).getTime())) return "Informe uma data e hora de início válidas";
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft.data_fim) || Number.isNaN(new Date(draft.data_fim).getTime())) return "Informe uma data e hora de fim válidas";
+    if (new Date(draft.data_fim).getTime() <= new Date(draft.data_inicio).getTime()) return "A data/hora fim deve ser posterior à data/hora início";
     if (draft.penalidade.trim().length < 2) return "Informe a penalidade";
+    if (draft.penalidade.trim().length > 200) return "A penalidade deve ter no máximo 200 caracteres";
     const qtd = Number(draft.qtd_ocorrencia);
-    if (!Number.isInteger(qtd) || qtd < 1 || qtd > 31) return "A quantidade de “Não fez” deve estar entre 1 e 31";
-    if (!/^\d+(?:[,.]\d{1,2})?$/.test(draft.valor_debito) || Number(draft.valor_debito.replace(",", ".")) <= 0) return "Informe o desconto por “Não fez”";
+    if (!Number.isInteger(qtd) || qtd < 1) return "Mínimo de 1 ocorrência";
+    if (qtd > 31) return "Máximo de 31";
+    const valor = Number(draft.valor_debito.replace(",", "."));
+    if (!/^\d+(?:[,.]\d{1,2})?$/.test(draft.valor_debito) || valor <= 0 || valor > 9999999999.99) return "Informe um valor de desconto maior que zero, com até duas casas decimais";
     return null;
   }
 
