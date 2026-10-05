@@ -19,7 +19,7 @@ import { erroLimiteMesada } from "@/lib/limite-mesada";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
-    { title: "Cadastro único — Combinado" },
+    { title: "Cadastro fluxo — Combinado" },
     { name: "description", content: "Cadastre filhos, tarefas, vigência e associações em um único fluxo." },
   ] }),
   component: CadastroUnicoPage,
@@ -230,7 +230,7 @@ function CadastroUnicoPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
-        <PageHeader title="Cadastro único" description="Cadastre vários filhos e tarefas em lote, crie associações e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
+        <PageHeader title="Cadastro fluxo" description="Cadastre vários filhos e tarefas em lote, crie associações e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
         <Button variant="outline" size="sm" onClick={() => navigate({ to: "/inicio" })}><ArrowLeft className="h-4 w-4" /> Voltar</Button>
       </div>
 
