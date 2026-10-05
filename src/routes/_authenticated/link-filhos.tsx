@@ -95,7 +95,6 @@ function LinkFilhosPage() {
         const ativo = acesso?.ativo === true;
         return <section key={f.id} className="min-w-0 rounded-2xl border bg-card p-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary font-display text-lg font-bold text-secondary-foreground">{f.nome[0]?.toUpperCase()}</div>
             <div className="min-w-0 flex-1"><h2 className="truncate font-semibold">{f.nome}</h2><p className="text-xs text-muted-foreground">Painel de acompanhamento</p></div>
           </div>
 
