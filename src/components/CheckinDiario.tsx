@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
@@ -364,11 +365,9 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                   {fez.bonusTipo === "VALOR" && (
                                     <div className="space-y-2">
                                       <Label>Valor da bonificação (R$)</Label>
-                                      <input
-                                        inputMode="decimal"
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                      <CurrencyInput
                                         value={fez.valor}
-                                        onChange={(e) => setFez({ ...fez, valor: e.target.value })}
+                                        onValueChange={(valor) => setFez({ ...fez, valor })}
                                       />
                                     </div>
                                   )}
