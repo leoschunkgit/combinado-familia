@@ -65,11 +65,11 @@ const NAV_GRUPOS: { titulo: string; itens: NavItem[] }[] = [
 ];
 
 const ETAPAS = [
-  { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se marcar ‘Tem mesada’, preencha também o valor: nesse caso, a penalidade será descontada da mesada." },
+  { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se marcar ‘Tem mesada’, preencha também o valor: nesse caso, cada ‘Não fez’ gera o desconto definido na vigência." },
   { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
   { to: "/vigencias", label: "Vigências", title: "Defina o período e as regras", rule: "Escolha as datas, o limite de ‘Não fez’, a penalidade escrita e o desconto por ocorrência. Com mesada, aplica-se o desconto; sem mesada, a penalidade escrita ao atingir o limite." },
-  { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Depois que houver um ‘Não fez’ para esse filho na vigência, as atribuições não poderão ser editadas ou excluídas." },
-  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre ‘Não fez’ na data em que aconteceu. O limite soma todas as tarefas do mesmo filho na vigência; você pode consultar as datas e penalidades em Relatório / Histórico." },
+  { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Uma atribuição que já tenha registro de ‘Fez’ ou ‘Não fez’ não pode ser excluída; outras atribuições sem histórico continuam independentes." },
+  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre ‘Fez’ ou ‘Não fez’ na data em que aconteceu. Para filho sem mesada, o limite de penalidade soma os ‘Não fez’ de todas as tarefas na vigência; com mesada, cada ‘Não fez’ gera seu desconto." },
 ] as const;
 
 function AuthenticatedLayout() {
