@@ -82,9 +82,16 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
     pendencias.length > 0;
 
   function totalNaoFez(r: FilhoTarefa) {
-    return atribuicoes
-      .filter((a) => a.id_filho === r.id_filho && a.id_vigencia === r.id_vigencia)
-      .reduce((s, a) => s + a.qtd_nao_fez, 0);
+    return ocorrencias.filter(
+      (o) =>
+        o.tipo !== "FEZ" &&
+        o.t_filho_tarefa?.id_filho === r.id_filho &&
+        o.t_filho_tarefa?.id_vigencia === r.id_vigencia,
+    ).length;
+  }
+
+  function totalNaoFezTarefa(r: FilhoTarefa) {
+    return ocorrencias.filter((o) => o.tipo !== "FEZ" && o.id_filho_tarefa === r.id).length;
   }
 
   async function registrarNaoFez(r: FilhoTarefa, data: string) {
@@ -117,7 +124,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
 
       const atualizacao = await supabase
         .from("t_filho_tarefa")
-        .update({ qtd_nao_fez: r.qtd_nao_fez + 1, feito: penalizado ? "N" : null })
+        .update({ qtd_nao_fez: totalNaoFezTarefa(r) + 1, feito: penalizado ? "N" : null })
         .eq("id", r.id);
       if (atualizacao.error) throw atualizacao.error;
 
