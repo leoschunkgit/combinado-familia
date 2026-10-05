@@ -19,7 +19,7 @@ export const Route = createFileRoute("/acompanhar/$token")({
   component: PainelPublico,
 });
 
-type Ocorrencia = { tipo: "FEZ" | "NAO_FEZ" | "PENALIDADE"; data: string; bonificacao_tipo: "TEXTO" | "VALOR" | null; bonificacao_descricao: string | null; bonificacao_valor: number | null };
+type Ocorrencia = { tipo: "FEZ" | "NAO_FEZ"; data: string; bonificacao_tipo: "TEXTO" | "VALOR" | null; bonificacao_descricao: string | null; bonificacao_valor: number | null };
 type Tarefa = { id: number; nome: string; qtd_nao_fez: number; ocorrencias: Ocorrencia[] };
 type Vigencia = { id: number; data_inicio: string; data_fim: string; penalidade: string; qtd_ocorrencia: number; valor_debito: number | null; tarefas: Tarefa[] };
 type Painel = { filho: { nome: string; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
@@ -71,7 +71,7 @@ function PainelPublico() {
   const descontoUnitario = Number(vigenciaAtual?.valor_debito ?? 0);
   const desconto = painel.filho.tem_mesada ? Math.min(painel.filho.valor_mesada ?? 0, qtdNaoFez * descontoUnitario) : 0;
   const mesadaFinal = painel.filho.valor_mesada === null ? null : Math.max(0, painel.filho.valor_mesada - desconto);
-  const resultados = tarefaDatas?.ocorrencias.filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ" || o.tipo === "PENALIDADE").sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
+  const resultados = tarefaDatas?.ocorrencias.filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ").sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
 
   return <main className="native-safe-area min-h-screen bg-muted/20 px-3 py-5 sm:px-6 sm:py-8">
     <div className="mx-auto max-w-3xl space-y-4">
