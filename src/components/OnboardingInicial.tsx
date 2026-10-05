@@ -215,7 +215,7 @@ export function OnboardingInicial() {
           </div>
           <DialogTitle>Aprenda o Combinado Família configurando seu primeiro combinado</DialogTitle>
           <DialogDescription>
-            Este passo a passo ensina, na prática, como o sistema funciona. Você fará os cadastros essenciais na ordem correta e, ao terminar, seguirá direto para Ocorrências.
+            Este passo a passo ensina, na prática, como o sistema funciona. Você fará os cadastros essenciais na ordem correta e, ao terminar, seguirá direto para Fez / Não fez.
           </DialogDescription>
         </DialogHeader>
 
@@ -285,7 +285,7 @@ export function OnboardingInicial() {
             </div>
             <div>
               <h3 className="font-semibold">3. Crie uma vigência</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Para seguir direto até Ocorrências, crie uma vigência que já esteja em andamento.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Para seguir direto até Fez / Não fez, crie uma vigência que já esteja em andamento.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label>Data início *</Label><BrDateTimeField id="onboarding-inicio-vigencia" value={inicioVigencia} onChange={setInicioVigencia} /></div>
@@ -323,13 +323,13 @@ export function OnboardingInicial() {
             </div>
             <div>
               <h3 className="font-semibold">4. Faça a primeira associação</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência. Depois disso, o sistema estará pronto para registrar ocorrências.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência. Depois disso, o sistema estará pronto para registrar Fez / Não fez.</p>
             </div>
             <Pick label="Filho" required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
             <Pick label="Tarefa" required value={tarefaAtual} onChange={setTarefaSelecionada} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
             <Pick label="Vigência" required value={vigenciaAtual} onChange={setVigenciaSelecionada} options={vigenciasAtivas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: "andamento" as const }))} />
             <Button className="w-full" disabled={salvando} onClick={() => void cadastrarAssociacao()}>
-              {salvando ? "Salvando..." : "Concluir aprendizado e ir para Ocorrências"}
+              {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
             </Button>
           </div>
         )}
