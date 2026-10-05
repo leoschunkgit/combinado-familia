@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Link2, Minus, MoreVertical, Pencil, Plus, Share2, Trash2, Users } from "lucide-react";
+import { Copy, ExternalLink, Link2, MoreVertical, Pencil, Share2, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { CollapseChevron } from "@/components/CollapseChevron";
 import { maskCelular, msgErro, useFilhos, type Filho } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
@@ -183,7 +184,7 @@ function FilhosPage() {
             <Button className="shrink-0" variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button><Button className="shrink-0" variant="ghost" size="icon" onClick={() => setConfirmarExclusao(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
           </div>
           <div className="mt-4 min-w-0 max-w-full rounded-xl border bg-muted/25 p-3">
-            <div className="flex min-w-0 items-center gap-2"><Link2 className="h-4 w-4 shrink-0 text-muted-foreground" /><p className="min-w-0 flex-1 text-sm font-medium">Gerar link acompanhamento</p><Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-expanded={painelAberto} aria-label={painelAberto ? `Fechar painel de acompanhamento de ${f.nome}` : `Abrir painel de acompanhamento de ${f.nome}`} onClick={() => setPaineisAbertos((v) => ({ ...v, [f.id]: !painelAberto }))}>{painelAberto ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}</Button></div>
+            <div className="flex min-w-0 items-center gap-2"><Link2 className="h-4 w-4 shrink-0 text-muted-foreground" /><p className="min-w-0 flex-1 text-sm font-medium">Gerar link acompanhamento</p><button type="button" className="shrink-0" aria-expanded={painelAberto} aria-label={painelAberto ? `Fechar painel de acompanhamento de ${f.nome}` : `Abrir painel de acompanhamento de ${f.nome}`} onClick={() => setPaineisAbertos((v) => ({ ...v, [f.id]: !painelAberto }))}><CollapseChevron open={painelAberto} className="h-7 w-7" /></button></div>
             {painelAberto && <div className="mt-2 min-w-0 pl-6">{carregandoAcesso[f.id] ? <p className="text-xs text-muted-foreground">Carregando acesso...</p> : !acesso ? <><p className="text-xs text-muted-foreground">Permita que {f.nome} acompanhe tarefas e resultados sem fazer login.</p><Button size="sm" className="mt-3" onClick={() => void runAction(() => gerarLink(f))}>Gerar link</Button></> : <>
               <div className="flex items-center gap-1.5 text-xs"><span className={`h-2 w-2 shrink-0 rounded-full ${ativo ? "bg-green-500" : "bg-muted-foreground/50"}`} /><span className={ativo ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>{ativo ? "Acesso ativo" : "Acesso desativado"}</span></div>
               {ativo && <><p className="mt-2 max-w-full break-all text-xs text-muted-foreground">{urlAcesso(acesso.token)}</p><div className="mt-3 flex min-w-0 flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void copiarLink(acesso.token)}><Copy className="mr-1.5 h-3.5 w-3.5" />Copiar link</Button><Button size="sm" variant="outline" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartilhar</Button><Button size="sm" variant="ghost" onClick={() => void openExternalUrl(urlAcesso(acesso.token))}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Abrir</Button></div></>}
