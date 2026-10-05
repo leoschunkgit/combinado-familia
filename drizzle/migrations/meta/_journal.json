@@ -134,6 +134,13 @@
       "when": 1791242904216,
       "tag": "0018_consolidate_child_public_access",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791243279572,
+      "tag": "0019_allow_parent_cascade_with_history",
+      "breakpoints": true
     }
   ]
 }
