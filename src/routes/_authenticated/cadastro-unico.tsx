@@ -329,13 +329,16 @@ function CadastroUnicoPage() {
     <div className="space-y-4">
       <PageHeader title="Cadastro Fluxo" description="Cadastre vários filhos e tarefas em lote, crie associações e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <button type="button" onClick={() => setModo("novo")} className={`rounded-lg border p-3 text-left transition ${modo === "novo" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
-          <span className="flex items-center gap-3"><span className={`flex h-10 w-10 items-center justify-center rounded-lg ${modo === "novo" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><Plus className="h-5 w-5" /></span><span><span className="block font-semibold">Montar novo cadastro</span><span className="block text-xs text-muted-foreground">Filhos, tarefas, vigência e associações em lote</span></span></span>
-        </button>
-        <button type="button" onClick={() => setModo("duplicar")} className={`rounded-lg border p-3 text-left transition ${modo === "duplicar" ? "border-primary bg-primary/10 ring-1 ring-primary/20" : "bg-card hover:bg-muted/40"}`}>
-          <span className="flex items-center gap-3"><span className={`flex h-10 w-10 items-center justify-center rounded-lg ${modo === "duplicar" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><Copy className="h-5 w-5" /></span><span><span className="block font-semibold">Duplicar vigência</span><span className="block text-xs text-muted-foreground">Reaproveite regras e associações existentes</span></span></span>
-        </button>
+      <div className="max-w-sm">
+        <Pick
+          label="Tipo de cadastro"
+          value={modo}
+          onChange={(value) => setModo(value as Modo)}
+          options={[
+            { value: "novo", label: "Novo cadastro" },
+            { value: "duplicar", label: "Duplicar vigência" },
+          ]}
+        />
       </div>
 
       {modo === "novo" ? (
