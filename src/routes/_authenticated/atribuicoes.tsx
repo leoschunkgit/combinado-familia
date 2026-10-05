@@ -50,10 +50,15 @@ function AtribuicoesPage() {
   const [filtroTarefa, setFiltroTarefa] = useState("all");
 
   const vigenciasOrdenadas = [...vigencias].sort((a, b) => {
-    const aAndamento = vigenciaEmAndamento(a);
-    const bAndamento = vigenciaEmAndamento(b);
-    if (aAndamento !== bAndamento) return aAndamento ? -1 : 1;
-    return new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime();
+    const agora = Date.now();
+    const inicioA = new Date(a.data_inicio).getTime();
+    const inicioB = new Date(b.data_inicio).getTime();
+    const fimA = new Date(a.data_fim).getTime();
+    const fimB = new Date(b.data_fim).getTime();
+    const statusA = inicioA <= agora && fimA >= agora ? 0 : inicioA > agora ? 1 : 2;
+    const statusB = inicioB <= agora && fimB >= agora ? 0 : inicioB > agora ? 1 : 2;
+    if (statusA !== statusB) return statusA - statusB;
+    return statusA === 2 ? inicioB - inicioA : inicioA - inicioB;
   });
 
   const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
