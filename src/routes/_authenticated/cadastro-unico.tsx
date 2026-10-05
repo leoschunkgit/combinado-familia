@@ -26,6 +26,12 @@ export const Route = createFileRoute("/_authenticated/cadastro-unico")({
 });
 
 type Modo = "novo" | "duplicar";
+type FilhoNovoFluxo = {
+  tempId: number;
+  nome: string;
+  tem_mesada: boolean;
+  valor_mesada: number | null;
+};
 type VigenciaDraft = {
   data_inicio: string;
   data_fim: string;
@@ -62,6 +68,7 @@ function CadastroUnicoPage() {
   const [nomeTarefa, setNomeTarefa] = useState("");
   const [filhosSelecionados, setFilhosSelecionados] = useState<number[]>([]);
   const [filhosCriadosNoFluxo, setFilhosCriadosNoFluxo] = useState<number[]>([]);
+  const [filhosNovosPendentes, setFilhosNovosPendentes] = useState<FilhoNovoFluxo[]>([]);
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
   const [vigenciaDraft, setVigenciaDraft] = useState<VigenciaDraft>(() => vigenciaInicial());
   const [vigenciaCriadaId, setVigenciaCriadaId] = useState<number | null>(null);
@@ -77,24 +84,58 @@ function CadastroUnicoPage() {
   const alternar = (lista: number[], setLista: (v: number[]) => void, id: number) =>
     setLista(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]);
 
-  async function cadastrarFilho() {
+  function adicionarFilhoAoFluxo() {
     const nome = nomeFilho.trim();
     if (nome.length < 2 || nome.length > 100) { toast.error("Informe o nome do filho"); return; }
     if (temMesada && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0)) {
       toast.error("Informe um valor de mesada válido"); return;
     }
-    const { data, error } = await supabase.from("t_filho").insert({
-      nome, email: null, celular: null, idade: null,
-      tem_mesada: temMesada,
-      tem_mesada_opcional: temMesada ? true : null,
-      valor_mesada: temMesada ? Number(valorMesada.replace(",", ".")) : null,
-    }).select("id").single();
-    if (error || !data) { toast.error(msgErro(error)); return; }
-    setFilhosSelecionados((atuais) => [...new Set([...atuais, data.id])]);
-    setFilhosCriadosNoFluxo((atuais) => [...new Set([...atuais, data.id])]);
-    setNomeFilho(""); setTemMesada(false); setValorMesada("");
-    await qc.invalidateQueries({ queryKey: ["filhos"] });
-    toast.success("Filho adicionado ao lote");
+
+    const valor = temMesada ? Number(valorMesada.replace(",", ".")) : null;
+    setFilhosNovosPendentes((atuais) => [
+      ...atuais,
+      {
+        tempId: Date.now() + atuais.length,
+        nome,
+        tem_mesada: temMesada,
+        valor_mesada: valor,
+      },
+    ]);
+    setNomeFilho("");
+    setTemMesada(false);
+    setValorMesada("");
+  }
+
+  async function concluirEtapaFilhos() {
+    if (filhosSelecionados.length === 0 && filhosNovosPendentes.length === 0) {
+      toast.error("Selecione ou adicione pelo menos um filho");
+      return;
+    }
+
+    let idsNovos: number[] = [];
+
+    if (filhosNovosPendentes.length > 0) {
+      const payload = filhosNovosPendentes.map((filho) => ({
+        nome: filho.nome,
+        email: null,
+        celular: null,
+        idade: null,
+        tem_mesada: filho.tem_mesada,
+        tem_mesada_opcional: filho.tem_mesada ? true : null,
+        valor_mesada: filho.valor_mesada,
+      }));
+
+      const { data, error } = await supabase.from("t_filho").insert(payload).select("id");
+      if (error || !data) { toast.error(msgErro(error)); return; }
+
+      idsNovos = data.map((item) => item.id);
+      setFilhosSelecionados((atuais) => [...new Set([...atuais, ...idsNovos])]);
+      setFilhosCriadosNoFluxo((atuais) => [...new Set([...atuais, ...idsNovos])]);
+      setFilhosNovosPendentes([]);
+      await qc.invalidateQueries({ queryKey: ["filhos"] });
+    }
+
+    setEtapaNovo(2);
   }
 
   async function cadastrarTarefa() {
@@ -292,11 +333,11 @@ function CadastroUnicoPage() {
                     <div className="w-full space-y-1.5 sm:w-52"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
                     <label className="flex h-10 shrink-0 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
                     {temMesada && <div className="w-full space-y-1.5 sm:w-32"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
-                    <Button className="h-10 shrink-0" size="sm" onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar</Button>
+                    <Button className="h-10 shrink-0" size="sm" onClick={adicionarFilhoAoFluxo}><Plus className="h-4 w-4" /> Adicionar</Button>
                   </div>
                 </div>
 
-                {filhos.length > 0 && (
+                {(filhos.length > 0 || filhosNovosPendentes.length > 0) && (
                   <div>
                     <p className="text-sm font-semibold">Marque abaixo quem participa do fluxo</p>
                     <div className="mt-2 divide-y rounded-lg border bg-background">
@@ -314,12 +355,22 @@ function CadastroUnicoPage() {
                           </label>
                         );
                       })}
+                      {filhosNovosPendentes.map((f) => (
+                        <div key={f.tempId} className="flex items-center gap-2.5 px-3 py-2 text-sm">
+                          <Checkbox checked disabled />
+                          <span className="min-w-0 flex-1 truncate font-medium">{f.nome}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {f.tem_mesada && f.valor_mesada != null ? `R$ ${f.valor_mesada.toFixed(2).replace(".", ",")}` : "Sem mesada"}
+                          </span>
+                          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Novo</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
                 <div className="flex justify-end border-t pt-2.5">
-                  <Button onClick={() => setEtapaNovo(2)} disabled={filhosSelecionados.length === 0}>Continuar para tarefas</Button>
+                  <Button onClick={() => void runAction(concluirEtapaFilhos)} disabled={filhosSelecionados.length === 0 && filhosNovosPendentes.length === 0}>Continuar para tarefas</Button>
                 </div>
               </CardContent>
             </Card>
