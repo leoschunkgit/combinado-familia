@@ -252,14 +252,47 @@ function CadastroUnicoPage() {
       {modo === "novo" ? (
         <>
           <Card className="overflow-hidden"><CardHeader className="border-b bg-muted/20"><CardTitle className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">1</span><span className="flex items-center gap-2"><Users className="h-5 w-5" /> Filhos</span></CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
-                <div className="space-y-2"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
-                <label className="flex h-10 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
-                {temMesada && <div className="space-y-2"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
+            <CardContent className="space-y-5">
+              <div className="rounded-xl border bg-muted/20 p-3">
+                <p className="text-sm font-semibold">Cadastrar novo filho</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Cadastre um novo filho e ele já será incluído neste fluxo.</p>
+                <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
+                  <div className="space-y-2"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
+                  <label className="flex h-10 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
+                  {temMesada && <div className="space-y-2"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
+                </div>
+                <Button className="mt-3" onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar ao fluxo</Button>
               </div>
-              <Button onClick={() => void runAction(cadastrarFilho)}><Plus className="h-4 w-4" /> Adicionar filho</Button>
-              {filhos.length > 0 && <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">{filhos.map((f) => { const selecionado = filhosSelecionados.includes(f.id); return <label key={f.id} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition ${selecionado ? "border-primary bg-primary/5 font-medium" : "hover:bg-muted/40"}`}><Checkbox checked={selecionado} onCheckedChange={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)} /><span className="min-w-0 flex-1 truncate">{f.nome}</span>{selecionado && <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />}</label>; })}</div>}
+
+              {filhos.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold">Usar filhos já cadastrados</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Selecione quem deve participar deste fluxo. Isso não cria um novo cadastro.</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    {filhos.map((f) => {
+                      const selecionado = filhosSelecionados.includes(f.id);
+                      return (
+                        <button
+                          type="button"
+                          key={f.id}
+                          onClick={() => alternar(filhosSelecionados, setFilhosSelecionados, f.id)}
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition ${selecionado ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background hover:bg-muted/40"}`}
+                        >
+                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${selecionado ? "border-primary bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                            {selecionado ? <CheckCircle2 className="h-4 w-4" /> : <Users className="h-3.5 w-3.5" />}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{f.nome}</span>
+                            <span className={`block text-[11px] ${selecionado ? "text-primary" : "text-muted-foreground"}`}>
+                              {selecionado ? "Selecionado para este fluxo" : "Selecionar para este fluxo"}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
