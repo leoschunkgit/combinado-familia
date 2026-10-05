@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/PageHeader";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
@@ -178,11 +179,14 @@ function Notificacoes() {
                           </div>
                           {editando && fezAnterior && <div className="mt-3 space-y-3 border-t pt-3">
                             <Label>Bonificação opcional</Label>
-                            <div className="grid grid-cols-3 gap-2">
-                              <Button size="sm" variant={fezAnterior.bonusTipo==="NENHUMA"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"NENHUMA"})}>Nenhuma</Button>
-                              <Button size="sm" variant={fezAnterior.bonusTipo==="TEXTO"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"TEXTO"})}>Escrita</Button>
-                              <Button size="sm" variant={fezAnterior.bonusTipo==="VALOR"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"VALOR"})}>Valor</Button>
-                            </div>
+                            <Select value={fezAnterior.bonusTipo} onValueChange={(valor)=>setFezAnterior({...fezAnterior,bonusTipo:valor as FezAnterior["bonusTipo"]})}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="NENHUMA">Nenhuma</SelectItem>
+                                <SelectItem value="TEXTO">Escrita</SelectItem>
+                                <SelectItem value="VALOR">Valor</SelectItem>
+                              </SelectContent>
+                            </Select>
                             {fezAnterior.bonusTipo==="TEXTO" && <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.descricao} onChange={e=>setFezAnterior({...fezAnterior,descricao:e.target.value})}/>}
                             {fezAnterior.bonusTipo==="VALOR" && <input inputMode="decimal" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.valor} onChange={e=>setFezAnterior({...fezAnterior,valor:e.target.value})}/>}
                             <div className="flex justify-end gap-2"><Button size="sm" variant="outline" onClick={()=>setFezAnterior(null)}>Cancelar</Button><Button size="sm" disabled={busy} onClick={()=>void registrarFezAnterior(fezAnterior)}>Salvar Fez</Button></div>
