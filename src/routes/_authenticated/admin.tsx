@@ -10,9 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { msgErro } from "@/lib/db";
+import { useActionLoading } from "@/components/ActionLoading";
 
 function Admin() {
   const router = useRouter();
+  const { runAction } = useActionLoading();
   const navigate = useNavigate();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -86,7 +88,7 @@ function Admin() {
         <section className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className="text-lg font-semibold">Dados pessoais</h2>
           <p className="mb-5 mt-1 text-sm text-muted-foreground">Altere seu nome. O email é apenas para consulta.</p>
-          <form onSubmit={salvarDados} className="space-y-4">
+          <form onSubmit={(e) => { void runAction(() => salvarDados(e)); }} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="admin-nome">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="admin-nome" value={nome} onChange={(e) => setNome(e.target.value)} required /></div>
             <div className="space-y-2"><p className="text-sm font-medium">Email</p><p className="break-all text-sm text-foreground">{email || "Não informado"}</p></div>
             <Button type="submit" disabled={loading}><Save /> Salvar nome</Button>
@@ -126,7 +128,7 @@ function Admin() {
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setConfirmarExclusao(false)} disabled={excluindo}>Cancelar</Button>
-            <Button variant="destructive" onClick={excluirConta} disabled={excluindo || textoConfirmacao.trim().toUpperCase() !== "EXCLUIR"}>
+            <Button variant="destructive" onClick={() => void runAction(excluirConta)} disabled={excluindo || textoConfirmacao.trim().toUpperCase() !== "EXCLUIR"}>
               {excluindo ? "Excluindo..." : "Excluir permanentemente"}
             </Button>
           </DialogFooter>
