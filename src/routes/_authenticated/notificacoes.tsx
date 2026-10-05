@@ -16,6 +16,7 @@ function Notificacoes() {
   const { data: ocorrencias = [] } = useOcorrencias();
   const hoje = useDataBrasilAtual();
   const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
+  const dataAtual = hoje.split("-").reverse().join("/");
 
   const grupos = vigencias
     .map((vigencia) => ({
@@ -50,11 +51,9 @@ function Notificacoes() {
       ) : (
         <>
           <div className="rounded-2xl border bg-primary/5 p-4">
-            <p className="text-sm font-semibold">
-              {pendencias.length} {pendencias.length === 1 ? "tarefa pendente" : "tarefas pendentes"} hoje
-            </p>
+            <p className="text-sm font-semibold">1 notificação pendente hoje</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Enquanto houver pendências, o menu mobile mostrará o aviso de notificação.
+              Existe pelo menos uma tarefa de hoje ainda sem Fez ou Não fez.
             </p>
           </div>
 
@@ -72,9 +71,10 @@ function Notificacoes() {
                       <p className="font-bold">{filho.nome}</p>
                       <ul className="mt-2 space-y-2">
                         {tarefas.map((tarefa) => (
-                          <li key={tarefa.id} className="flex items-center justify-between gap-3 rounded-lg bg-muted/30 px-3 py-2 text-sm">
-                            <span className="min-w-0 break-words">{tarefa.t_tarefa?.nome}</span>
-                            <span className="shrink-0 text-xs font-medium text-destructive">Pendente</span>
+                          <li key={tarefa.id} className="grid gap-1 rounded-lg bg-muted/30 px-3 py-2 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3">
+                            <span className="min-w-0 break-words font-medium">{tarefa.t_tarefa?.nome}</span>
+                            <span className="text-xs text-muted-foreground sm:text-sm">{dataAtual}</span>
+                            <span className="w-fit shrink-0 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Pendente</span>
                           </li>
                         ))}
                       </ul>
