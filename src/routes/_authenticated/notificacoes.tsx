@@ -11,6 +11,7 @@ import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVi
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { reais, usaDesconto, valorDebitado } from "@/lib/mesada";
+import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
 
 export const Route = createFileRoute("/_authenticated/notificacoes")({
   component: Notificacoes,
@@ -177,7 +178,7 @@ function Notificacoes() {
                             <span className="font-medium">{tarefa.t_tarefa?.nome}</span>
                             <span className="text-sm text-muted-foreground">{data.split("-").reverse().join("/")}</span>
                             <span className="w-fit rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Pendente</span>
-                            {!editando && <div className="flex gap-2"><Button size="sm" variant="outline" disabled={busy} onClick={()=>setFezAnterior({tarefa,data,bonusTipo:"NENHUMA",descricao:"",valor:""})}><ThumbsUp className="h-4 w-4 text-green-600"/>Fez</Button><Button size="sm" variant="destructive" disabled={busy} onClick={()=>void registrarNaoFezAnterior(tarefa,data)}><ThumbsDown className="h-4 w-4"/>Não fez</Button></div>}
+                            {!editando && <div className="flex gap-2"><Button size="sm" variant="outline" className={botaoFezClass} disabled={busy} onClick={()=>setFezAnterior({tarefa,data,bonusTipo:"NENHUMA",descricao:"",valor:""})}><ThumbsUp className="h-4 w-4 text-green-600"/>Fez</Button><Button size="sm" variant="outline" className={botaoNaoFezClass} disabled={busy} onClick={()=>void registrarNaoFezAnterior(tarefa,data)}><ThumbsDown className="h-4 w-4 text-red-600"/>Não fez</Button></div>}
                           </div>
                           {editando && fezAnterior && <div className="mt-3 space-y-3 border-t pt-3">
                             <Label>Bonificação opcional</Label>
