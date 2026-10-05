@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCircle2, ClipboardCheck, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Bell, CheckCircle2, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,11 @@ function Notificacoes() {
   const [fezAnterior, setFezAnterior] = useState<FezAnterior | null>(null);
   const hoje = useDataBrasilAtual();
   const pendencias = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
-  const dataAtual = hoje.split("-").reverse().join("/");
   const anteriores = pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, new Date(hoje + "T12:00:00-03:00"));
+  const todasPendencias = [
+    ...pendencias.map((tarefa) => ({ tarefa, data: hoje })),
+    ...anteriores,
+  ].sort((a, b) => b.data.localeCompare(a.data));
 
   const gruposAnteriores = vigencias
     .filter(vigenciaEmAndamento)
@@ -37,7 +40,7 @@ function Notificacoes() {
       vigencia,
       filhos: filhos.map((filho) => ({
         filho,
-        itens: anteriores.filter((p) => p.tarefa.id_vigencia === vigencia.id && p.tarefa.id_filho === filho.id),
+        itens: todasPendencias.filter((p) => p.tarefa.id_vigencia === vigencia.id && p.tarefa.id_filho === filho.id),
       })).filter((g) => g.itens.length > 0),
     }))
     .filter((g) => g.filhos.length > 0);
@@ -84,19 +87,7 @@ function Notificacoes() {
     } catch(e) { toast.error(msgErro(e as {message?: string})); } finally { setBusy(false); }
   }
 
-  const grupos = vigencias
-    .map((vigencia) => ({
-      vigencia,
-      filhos: filhos
-        .map((filho) => ({
-          filho,
-          tarefas: pendencias.filter(
-            (p) => p.id_vigencia === vigencia.id && p.id_filho === filho.id,
-          ),
-        }))
-        .filter((grupo) => grupo.tarefas.length > 0),
-    }))
-    .filter((grupo) => grupo.filhos.length > 0);
+
 
   return (
     <div className="space-y-6">
@@ -106,110 +97,62 @@ function Notificacoes() {
         icon={<Bell className="h-6 w-6" />}
       />
 
-      {pendencias.length === 0 ? (
+      {todasPendencias.length === 0 ? (
         <div className="rounded-2xl border bg-card p-8 text-center">
           <CheckCircle2 className="mx-auto h-10 w-10 text-green-600" />
           <h2 className="mt-3 text-lg font-semibold">Tudo em dia</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Todas as tarefas de hoje já têm Fez ou Não fez registrado.
+            Todos os dias desta vigência já têm Fez ou Não fez registrado.
           </p>
         </div>
       ) : (
-        <>
-          <div className="space-y-5">
-            {grupos.map(({ vigencia, filhos: gruposFilhos }) => (
-              <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card">
-                <div className="border-b bg-muted/30 px-4 py-3">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência</p>
-                      <p className="mt-1 font-semibold">{fmtVigencia(vigencia)}</p>
-                    </div>
-                    <div className="shrink-0 text-left sm:text-right">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
-                      <p className="mt-1 text-sm font-semibold">{dataAtual}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="divide-y">
-                  {gruposFilhos.map(({ filho, tarefas }) => (
-                    <div key={filho.id} className="p-4">
-                      <p className="font-bold">{filho.nome}</p>
-                      <ul className="mt-2 space-y-2">
-                        {tarefas.map((tarefa) => (
-                          <li key={tarefa.id} className="grid gap-1 rounded-lg bg-muted/30 px-3 py-2 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3">
-                            <span className="min-w-0 break-words font-medium">{tarefa.t_tarefa?.nome}</span>
-                            <span className="text-xs text-muted-foreground sm:text-sm">{dataAtual}</span>
-                            <span className="w-fit shrink-0 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Pendente</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ))}
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Pendências</h2>
+            <p className="text-sm text-muted-foreground">Dias desta vigência que ainda não têm nenhuma marcação.</p>
           </div>
-
-          {anteriores.length > 0 && (
-            <section className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold">Pendências anteriores</h2>
-                <p className="text-sm text-muted-foreground">Dias anteriores desta vigência que ainda não têm Fez ou Não fez registrado.</p>
+          {gruposAnteriores.map(({ vigencia, filhos: gruposFilhos }) => (
+            <div key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card">
+              <div className="border-b bg-muted/30 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência</p>
+                <p className="mt-1 font-semibold">{fmtVigencia(vigencia)}</p>
               </div>
-              {gruposAnteriores.map(({ vigencia, filhos: gruposFilhos }) => (
-                <div key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card">
-                  <div className="border-b bg-muted/30 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência</p>
-                    <p className="mt-1 font-semibold">{fmtVigencia(vigencia)}</p>
-                  </div>
-                  <div className="divide-y">
-                    {gruposFilhos.map(({ filho, itens }) => (
-                      <div key={filho.id} className="p-4">
-                        <p className="font-bold">{filho.nome}</p>
-                        <div className="mt-2 space-y-2">
-                          {itens.map(({ tarefa, data }) => {
-                            const chave = tarefa.id + "|" + data;
-                            const editando = fezAnterior && (fezAnterior.tarefa.id + "|" + fezAnterior.data) === chave;
-                            return <div key={chave} className="rounded-lg bg-muted/30 p-3">
-                              <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
-                                <span className="font-medium">{tarefa.t_tarefa?.nome}</span>
-                                <span className="text-sm text-muted-foreground">{data.split("-").reverse().join("/")}</span>
-                                <span className="w-fit rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Pendente</span>
-                                {!editando && <div className="flex gap-2"><Button size="sm" variant="outline" disabled={busy} onClick={()=>setFezAnterior({tarefa,data,bonusTipo:"NENHUMA",descricao:"",valor:""})}><ThumbsUp className="h-4 w-4 text-green-600"/>Fez</Button><Button size="sm" variant="destructive" disabled={busy} onClick={()=>void registrarNaoFezAnterior(tarefa,data)}><ThumbsDown className="h-4 w-4"/>Não fez</Button></div>}
-                              </div>
-                              {editando && fezAnterior && <div className="mt-3 space-y-3 border-t pt-3">
-                                <Label>Bonificação opcional</Label>
-                                <div className="grid grid-cols-3 gap-2">
-                                  <Button size="sm" variant={fezAnterior.bonusTipo==="NENHUMA"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"NENHUMA"})}>Nenhuma</Button>
-                                  <Button size="sm" variant={fezAnterior.bonusTipo==="TEXTO"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"TEXTO"})}>Escrita</Button>
-                                  <Button size="sm" variant={fezAnterior.bonusTipo==="VALOR"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"VALOR"})}>Valor</Button>
-                                </div>
-                                {fezAnterior.bonusTipo==="TEXTO" && <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.descricao} onChange={e=>setFezAnterior({...fezAnterior,descricao:e.target.value})}/>}
-                                {fezAnterior.bonusTipo==="VALOR" && <input inputMode="decimal" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.valor} onChange={e=>setFezAnterior({...fezAnterior,valor:e.target.value})}/>}
-                                <div className="flex justify-end gap-2"><Button size="sm" variant="outline" onClick={()=>setFezAnterior(null)}>Cancelar</Button><Button size="sm" disabled={busy} onClick={()=>void registrarFezAnterior(fezAnterior)}>Salvar Fez</Button></div>
-                              </div>}
+              <div className="divide-y">
+                {gruposFilhos.map(({ filho, itens }) => (
+                  <div key={filho.id} className="p-4">
+                    <p className="font-bold">{filho.nome}</p>
+                    <div className="mt-2 space-y-2">
+                      {itens.map(({ tarefa, data }) => {
+                        const chave = tarefa.id + "|" + data;
+                        const editando = fezAnterior && (fezAnterior.tarefa.id + "|" + fezAnterior.data) === chave;
+                        return <div key={chave} className="rounded-lg bg-muted/30 p-3">
+                          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
+                            <span className="font-medium">{tarefa.t_tarefa?.nome}</span>
+                            <span className="text-sm text-muted-foreground">{data.split("-").reverse().join("/")}</span>
+                            <span className="w-fit rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">Pendente</span>
+                            {!editando && <div className="flex gap-2"><Button size="sm" variant="outline" disabled={busy} onClick={()=>setFezAnterior({tarefa,data,bonusTipo:"NENHUMA",descricao:"",valor:""})}><ThumbsUp className="h-4 w-4 text-green-600"/>Fez</Button><Button size="sm" variant="destructive" disabled={busy} onClick={()=>void registrarNaoFezAnterior(tarefa,data)}><ThumbsDown className="h-4 w-4"/>Não fez</Button></div>}
+                          </div>
+                          {editando && fezAnterior && <div className="mt-3 space-y-3 border-t pt-3">
+                            <Label>Bonificação opcional</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                              <Button size="sm" variant={fezAnterior.bonusTipo==="NENHUMA"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"NENHUMA"})}>Nenhuma</Button>
+                              <Button size="sm" variant={fezAnterior.bonusTipo==="TEXTO"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"TEXTO"})}>Escrita</Button>
+                              <Button size="sm" variant={fezAnterior.bonusTipo==="VALOR"?"default":"outline"} onClick={()=>setFezAnterior({...fezAnterior,bonusTipo:"VALOR"})}>Valor</Button>
                             </div>
-                          })}
+                            {fezAnterior.bonusTipo==="TEXTO" && <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.descricao} onChange={e=>setFezAnterior({...fezAnterior,descricao:e.target.value})}/>}
+                            {fezAnterior.bonusTipo==="VALOR" && <input inputMode="decimal" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={fezAnterior.valor} onChange={e=>setFezAnterior({...fezAnterior,valor:e.target.value})}/>}
+                            <div className="flex justify-end gap-2"><Button size="sm" variant="outline" onClick={()=>setFezAnterior(null)}>Cancelar</Button><Button size="sm" disabled={busy} onClick={()=>void registrarFezAnterior(fezAnterior)}>Salvar Fez</Button></div>
+                          </div>}
                         </div>
-                      </div>
-                    ))}
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </section>
-          )}
-
-          <div className="flex justify-end">
-            <Button asChild>
-              <Link to="/inicio">
-                <ClipboardCheck className="h-4 w-4" />
-                Resolver agora
-              </Link>
-            </Button>
-          </div>
-        </>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
       )}
     </div>
   );
