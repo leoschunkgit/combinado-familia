@@ -139,7 +139,7 @@ function AuthenticatedLayout() {
   ]).size;
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
-    <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
+    <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
       <UserCog className={mobile ? "h-5 w-5" : "h-4 w-4"} /> Minha conta
     </Link>
   );
@@ -164,11 +164,11 @@ function AuthenticatedLayout() {
               <span className="min-w-0"><span className="block">Cadastro Fluxo</span><span className="block text-[8px] font-medium leading-tight opacity-75">Cadastre tudo em um só fluxo</span></span>
             </Link>
             {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1">
-              <p className="mb-0.5 px-1.5 text-[10px] font-extrabold uppercase tracking-wide text-foreground">{grupo.titulo}</p>
-              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-2 rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-3 w-3" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
+              <p className="mb-1 px-1.5 text-[11px] font-extrabold uppercase tracking-wide text-foreground">{grupo.titulo}</p>
+              <div className="space-y-1">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-3 w-3" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
             </div>)}
             <div className="mt-auto border-t pt-2">
-              <Button variant="ghost" className="h-auto w-full justify-start gap-2 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
+              <Button variant="ghost" className="h-auto w-full justify-start gap-2.5 rounded-md px-1.5 py-1 text-[12px] text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
               <ContaLink />
             </div>
           </nav>
