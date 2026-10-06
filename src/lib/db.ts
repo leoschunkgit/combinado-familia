@@ -33,6 +33,7 @@ z.setErrorMap((issue, ctx) => {
   }
 });
 
+export type UsuarioPai = Tables<"t_usuario_pai">;
 export type Filho = Tables<"t_filho">;
 export type Vigencia = Tables<"t_vigencia">;
 export type Tarefa = Tables<"t_tarefa">;
@@ -47,6 +48,15 @@ async function unwrap<T>(p: PromiseLike<{ data: T | null; error: { message: stri
   if (error) throw new Error(error.message);
   return data as T;
 }
+
+export const useUsuarioPai = () =>
+  useQuery({
+    queryKey: ["usuario_pai"],
+    queryFn: () =>
+      unwrap<UsuarioPai>(
+        supabase.from("t_usuario_pai").select("*").single(),
+      ),
+  });
 
 export const useFilhos = () =>
   useQuery({
