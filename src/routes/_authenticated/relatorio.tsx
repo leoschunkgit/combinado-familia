@@ -91,9 +91,8 @@ function RelatorioPage() {
       texto(descricaoPenalidade(grupo.vigencia), margem, largura);
       for (const { filho, tarefas, registros } of grupo.filhos) {
         precisa(24); doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.text(`Filho: ${filho.nome}`, margem + 4, y); y += 6;
-        const totalNaoFez = registros.filter(naoFez).length, totalFez = registros.filter(ehFez).length;
+        const totalNaoFez = registros.filter(naoFez).length;
         const comDesconto = usaDesconto(filho, grupo.vigencia);
-        texto(`Fez: ${totalFez} · ${comDesconto ? `Não fez: ${totalNaoFez}` : `Não fez: ${totalNaoFez} de ${grupo.vigencia.qtd_ocorrencia}`}`, margem + 4, largura - 4, 9, true);
         if (comDesconto) texto(`Mesada: ${reais(filho.valor_mesada ?? 0)} · ${resumoMesada(filho, grupo.vigencia, totalNaoFez)}`, margem + 4, largura - 4);
         else texto(`Penalidade escrita ao atingir o limite: ${grupo.vigencia.penalidade || "Não cadastrada"}`, margem + 4, largura - 4);
         for (const tarefa of tarefas) {
