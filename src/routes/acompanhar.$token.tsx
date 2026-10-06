@@ -28,7 +28,7 @@ type Painel = { filho: { nome: string; tem_mesada: boolean; valor_mesada: number
 const dataHora = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(v));
 const data = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(v));
 const dinheiro = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-function status(v: Vigencia) { const s = situacaoVigencia(v); return s === "andamento" ? "Em andamento" : s === "futura" ? "Futura" : "Finalizada"; }
+function status(v: Vigencia) { const s = situacaoVigencia(v); return s === "andamento" ? "Em andamento" : s === "futura" ? "Irá começar" : "Finalizada"; }
 const corStatus = (s: string) => s === "Em andamento" ? "bg-green-400" : s === "Finalizada" ? "bg-red-300" : "bg-gray-300";
 function bonus(o: Ocorrencia) { if (o.tipo !== "FEZ") return null; if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao; if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null) return dinheiro(Number(o.bonificacao_valor)); return "Sem bonificação"; }
 
@@ -55,7 +55,7 @@ function PainelPublico() {
   }, [token]);
 
   const vigenciasOrdenadas = useMemo(() => [...(painel?.vigencias ?? [])].sort((a, b) => {
-    const ordem = (v: Vigencia) => status(v) === "Em andamento" ? 0 : status(v) === "Futura" ? 1 : 2;
+    const ordem = (v: Vigencia) => status(v) === "Em andamento" ? 0 : status(v) === "Irá começar" ? 1 : 2;
     const oa = ordem(a), ob = ordem(b);
     if (oa !== ob) return oa - ob;
     const ia = new Date(a.data_inicio).getTime(), ib = new Date(b.data_inicio).getTime();
