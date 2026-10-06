@@ -87,7 +87,7 @@ function EscolhaPenalidade({ value, onChange, prefix, mostrarPenalidade = true }
       <Label htmlFor={`${prefix}-penalidade`}>Descrição <span className="text-destructive" aria-hidden="true">*</span></Label>
       <Input id={`${prefix}-penalidade`} placeholder="Ex.: Sem videogame no fim de semana" value={value.penalidade} onChange={(e) => onChange({ ...value, penalidade: e.target.value })} />
       <div className="space-y-2">
-        <Label htmlFor={`${prefix}-quantidade`} className="block leading-5">Número de “Não fez” para ser penalizado <span className="text-destructive" aria-hidden="true">*</span></Label>
+        <Label htmlFor={`${prefix}-quantidade`} className="block leading-5">Quantidade de “Não fez” para ser penalizado <span className="text-destructive" aria-hidden="true">*</span></Label>
         <Input id={`${prefix}-quantidade`} type="number" min="1" max="31" value={value.qtd_ocorrencia} onChange={(e) => onChange({ ...value, qtd_ocorrencia: e.target.value })} />
         <p className="animate-pulse text-xs font-semibold text-amber-600 dark:text-amber-400">Usado apenas para filhos sem mesada.</p>
       </div>
