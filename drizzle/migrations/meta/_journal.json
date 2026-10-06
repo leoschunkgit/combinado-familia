@@ -176,6 +176,13 @@
       "when": 1791244054446,
       "tag": "0024_allow_occurrence_cascade_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791245211821,
+      "tag": "0025_fix_internal_recalculation_permissions",
+      "breakpoints": true
     }
   ]
 }
