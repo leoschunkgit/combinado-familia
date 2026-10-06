@@ -21,7 +21,7 @@ export const Route = createFileRoute("/acompanhar/$token")({
 });
 
 type Ocorrencia = { tipo: "FEZ" | "NAO_FEZ"; data: string; bonificacao_tipo: "TEXTO" | "VALOR" | null; bonificacao_descricao: string | null; bonificacao_valor: number | null };
-type Tarefa = { id: number; nome: string; qtd_nao_fez: number; ocorrencias: Ocorrencia[] };
+type Tarefa = { id: number; nome: string; ocorrencias: Ocorrencia[] };
 type Vigencia = { id: number; data_inicio: string; data_fim: string; penalidade: string; qtd_ocorrencia: number; valor_debito: number | null; tarefas: Tarefa[] };
 type Painel = { filho: { nome: string; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
 
