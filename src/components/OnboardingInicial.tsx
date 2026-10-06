@@ -20,6 +20,7 @@ import {
   useFilhos,
   useFilhoTarefas,
   useTarefas,
+  useUsuarioPai,
   useVigencias,
 } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
@@ -35,6 +36,7 @@ export function OnboardingInicial() {
   const { data: tarefas = [], isLoading: carregandoTarefas } = useTarefas();
   const { data: vigencias = [], isLoading: carregandoVigencias } = useVigencias();
   const { data: atribuicoes = [], isLoading: carregandoAtribuicoes } = useFilhoTarefas();
+  const { data: usuarioPai, isLoading: carregandoUsuarioPai } = useUsuarioPai();
 
   const [salvando, setSalvando] = useState(false);
 
@@ -59,7 +61,7 @@ export function OnboardingInicial() {
   const [tarefaEmCorrecaoId, setTarefaEmCorrecaoId] = useState<number | null>(null);
   const [vigenciaEmCorrecaoId, setVigenciaEmCorrecaoId] = useState<number | null>(null);
 
-  const carregando = carregandoFilhos || carregandoTarefas || carregandoVigencias || carregandoAtribuicoes;
+  const carregando = carregandoFilhos || carregandoTarefas || carregandoVigencias || carregandoAtribuicoes || carregandoUsuarioPai;
   const vigenciasAtivas = vigencias.filter(vigenciaEmAndamento);
 
   const etapaBase =
@@ -70,7 +72,7 @@ export function OnboardingInicial() {
     -1;
   const etapa = filhoEmCorrecaoId !== null ? 0 : tarefaEmCorrecaoId !== null ? 1 : vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
 
-  const aberto = !carregando && etapa >= 0;
+  const aberto = !carregando && usuarioPai?.onboarding_concluido !== true && etapa >= 0;
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
   const tarefaAtual = tarefaSelecionada || (tarefas[0] ? String(tarefas[0].id) : "");
   const vigenciaAtual = vigenciaSelecionada || (vigenciasAtivas[0] ? String(vigenciasAtivas[0].id) : "");
@@ -278,7 +280,10 @@ export function OnboardingInicial() {
       return;
     }
 
-    await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
+      qc.invalidateQueries({ queryKey: ["usuario_pai"] }),
+    ]);
     toast.success("Configuração inicial concluída!");
     navigate({ to: "/ocorrencias" });
   }
