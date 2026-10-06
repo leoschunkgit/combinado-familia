@@ -150,7 +150,7 @@ function FilhosPage() {
 
   async function excluir(id: number) {
     const { error } = await supabase.from("t_filho").delete().eq("id", id);
-    if (error) { toast.error(/Filho com Não fez nesta vigência/i.test(error.message) ? "Este filho tem registros de ‘Não fez’ e não pode ser excluído. A edição dos dados continua permitida." : msgErro(error)); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries();
   }
 
