@@ -19,8 +19,8 @@ export function BrDateTimeField({
       value={value}
       onChange={onChange}
       id={id}
-      min={min}
-      max={max}
+      {...(min ? { min } : {})}
+      {...(max ? { max } : {})}
     />
   );
 }
