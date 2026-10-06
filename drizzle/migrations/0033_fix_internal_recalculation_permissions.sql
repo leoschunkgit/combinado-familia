@@ -61,3 +61,63 @@ $$;
 REVOKE ALL ON FUNCTION public.recalcular_estado_atribuicao(bigint) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.recalcular_estado_atribuicao(bigint) FROM anon;
 REVOKE ALL ON FUNCTION public.recalcular_estado_atribuicao(bigint) FROM authenticated;
+
+
+CREATE OR REPLACE FUNCTION public.recalcular_estado_atribuicao_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    PERFORM public.recalcular_estado_atribuicao(OLD.id_filho_tarefa);
+    RETURN OLD;
+  END IF;
+
+  IF TG_OP = 'UPDATE' AND OLD.id_filho_tarefa IS DISTINCT FROM NEW.id_filho_tarefa THEN
+    PERFORM public.recalcular_estado_atribuicao(OLD.id_filho_tarefa);
+  END IF;
+
+  PERFORM public.recalcular_estado_atribuicao(NEW.id_filho_tarefa);
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.recalcular_estado_por_regra_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  r record;
+BEGIN
+  IF TG_TABLE_NAME = 't_filho' THEN
+    FOR r IN
+      SELECT ft.id
+      FROM public.t_filho_tarefa ft
+      WHERE ft.id_filho = NEW.id
+    LOOP
+      PERFORM public.recalcular_estado_atribuicao(r.id);
+    END LOOP;
+    RETURN NEW;
+  END IF;
+
+  IF TG_TABLE_NAME = 't_vigencia' THEN
+    FOR r IN
+      SELECT ft.id
+      FROM public.t_filho_tarefa ft
+      WHERE ft.id_vigencia = NEW.id
+    LOOP
+      PERFORM public.recalcular_estado_atribuicao(r.id);
+    END LOOP;
+    RETURN NEW;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.recalcular_estado_atribuicao_trigger() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.recalcular_estado_por_regra_trigger() FROM PUBLIC;
