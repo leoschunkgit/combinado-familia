@@ -188,7 +188,7 @@ function AtribuicoesPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && new Date(v.data_fim).getTime() >= Date.now())}><Plus className="h-4 w-4" /> Adicionar</Button>
+            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && situacaoVigencia(v) !== "finalizada")}><Plus className="h-4 w-4" /> Adicionar</Button>
           </div>
           {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
           {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Esta vigência ainda vai começar. Você pode preparar e ajustar as atribuições normalmente.</p>}
@@ -211,7 +211,7 @@ function AtribuicoesPage() {
               </Table>
             </div>
           )}
-           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && new Date(v.data_fim).getTime() >= Date.now()))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
+           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && situacaoVigencia(v) !== "finalizada"))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
         </CardContent>
       </Card>
 
