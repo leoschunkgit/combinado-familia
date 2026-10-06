@@ -533,8 +533,8 @@ function CadastroUnicoPage() {
                   <div className="space-y-1.5"><Label>Início</Label><BrDateTimeField id="lote-inicio" value={vigenciaDraft.data_inicio} onChange={(data_inicio) => setVigenciaDraft({ ...vigenciaDraft, data_inicio })} /></div>
                   <div className="space-y-1.5"><Label>Fim</Label><BrDateTimeField id="lote-fim" value={vigenciaDraft.data_fim} min={vigenciaDraft.data_inicio} onChange={(data_fim) => setVigenciaDraft({ ...vigenciaDraft, data_fim })} /></div>
                 </div>
-                <div className="space-y-1.5"><Label>Penalidade</Label><Input value={vigenciaDraft.penalidade} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, penalidade: e.target.value })} /></div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 md:grid-cols-[1.4fr_0.8fr_1fr]">
+                  <div className="space-y-1.5"><Label>Penalidade</Label><Input value={vigenciaDraft.penalidade} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, penalidade: e.target.value })} /></div>
                   <div className="space-y-1.5"><Label>Quantidade de “Não fez”</Label><Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} /></div>
                   <div className="space-y-1.5"><Label>Desconto por “Não fez”</Label><CurrencyInput value={vigenciaDraft.valor_debito} onValueChange={(valor_debito) => setVigenciaDraft({ ...vigenciaDraft, valor_debito })} /></div>
                 </div>
