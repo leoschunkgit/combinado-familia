@@ -333,6 +333,10 @@ export type Database = {
     }
     Functions: {
       current_pai_id: { Args: never; Returns: number }
+      desativar_acesso_publico_filho: {
+        Args: { p_id_filho: number }
+        Returns: boolean
+      }
       duplicar_vigencia_com_atribuicoes: {
         Args: {
           p_data_fim: string
@@ -346,10 +350,6 @@ export type Database = {
           id_vigencia: number
           qtd_atribuicoes: number
         }[]
-      }
-      desativar_acesso_publico_filho: {
-        Args: { p_id_filho: number }
-        Returns: boolean
       }
       gerar_acesso_publico_filho: {
         Args: { p_id_filho: number }
