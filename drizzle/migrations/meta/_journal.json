@@ -183,6 +183,13 @@
       "when": 1791245211821,
       "tag": "0025_fix_internal_recalculation_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791245429361,
+      "tag": "0026_minimize_public_child_payload",
+      "breakpoints": true
     }
   ]
 }
