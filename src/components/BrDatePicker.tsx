@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -78,13 +78,12 @@ export function BrDatePicker({
   const maxDate = parseDatePart(max);
   const currentTime = timeValue(value);
 
-  const boundaryTimes = useMemo(() => {
-    if (mode !== "datetime") return {};
-    return {
-      minTime: sameDay(selected, minDate) ? timeValue(min) || undefined : undefined,
-      maxTime: sameDay(selected, maxDate) ? timeValue(max) || undefined : undefined,
-    };
-  }, [mode, selected?.getTime(), minDate?.getTime(), maxDate?.getTime(), min, max]);
+  const boundaryTimes = mode === "datetime"
+    ? {
+        minTime: sameDay(selected, minDate) ? timeValue(min) || undefined : undefined,
+        maxTime: sameDay(selected, maxDate) ? timeValue(max) || undefined : undefined,
+      }
+    : {};
 
   const applyDate = (date: Date) => {
     const nextDate = dateValue(date);
@@ -95,11 +94,13 @@ export function BrDatePicker({
     }
 
     let time = currentTime || "00:00";
-    if (sameDay(date, minDate) && boundaryTimes.minTime && time < boundaryTimes.minTime) {
-      time = boundaryTimes.minTime;
+    const selectedMinTime = sameDay(date, minDate) ? timeValue(min) || undefined : undefined;
+    const selectedMaxTime = sameDay(date, maxDate) ? timeValue(max) || undefined : undefined;
+    if (selectedMinTime && time < selectedMinTime) {
+      time = selectedMinTime;
     }
-    if (sameDay(date, maxDate) && boundaryTimes.maxTime && time > boundaryTimes.maxTime) {
-      time = boundaryTimes.maxTime;
+    if (selectedMaxTime && time > selectedMaxTime) {
+      time = selectedMaxTime;
     }
     onChange(`${nextDate}T${time}`);
   };
