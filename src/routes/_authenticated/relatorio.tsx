@@ -27,7 +27,6 @@ function statusVigencia(v: { data_inicio: string; data_fim: string }) {
   return status === "andamento" ? "Em andamento" : status === "finalizada" ? "Finalizada" : "Irá começar";
 }
 
-function ehFez(o: Ocorrencia) { return o.tipo === "FEZ"; }
 function naoFez(o: Ocorrencia) { return o.tipo !== "FEZ"; }
 function bonus(o: Ocorrencia) {
   if (o.tipo !== "FEZ") return "";
@@ -138,7 +137,7 @@ function RelatorioPage() {
         <button type="button" className="flex w-full cursor-pointer items-start gap-2 text-left" onClick={() => setVigenciasAbertas(a => ({...a,[vigencia.id]:!vigenciaAberta}))}><CollapseChevron open={vigenciaAberta} className="mt-0.5" /><CalendarRange className="mt-0.5 h-5 w-5 shrink-0 text-primary"/><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><CardTitle>{fmtVigencia(vigencia)}</CardTitle><VigenciaStatus vigencia={vigencia}/></div></div></button>
         {vigenciaAberta && <div className="mt-2 space-y-1.5"><div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10"><b>Penalidade:</b> <span className="text-muted-foreground">{vigencia.penalidade||"Não cadastrada"} · </span><b>Limite:</b> <span className="text-muted-foreground">{vigencia.qtd_ocorrencia} ocorrência(s)</span></div><div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10"><b>Desconto da mesada:</b> <span className="text-muted-foreground">{vigencia.valor_debito!==null?`${reais(vigencia.valor_debito)} por Não fez`:"Não cadastrado"}</span></div></div>}
       </CardHeader>{vigenciaAberta && <CardContent className="space-y-3">{gruposFilhos.map(({filho,tarefas,registros}) => {
-        const totalFez=registros.filter(ehFez).length,totalNaoFez=registros.filter(naoFez).length,comDesconto=usaDesconto(filho,vigencia),chave=`${vigencia.id}-${filho.id}`,aberto=filhosAbertos[chave]===true;
+        const totalNaoFez=registros.filter(naoFez).length,comDesconto=usaDesconto(filho,vigencia),chave=`${vigencia.id}-${filho.id}`,aberto=filhosAbertos[chave]===true;
         return <div key={filho.id} className="rounded-xl border"><button type="button" className="flex w-full cursor-pointer items-center gap-2 p-4 text-left" onClick={()=>setFilhosAbertos(a=>({...a,[chave]:!aberto}))}><CollapseChevron open={aberto} /><h3 className="min-w-0 truncate text-lg font-bold">{filho.nome}</h3></button>
         {aberto && <div className="border-t p-4 pt-3">{comDesconto?<p className="text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada??0)} · {resumoMesada(filho,vigencia,totalNaoFez)}</p>:<p className="text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade||"Não cadastrada"}</p>}<div className="mt-4 space-y-3">{tarefas.map(tarefa=>{
           const rs=ocorrencias.filter(o=>Number(o.id_filho_tarefa)===Number(tarefa.id)).sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
