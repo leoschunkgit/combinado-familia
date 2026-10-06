@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "Combinado" },
-      { title: "Combinado" },
+      { title: "Combinado Família" },
       { name: "description", content: "Gestão de tarefas da família com vigências e penalidades." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
