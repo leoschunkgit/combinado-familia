@@ -268,6 +268,7 @@ export type Database = {
           email: string
           id: number
           nome: string
+          onboarding_concluido: boolean
         }
         Insert: {
           auth_user_id?: string
@@ -275,6 +276,7 @@ export type Database = {
           email: string
           id?: never
           nome: string
+          onboarding_concluido?: boolean
         }
         Update: {
           auth_user_id?: string
