@@ -236,14 +236,12 @@ export type Database = {
           id: number
           id_usuario_pai: number
           nome: string
-          onboarding_concluido: boolean
         }
         Insert: {
           created_at?: string
           id?: never
           id_usuario_pai?: number
           nome: string
-          onboarding_concluido?: boolean
         }
         Update: {
           created_at?: string
@@ -268,7 +266,6 @@ export type Database = {
           email: string
           id: number
           nome: string
-          onboarding_concluido: boolean
         }
         Insert: {
           auth_user_id?: string
@@ -276,7 +273,6 @@ export type Database = {
           email: string
           id?: never
           nome: string
-          onboarding_concluido?: boolean
         }
         Update: {
           auth_user_id?: string
@@ -284,7 +280,6 @@ export type Database = {
           email?: string
           id?: never
           nome?: string
-          onboarding_concluido?: boolean
         }
         Relationships: []
       }
