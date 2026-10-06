@@ -49,7 +49,7 @@ function AtribuicoesPage() {
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
 
   const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
-  const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && new Date(vigenciaSelecionada.data_fim).getTime() < Date.now());
+  const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada");
   const vigenciaSelecionadaFutura = Boolean(vigenciaSelecionada && new Date(vigenciaSelecionada.data_inicio).getTime() > Date.now());
 
   const nomeF = (id: number) => filhos.find((f) => f.id === id)?.nome ?? "";
