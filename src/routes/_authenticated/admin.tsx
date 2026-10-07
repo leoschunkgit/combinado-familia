@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Save, Trash2, UserCog } from "lucide-react";
+import { Monitor, Moon, Save, Sun, Trash2, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { msgErro } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
+import { getThemePreference, saveThemePreference, type ThemePreference } from "@/lib/theme";
 
 function Admin() {
   const router = useRouter();
@@ -24,6 +25,11 @@ function Admin() {
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [textoConfirmacao, setTextoConfirmacao] = useState("");
   const [excluindo, setExcluindo] = useState(false);
+  const [tema, setTema] = useState<ThemePreference>("light");
+
+  useEffect(() => {
+    setTema(getThemePreference());
+  }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -94,6 +100,37 @@ function Admin() {
             <div className="space-y-2"><p className="text-sm font-medium">Email</p><p className="break-all text-sm text-foreground">{email || "Não informado"}</p></div>
             <Button type="submit" disabled={loading}><Save /> Salvar nome</Button>
           </form>
+        </section>
+
+        <section className="rounded-xl border bg-card p-5 shadow-sm">
+          <h2 className={uiTypography.secondaryTitle}>Aparência</h2>
+          <p className="mb-4 mt-1 text-sm text-muted-foreground">Escolha como o Combinado deve aparecer neste dispositivo.</p>
+          <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Tema do aplicativo">
+            {([
+              { value: "light" as const, label: "Claro", icon: Sun },
+              { value: "dark" as const, label: "Escuro", icon: Moon },
+              { value: "system" as const, label: "Seguir sistema", icon: Monitor },
+            ]).map(({ value, label, icon: Icon }) => {
+              const ativo = tema === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={ativo}
+                  onClick={() => {
+                    setTema(value);
+                    saveThemePreference(value);
+                  }}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-3 text-left text-sm font-medium transition ${ativo ? "border-primary bg-primary/10 text-primary" : "bg-background text-foreground hover:bg-muted/60"}`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">O padrão inicial é Claro. Em “Seguir sistema”, o tema acompanha automaticamente o Windows, Android ou iOS.</p>
         </section>
 
         <section className="rounded-xl border border-destructive/30 bg-card p-5 shadow-sm">
