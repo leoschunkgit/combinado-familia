@@ -352,7 +352,7 @@ function CadastroUnicoPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Cadastro Fluxo" description="Cadastre vários filhos e tarefas em lote, crie atribuições e reutilize vigências anteriores." icon={<ListPlus className="h-6 w-6" />} />
+      <PageHeader title="Cadastro Fluxo" description="Cadastre todo fluxo na mesma tela" icon={<ListPlus className="h-6 w-6" />} />
 
       <div className="max-w-sm">
         <Pick
