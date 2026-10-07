@@ -307,7 +307,7 @@ function CadastroUnicoPage() {
                     <div className="w-full space-y-1.5 sm:w-52"><Label>Nome</Label><Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" /></div>
                     <label className="flex h-10 shrink-0 items-center gap-2"><Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} /> Tem mesada</label>
                     {temMesada && <div className="w-full space-y-1.5 sm:w-32"><Label>Mesada</Label><CurrencyInput value={valorMesada} onValueChange={setValorMesada} /></div>}
-                    <Button className="h-10 shrink-0" size="sm" onClick={adicionarFilhoAoFluxo}><Plus className="h-4 w-4" /> Adicionar</Button>
+                    <Button className="h-9 shrink-0 px-3 text-xs" size="sm" onClick={adicionarFilhoAoFluxo}><Plus className="h-3.5 w-3.5" /> Adicionar</Button>
                   </div>
                 </div>
 
