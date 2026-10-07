@@ -180,19 +180,19 @@ function AuthenticatedLayout() {
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
           {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/notificacoes" && (
-            <section className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950 shadow-sm" role="status" aria-live="polite">
-              <TriangleAlert className="h-4 w-4 shrink-0 text-amber-600" />
-              <p className="min-w-0 flex-1 truncate text-sm font-semibold">“Fez” ou “Não fez” pendentes</p>
-              <Button type="button" size="sm" variant="outline" className="h-8 shrink-0 border-amber-300 bg-white/70 px-3 text-xs hover:bg-white" onClick={() => setModalPendenciasAberto(true)}>
+            <section className="mb-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-amber-950 shadow-sm md:mb-4 md:gap-2 md:px-3 md:py-2" role="status" aria-live="polite">
+              <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-amber-600 md:h-4 md:w-4" />
+              <p className="min-w-0 flex-1 truncate text-xs font-semibold md:text-sm">“Fez” ou “Não fez”</p>
+              <Button type="button" size="sm" variant="outline" className="h-7 shrink-0 border-amber-300 bg-white/70 px-2.5 text-[11px] hover:bg-white md:h-8 md:px-3 md:text-xs" onClick={() => setModalPendenciasAberto(true)}>
                 Resolver
               </Button>
             </section>
           )}
           {!pathname.startsWith("/cadastro-unico") && (
-            <section className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950 shadow-sm">
-              <ListPlus className="h-4 w-4 shrink-0 text-amber-600" />
-              <p className="min-w-0 flex-1 truncate text-sm font-semibold">Cadastro Fluxo</p>
-              <Button type="button" size="sm" variant="outline" className="h-8 shrink-0 border-amber-300 bg-white/70 px-3 text-xs hover:bg-white" onClick={() => navigate({ to: "/cadastro-unico" })}>
+            <section className="mb-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-amber-950 shadow-sm md:mb-4 md:gap-2 md:px-3 md:py-2">
+              <ListPlus className="h-3.5 w-3.5 shrink-0 text-amber-600 md:h-4 md:w-4" />
+              <p className="min-w-0 flex-1 truncate text-xs font-semibold md:text-sm">Cadastro Fluxo</p>
+              <Button type="button" size="sm" variant="outline" className="h-7 shrink-0 border-amber-300 bg-white/70 px-2.5 text-[11px] hover:bg-white md:h-8 md:px-3 md:text-xs" onClick={() => navigate({ to: "/cadastro-unico" })}>
                 Acessar
               </Button>
             </section>
