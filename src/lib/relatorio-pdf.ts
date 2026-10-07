@@ -4,7 +4,7 @@ import { savePdfDocument } from "@/lib/pdf-export";
 export type RelatorioPdfRegistro = {
   data: string;
   resultado: "Fez" | "Não fez";
-  detalhe?: string;
+  detalhe?: string | undefined;
   penalidadeAtingida?: boolean;
 };
 
@@ -95,8 +95,8 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
     const linhas = doc.splitTextToSize(valor, largura - 8) as string[];
     const altura = Math.max(16, 9 + linhas.length * 3.8);
     garantirEspaco(altura + 2);
-    doc.setFillColor(...fundos[destaque]);
-    doc.setDrawColor(...bordas[destaque]);
+    { const [r, g, b] = fundos[destaque]; doc.setFillColor(r, g, b); }
+    { const [r, g, b] = bordas[destaque]; doc.setDrawColor(r, g, b); }
     doc.roundedRect(x, y, largura, altura, 2, 2, "FD");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
