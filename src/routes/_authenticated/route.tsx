@@ -207,7 +207,7 @@ function AuthenticatedLayout() {
           <Link
             to="/link-filhos"
             style={{ right: "calc(1rem + env(safe-area-inset-right))", bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-            className="fixed z-30 inline-flex h-12 w-12 items-center justify-center rounded-full border border-amber-600 bg-amber-500 text-white shadow-lg transition hover:bg-amber-600 active:scale-95 md:hidden"
+            className="fixed z-30 inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95 md:hidden"
             aria-label="Ir para Gerar Link / Filho"
             title="Link/Filho"
           >
