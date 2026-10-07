@@ -230,6 +230,96 @@ export type Database = {
           },
         ]
       }
+      t_push_dispositivo: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: number
+          id_usuario_pai: number
+          plataforma: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_usuario_pai: number
+          plataforma: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_usuario_pai?: number
+          plataforma?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_push_dispositivo_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_push_envio: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: number
+          id_filho: number
+          id_push_dispositivo: number
+          id_usuario_pai: number
+          qtd_pendencias: number
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: number
+          id_filho: number
+          id_push_dispositivo: number
+          id_usuario_pai: number
+          qtd_pendencias: number
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: number
+          id_filho?: number
+          id_push_dispositivo?: number
+          id_usuario_pai?: number
+          qtd_pendencias?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_push_envio_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_push_envio_id_push_dispositivo_fkey"
+            columns: ["id_push_dispositivo"]
+            isOneToOne: false
+            referencedRelation: "t_push_dispositivo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_push_envio_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_tarefa: {
         Row: {
           created_at: string
