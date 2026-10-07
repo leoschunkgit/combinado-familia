@@ -14,6 +14,7 @@ import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { PageHeader } from "@/components/PageHeader";
 import { useActionLoading } from "@/components/ActionLoading";
 import { msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
@@ -252,14 +253,35 @@ function CadastroUnicoPage() {
     const vigencia = vigencias.find((v) => v.id === vigenciaCriadaId);
     if (!vigencia) { toast.error("Aguarde a atualização da vigência e tente novamente"); return; }
 
-    const existentes = new Set(atribuicoes.map((a) => `${a.id_vigencia}|${a.id_filho}|${a.id_tarefa}`));
-    const novos = filhosSelecionados.flatMap((id_filho) =>
-      (tarefasPorFilho[id_filho] ?? []).map((id_tarefa) => ({ id_vigencia: vigenciaCriadaId, id_filho, id_tarefa }))
-    ).filter((x) => !existentes.has(`${x.id_vigencia}|${x.id_filho}|${x.id_tarefa}`));
+    const candidatos = filhosSelecionados.flatMap((id_filho) =>
+      (tarefasPorFilho[id_filho] ?? []).map((id_tarefa) => ({
+        id_vigencia: vigenciaCriadaId,
+        id_filho,
+        id_tarefa,
+      }))
+    );
 
-    if (!novos.length) { toast.error("Selecione ao menos uma atribuição entre filho e tarefa"); return; }
-    const { error } = await supabase.from("t_filho_tarefa").insert(novos);
-    if (error) { toast.error(msgErro(error)); return; }
+    if (!candidatos.length) {
+      toast.error("Selecione ao menos uma atribuição entre filho e tarefa");
+      return;
+    }
+
+    const resultado = await cadastrarAtribuicoes({
+      candidatos,
+      existentes: atribuicoes,
+      vigencias,
+      politica: "ATUAL_OU_FUTURA",
+    });
+
+    if (!resultado.ok) {
+      toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+      return;
+    }
+
+    if (resultado.repetidas > 0) {
+      toast.info("As atribuições repetidas não foram cadastradas");
+    }
+
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
 
     setNomeFilho("");
