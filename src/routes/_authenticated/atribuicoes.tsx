@@ -163,7 +163,6 @@ function AtribuicoesPage() {
           Para atribuir, cadastre antes pelo menos uma vigência, um filho e uma tarefa.
         </div>
       )}
-      <h2 className="mb-3 text-xl font-bold">Atribuições cadastradas</h2>
       {existentes.length > 0 && (
         <ResponsiveFilters
           desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
