@@ -282,8 +282,8 @@ function AuthenticatedLayout() {
           <div className="relative flex items-center px-4 py-3 md:justify-center md:px-2.5 md:pb-5 md:pt-4">
             <Button variant="ghost" size="icon" className="relative z-10 md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
             <Link to="/inicio" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 md:static md:translate-x-0 md:gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground md:h-10 md:w-10"><Home className="h-4 w-4 md:h-5.5 md:w-5.5" /></span>
-              <span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold md:text-[22px]">Combinado</span><span className="-mt-1 text-[11px] font-semibold tracking-wide text-muted-foreground md:text-xs">família</span></span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground md:h-10 md:w-10"><Home className="h-[18px] w-[18px] md:h-5.5 md:w-5.5" /></span>
+              <span className="flex flex-col items-start leading-none"><span className="font-display text-xl font-bold md:text-[22px]">Combinado</span><span className="-mt-1 text-xs font-semibold tracking-wide text-muted-foreground md:text-xs">família</span></span>
             </Link>
           </div>
 
@@ -352,7 +352,7 @@ function AuthenticatedLayout() {
         )}
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
-          <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
+          <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2.5" onClick={() => setMenuMobileAberto(false)}><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-[18px] w-[18px]" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-xl font-bold">Combinado</span><span className="mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
           <nav className="flex flex-col p-2 pb-28">
             {NAV_GRUPOS.map((grupo) => <GrupoMenu key={grupo.titulo} grupo={grupo} mobile />)}
             <AtalhosPrincipais mobile />
