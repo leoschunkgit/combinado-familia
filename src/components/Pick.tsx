@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { uiSpacing } from "@/lib/ui-spacing";
 
 export function Pick({
   label,
@@ -19,7 +20,7 @@ export function Pick({
   required?: boolean;
 }) {
   return (
-    <div className="space-y-2">
+    <div className={uiSpacing.fieldStack}>
       <Label>{label}{required && <span className="text-destructive" aria-hidden="true"> *</span>}</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="w-full"><SelectValue placeholder={placeholder} /></SelectTrigger>
