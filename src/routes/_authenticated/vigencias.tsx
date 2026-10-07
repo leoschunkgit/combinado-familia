@@ -11,6 +11,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
@@ -205,7 +206,7 @@ function VigenciasPage() {
       setConfirmarCloneAberto(false);
       toast.success(`Vigência clonada com ${qtdAtribuicoes} atribuição(ões), todas zeradas`);
     } catch (error) {
-      toast.error(msgErro(error));
+      toast.error(msgErro(error instanceof Error ? { message: error.message } : null));
     }
   }
 
@@ -318,28 +319,11 @@ function VigenciasPage() {
       </DialogContent>
     </Dialog>
 
-    <Dialog open={confirmarCloneAberto} onOpenChange={setConfirmarCloneAberto}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Clonar vigência</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <p className="text-sm leading-relaxed text-foreground">
-            Serão copiadas todas as informações da última vigência, incluindo os filhos vinculados às tarefas, para a nova vigência.
-            Você poderá editar essa nova vigência depois pelo menu <strong>Vigências</strong>.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Os registros de Fez/Não fez, bonificações, penalidades atingidas e contadores não serão copiados.
-          </p>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setConfirmarCloneAberto(false)}>Cancelar</Button>
-            <Button type="button" onClick={() => void runAction(confirmarClone)}>
-              <Copy className="h-4 w-4" /> Confirmar
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <ClonarVigenciaDialog
+      open={confirmarCloneAberto}
+      onOpenChange={setConfirmarCloneAberto}
+      onConfirm={() => void runAction(confirmarClone)}
+    />
     <Dialog open={confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}><DialogContent><DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader><p>Tem certeza que deseja finalizar esta vigência?</p><p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button><Button onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir esta vigência?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent className="max-h-[92vh] overflow-y-auto p-4 sm:max-w-lg sm:p-5"><DialogHeader className="space-y-0.5"><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
