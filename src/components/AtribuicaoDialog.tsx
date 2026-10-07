@@ -26,12 +26,14 @@ type Props = {
   onSaved?: () => void;
 };
 
-function FixedInfo({ label, value }: { label: string; value: string }) {
+function FixedInfo({ label, values }: { label: string; values: string[] }) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-sm">{label}</Label>
-      <div className="min-w-0 rounded-lg border bg-background px-3 py-2.5">
-        <p className="truncate text-sm font-medium text-foreground">{value}</p>
+    <div className="min-w-0 space-y-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <div className="space-y-0.5">
+        {values.map((value, index) => (
+          <p key={index} className="break-words text-xs font-medium leading-5 text-foreground">{value}</p>
+        ))}
       </div>
     </div>
   );
@@ -316,7 +318,7 @@ export function AtribuicaoDialog({
                   <div className="grid gap-4 md:grid-cols-2">
                   {mode === "POS_CADASTRO_FILHO" ? (
                     <>
-                      <FixedInfo label="Filho" value={filhoInicial?.nome ?? "Filho cadastrado"} />
+                      <FixedInfo label="Filho" values={[filhoInicial?.nome ?? "Filho cadastrado"]} />
                       <div className="space-y-2">
                         <Label>Tarefas <span className="text-destructive">*</span></Label>
                         <DropdownMenu>
@@ -348,7 +350,7 @@ export function AtribuicaoDialog({
                     <>
                       <FixedInfo
                         label={tarefasIniciais.length > 1 ? "Tarefas cadastradas" : "Tarefa"}
-                        value={tarefasIniciais.map((t) => t.nome).join(", ")}
+                        values={tarefasIniciais.map((t) => t.nome)}
                       />
                       <div className="space-y-2">
                         <Label>Filhos <span className="text-destructive">*</span></Label>
