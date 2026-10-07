@@ -247,7 +247,7 @@ function AuthenticatedLayout() {
                 className={mobile
                   ? "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   : "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}
-                activeProps={{ className: "!bg-primary !text-primary-foreground" }}
+                activeProps={{ className: "!bg-primary/10 !text-primary" }}
               >
                 <Icon className={mobile ? "h-5 w-5" : "h-3.5 w-3.5"} />
                 <span className="min-w-0 flex-1">{label}</span>
@@ -265,7 +265,7 @@ function AuthenticatedLayout() {
   };
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
-    <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
+    <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary/10 !text-primary" }}>
       <UserCog className={mobile ? "h-5 w-5" : "h-4 w-4"} /> Minha conta
     </Link>
   );
