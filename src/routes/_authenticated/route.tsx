@@ -215,15 +215,18 @@ function AuthenticatedLayout() {
 
   const GrupoMenu = ({ grupo, mobile = false }: { grupo: (typeof NAV_GRUPOS)[number]; mobile?: boolean }) => {
     const aberto = grupoMenuAberto === grupo.titulo;
+    const grupoAtual = grupoDoPath(pathname) === grupo.titulo;
+    const grupoFechadoAtual = grupoAtual && !aberto;
     return (
       <div className={mobile ? "mb-1.5" : "mb-1"}>
         <button
           type="button"
           onClick={() => setGrupoMenuAberto(aberto ? null : grupo.titulo)}
           className={mobile
-            ? "group flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[12px] font-extrabold uppercase tracking-wide text-foreground transition hover:bg-sidebar-accent/60"
-            : "group flex w-full items-center justify-between rounded-md px-1.5 py-1.5 text-left text-[11px] font-extrabold uppercase tracking-wide text-foreground transition hover:bg-sidebar-accent/60"}
+            ? `group flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[12px] font-extrabold uppercase tracking-wide transition ${grupoFechadoAtual ? "bg-primary/10 text-primary" : "text-foreground hover:bg-sidebar-accent/60"}`
+            : `group flex w-full items-center justify-between rounded-md px-1.5 py-1.5 text-left text-[11px] font-extrabold uppercase tracking-wide transition ${grupoFechadoAtual ? "bg-primary/10 text-primary" : "text-foreground hover:bg-sidebar-accent/60"}`}
           aria-expanded={aberto}
+          aria-current={grupoFechadoAtual ? "location" : undefined}
         >
           <span className="flex min-w-0 items-center gap-2">
             <span>{grupo.titulo}</span>
