@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Bell, CalendarRange, ClipboardCheck, Copy, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, ListPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useActionLoading } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
 import { CheckinDiario } from "@/components/CheckinDiario";
@@ -13,6 +13,7 @@ import { msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVig
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { CollapseChevron } from "@/components/CollapseChevron";
+import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -126,7 +127,7 @@ function AuthenticatedLayout() {
       toast.success(`Vigência clonada com ${qtdAtribuicoes} atribuição(ões), todas zeradas`);
       navigate({ to: "/vigencias" });
     } catch (error) {
-      toast.error(msgErro(error));
+      toast.error(msgErro(error instanceof Error ? { message: error.message } : null));
     }
   }
 
@@ -336,28 +337,11 @@ function AuthenticatedLayout() {
           <div className="fixed bottom-3 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="rounded-lg bg-muted p-2.5"><p className="text-[10px] text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-2 h-8 w-full text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
 
-        <Dialog open={confirmarCloneMenuAberto} onOpenChange={setConfirmarCloneMenuAberto}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Clonar vigência</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm leading-relaxed text-foreground">
-                Serão copiadas todas as informações da última vigência, incluindo os filhos vinculados às tarefas, para a nova vigência.
-                Você poderá editar essa nova vigência depois pelo menu <strong>Vigências</strong>.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Os registros de Fez/Não fez, bonificações, penalidades atingidas e contadores não serão copiados.
-              </p>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setConfirmarCloneMenuAberto(false)}>Cancelar</Button>
-                <Button type="button" onClick={() => void runAction(clonarPeloMenu)}>
-                  <Copy className="h-4 w-4" /> Confirmar
-                </Button>
-              </DialogFooter>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <ClonarVigenciaDialog
+          open={confirmarCloneMenuAberto}
+          onOpenChange={setConfirmarCloneMenuAberto}
+          onConfirm={() => void runAction(clonarPeloMenu)}
+        />
 
         <Dialog open={aberto} onOpenChange={(open) => { if (!open) void runAction(encerrar); }}><DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-lg"><DialogHeader><DialogTitle>Boas-vindas ao Combinado</DialogTitle><DialogDescription>Um caminho simples para começar a organizar os combinados da família.</DialogDescription></DialogHeader><ol className="space-y-2 py-2">{ETAPAS.map((item, index) => <li key={item.to} className="flex gap-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span><span className="self-center font-medium">{item.title}</span></li>)}</ol><div className="flex flex-wrap justify-end gap-2"><Button variant="ghost" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button><Button onClick={() => irParaEtapa(0)}>Começar <ArrowRight /></Button></div></DialogContent></Dialog>
       </div>
