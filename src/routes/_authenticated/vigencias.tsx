@@ -301,13 +301,18 @@ function VigenciasPage() {
       description="Defina o período, a penalidade e o desconto da mesada."
       icon={<CalendarRange className="h-6 w-6" />}
       action={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {ultimaVigencia && (
-            <Button size="sm" variant="outline" onClick={() => abrirDuplicacao(ultimaVigencia)}>
-              <Copy className="h-4 w-4" /> Clonar vigência
+            <Button size="sm" variant="outline" className="px-2 sm:px-3" onClick={() => abrirDuplicacao(ultimaVigencia)}>
+              <Copy className="h-4 w-4" />
+              <span className="sm:hidden">Clonar</span>
+              <span className="hidden sm:inline">Clonar vigência</span>
             </Button>
           )}
-          <Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>
+          <Button size="sm" className="px-2 sm:px-3" onClick={() => setNovoAberto(true)}>
+            <Plus className="h-4 w-4" />
+            <span>Adicionar</span>
+          </Button>
         </div>
       }
     />
