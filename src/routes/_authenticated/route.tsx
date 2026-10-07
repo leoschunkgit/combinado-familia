@@ -194,7 +194,7 @@ function AuthenticatedLayout() {
                 ? "calc(4.75rem + env(safe-area-inset-bottom))"
                 : "calc(1rem + env(safe-area-inset-bottom))",
             }}
-            className="animate-notification-bell fixed z-30 h-12 w-12 rounded-full border border-amber-600 bg-amber-500 text-white shadow-lg hover:bg-amber-600 active:scale-95 md:hidden"
+            className="animate-notification-bell fixed z-30 h-12 w-12 rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 md:hidden"
             aria-label="Abrir pendências de Fez ou Não fez"
             title="Pendências"
           >
