@@ -290,6 +290,7 @@ function VigenciasPage() {
 
   const agora = Date.now();
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
+  const ultimaVigencia = vigencias.length === 0 ? null : [...vigencias].sort((a, b) => new Date(b.data_fim).getTime() - new Date(a.data_fim).getTime())[0];
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (diaBrasil(o.created_at) < diaCampo(edicao.data_inicio) || diaBrasil(o.created_at) > diaCampo(edicao.data_fim))) : [];
@@ -299,7 +300,16 @@ function VigenciasPage() {
       title="Vigências"
       description="Defina o período, a penalidade e o desconto da mesada."
       icon={<CalendarRange className="h-6 w-6" />}
-      action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+      action={
+        <div className="flex items-center gap-2">
+          {ultimaVigencia && (
+            <Button size="sm" variant="outline" onClick={() => abrirDuplicacao(ultimaVigencia)}>
+              <Copy className="h-4 w-4" /> Clonar vigência
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>
+        </div>
+      }
     />
     <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
       <span className="font-medium">Legenda:</span>
@@ -320,7 +330,6 @@ function VigenciasPage() {
                 <div className="flex flex-col items-start gap-1"><VigenciaStatus vigencia={v} /><p className="font-semibold">{fmtVigencia(v)}</p></div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={() => abrirDuplicacao(v)} title="Duplicar vigência" aria-label="Duplicar vigência"><Copy className="h-4 w-4" /></Button>
                 {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
                 <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência"><Trash2 className="h-4 w-4" /></Button>
