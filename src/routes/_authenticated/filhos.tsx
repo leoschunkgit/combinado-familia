@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Link2, MoreVertical, Pencil, Share2, Trash2, Users } from "lucide-react";
+import { Copy, ExternalLink, Link2, MoreVertical, Pencil, Plus, Share2, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -68,6 +68,7 @@ function FilhosPage() {
   const { runAction } = useActionLoading();
   const { data: filhos = [] } = useFilhos();
   const [form, setForm] = useState<FilhoForm>(vazio);
+  const [novoAberto, setNovoAberto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Filho | null>(null);
   const [edicao, setEdicao] = useState<FilhoForm>(vazio);
@@ -145,7 +146,7 @@ function FilhosPage() {
     const { error } = await supabase.from("t_filho").insert({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) });
     setSaving(false);
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Filho cadastrado"); setForm(vazio); qc.invalidateQueries({ queryKey: ["filhos"] });
+    toast.success("Filho cadastrado"); setForm(vazio); setNovoAberto(false); qc.invalidateQueries({ queryKey: ["filhos"] });
   }
 
   async function excluir(id: number) {
@@ -169,15 +170,13 @@ function FilhosPage() {
   }
 
   return <>
-    <PageHeader title="Filhos" description="Cadastre os filhos vinculados à sua conta." icon={<Users className="h-6 w-6" />} />
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-      <Card className="min-w-0 max-w-full"><CardHeader><CardTitle>Cadastrar filho</CardTitle></CardHeader><CardContent><form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-        <div className="space-y-2"><Label>Nome <span className="text-destructive">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
-        <div className="space-y-2"><Label>Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-        <div className="space-y-2"><Label>Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
-        <CamposExtras value={form} onChange={setForm} prefix="novo-filho" /><Button type="submit" className="w-full" disabled={saving}>Cadastrar</Button>
-      </form></CardContent></Card>
-      <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
+    <PageHeader
+      title="Filhos"
+      description="Cadastre os filhos vinculados à sua conta."
+      icon={<Users className="h-6 w-6" />}
+      action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+    />
+    <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
         const acesso = acessos[f.id]; const ativo = acesso?.ativo === true; const painelAberto = paineisAbertos[f.id] === true;
         return <div key={f.id} className="min-w-0 max-w-full rounded-2xl border bg-card p-4">
           <div className="flex min-w-0 items-center gap-3"><div className="min-w-0 flex-1"><p className="truncate font-semibold">{f.nome}</p><p className="truncate text-sm text-muted-foreground">{[f.email, f.celular && maskCelular(f.celular)].filter(Boolean).join(" · ") || "Sem contato"}</p><p className="truncate text-sm text-muted-foreground">{[f.idade !== null && `${f.idade} anos`, f.tem_mesada_opcional === true && f.valor_mesada !== null ? `Mesada: ${dinheiro(f.valor_mesada)}` : null].filter(Boolean).join(" · ")}</p></div>
@@ -193,7 +192,21 @@ function FilhosPage() {
           </div>
         </div>;
       })}</div>
-    </div>
+    <Dialog open={novoAberto} onOpenChange={(open) => { setNovoAberto(open); if (!open) setForm(vazio); }}>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader><DialogTitle>Adicionar filho</DialogTitle></DialogHeader>
+        <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
+          <div className="space-y-2"><Label>Nome <span className="text-destructive">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
+          <div className="space-y-2"><Label>Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+          <div className="space-y-2"><Label>Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
+          <CamposExtras value={form} onChange={setForm} prefix="novo-filho" />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => { setNovoAberto(false); setForm(vazio); }}>Cancelar</Button>
+            <Button type="submit" disabled={saving}>Cadastrar</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2"><p>Tem certeza que deseja excluir <strong>{filhos.find((f) => f.id === confirmarExclusao)?.nome}</strong>?</p><p className="text-sm text-muted-foreground">As atribuições, registros de Fez/Não fez e o link público deste filho também serão excluídos.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(confirmarDesativar)} onOpenChange={(open) => !open && setConfirmarDesativar(null)}><DialogContent><DialogHeader><DialogTitle>Desativar painel</DialogTitle></DialogHeader><p>O link de <strong>{confirmarDesativar?.nome}</strong> deixará de permitir acesso ao painel. Os dados não serão apagados.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarDesativar(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { const f = confirmarDesativar; setConfirmarDesativar(null); if (f) void runAction(() => desativarLink(f)); }}>Desativar</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(confirmarNovoLink)} onOpenChange={(open) => !open && setConfirmarNovoLink(null)}><DialogContent><DialogHeader><DialogTitle>Gerar novo link</DialogTitle></DialogHeader><p>O link atual de <strong>{confirmarNovoLink?.nome}</strong> deixará de funcionar imediatamente. Deseja continuar?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarNovoLink(null)}>Cancelar</Button><Button onClick={() => { const f = confirmarNovoLink; setConfirmarNovoLink(null); if (f) void runAction(() => gerarLink(f, true)); }}>Gerar novo link</Button></DialogFooter></DialogContent></Dialog>
