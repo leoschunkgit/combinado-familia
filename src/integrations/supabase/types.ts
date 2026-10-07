@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_cron_config: {
+        Row: {
+          chave: string
+          valor: string
+        }
+        Insert: {
+          chave: string
+          valor: string
+        }
+        Update: {
+          chave?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       t_filho: {
         Row: {
           celular: string | null

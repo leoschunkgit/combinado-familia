@@ -204,6 +204,13 @@
       "when": 1791247970378,
       "tag": "0028_persist_onboarding_completion",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791359470981,
+      "tag": "0029_schedule_daily_push_pendencias",
+      "breakpoints": true
     }
   ]
 }
