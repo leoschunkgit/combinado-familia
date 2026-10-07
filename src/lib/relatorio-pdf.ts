@@ -123,10 +123,19 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
 
   escrever("Filtros aplicados", MARGIN, CONTENT_WIDTH, 10, { negrito: true });
   const filtroTexto = `Vigência: ${dados.filtros.vigencia}   •   Filho: ${dados.filtros.filho}   •   Tarefa: ${dados.filtros.tarefa}`;
-  caixa("Consulta", filtroTexto, MARGIN, CONTENT_WIDTH);
-  y += 3;
+  const linhasFiltro = doc.splitTextToSize(filtroTexto, CONTENT_WIDTH - 8) as string[];
+  const alturaFiltro = Math.max(11, linhasFiltro.length * 4 + 5);
+  garantirEspaco(alturaFiltro + 2);
+  doc.setFillColor(247, 248, 247);
+  doc.setDrawColor(220, 224, 221);
+  doc.roundedRect(MARGIN, y, CONTENT_WIDTH, alturaFiltro, 2, 2, "FD");
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(35, 45, 40);
+  doc.text(linhasFiltro, MARGIN + 4, y + 6);
+  y += alturaFiltro + 5;
 
-  for (const vigencia of dados.vigencias) {
+  for (const [indiceVigencia, vigencia] of dados.vigencias.entries()) {
     garantirEspaco(30);
     doc.setFillColor(236, 244, 239);
     doc.setDrawColor(188, 205, 195);
@@ -134,11 +143,11 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(35, 70, 55);
-    doc.text(vigencia.periodo, MARGIN + 5, y + 7);
+    doc.text(`Vigência ${indiceVigencia + 1} — ${vigencia.status}`, MARGIN + 5, y + 7);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(75, 90, 82);
-    doc.text(`Status: ${vigencia.status}`, MARGIN + 5, y + 13);
+    doc.text(vigencia.periodo, MARGIN + 5, y + 13);
     y += 22;
 
     const boxGap = 4;
