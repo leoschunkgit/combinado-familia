@@ -3,7 +3,7 @@
 import { X } from "lucide-react";
 
 const modalCloseVisualClass =
-  "inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary text-primary opacity-80 ring-offset-background cursor-pointer transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none";
+  "inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary text-primary opacity-80 cursor-pointer transition-opacity hover:opacity-100 focus:outline-none focus-visible:opacity-100 disabled:pointer-events-none";
 
 export const modalCloseButtonClass =
   `absolute right-4 top-4 ${modalCloseVisualClass}`;
