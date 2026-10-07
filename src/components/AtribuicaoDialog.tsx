@@ -63,8 +63,6 @@ export function AtribuicaoDialog({
   const [saving, setSaving] = useState(false);
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
-  const contextual = mode !== "NORMAL";
-
   useEffect(() => {
     if (!open) return;
     setItens([]);
@@ -171,6 +169,12 @@ export function AtribuicaoDialog({
   async function cadastrarContextual() {
     if (!vigenciaInicialId) {
       toast.error("Vigência atual não encontrada");
+      return;
+    }
+
+    const vigenciaContextual = vigencias.find((v) => v.id === vigenciaInicialId);
+    if (!vigenciaContextual || situacaoVigencia(vigenciaContextual) !== "andamento") {
+      toast.error("A vigência atual não está mais em andamento");
       return;
     }
 
@@ -378,7 +382,7 @@ export function AtribuicaoDialog({
                 </p>
 
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Agora não</Button>
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
                   <Button type="button" onClick={() => void runAction(cadastrarContextual)} disabled={saving}>
                     Cadastrar atribuição
                   </Button>
