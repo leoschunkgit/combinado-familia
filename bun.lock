@@ -13,6 +13,7 @@
         "@capacitor/filesystem": "8.1.4",
         "@capacitor/ios": "8.5.2",
         "@capacitor/keyboard": "8.0.6",
+        "@capacitor/push-notifications": "8.1.3",
         "@capacitor/share": "8.0.1",
         "@capacitor/status-bar": "8.0.3",
         "@hookform/resolvers": "^5.2.2",
@@ -159,6 +160,8 @@
     "@capacitor/ios": ["@capacitor/ios@8.5.2", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/ios/-/ios-8.5.2.tgz", { "peerDependencies": { "@capacitor/core": "^8.5.0" } }, "sha512-eOT2S67AfTFG7KN0T3oxwAajrJz4rSye+ODfvChiwrk0F/+kWufFM1qU6cDjGJUOfwdAoeuEpZyWHSwZlu4GFg=="],
 
     "@capacitor/keyboard": ["@capacitor/keyboard@8.0.6", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/keyboard/-/keyboard-8.0.6.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-Bbe+9V0qaT6dzEFJEK7BUWR01l2+vZE8FM5ITF/WgKtx+G6eGZ6d5+YiSMRJBAK0VGjdO59v8yiQ10Doa5KyvQ=="],
+
+    "@capacitor/push-notifications": ["@capacitor/push-notifications@8.1.3", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/push-notifications/-/push-notifications-8.1.3.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-UlOCTS3uiw8ZUJ1rkFKJgoqPADipHDNn0lq5mNRwtXALVxQXIeIoRd3iqpzC+962R2LpCRJRkCTjPX2OHK3tBA=="],
 
     "@capacitor/share": ["@capacitor/share@8.0.1", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/share/-/share-8.0.1.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-3cSBKBCJVon54rKDROP2rqGyeGks4pBh9TbaEk9S375Kbek/ZHe72N50zIa0Vn9Eac/SuhwgehO/mmA4CsUOiw=="],
 
