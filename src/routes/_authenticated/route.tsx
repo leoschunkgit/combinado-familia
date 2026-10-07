@@ -279,7 +279,7 @@ function AuthenticatedLayout() {
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="native-safe-area min-h-screen md:flex">
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-56 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
-          <div className="relative flex items-center px-4 py-3 md:px-2.5 md:py-2.5">
+          <div className="relative flex items-center px-4 py-3 md:justify-center md:px-2.5 md:pb-5 md:pt-4">
             <Button variant="ghost" size="icon" className="relative z-10 md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
             <Link to="/inicio" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 md:static md:translate-x-0 md:gap-3">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground md:h-10 md:w-10"><Home className="h-4 w-4 md:h-5.5 md:w-5.5" /></span>
@@ -287,7 +287,7 @@ function AuthenticatedLayout() {
             </Link>
           </div>
 
-          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-1.5 md:pb-1">
+          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-1.5 md:pb-1 md:pt-1">
             {NAV_GRUPOS.map((grupo) => <GrupoMenu key={grupo.titulo} grupo={grupo} />)}
             <AtalhosPrincipais />
             <div className="mt-auto border-t pt-2">
