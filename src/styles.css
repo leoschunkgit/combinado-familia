@@ -134,3 +134,24 @@ button[role="combobox"] {
   scroll-margin-top: 5rem;
   scroll-margin-bottom: 10rem;
 }
+
+
+/* Sino flutuante de pendências: tremida sutil com pausa entre os movimentos. */
+@keyframes notification-bell-shake {
+  0%, 82%, 100% { transform: rotate(0deg); }
+  86% { transform: rotate(10deg); }
+  90% { transform: rotate(-10deg); }
+  94% { transform: rotate(7deg); }
+  97% { transform: rotate(-5deg); }
+}
+
+.animate-notification-bell {
+  animation: notification-bell-shake 2.6s ease-in-out infinite;
+  transform-origin: 50% 15%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-notification-bell {
+    animation: none;
+  }
+}
