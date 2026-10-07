@@ -131,11 +131,15 @@
   * {
     border-color: var(--color-border);
   }
-  html {
-    padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
-    padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
-    padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
-    padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  html.native-app {
+    --app-safe-top: max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px), 24px);
+    --app-safe-right: max(var(--safe-area-inset-right, 0px), env(safe-area-inset-right, 0px));
+    --app-safe-bottom: max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px));
+    --app-safe-left: max(var(--safe-area-inset-left, 0px), env(safe-area-inset-left, 0px));
+    padding-top: var(--app-safe-top);
+    padding-right: var(--app-safe-right);
+    padding-bottom: var(--app-safe-bottom);
+    padding-left: var(--app-safe-left);
   }
   body {
     background-color: var(--color-background);
@@ -153,15 +157,24 @@
    No Android moderno, o Capacitor SystemBars injeta --safe-area-inset-*.
    O env(...) fica como fallback para iOS/WebView que já fornece os insets. */
 @supports (padding: max(0px)) {
-  .native-safe-area {
-    padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
-    padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
-    padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
-    padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  .native-app .native-safe-area {
+    padding-top: var(--app-safe-top);
+    padding-right: var(--app-safe-right);
+    padding-bottom: var(--app-safe-bottom);
+    padding-left: var(--app-safe-left);
   }
 
-  .native-safe-bottom {
-    padding-bottom: max(1rem, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  .native-app .native-safe-bottom {
+    padding-bottom: max(1rem, var(--app-safe-bottom));
+  }
+
+  .native-app .native-fixed-safe-panel {
+    padding-top: calc(var(--app-safe-top) + 1rem);
+    padding-bottom: calc(var(--app-safe-bottom) + 1rem);
+  }
+
+  .native-app .native-fixed-safe-close {
+    top: calc(var(--app-safe-top) + 1rem);
   }
 }
 
