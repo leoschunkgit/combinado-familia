@@ -37,6 +37,7 @@ function AtribuicoesPage() {
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
   const [vig, setVig] = useState("");
+  const [novoAberto, setNovoAberto] = useState(false);
   const [filho, setFilho] = useState("");
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
   const [itens, setItens] = useState<Item[]>([]);
@@ -87,6 +88,7 @@ function AtribuicoesPage() {
     if (error) { toast.error(msgErro(error)); return; }
     toast.success(`${itens.length} atribuição(ões) cadastrada(s)`);
     setItens([]);
+    setNovoAberto(false);
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
@@ -150,71 +152,17 @@ function AtribuicoesPage() {
 
   return (
     <>
-      <PageHeader title="Filho na tarefa" description="Associe tarefas aos filhos dentro de uma vigência." icon={<Link2 className="h-6 w-6" />} />
+      <PageHeader
+        title="Filho na tarefa"
+        description="Associe tarefas aos filhos dentro de uma vigência."
+        icon={<Link2 className="h-6 w-6" />}
+        action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+      />
       {faltando && (
         <div className="mb-6 rounded-2xl bg-accent/30 p-4 text-sm">
           Para atribuir, cadastre antes pelo menos uma vigência, um filho e uma tarefa.
         </div>
       )}
-      <Card className="mb-8">
-        <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
-            <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
-            <div className="space-y-2">
-              <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" className="w-full justify-between font-normal">
-                     <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
-                    <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                  <DropdownMenuCheckboxItem
-                    checked={tarefas.length > 0 && tarefasSelecionadas.length === tarefas.length}
-                    onSelect={(e) => e.preventDefault()}
-                    onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
-                  >
-                    Selecionar todas
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuSeparator />
-                  {tarefas.map((t) => (
-                    <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
-                      {t.nome}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && situacaoVigencia(v) !== "finalizada")}><Plus className="h-4 w-4" /> Adicionar</Button>
-          </div>
-          {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
-          {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Esta vigência ainda vai começar. Você pode preparar e ajustar as atribuições normalmente.</p>}
-          {itens.length > 0 && (
-            <div className="rounded-xl border">
-              <Table>
-                <TableHeader><TableRow><TableHead>Filho</TableHead><TableHead>Tarefa</TableHead><TableHead>Vigência</TableHead><TableHead /></TableRow></TableHeader>
-                <TableBody>
-                  {itens.map((it, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{nomeF(it.id_filho)}</TableCell>
-                      <TableCell>{nomeT(it.id_tarefa)}</TableCell>
-                      <TableCell><div className="flex items-center gap-2"><span>{nomeV(it.id_vigencia)}</span>{vigencias.find((v) => v.id === it.id_vigencia) && <VigenciaStatus vigencia={vigencias.find((v) => v.id === it.id_vigencia)!} />}</div></TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => setItens(itens.filter((_, j) => j !== i))} aria-label="Remover"><X className="h-4 w-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && situacaoVigencia(v) !== "finalizada"))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
-        </CardContent>
-      </Card>
-
       <h2 className="mb-3 text-xl font-bold">Atribuições cadastradas</h2>
       {existentes.length > 0 && <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <Pick label="Filtrar por vigência" value={filtroVig} onChange={setFiltroVig} allLabel="Todas as vigências" options={vigenciasOrdenadas.map(statusVigencia)} />
@@ -282,6 +230,71 @@ function AtribuicoesPage() {
           })}
         </div>
       )}
+      <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader><DialogTitle>Adicionar atribuição</DialogTitle></DialogHeader>
+        <Card className="border-0 shadow-none">
+        <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
+            <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" className="w-full justify-between font-normal">
+                     <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
+                    <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
+                  <DropdownMenuCheckboxItem
+                    checked={tarefas.length > 0 && tarefasSelecionadas.length === tarefas.length}
+                    onSelect={(e) => e.preventDefault()}
+                    onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
+                  >
+                    Selecionar todas
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuSeparator />
+                  {tarefas.map((t) => (
+                    <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
+                      {t.nome}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && situacaoVigencia(v) !== "finalizada")}><Plus className="h-4 w-4" /> Adicionar</Button>
+          </div>
+          {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
+          {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Esta vigência ainda vai começar. Você pode preparar e ajustar as atribuições normalmente.</p>}
+          {itens.length > 0 && (
+            <div className="rounded-xl border">
+              <Table>
+                <TableHeader><TableRow><TableHead>Filho</TableHead><TableHead>Tarefa</TableHead><TableHead>Vigência</TableHead><TableHead /></TableRow></TableHeader>
+                <TableBody>
+                  {itens.map((it, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{nomeF(it.id_filho)}</TableCell>
+                      <TableCell>{nomeT(it.id_tarefa)}</TableCell>
+                      <TableCell><div className="flex items-center gap-2"><span>{nomeV(it.id_vigencia)}</span>{vigencias.find((v) => v.id === it.id_vigencia) && <VigenciaStatus vigencia={vigencias.find((v) => v.id === it.id_vigencia)!} />}</div></TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => setItens(itens.filter((_, j) => j !== i))} aria-label="Remover"><X className="h-4 w-4" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && situacaoVigencia(v) !== "finalizada"))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
+        </CardContent>
+        </Card>
+
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
