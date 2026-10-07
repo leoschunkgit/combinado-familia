@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { CalendarRange, CheckCircle2, Copy, Link2, ListPlus, ListTodo, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,11 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
-import { Pick } from "@/components/Pick";
 import { PageHeader } from "@/components/PageHeader";
-import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useActionLoading } from "@/components/ActionLoading";
-import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
@@ -25,7 +24,6 @@ export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   component: CadastroUnicoPage,
 });
 
-type Modo = "novo" | "duplicar";
 type FilhoNovoFluxo = {
   tempId: number;
   nome: string;
@@ -89,7 +87,6 @@ function CadastroUnicoPage() {
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [] } = useFilhoTarefas();
 
-  const [modo, setModo] = useState<Modo>("novo");
   const [nomeFilho, setNomeFilho] = useState("");
   const [temMesada, setTemMesada] = useState(false);
   const [valorMesada, setValorMesada] = useState("");
@@ -100,15 +97,12 @@ function CadastroUnicoPage() {
   const [tarefasNovasPendentes, setTarefasNovasPendentes] = useState<TarefaNovaFluxo[]>([]);
   const [vigenciaDraft, setVigenciaDraft] = useState<VigenciaDraft>(() => vigenciaInicial());
   const [vigenciaCriadaId, setVigenciaCriadaId] = useState<number | null>(null);
-  const [modeloId, setModeloId] = useState("");
-  const [duplicacao, setDuplicacao] = useState<VigenciaDraft>(() => vigenciaInicial());
   const [etapaNovo, setEtapaNovo] = useState<1 | 2 | 3 | 4>(1);
+  const [confirmarCloneAberto, setConfirmarCloneAberto] = useState(false);
   const [tarefasPorFilho, setTarefasPorFilho] = useState<Record<number, number[]>>({});
 
-  const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
-  const modelo = vigencias.find((v) => v.id === Number(modeloId));
-  const associacoesModelo = useMemo(() => atribuicoes.filter((a) => a.id_vigencia === Number(modeloId)), [atribuicoes, modeloId]);
   const totalCombinacoes = filhosSelecionados.reduce((total, idFilho) => total + (tarefasPorFilho[idFilho]?.length ?? 0), 0);
+  const ultimaVigencia = vigencias.length === 0 ? null : [...vigencias].sort((a, b) => new Date(b.data_fim).getTime() - new Date(a.data_fim).getTime())[0];
 
   const alternar = (lista: number[], setLista: (v: number[]) => void, id: number) =>
     setLista(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]);
@@ -288,65 +282,65 @@ function CadastroUnicoPage() {
     toast.success("Cadastro Fluxo finalizado com sucesso");
   }
 
-  function escolherModelo(value: string) {
-    setModeloId(value);
-    const v = vigencias.find((item) => item.id === Number(value));
-    if (!v) return;
+  async function clonarUltimaVigencia() {
+    if (!ultimaVigencia) {
+      toast.error("Não há vigência para clonar");
+      setConfirmarCloneAberto(false);
+      return;
+    }
 
     const maiorFim = vigencias.reduce((maior, vigencia) => {
       const fim = new Date(vigencia.data_fim).getTime();
       return fim > maior ? fim : maior;
     }, Number.NEGATIVE_INFINITY);
 
-    const novoInicio = Number.isFinite(maiorFim) ? new Date(maiorFim) : new Date(v.data_fim);
+    const novoInicio = Number.isFinite(maiorFim) ? new Date(maiorFim) : new Date(ultimaVigencia.data_fim);
     novoInicio.setDate(novoInicio.getDate() + 1);
 
     const novoFim = new Date(novoInicio);
     novoFim.setMonth(novoFim.getMonth() + 1);
 
-    setDuplicacao({
+    const novaVigencia: VigenciaDraft = {
       data_inicio: paraCampoDataHoraBrasil(novoInicio.toISOString()),
       data_fim: paraCampoDataHoraBrasil(novoFim.toISOString()),
-      penalidade: v.penalidade ?? "",
-      qtd_ocorrencia: String(v.qtd_ocorrencia),
-      valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","),
-    });
-  }
+      penalidade: ultimaVigencia.penalidade ?? "",
+      qtd_ocorrencia: String(ultimaVigencia.qtd_ocorrencia),
+      valor_debito: ultimaVigencia.valor_debito === null ? "" : ultimaVigencia.valor_debito.toFixed(2).replace(".", ","),
+    };
 
-  async function duplicarVigencia() {
-    if (!modelo) { toast.error("Selecione a vigência que será usada como modelo"); return; }
-    const erro = validarVigencia(duplicacao);
+    const erro = validarVigencia(novaVigencia);
     if (erro) { toast.error(erro); return; }
 
-    const novoInicio = new Date(duplicacao.data_inicio).getTime();
-    const fimModelo = new Date(modelo.data_fim).getTime();
-    if (novoInicio <= fimModelo) {
-      toast.error("A nova vigência deve começar depois do término da vigência modelo");
+    const novoInicioMs = new Date(novaVigencia.data_inicio).getTime();
+    const fimOriginal = new Date(ultimaVigencia.data_fim).getTime();
+    if (novoInicioMs <= fimOriginal) {
+      toast.error("A nova vigência deve começar depois do término da vigência original");
       return;
     }
-    if (conflitaComVigenciaExistente(duplicacao.data_inicio, duplicacao.data_fim)) {
+    if (conflitaComVigenciaExistente(novaVigencia.data_inicio, novaVigencia.data_fim)) {
       toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
       return;
     }
 
     const { data, error } = await supabase.rpc("duplicar_vigencia_com_atribuicoes", {
-      p_modelo_id: modelo.id,
-      p_data_inicio: paraIsoDataHoraBrasil(duplicacao.data_inicio),
-      p_data_fim: paraIsoDataHoraBrasil(duplicacao.data_fim),
-      p_penalidade: duplicacao.penalidade.trim(),
-      p_qtd_ocorrencia: Number(duplicacao.qtd_ocorrencia),
-      p_valor_debito: Number(duplicacao.valor_debito.replace(",", ".")),
+      p_modelo_id: ultimaVigencia.id,
+      p_data_inicio: paraIsoDataHoraBrasil(novaVigencia.data_inicio),
+      p_data_fim: paraIsoDataHoraBrasil(novaVigencia.data_fim),
+      p_penalidade: novaVigencia.penalidade.trim(),
+      p_qtd_ocorrencia: Number(novaVigencia.qtd_ocorrencia),
+      p_valor_debito: Number(novaVigencia.valor_debito.replace(",", ".")),
     });
 
     if (error) { toast.error(msgErro(error)); return; }
 
     const qtdCopiada = data?.[0]?.qtd_atribuicoes ?? 0;
-
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["vigencias"] }),
       qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
     ]);
-    toast.success(`Nova vigência criada com ${qtdCopiada} atribuição(ões) copiadas e zeradas`);
+
+    setConfirmarCloneAberto(false);
+    toast.success(`Vigência clonada com ${qtdCopiada} atribuição(ões), todas zeradas`);
     navigate({ to: "/vigencias" });
   }
 
@@ -355,24 +349,19 @@ function CadastroUnicoPage() {
       <PageHeader title="Cadastro Fluxo" description="Cadastre todo fluxo na mesma tela" icon={<ListPlus className="h-6 w-6" />} />
 
       <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant={modo === "novo" ? "default" : "outline"}
-          onClick={() => setModo("novo")}
-        >
+        <Button type="button">
           <Plus className="h-4 w-4" /> Novo cadastro
         </Button>
         <Button
           type="button"
-          variant={modo === "duplicar" ? "default" : "outline"}
-          onClick={() => setModo("duplicar")}
+          variant="outline"
+          onClick={() => ultimaVigencia ? setConfirmarCloneAberto(true) : toast.error("Não há vigência para clonar")}
         >
           <Copy className="h-4 w-4" /> Clonar vigência
         </Button>
       </div>
 
-      {modo === "novo" ? (
-        <div className="space-y-2">
+      <div className="space-y-2">
           {etapaNovo > 1 && (
             <Card className="overflow-hidden">
               <CardContent className="flex items-center gap-2.5 px-3 py-2">
@@ -614,38 +603,29 @@ function CadastroUnicoPage() {
             </Card>
           )}
         </div>
-      ) : (
-        <Card className="overflow-hidden border-primary/20">
-          <CardHeader className="border-b bg-primary/5"><CardTitle className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Copy className="h-5 w-5" /></span><span>Clonar vigência existente</span></CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <Pick label="Vigência modelo" value={modeloId} onChange={escolherModelo} options={vigenciasOrdenadas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: situacaoVigencia(v) }))} />
-            {modelo && (
-              <>
-                <div className="rounded-xl border bg-muted/20 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigência modelo</p>
-                  <p className="mt-1 font-semibold">{fmtVigencia(modelo)}</p>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold">{new Set(associacoesModelo.map((a) => a.id_filho)).size}</p><p className="text-[10px] text-muted-foreground">filhos</p></div>
-                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold">{new Set(associacoesModelo.map((a) => a.id_tarefa)).size}</p><p className="text-[10px] text-muted-foreground">tarefas</p></div>
-                    <div className="rounded-lg bg-background p-2 text-center"><p className="text-xl font-bold text-primary">{associacoesModelo.length}</p><p className="text-[10px] text-muted-foreground">atribuições</p></div>
-                  </div>
-                  <p className="mt-3 text-xs text-muted-foreground">Somente a estrutura será copiada. Fez, Não fez, bonificações, penalidades atingidas e contadores começam zerados.</p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2"><Label>Novo início</Label><BrDateTimeField id="duplicar-lote-inicio" value={duplicacao.data_inicio} min={paraCampoDataHoraBrasil(new Date(new Date(modelo.data_fim).getTime() + 60_000).toISOString())} onChange={(data_inicio) => setDuplicacao({ ...duplicacao, data_inicio })} /></div>
-                  <div className="space-y-2"><Label>Novo fim</Label><BrDateTimeField id="duplicar-lote-fim" value={duplicacao.data_fim} min={duplicacao.data_inicio || paraCampoDataHoraBrasil(new Date(new Date(modelo.data_fim).getTime() + 60_000).toISOString())} onChange={(data_fim) => setDuplicacao({ ...duplicacao, data_fim })} /></div>
-                </div>
-                <div className="space-y-2"><Label>Penalidade</Label><Input value={duplicacao.penalidade} onChange={(e) => setDuplicacao({ ...duplicacao, penalidade: e.target.value })} /></div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2"><Label>Quantidade de “Não fez”</Label><Input type="number" min="1" max="31" value={duplicacao.qtd_ocorrencia} onChange={(e) => setDuplicacao({ ...duplicacao, qtd_ocorrencia: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>Desconto por “Não fez”</Label><CurrencyInput value={duplicacao.valor_debito} onValueChange={(valor_debito) => setDuplicacao({ ...duplicacao, valor_debito })} /></div>
-                </div>
-                <Button onClick={() => void runAction(duplicarVigencia)}><Copy className="h-4 w-4" /> Criar nova vigência com atribuições</Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
+
+      <Dialog open={confirmarCloneAberto} onOpenChange={setConfirmarCloneAberto}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Clonar vigência</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-foreground">
+              Serão copiadas todas as informações da última vigência, incluindo os filhos vinculados às tarefas, para a nova vigência.
+              Você poderá editar essa nova vigência depois pelo menu <strong>Vigências</strong>.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Os registros de Fez/Não fez, bonificações, penalidades atingidas e contadores não serão copiados.
+            </p>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setConfirmarCloneAberto(false)}>Cancelar</Button>
+              <Button type="button" onClick={() => void runAction(clonarUltimaVigencia)}>
+                <Copy className="h-4 w-4" /> Confirmar
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
