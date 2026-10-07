@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronsUpDown, Plus, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { cadastrarAtribuicoes, prepararAtribuicoes, type AtribuicaoItem, type PoliticaVigenciaAtribuicao } from "@/lib/atribuicoes";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 
 export type AtribuicaoDialogMode = "NORMAL" | "POS_CADASTRO_FILHO" | "POS_CADASTRO_TAREFA";
-
-type Item = { id_vigencia: number; id_filho: number; id_tarefa: number };
 
 type Props = {
   open: boolean;
@@ -59,7 +57,7 @@ export function AtribuicaoDialog({
   const [filho, setFilho] = useState("");
   const [filhosSelecionados, setFilhosSelecionados] = useState<number[]>([]);
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
-  const [itens, setItens] = useState<Item[]>([]);
+  const [itens, setItens] = useState<AtribuicaoItem[]>([]);
   const [saving, setSaving] = useState(false);
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
@@ -89,17 +87,6 @@ export function AtribuicaoDialog({
     return v ? fmtVigencia(v) : "";
   };
 
-  const igual = (a: Item, b: Item) =>
-    a.id_vigencia === b.id_vigencia && a.id_filho === b.id_filho && a.id_tarefa === b.id_tarefa;
-
-  function filtrarNovos(candidatos: Item[], incluirItens = true) {
-    return candidatos.filter((item, index, todos) =>
-      todos.findIndex((outro) => igual(outro, item)) === index &&
-      !existentes.some((existente) => igual(existente, item)) &&
-      (!incluirItens || !itens.some((existente) => igual(existente, item)))
-    );
-  }
-
   function alternarTarefa(id: number) {
     setTarefasSelecionadas((atuais) => atuais.includes(id) ? atuais.filter((x) => x !== id) : [...atuais, id]);
   }
@@ -113,68 +100,81 @@ export function AtribuicaoDialog({
       toast.error("Selecione vigência, filho e ao menos uma tarefa");
       return;
     }
-    const periodo = vigencias.find((v) => v.id === Number(vig));
-    if (!periodo || situacaoVigencia(periodo) === "finalizada") {
-      toast.error("Não é possível criar atribuições em uma vigência finalizada");
-      return;
-    }
 
     const candidatos = tarefasSelecionadas.map((id_tarefa) => ({
       id_vigencia: Number(vig),
       id_filho: Number(filho),
       id_tarefa,
     }));
-    const novos = filtrarNovos(candidatos);
+
+    const preparado = prepararAtribuicoes({
+      candidatos: [...itens, ...candidatos],
+      existentes,
+      vigencias,
+      politica: "ATUAL_OU_FUTURA",
+    });
+
+    if (!preparado.ok) {
+      toast.error(preparado.mensagem);
+      return;
+    }
+
+    const novos = preparado.itens.filter((item) =>
+      !itens.some((existente) =>
+        existente.id_vigencia === item.id_vigencia &&
+        existente.id_filho === item.id_filho &&
+        existente.id_tarefa === item.id_tarefa
+      )
+    );
 
     if (novos.length === 0) {
       toast.error("As atribuições selecionadas já existem");
       return;
     }
-    if (novos.length < candidatos.length) toast.info("As atribuições repetidas não foram adicionadas");
+
+    if (novos.length < candidatos.length) {
+      toast.info("As atribuições repetidas não foram adicionadas");
+    }
 
     setItens((atuais) => [...atuais, ...novos]);
     setTarefasSelecionadas([]);
   }
 
-  async function salvarItens(itensParaSalvar: Item[]) {
-    if (itensParaSalvar.length === 0) {
-      toast.error("Adicione ao menos uma atribuição");
-      return;
-    }
-    if (itensParaSalvar.some((item) => {
-      const periodo = vigencias.find((v) => v.id === item.id_vigencia);
-      return !periodo || situacaoVigencia(periodo) === "finalizada";
-    })) {
-      toast.error("Não é possível criar atribuições em uma vigência finalizada");
-      return;
-    }
-
+  async function salvarItens(
+    itensParaSalvar: AtribuicaoItem[],
+    politica: PoliticaVigenciaAtribuicao,
+  ) {
     setSaving(true);
-    const { error } = await supabase.from("t_filho_tarefa").insert(itensParaSalvar);
+    const resultado = await cadastrarAtribuicoes({
+      candidatos: itensParaSalvar,
+      existentes,
+      vigencias,
+      politica,
+    });
     setSaving(false);
-    if (error) {
-      toast.error(msgErro(error));
-      return;
+
+    if (!resultado.ok) {
+      toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+      return false;
     }
 
-    toast.success(`${itensParaSalvar.length} atribuição(ões) cadastrada(s)`);
+    if (resultado.repetidas > 0) {
+      toast.info("As atribuições repetidas não foram cadastradas");
+    }
+
+    toast.success(`${resultado.quantidade} atribuição(ões) cadastrada(s)`);
     setItens([]);
     setFilhosSelecionados([]);
     setTarefasSelecionadas([]);
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
     onOpenChange(false);
     onSaved?.();
+    return true;
   }
 
   async function cadastrarContextual() {
     if (!vigenciaInicialId) {
       toast.error("Vigência atual não encontrada");
-      return;
-    }
-
-    const vigenciaContextual = vigencias.find((v) => v.id === vigenciaInicialId);
-    if (!vigenciaContextual || situacaoVigencia(vigenciaContextual) !== "andamento") {
-      toast.error("A vigência atual não está mais em andamento");
       return;
     }
 
@@ -188,13 +188,7 @@ export function AtribuicaoDialog({
         id_filho: filhoInicial.id,
         id_tarefa,
       }));
-      const novos = filtrarNovos(candidatos, false);
-      if (novos.length === 0) {
-        toast.error("As atribuições selecionadas já existem");
-        return;
-      }
-      if (novos.length < candidatos.length) toast.info("As atribuições repetidas não serão cadastradas");
-      await salvarItens(novos);
+      await salvarItens(candidatos, "SOMENTE_ATUAL");
       return;
     }
 
@@ -209,13 +203,7 @@ export function AtribuicaoDialog({
         id_tarefa: tarefa.id,
       }))
     );
-    const novos = filtrarNovos(candidatos, false);
-    if (novos.length === 0) {
-      toast.error("As atribuições selecionadas já existem");
-      return;
-    }
-    if (novos.length < candidatos.length) toast.info("As atribuições repetidas não serão cadastradas");
-    await salvarItens(novos);
+    await salvarItens(candidatos, "SOMENTE_ATUAL");
   }
 
   const titulo = mode === "NORMAL"
@@ -302,7 +290,7 @@ export function AtribuicaoDialog({
                   </div>
                 )}
 
-                <Button onClick={() => void runAction(() => salvarItens(itens))} disabled={saving || itens.length === 0}>
+                <Button onClick={() => void runAction(() => salvarItens(itens, "ATUAL_OU_FUTURA"))} disabled={saving || itens.length === 0}>
                   Cadastrar {itens.length > 0 && `(${itens.length})`}
                 </Button>
               </>
