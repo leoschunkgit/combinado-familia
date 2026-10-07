@@ -2,13 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronsUpDown, Link2, Plus, Trash2, X } from "lucide-react";
+import { Link2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AtribuicaoDialog } from "@/components/AtribuicaoDialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
@@ -28,8 +26,6 @@ export const Route = createFileRoute("/_authenticated/atribuicoes")({
   component: AtribuicoesPage,
 });
 
-type Item = { id_vigencia: number; id_filho: number; id_tarefa: number };
-
 function AtribuicoesPage() {
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
@@ -37,60 +33,12 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
-  const [vig, setVig] = useState("");
   const [novoAberto, setNovoAberto] = useState(false);
-  const [filho, setFilho] = useState("");
-  const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
-  const [itens, setItens] = useState<Item[]>([]);
-  const [saving, setSaving] = useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filtrosRascunho, setFiltrosRascunho] = useState({ vig: "all", filho: "all", tarefa: "all" });
   const [filtrosAplicados, setFiltrosAplicados] = useState({ vig: "all", filho: "all", tarefa: "all" });
 
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
-
-  const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
-  const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada");
-  const vigenciaSelecionadaFutura = Boolean(vigenciaSelecionada && new Date(vigenciaSelecionada.data_inicio).getTime() > Date.now());
-
-  const nomeF = (id: number) => filhos.find((f) => f.id === id)?.nome ?? "";
-  const nomeT = (id: number) => tarefas.find((t) => t.id === id)?.nome ?? "";
-  const nomeV = (id: number) => {
-    const v = vigencias.find((x) => x.id === id);
-    return v ? fmtVigencia(v) : "";
-  };
-
-  function adicionar() {
-    if (!vig || !filho || tarefasSelecionadas.length === 0) { toast.error("Selecione vigência, filho e ao menos uma tarefa"); return; }
-    const periodoSelecionado = vigencias.find((v) => v.id === Number(vig));
-    if (!periodoSelecionado || new Date(periodoSelecionado.data_fim).getTime() < Date.now()) { toast.error("Não é possível criar atribuições em uma vigência finalizada"); return; }
-    const novos = tarefasSelecionadas
-      .map((id_tarefa) => ({ id_vigencia: +vig, id_filho: +filho, id_tarefa }))
-      .filter((it) => {
-        const igual = (a: Item) => a.id_vigencia === it.id_vigencia && a.id_filho === it.id_filho && a.id_tarefa === it.id_tarefa;
-        return !itens.some(igual) && !existentes.some(igual);
-      });
-    if (novos.length === 0) { toast.error("As atribuições selecionadas já existem"); return; }
-    if (novos.length < tarefasSelecionadas.length) toast.info("As atribuições repetidas não foram adicionadas");
-    setItens([...itens, ...novos]);
-    setTarefasSelecionadas([]);
-  }
-
-  async function cadastrar() {
-    if (itens.length === 0) { toast.error("Adicione ao menos uma atribuição"); return; }
-    if (itens.some((item) => {
-      const periodo = vigencias.find((v) => v.id === item.id_vigencia);
-      return !periodo || new Date(periodo.data_fim).getTime() < Date.now();
-    })) { toast.error("Não é possível criar atribuições em uma vigência finalizada"); return; }
-    setSaving(true);
-    const { error } = await supabase.from("t_filho_tarefa").insert(itens);
-    setSaving(false);
-    if (error) { toast.error(msgErro(error)); return; }
-    toast.success(`${itens.length} atribuição(ões) cadastrada(s)`);
-    setItens([]);
-    setNovoAberto(false);
-    qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-  }
 
   async function excluir(id: number) {
     const alvo = existentes.find((item) => item.id === id);
@@ -119,10 +67,6 @@ function AtribuicoesPage() {
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-  }
-
-  function alternarTarefa(id: number) {
-    setTarefasSelecionadas((atuais) => atuais.includes(id) ? atuais.filter((x) => x !== id) : [...atuais, id]);
   }
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
@@ -162,11 +106,13 @@ function AtribuicoesPage() {
         icon={<Link2 className="h-6 w-6" />}
         action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
       />
+
       {faltando && (
         <div className="mb-6 rounded-2xl bg-accent/30 p-4 text-sm">
           Para atribuir, cadastre antes pelo menos uma vigência, um filho e uma tarefa.
         </div>
       )}
+
       {existentes.length > 0 && (
         <ResponsiveFilters
           desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
@@ -180,6 +126,7 @@ function AtribuicoesPage() {
           )}
         />
       )}
+
       {existentes.length === 0 ? (
         <EmptyState>Nenhuma atribuição ainda.</EmptyState>
       ) : filtradas.length === 0 ? (
@@ -204,107 +151,54 @@ function AtribuicoesPage() {
                     {totalVigencia} {totalVigencia === 1 ? "tarefa" : "tarefas"}
                   </span>
                 </div>
+
                 <div className="divide-y">
-                    {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
-                      const chave = `${vigencia.id}|${filhoItem.id}`;
-                      return (
-                        <div key={chave}>
-                          <div className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
-                                <p className="truncate font-bold">{filhoItem.nome}</p>
-                              </div>
+                  {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
+                    const chave = `${vigencia.id}|${filhoItem.id}`;
+                    return (
+                      <div key={chave}>
+                        <div className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
+                              <p className="truncate font-bold">{filhoItem.nome}</p>
                             </div>
-                            <span className="shrink-0 text-xs font-medium text-muted-foreground">{atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}</span>
                           </div>
-                          <div className="border-t bg-muted/10 px-2 py-1.5 sm:px-3">
-                              <div className="divide-y rounded-md border bg-background">
-                                {atribuicoesFilho.map((e) => (
-                                  <div key={e.id} className="grid min-h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-1.5 sm:px-3">
-                                    <div className="min-w-0">
-                                      <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
-                                    </div>
-                                    <div className="flex shrink-0 items-center gap-0.5">
-                                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}><Trash2 className="h-3.5 w-3.5" /></Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                            {atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}
+                          </span>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div className="border-t bg-muted/10 px-2 py-1.5 sm:px-3">
+                          <div className="divide-y rounded-md border bg-background">
+                            {atribuicoesFilho.map((e) => (
+                              <div key={e.id} className="grid min-h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-1.5 sm:px-3">
+                                <div className="min-w-0">
+                                  <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-0.5">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
             );
           })}
         </div>
       )}
-      <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader><DialogTitle>Adicionar atribuição</DialogTitle></DialogHeader>
-        <Card className="border-0 shadow-none">
-        <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-            <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
-            <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
-            <div className="space-y-2">
-              <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" className="w-full justify-between font-normal">
-                     <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
-                    <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                  <DropdownMenuCheckboxItem
-                    checked={tarefas.length > 0 && tarefasSelecionadas.length === tarefas.length}
-                    onSelect={(e) => e.preventDefault()}
-                    onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
-                  >
-                    Selecionar todas
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuSeparator />
-                  {tarefas.map((t) => (
-                    <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
-                      {t.nome}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <Button variant="secondary" onClick={adicionar} disabled={!vig || !vigencias.some((v) => v.id === Number(vig) && situacaoVigencia(v) !== "finalizada")}><Plus className="h-4 w-4" /> Adicionar</Button>
-          </div>
-          {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
-          {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Esta vigência ainda vai começar. Você pode preparar e ajustar as atribuições normalmente.</p>}
-          {itens.length > 0 && (
-            <div className="rounded-xl border">
-              <Table>
-                <TableHeader><TableRow><TableHead>Filho</TableHead><TableHead>Tarefa</TableHead><TableHead>Vigência</TableHead><TableHead /></TableRow></TableHeader>
-                <TableBody>
-                  {itens.map((it, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{nomeF(it.id_filho)}</TableCell>
-                      <TableCell>{nomeT(it.id_tarefa)}</TableCell>
-                      <TableCell><div className="flex items-center gap-2"><span>{nomeV(it.id_vigencia)}</span>{vigencias.find((v) => v.id === it.id_vigencia) && <VigenciaStatus vigencia={vigencias.find((v) => v.id === it.id_vigencia)!} />}</div></TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => setItens(itens.filter((_, j) => j !== i))} aria-label="Remover"><X className="h-4 w-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-           <Button onClick={() => { void runAction(cadastrar); }} disabled={saving || itens.length === 0 || itens.some((item) => !vigencias.some((v) => v.id === item.id_vigencia && situacaoVigencia(v) !== "finalizada"))}>Cadastrar {itens.length > 0 && `(${itens.length})`}</Button>
-        </CardContent>
-        </Card>
 
-        </DialogContent>
-      </Dialog>
+      <AtribuicaoDialog
+        open={novoAberto}
+        onOpenChange={setNovoAberto}
+        mode="NORMAL"
+      />
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
@@ -316,7 +210,6 @@ function AtribuicoesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </>
   );
 }
