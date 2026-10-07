@@ -2,17 +2,13 @@ import type { ReactNode } from "react";
 
 export function PageHeader({ title, description, icon, action }: { title: string; description: string; icon: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mb-8 flex items-start justify-between gap-3">
-      <div className="flex min-w-0 items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <h1 className="text-3xl font-bold md:text-4xl">{title}</h1>
-          <p className="mt-1 text-muted-foreground">{description}</p>
-        </div>
+    <div className="mb-8 grid grid-cols-[3rem_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 md:gap-x-4">
+      <div className="row-span-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+        {icon}
       </div>
+      <h1 className="min-w-0 text-3xl font-bold md:text-4xl">{title}</h1>
       {action && <div className="shrink-0 pt-1">{action}</div>}
+      <p className="col-start-2 col-end-4 min-w-0 text-muted-foreground">{description}</p>
     </div>
   );
 }
