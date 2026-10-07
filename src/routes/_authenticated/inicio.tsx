@@ -1,3 +1,4 @@
+import { uiTypography } from "@/lib/ui-typography";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, ClipboardCheck, History, Link2, ListTodo, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ function Inicio() {
 
       <section>
         <div className="mb-4">
-          <h2 className="text-xl font-semibold">Como começar</h2>
+          <h2 className={uiTypography.secondaryTitleLargeDesktop}>Como começar</h2>
           <p className="mt-1 text-sm text-muted-foreground">Siga estes passos para configurar seu primeiro combinado.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -69,7 +70,7 @@ function Inicio() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{numero}</span>
                 <Icon className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="mt-4 font-semibold">{titulo}</h3>
+              <h3 className={`mt-4 ${uiTypography.secondaryTitle}`}>{titulo}</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{texto}</p>
               <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">Acessar <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
             </Link>
@@ -81,7 +82,7 @@ function Inicio() {
         <div className="flex items-start gap-3">
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
-            <h2 className="font-semibold">A primeira ação é cadastrar os filhos</h2>
+            <h2 className={uiTypography.secondaryTitle}>A primeira ação é cadastrar os filhos</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
               Depois disso, você poderá criar as tarefas, fazer as atribuições e definir as vigências. Quando estiver tudo configurado, os registros de Fez / Não fez ficam prontos para serem lançados e o histórico para ser consultado.
             </p>
