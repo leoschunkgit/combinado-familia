@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, CheckCircle2, Copy, Pencil, Trash2 } from "lucide-react";
+import { CalendarRange, CheckCircle2, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +109,7 @@ function VigenciasPage() {
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const [form, setForm] = useState<VigenciaForm>(vazio);
+  const [novoAberto, setNovoAberto] = useState(false);
   const [editando, setEditando] = useState<Vigencia | null>(null);
   const [edicao, setEdicao] = useState(form);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
@@ -147,6 +148,7 @@ function VigenciasPage() {
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada");
     setForm(vazio);
+    setNovoAberto(false);
     qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
@@ -293,22 +295,19 @@ function VigenciasPage() {
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (diaBrasil(o.created_at) < diaCampo(edicao.data_inicio) || diaBrasil(o.created_at) > diaCampo(edicao.data_fim))) : [];
 
   return <>
-    <PageHeader title="Vigências" description="Defina o período, a penalidade e o desconto da mesada." icon={<CalendarRange className="h-6 w-6" />} />
+    <PageHeader
+      title="Vigências"
+      description="Defina o período, a penalidade e o desconto da mesada."
+      icon={<CalendarRange className="h-6 w-6" />}
+      action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+    />
     <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
       <span className="font-medium">Legenda:</span>
       <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" />Em andamento</span>
       <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" />Finalizada</span>
       <span className="flex shrink-0 items-center gap-2 whitespace-nowrap"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Irá começar</span>
     </div>
-    <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-      <Card><CardHeader><CardTitle>Cadastrar vigência</CardTitle></CardHeader><CardContent>
-        <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-          <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
-          <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
-          <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" /><Button type="submit" className="w-full">Cadastrar</Button>
-        </form>
-      </CardContent></Card>
-      <div className="space-y-3">
+    <div className="space-y-3">
         {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
         {vigenciasOrdenadas.map((v) => {
           const situacao = situacaoVigencia(v, agora);
@@ -338,8 +337,22 @@ function VigenciasPage() {
             </div>
           </div>;
         })}
-      </div>
     </div>
+
+    <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader><DialogTitle>Adicionar vigência</DialogTitle></DialogHeader>
+        <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
+          <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
+          <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
+          <EscolhaPenalidade value={form} onChange={setForm} prefix="novo" />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setNovoAberto(false)}>Cancelar</Button>
+            <Button type="submit">Cadastrar</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
 
     <Dialog open={Boolean(duplicando)} onOpenChange={(open) => !open && setDuplicando(null)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
