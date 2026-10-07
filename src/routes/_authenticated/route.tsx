@@ -179,7 +179,6 @@ function AuthenticatedLayout() {
         className={mobile
           ? "flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"
           : "flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1.5 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"}
-        activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}
       >
         <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"}>
           <ListPlus className={mobile ? "h-5 w-5" : "h-4 w-4"} />
