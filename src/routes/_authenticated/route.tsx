@@ -361,7 +361,7 @@ function AuthenticatedLayout() {
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2.5" onClick={() => setMenuMobileAberto(false)}><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-[18px] w-[18px]" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-xl font-bold">Combinado</span><span className="mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
-          <nav className="flex flex-col p-2 pb-28">
+          <nav className="flex flex-col px-2 pb-28 pt-3">
             {NAV_GRUPOS.map((grupo) => <GrupoMenu key={grupo.titulo} grupo={grupo} mobile />)}
             <AtalhosPrincipais mobile />
             <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></div>
