@@ -361,7 +361,7 @@ function CadastroUnicoPage() {
           onChange={(value) => setModo(value as Modo)}
           options={[
             { value: "novo", label: "Novo cadastro" },
-            { value: "duplicar", label: "Duplicar vigência" },
+            { value: "duplicar", label: "Clonar vigência" },
           ]}
         />
       </div>
@@ -611,7 +611,7 @@ function CadastroUnicoPage() {
         </div>
       ) : (
         <Card className="overflow-hidden border-primary/20">
-          <CardHeader className="border-b bg-primary/5"><CardTitle className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Copy className="h-5 w-5" /></span><span>Duplicar vigência existente</span></CardTitle></CardHeader>
+          <CardHeader className="border-b bg-primary/5"><CardTitle className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Copy className="h-5 w-5" /></span><span>Clonar vigência existente</span></CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <Pick label="Vigência modelo" value={modeloId} onChange={escolherModelo} options={vigenciasOrdenadas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: situacaoVigencia(v) }))} />
             {modelo && (
