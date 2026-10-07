@@ -111,20 +111,20 @@ function Index() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <section className="relative flex flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground md:p-14">
-        <div className="flex items-center gap-2"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground"><Home className="h-5 w-5" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-2xl font-bold">Combinado</span><span className="-mt-1 text-[13px] font-semibold tracking-wide opacity-80">família</span></span></div>
-        <div className="my-12"><h1 className="max-w-lg text-4xl font-bold leading-tight md:text-6xl">Combinado é combinado. <span className="text-accent">Em casa também.</span></h1><p className="mt-6 max-w-md text-lg opacity-80">Defina tarefas e um período para cada filho. Cadastre uma penalidade escrita e um desconto por ocorrência: quem tem mesada recebe o desconto; quem não tem recebe a penalidade escrita. Acompanhe tudo em um só lugar.</p></div>
-        <ul className="grid gap-3 text-sm opacity-90 sm:grid-cols-3"><li className="flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> Vários filhos</li><li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Ocorrências claras</li><li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-accent" /> Dados privados</li></ul>
+    <div className="grid lg:min-h-screen lg:grid-cols-2">
+      <section className="relative flex flex-col justify-between overflow-hidden bg-primary p-4 text-primary-foreground sm:p-6 md:p-8 lg:p-14">
+        <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground sm:h-9 sm:w-9 lg:h-10 lg:w-10 lg:rounded-xl"><Home className="h-4 w-4 lg:h-5 lg:w-5" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-xl font-bold lg:text-2xl">Combinado</span><span className="-mt-0.5 text-[11px] font-semibold tracking-wide opacity-80 lg:-mt-1 lg:text-[13px]">família</span></span></div>
+        <div className="my-4 sm:my-5 lg:my-12"><h1 className="max-w-lg text-2xl font-bold leading-tight sm:text-3xl lg:text-6xl">Combinado é combinado. <span className="text-accent">Em casa também.</span></h1><p className="mt-2 max-w-md text-sm leading-snug opacity-80 sm:text-base lg:mt-6 lg:text-lg lg:leading-normal">Defina tarefas e um período para cada filho. Cadastre uma penalidade escrita e um desconto por ocorrência: quem tem mesada recebe o desconto; quem não tem recebe a penalidade escrita. Acompanhe tudo em um só lugar.</p></div>
+        <ul className="hidden gap-3 text-sm opacity-90 sm:grid sm:grid-cols-3 lg:grid"><li className="flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> Vários filhos</li><li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Ocorrências claras</li><li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-accent" /> Dados privados</li></ul>
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/20" />
       </section>
-      <section className="flex items-center justify-center p-6 md:p-14">
+      <section className="flex items-start justify-center p-4 sm:p-6 lg:items-center lg:p-14">
         <div className="w-full max-w-md">
           <Tabs defaultValue="entrar">
-            <TabsList className="mb-6 grid w-full grid-cols-2"><TabsTrigger value="entrar">Entrar</TabsTrigger><TabsTrigger value="cadastrar">Cadastrar</TabsTrigger></TabsList>
+            <TabsList className="mb-4 grid w-full grid-cols-2 lg:mb-6"><TabsTrigger value="entrar">Entrar</TabsTrigger><TabsTrigger value="cadastrar">Cadastrar</TabsTrigger></TabsList>
             <TabsContent value="entrar">
-              <h2 className="text-3xl font-bold">Bem-vindo de volta</h2>
-              <p className="mb-6 mt-1 text-muted-foreground">Acesse sua conta de responsável.</p>
+              <h2 className="text-2xl font-bold sm:text-3xl">Bem-vindo de volta</h2>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground sm:text-base lg:mb-6">Acesse sua conta de responsável.</p>
               {recuperar ? (
                 <form onSubmit={recuperarSenha} className="space-y-4">
                   <div className="space-y-2"><Label htmlFor="re">Email</Label><Input id="re" type="email" required autoFocus autoComplete="email" inputMode="email" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} placeholder="seu@email.com" /></div>
@@ -142,7 +142,7 @@ function Index() {
               )}
             </TabsContent>
             <TabsContent value="cadastrar">
-              <h2 className="text-3xl font-bold">Cadastrar usuário</h2><p className="mb-6 mt-1 text-muted-foreground">Crie a conta do responsável pela família.</p>
+              <h2 className="text-2xl font-bold sm:text-3xl">Cadastrar usuário</h2><p className="mb-4 mt-1 text-sm text-muted-foreground sm:text-base lg:mb-6">Crie a conta do responsável pela família.</p>
               <form onSubmit={cadastrar} className="space-y-4">
                 <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" type="email" autoComplete="email" inputMode="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
