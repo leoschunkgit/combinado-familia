@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
-import { CalendarRange, ChevronsDownUp, ChevronsUpDown, FileDown, FileText, Search, ThumbsDown, ThumbsUp } from "lucide-react";
+import { CalendarRange, ChevronsDownUp, ChevronsUpDown, FileDown, FileText, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pick } from "@/components/Pick";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, useTarefas, type Ocorrencia } from "@/lib/db";
@@ -119,12 +120,17 @@ function RelatorioPage() {
 
   return <>
     <PageHeader title="Relatório / Histórico" description="Consulte o histórico completo por vigência, filho e tarefa e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
-    <Card className="mb-6"><CardContent className="grid gap-4 pt-6 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
-      <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({value:String(v.id),label:fmtVigencia(v),status:situacaoVigencia(v)}))} />
-      <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
-      <Pick label="Tarefa" value={f.tarefa} onChange={(v) => setF({ ...f, tarefa: v })} allLabel="Todas" options={tarefasCadastradas.map((t) => ({ value: String(t.id), label: t.nome }))} />
-      <Button onClick={() => setFiltro(f)}><Search className="h-4 w-4" /> Pesquisar</Button>
-    </CardContent></Card>
+    <ResponsiveFilters
+      desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
+      onApply={() => setFiltro(f)}
+      renderFilters={() => (
+        <>
+          <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({value:String(v.id),label:fmtVigencia(v),status:situacaoVigencia(v)}))} />
+          <Pick label="Filho" value={f.filho} onChange={(v) => setF({ ...f, filho: v })} allLabel="Todos" options={filhos.map((x) => ({ value: String(x.id), label: x.nome }))} />
+          <Pick label="Tarefa" value={f.tarefa} onChange={(v) => setF({ ...f, tarefa: v })} allLabel="Todas" options={tarefasCadastradas.map((t) => ({ value: String(t.id), label: t.nome }))} />
+        </>
+      )}
+    />
     <div className="mb-6 flex flex-wrap justify-end gap-2">
       <Button variant="outline" size="sm" onClick={() => definirTudo(true)} disabled={carregando || !relatorio.length}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
       <Button variant="outline" size="sm" onClick={() => definirTudo(false)} disabled={carregando || !relatorio.length}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
