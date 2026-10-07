@@ -354,16 +354,21 @@ function CadastroUnicoPage() {
     <div className="space-y-4">
       <PageHeader title="Cadastro Fluxo" description="Cadastre todo fluxo na mesma tela" icon={<ListPlus className="h-6 w-6" />} />
 
-      <div className="max-w-sm">
-        <Pick
-          label="Tipo de cadastro"
-          value={modo}
-          onChange={(value) => setModo(value as Modo)}
-          options={[
-            { value: "novo", label: "Novo cadastro" },
-            { value: "duplicar", label: "Clonar vigência" },
-          ]}
-        />
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant={modo === "novo" ? "default" : "outline"}
+          onClick={() => setModo("novo")}
+        >
+          <Plus className="h-4 w-4" /> Novo cadastro
+        </Button>
+        <Button
+          type="button"
+          variant={modo === "duplicar" ? "default" : "outline"}
+          onClick={() => setModo("duplicar")}
+        >
+          <Copy className="h-4 w-4" /> Clonar vigência
+        </Button>
       </div>
 
       {modo === "novo" ? (
