@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ListTodo, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AtribuicaoDialog } from "@/components/AtribuicaoDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { msgErro, useTarefas, type Tarefa } from "@/lib/db";
+import { msgErro, useFilhos, useTarefas, useVigencias, type Tarefa } from "@/lib/db";
+import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
@@ -30,6 +32,9 @@ function TarefasPage() {
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const { data: tarefas = [] } = useTarefas();
+  const { data: filhos = [] } = useFilhos();
+  const { data: vigencias = [] } = useVigencias();
+  const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
   const [nome, setNome] = useState("");
   const [lote, setLote] = useState("");
   const [novoAberto, setNovoAberto] = useState(false);
@@ -37,17 +42,30 @@ function TarefasPage() {
   const [editando, setEditando] = useState<Tarefa | null>(null);
   const [nomeEdicao, setNomeEdicao] = useState("");
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
+  const [tarefasPosCadastro, setTarefasPosCadastro] = useState<Array<{ id: number; nome: string }>>([]);
+  const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
+  const [atribuirAberto, setAtribuirAberto] = useState(false);
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const n = nome.trim();
     if (n.length < 2 || n.length > 150) { toast.error("Informe um nome entre 2 e 150 caracteres"); return; }
-    const { error } = await supabase.from("t_tarefa").insert({ nome: n });
-    if (error) { toast.error(msgErro(error)); return; }
+    const { data: criada, error } = await supabase
+      .from("t_tarefa")
+      .insert({ nome: n })
+      .select("id, nome")
+      .single();
+    if (error || !criada) { toast.error(msgErro(error)); return; }
+
     toast.success("Tarefa cadastrada");
     setNome("");
     setNovoAberto(false);
-    qc.invalidateQueries({ queryKey: ["tarefas"] });
+    await qc.invalidateQueries({ queryKey: ["tarefas"] });
+
+    if (filhos.length > 0 && vigenciaAtual) {
+      setTarefasPosCadastro([{ id: criada.id, nome: criada.nome }]);
+      setPerguntarAtribuicao(true);
+    }
   }
 
   async function salvarLote(e: FormEvent) {
@@ -57,10 +75,11 @@ function TarefasPage() {
     const invalida = nomes.find((item) => item.length < 2 || item.length > 150);
     if (invalida) { toast.error(`A tarefa "${invalida}" deve ter entre 2 e 150 caracteres`); return; }
 
-    const { error } = await supabase.from("t_tarefa").insert(
-      nomes.map((tarefa) => ({ nome: tarefa })),
-    );
-    if (error) {
+    const { data: criadas, error } = await supabase
+      .from("t_tarefa")
+      .insert(nomes.map((tarefa) => ({ nome: tarefa })))
+      .select("id, nome");
+    if (error || !criadas) {
       toast.error(msgErro(error));
       return;
     }
@@ -68,7 +87,12 @@ function TarefasPage() {
     toast.success(`${nomes.length} tarefa(s) cadastrada(s)`);
     setLote("");
     setNovoAberto(false);
-    qc.invalidateQueries({ queryKey: ["tarefas"] });
+    await qc.invalidateQueries({ queryKey: ["tarefas"] });
+
+    if (filhos.length > 0 && vigenciaAtual && criadas.length > 0) {
+      setTarefasPosCadastro(criadas.map((tarefa) => ({ id: tarefa.id, nome: tarefa.nome })));
+      setPerguntarAtribuicao(true);
+    }
   }
 
   async function excluir(id: number) {
@@ -169,6 +193,31 @@ function TarefasPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={perguntarAtribuicao} onOpenChange={setPerguntarAtribuicao}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{tarefasPosCadastro.length > 1 ? "Tarefas cadastradas com sucesso" : "Tarefa cadastrada com sucesso"}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {tarefasPosCadastro.length > 1
+              ? `Deseja atribuir estas ${tarefasPosCadastro.length} tarefas na vigência atual?`
+              : "Deseja atribuir esta tarefa na vigência atual?"}
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => { setPerguntarAtribuicao(false); setTarefasPosCadastro([]); }}>Agora não</Button>
+            <Button type="button" onClick={() => { setPerguntarAtribuicao(false); setAtribuirAberto(true); }}>Sim, atribuir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AtribuicaoDialog
+        open={atribuirAberto}
+        onOpenChange={(open) => { setAtribuirAberto(open); if (!open) setTarefasPosCadastro([]); }}
+        mode="POS_CADASTRO_TAREFA"
+        vigenciaInicialId={vigenciaAtual?.id ?? null}
+        tarefasIniciais={tarefasPosCadastro}
+      />
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
