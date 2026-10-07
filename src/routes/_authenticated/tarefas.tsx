@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ListTodo, Pencil, Search, Trash2 } from "lucide-react";
+import { ListTodo, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ function TarefasPage() {
   const { data: tarefas = [] } = useTarefas();
   const [nome, setNome] = useState("");
   const [lote, setLote] = useState("");
+  const [novoAberto, setNovoAberto] = useState(false);
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<Tarefa | null>(null);
   const [nomeEdicao, setNomeEdicao] = useState("");
@@ -45,6 +46,7 @@ function TarefasPage() {
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Tarefa cadastrada");
     setNome("");
+    setNovoAberto(false);
     qc.invalidateQueries({ queryKey: ["tarefas"] });
   }
 
@@ -65,6 +67,7 @@ function TarefasPage() {
 
     toast.success(`${nomes.length} tarefa(s) cadastrada(s)`);
     setLote("");
+    setNovoAberto(false);
     qc.invalidateQueries({ queryKey: ["tarefas"] });
   }
 
@@ -96,37 +99,13 @@ function TarefasPage() {
 
   return (
     <>
-      <PageHeader title="Tarefas" description="Crie as tarefas que poderão ser atribuídas aos filhos." icon={<ListTodo className="h-6 w-6" />} />
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
-        <Card>
-          <CardHeader><CardTitle>Cadastrar tarefa</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-5">
-              <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-                <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-                <Button type="submit" className="w-full">Cadastrar</Button>
-              </form>
-
-              <div className="border-t pt-5">
-                <form onSubmit={(e) => { void runAction(() => salvarLote(e)); }} className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="tarefas-lote">Cadastrar várias tarefas</Label>
-                    <Textarea
-                      id="tarefas-lote"
-                      value={lote}
-                      onChange={(e) => setLote(e.target.value)}
-                      placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
-                      className="min-h-28 resize-y"
-                    />
-                    <p className="text-xs text-muted-foreground">Separe cada tarefa com #. Os espaços antes e depois serão removidos automaticamente.</p>
-                  </div>
-                  <Button type="submit" variant="secondary" className="w-full">Cadastrar tarefas</Button>
-                </form>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      <PageHeader
+        title="Tarefas"
+        description="Crie as tarefas que poderão ser atribuídas aos filhos."
+        icon={<ListTodo className="h-6 w-6" />}
+        action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+      />
+      <div>
         <Card>
           <CardHeader className="pb-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -162,6 +141,34 @@ function TarefasPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader><DialogTitle>Adicionar tarefa</DialogTitle></DialogHeader>
+          <div className="space-y-5">
+            <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
+              <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
+              <Button type="submit" className="w-full">Cadastrar</Button>
+            </form>
+            <div className="border-t pt-5">
+              <form onSubmit={(e) => { void runAction(() => salvarLote(e)); }} className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="tarefas-lote">Cadastrar várias tarefas</Label>
+                  <Textarea
+                    id="tarefas-lote"
+                    value={lote}
+                    onChange={(e) => setLote(e.target.value)}
+                    placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
+                    className="min-h-28 resize-y"
+                  />
+                  <p className="text-xs text-muted-foreground">Separe cada tarefa com #. Os espaços antes e depois serão removidos automaticamente.</p>
+                </div>
+                <Button type="submit" variant="secondary" className="w-full">Cadastrar tarefas</Button>
+              </form>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
