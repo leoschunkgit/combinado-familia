@@ -124,6 +124,7 @@ function Notificacoes() {
     <div className="space-y-6">
       <PageHeader
         title="Pendências"
+        description="Dias desta vigência que ainda não têm nenhuma marcação."
         icon={<Bell className="h-6 w-6" />}
       />
 
@@ -137,8 +138,7 @@ function Notificacoes() {
         </div>
       ) : (
         <section className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <p className="text-sm text-muted-foreground">Dias desta vigência que ainda não têm nenhuma marcação.</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" onClick={expandirTodos}>
                 <ChevronsDown className="h-4 w-4" /> Expandir todos
