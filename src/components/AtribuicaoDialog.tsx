@@ -26,12 +26,26 @@ type Props = {
   onSaved?: () => void;
 };
 
-function LockedField({ label, value }: { label: string; value: string }) {
+function FixedInfo({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <div className="flex min-h-10 items-center rounded-md border bg-muted/30 px-3 text-sm font-medium">
-        {value}
+    <div className="space-y-1.5">
+      <Label className="text-sm">{label}</Label>
+      <div className="min-w-0 rounded-lg border bg-background px-3 py-2.5">
+        <p className="truncate text-sm font-medium text-foreground">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function FixedCurrentValidity({ value }: { value: string }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-sm">Vigência</Label>
+      <div className="flex min-h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-green-300" aria-hidden="true" />
+          <span className="min-w-0 truncate">{value}</span>
+        </span>
       </div>
     </div>
   );
@@ -296,12 +310,13 @@ export function AtribuicaoDialog({
               </>
             ) : (
               <>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <LockedField label="Vigência atual" value={vigenciaAtualTexto} />
+                <div className="space-y-4">
+                  <FixedCurrentValidity value={vigenciaAtualTexto} />
 
+                  <div className="grid gap-4 md:grid-cols-2">
                   {mode === "POS_CADASTRO_FILHO" ? (
                     <>
-                      <LockedField label="Filho" value={filhoInicial?.nome ?? "Filho cadastrado"} />
+                      <FixedInfo label="Filho" value={filhoInicial?.nome ?? "Filho cadastrado"} />
                       <div className="space-y-2">
                         <Label>Tarefas <span className="text-destructive">*</span></Label>
                         <DropdownMenu>
@@ -331,7 +346,7 @@ export function AtribuicaoDialog({
                     </>
                   ) : (
                     <>
-                      <LockedField
+                      <FixedInfo
                         label={tarefasIniciais.length > 1 ? "Tarefas cadastradas" : "Tarefa"}
                         value={tarefasIniciais.map((t) => t.nome).join(", ")}
                       />
@@ -363,6 +378,7 @@ export function AtribuicaoDialog({
                       </div>
                     </>
                   )}
+                  </div>
                 </div>
 
                 <p className="text-xs text-muted-foreground">
