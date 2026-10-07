@@ -17,6 +17,7 @@ import { AppDeepLinkListener } from "@/components/AppDeepLinkListener";
 import { AppResumeRefresh } from "@/components/AppResumeRefresh";
 import { AndroidBackButton } from "@/components/AndroidBackButton";
 import { ActionLoadingProvider } from "@/components/ActionLoading";
+import { applyTheme, getThemePreference, THEME_CHANGE_EVENT } from "@/lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -128,6 +129,27 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const syncTheme = () => applyTheme(getThemePreference());
+    const onThemeChange = () => syncTheme();
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === "combinado-theme") syncTheme();
+    };
+
+    syncTheme();
+    media.addEventListener("change", syncTheme);
+    window.addEventListener(THEME_CHANGE_EVENT, onThemeChange);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      media.removeEventListener("change", syncTheme);
+      window.removeEventListener(THEME_CHANGE_EVENT, onThemeChange);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
