@@ -50,7 +50,7 @@ const NAV_GRUPOS: { titulo: string; itens: NavItem[] }[] = [
     itens: [
       { to: "/inicio", label: "Início", icon: Home },
       { to: "/ocorrencias", label: "Fez / Não fez", icon: ClipboardCheck },
-      { to: "/notificacoes", label: "Notificações", icon: Bell },
+      { to: "/notificacoes", label: "Pendências", icon: Bell },
     ],
   },
   {
