@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Check, CheckCircle2, Eye, EyeOff, Home, ShieldCheck, Users, X } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Home, ShieldCheck, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,7 +146,7 @@ function Index() {
               <form onSubmit={cadastrar} className="space-y-4">
                 <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" type="email" autoComplete="email" inputMode="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
-                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 text-[11px] sm:text-xs" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-success" : "text-muted-foreground"}`}>{ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{r.label}</li>; })}</ul></div>
+                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 text-[11px] sm:text-xs" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={ok ? "text-success" : "text-destructive"}>{r.label}</li>; })}</ul></div>
                 <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" autoComplete="new-password" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>Cadastrar</Button>
               </form>
