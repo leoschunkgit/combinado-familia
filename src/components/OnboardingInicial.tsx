@@ -24,6 +24,7 @@ import {
   useVigencias,
 } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
+import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { useActionLoading } from "@/components/ActionLoading";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
@@ -268,15 +269,20 @@ export function OnboardingInicial() {
     }
 
     setSalvando(true);
-    const { error } = await supabase.from("t_filho_tarefa").insert({
-      id_filho: Number(filhoAtual),
-      id_tarefa: Number(tarefaAtual),
-      id_vigencia: Number(vigenciaAtual),
+    const resultado = await cadastrarAtribuicoes({
+      candidatos: [{
+        id_filho: Number(filhoAtual),
+        id_tarefa: Number(tarefaAtual),
+        id_vigencia: Number(vigenciaAtual),
+      }],
+      existentes: atribuicoes,
+      vigencias,
+      politica: "SOMENTE_ATUAL",
     });
     setSalvando(false);
 
-    if (error) {
-      toast.error(msgErro(error));
+    if (!resultado.ok) {
+      toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
       return;
     }
 
