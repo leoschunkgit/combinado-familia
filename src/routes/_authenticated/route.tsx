@@ -1,16 +1,18 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ClipboardCheck, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, ListPlus } from "lucide-react";
+import { Bell, CalendarRange, ClipboardCheck, Copy, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, ListPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useActionLoading } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
 import { CheckinDiario } from "@/components/CheckinDiario";
-import { useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
+import { msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
+import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
+import { CollapseChevron } from "@/components/CollapseChevron";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -72,6 +74,12 @@ const NAV_GRUPOS: { titulo: string; itens: NavItem[] }[] = [
   },
 ];
 
+function grupoDoPath(pathname: string): string | null {
+  return NAV_GRUPOS.find((grupo) =>
+    grupo.itens.some((item) => pathname === item.to || pathname.startsWith(item.to + "/")),
+  )?.titulo ?? null;
+}
+
 const ETAPAS = [
   { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se marcar ‘Tem mesada’, preencha também o valor: nesse caso, cada ‘Não fez’ gera o desconto definido na vigência." },
   { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
@@ -98,6 +106,29 @@ function AuthenticatedLayout() {
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
+  const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
+  const [grupoMenuAberto, setGrupoMenuAberto] = useState<string | null>(() => grupoDoPath(pathname));
+
+  useEffect(() => {
+    const grupo = grupoDoPath(pathname);
+    if (grupo) setGrupoMenuAberto(grupo);
+  }, [pathname]);
+
+  async function clonarPeloMenu() {
+    try {
+      const { qtdAtribuicoes } = await clonarUltimaVigencia(vigencias);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["vigencias"] }),
+        qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
+        qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
+      ]);
+      setConfirmarCloneMenuAberto(false);
+      toast.success(`Vigência clonada com ${qtdAtribuicoes} atribuição(ões), todas zeradas`);
+      navigate({ to: "/vigencias" });
+    } catch (error) {
+      toast.error(msgErro(error));
+    }
+  }
 
   async function encerrar() {
     setAberto(false); setEtapa(null);
@@ -137,6 +168,92 @@ function AuthenticatedLayout() {
     ...pendenciasHoje.map((p) => p.id_filho),
     ...pendenciasPassadas.map((p) => p.tarefa.id_filho),
   ]).size;
+  const ultimaVigencia = obterUltimaVigencia(vigencias);
+
+  const AtalhosPrincipais = ({ mobile = false }: { mobile?: boolean }) => (
+    <div className={mobile ? "mb-2 space-y-2" : "mb-2 space-y-1.5"}>
+      <Link
+        to="/cadastro-unico"
+        onClick={() => mobile && setMenuMobileAberto(false)}
+        className={mobile
+          ? "flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"
+          : "flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1.5 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"}
+        activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}
+      >
+        <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"}>
+          <ListPlus className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+        </span>
+        <span className="min-w-0">
+          <span className="block">Cadastro Fluxo</span>
+          <span className={mobile ? "block text-[10px] font-medium opacity-75" : "block text-[8px] font-medium leading-tight opacity-75"}>Cadastre tudo em um só fluxo</span>
+        </span>
+      </Link>
+      <button
+        type="button"
+        onClick={() => {
+          if (!ultimaVigencia) {
+            toast.error("Não há vigência para clonar");
+            return;
+          }
+          if (mobile) setMenuMobileAberto(false);
+          setConfirmarCloneMenuAberto(true);
+        }}
+        className={mobile
+          ? "flex w-full items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-left text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"
+          : "flex w-full items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1.5 text-left text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"}
+      >
+        <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"}>
+          <Copy className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+        </span>
+        <span className="min-w-0">
+          <span className="block">Clonar vigência</span>
+          <span className={mobile ? "block text-[10px] font-medium opacity-75" : "block text-[8px] font-medium leading-tight opacity-75"}>Copie a última vigência</span>
+        </span>
+      </button>
+    </div>
+  );
+
+  const GrupoMenu = ({ grupo, mobile = false }: { grupo: (typeof NAV_GRUPOS)[number]; mobile?: boolean }) => {
+    const aberto = grupoMenuAberto === grupo.titulo;
+    return (
+      <div className={mobile ? "mb-1.5" : "mb-1"}>
+        <button
+          type="button"
+          onClick={() => setGrupoMenuAberto(aberto ? null : grupo.titulo)}
+          className={mobile
+            ? "group flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[12px] font-extrabold uppercase tracking-wide text-foreground transition hover:bg-sidebar-accent/60"
+            : "group flex w-full items-center justify-between rounded-md px-1.5 py-1.5 text-left text-[11px] font-extrabold uppercase tracking-wide text-foreground transition hover:bg-sidebar-accent/60"}
+          aria-expanded={aberto}
+        >
+          <span>{grupo.titulo}</span>
+          <CollapseChevron open={aberto} className={mobile ? "h-7 w-7" : "h-6 w-6"} />
+        </button>
+        {aberto && (
+          <div className={mobile ? "mt-1 space-y-1 pl-1" : "mt-1 space-y-1.5 pl-1"}>
+            {grupo.itens.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => mobile && setMenuMobileAberto(false)}
+                className={mobile
+                  ? "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  : "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}
+                activeProps={{ className: "!bg-primary !text-primary-foreground" }}
+              >
+                <Icon className={mobile ? "h-5 w-5" : "h-3.5 w-3.5"} />
+                <span className="min-w-0 flex-1">{label}</span>
+                {to === "/notificacoes" && quantidadeNotificacoes > 0 && (
+                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                    {quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary !text-primary-foreground" }}>
@@ -159,14 +276,8 @@ function AuthenticatedLayout() {
           </div>
 
           <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-1.5 md:pb-1">
-            <Link to="/cadastro-unico" className="mb-1 flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100" activeProps={{ className: "!border-amber-300 !bg-amber-100 !text-amber-950" }}>
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"><ListPlus className="h-3.5 w-3.5" /></span>
-              <span className="min-w-0"><span className="block">Cadastro Fluxo</span><span className="block text-[8px] font-medium leading-tight opacity-75">Cadastre tudo em um só fluxo</span></span>
-            </Link>
-            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1">
-              <p className="mb-1 px-1.5 text-[11px] font-extrabold uppercase tracking-wide text-foreground">{grupo.titulo}</p>
-              <div className="space-y-1">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-3 w-3" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
-            </div>)}
+            <AtalhosPrincipais />
+            {NAV_GRUPOS.map((grupo) => <GrupoMenu key={grupo.titulo} grupo={grupo} />)}
             <div className="mt-auto border-t pt-2">
               <Button variant="ghost" className="h-auto w-full justify-start gap-2.5 rounded-md px-1.5 py-1 text-[12px] text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
               <ContaLink />
@@ -218,18 +329,35 @@ function AuthenticatedLayout() {
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
           <nav className="flex flex-col p-2 pb-28">
-            <Link to="/cadastro-unico" onClick={() => setMenuMobileAberto(false)} className="mb-2 flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><ListPlus className="h-5 w-5" /></span>
-              <span><span className="block">Cadastro Fluxo</span><span className="block text-[10px] font-medium opacity-75">Cadastre tudo em um só fluxo</span></span>
-            </Link>
-            {NAV_GRUPOS.map((grupo) => <div key={grupo.titulo} className="mb-1">
-              <p className="mb-1 px-2.5 text-[11px] font-extrabold uppercase tracking-wide text-foreground">{grupo.titulo}</p>
-              <div className="space-y-0.5">{grupo.itens.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenuMobileAberto(false)} className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "!bg-primary !text-primary-foreground" }}><Icon className="h-5 w-5" /><span className="min-w-0 flex-1">{label}</span>{to === "/notificacoes" && quantidadeNotificacoes > 0 && <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">{quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}</span>}</Link>)}</div>
-            </div>)}
+            <AtalhosPrincipais mobile />
+            {NAV_GRUPOS.map((grupo) => <GrupoMenu key={grupo.titulo} grupo={grupo} mobile />)}
             <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></div>
           </nav>
           <div className="fixed bottom-3 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="rounded-lg bg-muted p-2.5"><p className="text-[10px] text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-2 h-8 w-full text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
+
+        <Dialog open={confirmarCloneMenuAberto} onOpenChange={setConfirmarCloneMenuAberto}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Clonar vigência</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm leading-relaxed text-foreground">
+                Serão copiadas todas as informações da última vigência, incluindo os filhos vinculados às tarefas, para a nova vigência.
+                Você poderá editar essa nova vigência depois pelo menu <strong>Vigências</strong>.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Os registros de Fez/Não fez, bonificações, penalidades atingidas e contadores não serão copiados.
+              </p>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setConfirmarCloneMenuAberto(false)}>Cancelar</Button>
+                <Button type="button" onClick={() => void runAction(clonarPeloMenu)}>
+                  <Copy className="h-4 w-4" /> Confirmar
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={aberto} onOpenChange={(open) => { if (!open) void runAction(encerrar); }}><DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-lg"><DialogHeader><DialogTitle>Boas-vindas ao Combinado</DialogTitle><DialogDescription>Um caminho simples para começar a organizar os combinados da família.</DialogDescription></DialogHeader><ol className="space-y-2 py-2">{ETAPAS.map((item, index) => <li key={item.to} className="flex gap-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span><span className="self-center font-medium">{item.title}</span></li>)}</ol><div className="flex flex-wrap justify-end gap-2"><Button variant="ghost" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button><Button onClick={() => irParaEtapa(0)}>Começar <ArrowRight /></Button></div></DialogContent></Dialog>
       </div>
