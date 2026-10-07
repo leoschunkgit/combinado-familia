@@ -44,8 +44,8 @@ function AtribuicoesPage() {
   const [itens, setItens] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
-  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
-  const [filtro, setFiltro] = useState(f);
+  const [filtrosRascunho, setFiltrosRascunho] = useState({ vig: "all", filho: "all", tarefa: "all" });
+  const [filtrosAplicados, setFiltrosAplicados] = useState({ vig: "all", filho: "all", tarefa: "all" });
 
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
 
@@ -127,10 +127,14 @@ function AtribuicoesPage() {
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
   const filtradas = existentes.filter((item) =>
-    (filtro.vig === "all" || item.id_vigencia === Number(filtro.vig)) &&
-    (filtro.filho === "all" || item.id_filho === Number(filtro.filho)) &&
-    (filtro.tarefa === "all" || item.id_tarefa === Number(filtro.tarefa))
+    (filtrosAplicados.vig === "all" || item.id_vigencia === Number(filtrosAplicados.vig)) &&
+    (filtrosAplicados.filho === "all" || item.id_filho === Number(filtrosAplicados.filho)) &&
+    (filtrosAplicados.tarefa === "all" || item.id_tarefa === Number(filtrosAplicados.tarefa))
   );
+
+  function aplicarFiltros() {
+    setFiltrosAplicados({ ...filtrosRascunho });
+  }
 
   const grupos = vigenciasOrdenadas
     .map((vigencia) => ({
@@ -166,12 +170,12 @@ function AtribuicoesPage() {
       {existentes.length > 0 && (
         <ResponsiveFilters
           desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
-          onApply={() => setFiltro(f)}
+          onApply={aplicarFiltros}
           renderFilters={() => (
             <>
-              <Pick label="Vigência" value={f.vig} onChange={(vig) => setF({ ...f, vig })} allLabel="Todas" options={vigenciasOrdenadas.map(statusVigencia)} />
-              <Pick label="Filho" value={f.filho} onChange={(filho) => setF({ ...f, filho })} allLabel="Todos" options={filhos.map((filho) => ({ value: String(filho.id), label: filho.nome }))} />
-              <Pick label="Tarefa" value={f.tarefa} onChange={(tarefa) => setF({ ...f, tarefa })} allLabel="Todas" options={tarefas.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
+              <Pick label="Vigência" value={filtrosRascunho.vig} onChange={(vig) => setFiltrosRascunho((atual) => ({ ...atual, vig }))} allLabel="Todas" options={vigenciasOrdenadas.map(statusVigencia)} />
+              <Pick label="Filho" value={filtrosRascunho.filho} onChange={(filho) => setFiltrosRascunho((atual) => ({ ...atual, filho }))} allLabel="Todos" options={filhos.map((filho) => ({ value: String(filho.id), label: filho.nome }))} />
+              <Pick label="Tarefa" value={filtrosRascunho.tarefa} onChange={(tarefa) => setFiltrosRascunho((atual) => ({ ...atual, tarefa }))} allLabel="Todas" options={tarefas.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
             </>
           )}
         />
