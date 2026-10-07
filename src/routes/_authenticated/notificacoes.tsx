@@ -10,6 +10,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/PageHeader";
+import { uiTypography } from "@/lib/ui-typography";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
@@ -131,7 +132,7 @@ function Notificacoes() {
       {todasPendencias.length === 0 ? (
         <div className="rounded-2xl border bg-card p-8 text-center">
           <CheckCircle2 className="mx-auto h-10 w-10 text-green-600" />
-          <h2 className="mt-3 text-lg font-semibold">Tudo em dia</h2>
+          <h2 className={`mt-3 ${uiTypography.secondaryTitle}`}>Tudo em dia</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Todos os dias desta vigência já têm Fez ou Não fez registrado.
           </p>
