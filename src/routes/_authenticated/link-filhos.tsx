@@ -106,17 +106,34 @@ function LinkFilhosPage() {
             </> : <>
               <div className="flex items-center gap-1.5 text-xs"><span className={`h-2 w-2 rounded-full ${ativo ? "bg-green-500" : "bg-muted-foreground/50"}`} /><span className={ativo ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>{ativo ? "Acesso ativo" : "Acesso desativado"}</span></div>
               {ativo && <>
-                <p className="mt-2 max-w-full break-all text-xs text-muted-foreground">{urlAcesso(acesso.token)}</p>
-                <div className="mt-3 flex max-w-full flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => void copiarLink(acesso.token)}><Copy className="mr-1.5 h-3.5 w-3.5" />Copiar link</Button>
-                  <Button size="sm" variant="outline" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="mr-1.5 h-3.5 w-3.5" />Compartilhar</Button>
-                  <Button size="sm" variant="ghost" onClick={() => void openExternalUrl(urlAcesso(acesso.token))}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Abrir</Button>
+                <p className="mt-2 max-w-full break-all text-xs leading-relaxed text-muted-foreground">{urlAcesso(acesso.token)}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                  <Button size="sm" variant="outline" className="w-full justify-center sm:w-auto" onClick={() => void copiarLink(acesso.token)}><Copy className="h-3.5 w-3.5" />Copiar</Button>
+                  <Button size="sm" variant="outline" className="w-full justify-center sm:w-auto" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="h-3.5 w-3.5" />Compartilhar</Button>
+                  <Button size="sm" variant="outline" className="w-full justify-center sm:w-auto" onClick={() => void openExternalUrl(urlAcesso(acesso.token))}><ExternalLink className="h-3.5 w-3.5" />Abrir</Button>
+                  <Button size="sm" variant="ghost" className="w-full justify-center text-muted-foreground sm:w-auto" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="h-3.5 w-3.5" />Mais opções</Button>
                 </div>
               </>}
-              <div className="relative mt-2 max-w-full">
-                <Button size="sm" variant="ghost" className="max-w-full px-2 text-muted-foreground" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="mr-1 h-3.5 w-3.5" />Mais opções</Button>
-                {maisOpcoes === f.id && <div className="mt-1 flex max-w-full flex-wrap gap-2 rounded-lg border bg-background p-2">{ativo ? <><Button size="sm" variant="ghost" onClick={() => setConfirmarDesativar(f)}>Desativar acesso</Button><Button size="sm" variant="ghost" onClick={() => setConfirmarNovoLink(f)}>Gerar novo link</Button></> : <div className="min-w-0 max-w-full"><Button size="sm" variant="ghost" onClick={() => void runAction(() => gerarLink(f))}>Gerar novo link</Button><p className="px-2 pb-1 text-xs text-muted-foreground">Será criado um novo endereço de acesso.</p></div>}</div>}
-              </div>
+              {!ativo && (
+                <div className="mt-3">
+                  <Button size="sm" variant="ghost" className="px-2 text-muted-foreground" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="h-3.5 w-3.5" />Mais opções</Button>
+                </div>
+              )}
+              {maisOpcoes === f.id && (
+                <div className="mt-2 rounded-lg border bg-background p-2.5">
+                  {ativo ? (
+                    <div className="grid gap-2 sm:flex sm:flex-wrap">
+                      <Button size="sm" variant="ghost" className="justify-start sm:justify-center" onClick={() => setConfirmarDesativar(f)}>Desativar acesso</Button>
+                      <Button size="sm" variant="ghost" className="justify-start sm:justify-center" onClick={() => setConfirmarNovoLink(f)}>Gerar novo link</Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <Button size="sm" variant="ghost" className="justify-start px-2" onClick={() => void runAction(() => gerarLink(f))}>Gerar novo link</Button>
+                      <p className="px-2 text-xs leading-relaxed text-muted-foreground">Será criado um novo endereço de acesso.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </>}
           </div>
         </section>;
