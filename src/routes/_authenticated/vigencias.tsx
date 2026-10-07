@@ -255,7 +255,7 @@ function VigenciasPage() {
       qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
       qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
     ]);
-    toast.success(`Vigência duplicada com ${qtdCopiada} atribuição(ões), todas zeradas`);
+    toast.success(`Vigência clonada com ${qtdCopiada} atribuição(ões), todas zeradas`);
     setDuplicando(null);
   }
 
@@ -366,7 +366,7 @@ function VigenciasPage() {
     <Dialog open={Boolean(duplicando)} onOpenChange={(open) => !open && setDuplicando(null)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Duplicar vigência</DialogTitle>
+          <DialogTitle>Clonar vigência</DialogTitle>
         </DialogHeader>
         {duplicando && (
           <form onSubmit={(e) => { void runAction(() => duplicarVigencia(e)); }} className="space-y-4">
