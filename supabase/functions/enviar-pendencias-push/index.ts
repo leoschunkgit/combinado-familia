@@ -191,7 +191,7 @@ serve(async (req) => {
     const idsVigencias = vigencias.map((v) => v.id);
     const { data: atribuicoes, error: atribuicoesError } = await admin
       .from("t_filho_tarefa")
-      .select("id,id_usuario_pai,id_filho,t_filho!inner(nome)")
+      .select("id,id_usuario_pai,id_filho,t_filho!t_filho_tarefa_same_pai_filho_fk(nome)")
       .in("id_vigencia", idsVigencias);
 
     if (atribuicoesError) throw atribuicoesError;
