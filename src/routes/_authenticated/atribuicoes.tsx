@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -43,9 +44,8 @@ function AtribuicoesPage() {
   const [itens, setItens] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
-  const [filtroVig, setFiltroVig] = useState("all");
-  const [filtroFilho, setFiltroFilho] = useState("all");
-  const [filtroTarefa, setFiltroTarefa] = useState("all");
+  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
+  const [filtro, setFiltro] = useState(f);
 
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
 
@@ -127,9 +127,9 @@ function AtribuicoesPage() {
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
   const filtradas = existentes.filter((item) =>
-    (filtroVig === "all" || item.id_vigencia === Number(filtroVig)) &&
-    (filtroFilho === "all" || item.id_filho === Number(filtroFilho)) &&
-    (filtroTarefa === "all" || item.id_tarefa === Number(filtroTarefa))
+    (filtro.vig === "all" || item.id_vigencia === Number(filtro.vig)) &&
+    (filtro.filho === "all" || item.id_filho === Number(filtro.filho)) &&
+    (filtro.tarefa === "all" || item.id_tarefa === Number(filtro.tarefa))
   );
 
   const grupos = vigenciasOrdenadas
@@ -164,11 +164,19 @@ function AtribuicoesPage() {
         </div>
       )}
       <h2 className="mb-3 text-xl font-bold">Atribuições cadastradas</h2>
-      {existentes.length > 0 && <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <Pick label="Filtrar por vigência" value={filtroVig} onChange={setFiltroVig} allLabel="Todas as vigências" options={vigenciasOrdenadas.map(statusVigencia)} />
-        <Pick label="Filtrar por filho" value={filtroFilho} onChange={setFiltroFilho} allLabel="Todos os filhos" options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
-        <Pick label="Filtrar por tarefa" value={filtroTarefa} onChange={setFiltroTarefa} allLabel="Todas as tarefas" options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
-      </div>}
+      {existentes.length > 0 && (
+        <ResponsiveFilters
+          desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
+          onApply={() => setFiltro(f)}
+          renderFilters={() => (
+            <>
+              <Pick label="Vigência" value={f.vig} onChange={(vig) => setF({ ...f, vig })} allLabel="Todas" options={vigenciasOrdenadas.map(statusVigencia)} />
+              <Pick label="Filho" value={f.filho} onChange={(filho) => setF({ ...f, filho })} allLabel="Todos" options={filhos.map((filho) => ({ value: String(filho.id), label: filho.nome }))} />
+              <Pick label="Tarefa" value={f.tarefa} onChange={(tarefa) => setF({ ...f, tarefa })} allLabel="Todas" options={tarefas.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
+            </>
+          )}
+        />
+      )}
       {existentes.length === 0 ? (
         <EmptyState>Nenhuma atribuição ainda.</EmptyState>
       ) : filtradas.length === 0 ? (
