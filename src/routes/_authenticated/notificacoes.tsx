@@ -124,7 +124,7 @@ function Notificacoes() {
     <div className="space-y-6">
       <PageHeader
         title="Pendências"
-        description="Dias desta vigência que ainda não têm nenhuma marcação."
+        description="Veja os dias que ainda precisam de marcação"
         icon={<Bell className="h-6 w-6" />}
       />
 
