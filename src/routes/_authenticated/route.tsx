@@ -183,7 +183,7 @@ function AuthenticatedLayout() {
           <Outlet />
         </div></main>
 
-        {configuracaoInicialConcluida && totalPendencias > 0 && (
+        {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/notificacoes" && (
           <Button
             type="button"
             size="icon"
