@@ -281,9 +281,9 @@ function AuthenticatedLayout() {
         <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-56 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="relative flex items-center px-4 py-3 md:px-2.5 md:py-2.5">
             <Button variant="ghost" size="icon" className="relative z-10 md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
-            <Link to="/inicio" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 md:static md:translate-x-0">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground md:h-7 md:w-7"><Home className="h-4 w-4 md:h-3.5 md:w-3.5" /></span>
-              <span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold md:text-base">Combinado</span><span className="-mt-1 text-[11px] font-semibold tracking-wide text-muted-foreground md:text-[10px]">família</span></span>
+            <Link to="/inicio" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 md:static md:translate-x-0 md:gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground md:h-9 md:w-9"><Home className="h-4 w-4 md:h-5 md:w-5" /></span>
+              <span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold md:text-xl">Combinado</span><span className="-mt-1 text-[11px] font-semibold tracking-wide text-muted-foreground md:text-[11px]">família</span></span>
             </Link>
           </div>
 
