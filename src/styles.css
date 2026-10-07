@@ -159,3 +159,48 @@ button[role="combobox"] {
     animation: none;
   }
 }
+
+
+/* Cursor padrão para todos os controles realmente interativos.
+   Centralizado aqui para manter desktop, web mobile e app nativo consistentes. */
+button:not(:disabled),
+a[href],
+summary,
+select:not(:disabled),
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="checkbox"]:not([aria-disabled="true"]),
+[role="radio"]:not([aria-disabled="true"]),
+[role="switch"]:not([aria-disabled="true"]),
+[role="tab"]:not([aria-disabled="true"]),
+[role="option"]:not([aria-disabled="true"]):not([data-disabled]),
+[role="menuitem"]:not([aria-disabled="true"]):not([data-disabled]),
+[role="menuitemcheckbox"]:not([aria-disabled="true"]):not([data-disabled]),
+[role="menuitemradio"]:not([aria-disabled="true"]):not([data-disabled]),
+[data-radix-collection-item]:not([data-disabled]) {
+  cursor: pointer !important;
+}
+
+/* A mãozinha deve permanecer também sobre ícones/textos dentro do controle. */
+button:not(:disabled) *,
+a[href] *,
+summary *,
+[role="button"]:not([aria-disabled="true"]) *,
+[role="checkbox"]:not([aria-disabled="true"]) *,
+[role="radio"]:not([aria-disabled="true"]) *,
+[role="switch"]:not([aria-disabled="true"]) *,
+[role="tab"]:not([aria-disabled="true"]) *,
+[role="option"]:not([aria-disabled="true"]):not([data-disabled]) *,
+[role^="menuitem"]:not([aria-disabled="true"]):not([data-disabled]) * {
+  cursor: inherit !important;
+}
+
+/* Textos clicáveis que acompanham checkbox/radio também usam mãozinha. */
+label:has(input[type="checkbox"]:not(:disabled)),
+label:has(input[type="radio"]:not(:disabled)),
+label:has([role="checkbox"]:not([aria-disabled="true"])),
+label:has([role="radio"]:not([aria-disabled="true"])),
+label:has([role="switch"]:not([aria-disabled="true"])) {
+  cursor: pointer;
+}
