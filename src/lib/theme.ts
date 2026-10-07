@@ -19,7 +19,7 @@ export function applyTheme(preference: ThemePreference) {
   if (typeof document === "undefined") return;
   const resolved = resolveTheme(preference);
   document.documentElement.classList.toggle("dark", resolved === "dark");
-  document.documentElement.dataset.theme = preference;
+  document.documentElement.dataset["theme"] = preference;
   document.documentElement.style.colorScheme = resolved;
 }
 
