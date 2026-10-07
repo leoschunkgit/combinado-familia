@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { AtribuicaoDialog } from "@/components/AtribuicaoDialog";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, msgErro, useFilhos, type Filho } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos, useTarefas, useVigencias, type Filho } from "@/lib/db";
+import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
@@ -63,21 +65,40 @@ function FilhosPage() {
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const { data: filhos = [] } = useFilhos();
+  const { data: tarefas = [] } = useTarefas();
+  const { data: vigencias = [] } = useVigencias();
+  const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [novoAberto, setNovoAberto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Filho | null>(null);
   const [edicao, setEdicao] = useState<FilhoForm>(vazio);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
+  const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string } | null>(null);
+  const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
+  const [atribuirAberto, setAtribuirAberto] = useState(false);
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     setSaving(true);
-    const { error } = await supabase.from("t_filho").insert({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) });
+    const { data: criado, error } = await supabase
+      .from("t_filho")
+      .insert({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) })
+      .select("id, nome")
+      .single();
     setSaving(false);
-    if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Filho cadastrado"); setForm(vazio); setNovoAberto(false); qc.invalidateQueries({ queryKey: ["filhos"] });
+    if (error || !criado) { toast.error(msgErro(error)); return; }
+
+    toast.success("Filho cadastrado");
+    setForm(vazio);
+    setNovoAberto(false);
+    await qc.invalidateQueries({ queryKey: ["filhos"] });
+
+    if (tarefas.length > 0 && vigenciaAtual) {
+      setFilhoPosCadastro({ id: criado.id, nome: criado.nome });
+      setPerguntarAtribuicao(true);
+    }
   }
 
   async function excluir(id: number) {
@@ -129,6 +150,25 @@ function FilhosPage() {
         </form>
       </DialogContent>
     </Dialog>
+    <Dialog open={perguntarAtribuicao} onOpenChange={setPerguntarAtribuicao}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Filho cadastrado com sucesso</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">Deseja atribuir tarefas para <strong>{filhoPosCadastro?.nome}</strong> na vigência atual?</p>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => { setPerguntarAtribuicao(false); setFilhoPosCadastro(null); }}>Agora não</Button>
+          <Button type="button" onClick={() => { setPerguntarAtribuicao(false); setAtribuirAberto(true); }}>Sim, atribuir</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <AtribuicaoDialog
+      open={atribuirAberto}
+      onOpenChange={(open) => { setAtribuirAberto(open); if (!open) setFilhoPosCadastro(null); }}
+      mode="POS_CADASTRO_FILHO"
+      vigenciaInicialId={vigenciaAtual?.id ?? null}
+      filhoInicial={filhoPosCadastro}
+    />
+
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2"><p>Tem certeza que deseja excluir <strong>{filhos.find((f) => f.id === confirmarExclusao)?.nome}</strong>?</p><p className="text-sm text-muted-foreground">As atribuições, registros de Fez/Não fez e o link público deste filho também serão excluídos.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader><form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4"><div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome *</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-email">Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div><CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" /><DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" disabled={saving}>Salvar alterações</Button></DialogFooter></form></DialogContent></Dialog>
   </>;
