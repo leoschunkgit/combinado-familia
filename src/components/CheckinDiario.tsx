@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -406,7 +406,6 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
             className="min-w-28"
             onClick={() => onOpenChange(false)}
           >
-            <X className="h-4 w-4" />
             Fechar
           </Button>
         </DialogFooter>
