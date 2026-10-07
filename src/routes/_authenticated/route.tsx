@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ClipboardCheck, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, TriangleAlert, ListPlus } from "lucide-react";
+import { Bell, CalendarRange, ClipboardCheck, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, X, Menu, UserCog, FileText, ListPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -179,20 +179,41 @@ function AuthenticatedLayout() {
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
-          {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/notificacoes" && (
-            <section className="mb-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-amber-950 shadow-sm md:mb-4 md:gap-2 md:px-3 md:py-2" role="status" aria-live="polite">
-              <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-amber-600 md:h-4 md:w-4" />
-              <p className="min-w-0 flex-1 truncate text-xs font-semibold md:text-sm">“Fez” ou “Não fez”</p>
-              <Button type="button" size="sm" variant="outline" className="h-7 shrink-0 border-amber-300 bg-white/70 px-2.5 text-[11px] hover:bg-white md:h-8 md:px-3 md:text-xs" onClick={() => setModalPendenciasAberto(true)}>
-                Resolver
-              </Button>
-            </section>
-          )}
           {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Button variant="ghost" size="icon" onClick={() => void runAction(encerrar)} disabled={salvando} aria-label="Pular guia" title="Pular guia"><X /></Button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? void runAction(encerrar) : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button></div></section>}
           <Outlet />
         </div></main>
 
-        {mostrarAtalhoLinkFilho && <Link to="/link-filhos" style={{ right: "calc(1rem + env(safe-area-inset-right))", bottom: "calc(1rem + env(safe-area-inset-bottom))" }} className="fixed z-30 inline-flex h-10 w-auto max-w-[calc(100vw-2rem)] items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-primary/20 bg-primary/70 px-3.5 text-xs font-semibold leading-none text-primary-foreground shadow-md backdrop-blur-md transition hover:bg-primary/85 active:scale-[0.98] md:hidden" aria-label="Ir para Gerar Link / Filho"><Link2 className="h-4 w-4 shrink-0" /><span className="block shrink-0">Link/Filho</span></Link>}
+        {configuracaoInicialConcluida && totalPendencias > 0 && (
+          <Button
+            type="button"
+            size="icon"
+            onClick={() => setModalPendenciasAberto(true)}
+            style={{
+              right: "calc(1rem + env(safe-area-inset-right))",
+              bottom: mostrarAtalhoLinkFilho
+                ? "calc(4.75rem + env(safe-area-inset-bottom))"
+                : "calc(1rem + env(safe-area-inset-bottom))",
+            }}
+            className="animate-notification-bell fixed z-30 h-12 w-12 rounded-full border border-amber-600 bg-amber-500 text-white shadow-lg hover:bg-amber-600 active:scale-95 md:hidden"
+            aria-label="Abrir pendências de Fez ou Não fez"
+            title="Pendências"
+          >
+            <Bell className="h-5 w-5" />
+            <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-red-600 ring-2 ring-white" aria-hidden="true" />
+          </Button>
+        )}
+
+        {mostrarAtalhoLinkFilho && (
+          <Link
+            to="/link-filhos"
+            style={{ right: "calc(1rem + env(safe-area-inset-right))", bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+            className="fixed z-30 inline-flex h-12 w-12 items-center justify-center rounded-full border border-amber-600 bg-amber-500 text-white shadow-lg transition hover:bg-amber-600 active:scale-95 md:hidden"
+            aria-label="Ir para Gerar Link / Filho"
+            title="Link/Filho"
+          >
+            <Link2 className="h-5 w-5" />
+          </Link>
+        )}
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2" onClick={() => setMenuMobileAberto(false)}><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-4 w-4" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-lg font-bold">Combinado</span><span className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><Button variant="ghost" size="icon" onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></Button></div>
