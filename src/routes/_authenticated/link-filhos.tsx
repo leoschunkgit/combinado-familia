@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { uiTypography } from "@/lib/ui-typography";
 import { msgErro, useFilhos, type Filho } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
@@ -95,7 +96,7 @@ function LinkFilhosPage() {
         const ativo = acesso?.ativo === true;
         return <section key={f.id} className="min-w-0 rounded-2xl border bg-card p-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="min-w-0 flex-1"><h2 className="truncate font-semibold">{f.nome}</h2><p className="text-xs text-muted-foreground">Painel de acompanhamento</p></div>
+            <div className="min-w-0 flex-1"><h2 className={`truncate ${uiTypography.secondaryTitle}`}>{f.nome}</h2><p className="text-xs text-muted-foreground">Painel de acompanhamento</p></div>
           </div>
 
           <div className="mt-4 min-w-0 rounded-xl border bg-muted/25 p-3">
