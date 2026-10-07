@@ -13,7 +13,10 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: "DARK",
-      overlaysWebView: false,
+    },
+    SystemBars: {
+      insetsHandling: "css",
+      style: "DARK",
     },
   },
   android: {
