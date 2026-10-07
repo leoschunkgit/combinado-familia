@@ -216,8 +216,7 @@ function VigenciasPage() {
     });
   }
 
-  async function duplicarVigencia(e: FormEvent) {
-    e.preventDefault();
+  async function duplicarVigencia() {
     if (!duplicando) return;
 
     const p = schema.safeParse(duplicacao);
@@ -369,44 +368,26 @@ function VigenciasPage() {
     </Dialog>
 
     <Dialog open={Boolean(duplicando)} onOpenChange={(open) => !open && setDuplicando(null)}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Clonar vigência</DialogTitle>
         </DialogHeader>
         {duplicando && (
-          <form onSubmit={(e) => { void runAction(() => duplicarVigencia(e)); }} className="space-y-4">
-            <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-              <p className="font-semibold">Vigência original</p>
-              <p className="mt-1 text-muted-foreground">{fmtVigencia(duplicando)}</p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Serão copiadas {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_filho)).size} pessoa(s), {new Set(atribuicoes.filter((a) => a.id_vigencia === duplicando.id).map((a) => a.id_tarefa)).size} tarefa(s) e {atribuicoes.filter((a) => a.id_vigencia === duplicando.id).length} atribuição(ões).
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">Fez, Não fez, bonificações, penalidades atingidas e contadores não serão copiados.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="duplicar-inicio">Novo início <span className="text-destructive" aria-hidden="true">*</span></Label>
-              <BrDateTimeField
-                id="duplicar-inicio"
-                value={duplicacao.data_inicio}
-                onChange={(data_inicio) => setDuplicacao({ ...duplicacao, data_inicio })}
-              />
-              <p className="text-xs text-muted-foreground">Sugestão automática baseada no fim da última vigência cadastrada.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="duplicar-fim">Novo fim <span className="text-destructive" aria-hidden="true">*</span></Label>
-              <BrDateTimeField
-                id="duplicar-fim"
-                value={duplicacao.data_fim}
-                min={duplicacao.data_inicio}
-                onChange={(data_fim) => setDuplicacao({ ...duplicacao, data_fim })}
-              />
-            </div>
-            <EscolhaPenalidade value={duplicacao} onChange={setDuplicacao} prefix="duplicar" />
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-foreground">
+              Serão copiadas todas as informações da última vigência, incluindo os filhos vinculados às tarefas, para a nova vigência.
+              Você poderá editar essa nova vigência depois pelo menu <strong>Vigências</strong>.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Os registros de Fez/Não fez, bonificações, penalidades atingidas e contadores não serão copiados.
+            </p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDuplicando(null)}>Cancelar</Button>
-              <Button type="submit"><Copy className="h-4 w-4" /> Criar nova vigência</Button>
+              <Button type="button" onClick={() => void runAction(duplicarVigencia)}>
+                <Copy className="h-4 w-4" /> Confirmar
+              </Button>
             </DialogFooter>
-          </form>
+          </div>
         )}
       </DialogContent>
     </Dialog>
