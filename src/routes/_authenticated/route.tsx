@@ -14,6 +14,8 @@ import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
+import { AppPushNotifications } from "@/components/AppPushNotifications";
+import { desativarPushAtual } from "@/lib/push-notifications";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -153,6 +155,11 @@ function AuthenticatedLayout() {
     setSalvando(true);
     setMenuMobileAberto(false);
     await qc.cancelQueries();
+    try {
+      await desativarPushAtual();
+    } catch (error) {
+      console.error("Não foi possível desativar o push deste aparelho ao sair:", error);
+    }
     await supabase.auth.signOut();
     qc.clear();
     navigate({ to: "/", replace: true });
@@ -275,6 +282,7 @@ function AuthenticatedLayout() {
 
   return (
     <>
+      {!saindo && <AppPushNotifications />}
       {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="native-safe-area min-h-screen md:flex">
