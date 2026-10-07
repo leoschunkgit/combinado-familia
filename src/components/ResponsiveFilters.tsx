@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
+type FilterRenderer = (surface: "desktop" | "mobile") => ReactNode;
+
 export function ResponsiveFilters({
-  children,
+  renderFilters,
   onApply,
   desktopClassName,
 }: {
-  children: ReactNode;
+  renderFilters: FilterRenderer;
   onApply: () => void;
   desktopClassName?: string;
 }) {
@@ -49,7 +51,7 @@ export function ResponsiveFilters({
             desktopClassName,
           )}
         >
-          {children}
+          {renderFilters("desktop")}
           <Button type="button" onClick={onApply}>
             <Search className="h-4 w-4" />
             Pesquisar
@@ -69,7 +71,7 @@ export function ResponsiveFilters({
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-6 space-y-4">{children}</div>
+          <div className="mt-6 space-y-4">{renderFilters("mobile")}</div>
 
           <SheetFooter className="mt-6">
             <Button type="button" className="w-full sm:w-auto" onClick={aplicar}>
