@@ -225,7 +225,16 @@ function AuthenticatedLayout() {
             : "group flex w-full items-center justify-between rounded-md px-1.5 py-1.5 text-left text-[11px] font-extrabold uppercase tracking-wide text-foreground transition hover:bg-sidebar-accent/60"}
           aria-expanded={aberto}
         >
-          <span>{grupo.titulo}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <span>{grupo.titulo}</span>
+            {!aberto && grupo.titulo === "Dia a dia" && quantidadeNotificacoes > 0 && (
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full bg-destructive ring-2 ring-sidebar"
+                aria-label={`${quantidadeNotificacoes} pendência(s)`}
+                title={`${quantidadeNotificacoes} pendência(s)`}
+              />
+            )}
+          </span>
           <CollapseChevron open={aberto} className={mobile ? "h-7 w-7" : "h-6 w-6"} />
         </button>
         {aberto && (
