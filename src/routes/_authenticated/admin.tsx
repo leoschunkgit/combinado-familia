@@ -1,3 +1,4 @@
+import { uiTypography } from "@/lib/ui-typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
@@ -86,7 +87,7 @@ function Admin() {
       <div><div className="flex items-center gap-2"><UserCog className="h-6 w-6 text-primary" /><h1 className="text-2xl font-bold">Minha conta</h1></div><p className="mt-1 text-muted-foreground">Consulte seus dados pessoais e atualize seu nome.</p></div>
       <div className="max-w-xl space-y-6">
         <section className="rounded-xl border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">Dados pessoais</h2>
+          <h2 className={uiTypography.secondaryTitle}>Dados pessoais</h2>
           <p className="mb-5 mt-1 text-sm text-muted-foreground">Altere seu nome. O email é apenas para consulta.</p>
           <form onSubmit={(e) => { void runAction(() => salvarDados(e)); }} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="admin-nome">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="admin-nome" value={nome} onChange={(e) => setNome(e.target.value)} required /></div>
@@ -96,7 +97,7 @@ function Admin() {
         </section>
 
         <section className="rounded-xl border border-destructive/30 bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-destructive">Excluir conta</h2>
+          <h2 className={`${uiTypography.secondaryTitle} text-destructive`}>Excluir conta</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Exclui permanentemente sua conta e os dados vinculados, incluindo filhos, tarefas, vigências, atribuições, ocorrências, histórico e links públicos.
           </p>
