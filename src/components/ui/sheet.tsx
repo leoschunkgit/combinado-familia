@@ -5,7 +5,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
-import { ModalCloseIcon, modalCloseButtonClass } from "@/components/ui/modal-close";
+import { ModalCloseIcon, sheetCloseButtonClass } from "@/components/ui/modal-close";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -61,7 +61,7 @@ const SheetContent = React.forwardRef<
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-      <SheetPrimitive.Close className={modalCloseButtonClass}>
+      <SheetPrimitive.Close className={sheetCloseButtonClass}>
         <ModalCloseIcon />
       </SheetPrimitive.Close>
       {children}
