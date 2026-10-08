@@ -483,10 +483,10 @@ function CadastroUnicoPage() {
                   <div className="rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-                      {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) !== null && <p className="text-sm text-muted-foreground">Seu ciclo tem {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)} {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) === 1 ? "dia" : "dias"}.</p>}
-                      <Label>Escolha o limite máximo de “Não fez” que seu filho pode ter neste ciclo</Label>
+                      {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)} {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) === 1 ? "dia" : "dias"}.</p>}
+                      <Label>Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência</Label>
                       <Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} />
-                      <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho no ciclo, independentemente da quantidade de tarefas atribuídas a ele.</p>
+                      <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
                     </div>
                   </div>
                   <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
