@@ -1,4 +1,65 @@
-import type { Ocorrencia, Vigencia } from "@/lib/db";
+import type { Filho, Ocorrencia, Vigencia } from "@/lib/db";
+import { usaDesconto } from "@/lib/mesada";
+
+export function contarNaoFezPorFilhoVigencia(
+  ocorrencias: Ocorrencia[],
+  idFilho: number,
+  idVigencia: number,
+) {
+  return ocorrencias.filter(
+    (o) =>
+      o.tipo !== "FEZ" &&
+      o.t_filho_tarefa?.id_filho === idFilho &&
+      o.t_filho_tarefa?.id_vigencia === idVigencia,
+  ).length;
+}
+
+export function penalidadeJaFoiAplicada(
+  vigencia: Pick<Vigencia, "id" | "penalidade" | "qtd_ocorrencia" | "valor_debito">,
+  filhos: Filho[],
+  ocorrencias: Ocorrencia[],
+) {
+  if (!vigencia.penalidade?.trim()) return false;
+
+  return filhos.some((filho) => {
+    if (usaDesconto(filho, vigencia)) return false;
+    return contarNaoFezPorFilhoVigencia(ocorrencias, filho.id, vigencia.id) >= vigencia.qtd_ocorrencia;
+  });
+}
+
+export function validarAlteracaoLimiteNaoFez(params: {
+  vigencia: Pick<Vigencia, "id" | "penalidade" | "qtd_ocorrencia" | "valor_debito">;
+  novoLimite: number;
+  filhos: Filho[];
+  ocorrencias: Ocorrencia[];
+}) {
+  const { vigencia, novoLimite, filhos, ocorrencias } = params;
+
+  if (novoLimite === vigencia.qtd_ocorrencia) return { ok: true as const };
+
+  if (penalidadeJaFoiAplicada(vigencia, filhos, ocorrencias)) {
+    return {
+      ok: false as const,
+      mensagem: "O limite de “Não fez” não pode ser alterado depois que a penalidade já foi aplicada nesta vigência.",
+    };
+  }
+
+  const filhosSemMesada = filhos.filter((filho) => !usaDesconto(filho, vigencia));
+  const maiorTotalSemMesada = filhosSemMesada.reduce(
+    (maior, filho) =>
+      Math.max(maior, contarNaoFezPorFilhoVigencia(ocorrencias, filho.id, vigencia.id)),
+    0,
+  );
+
+  if (novoLimite <= maiorTotalSemMesada) {
+    return {
+      ok: false as const,
+      mensagem: `O novo limite deve ser maior que a quantidade atual de “Não fez” dos filhos sem mesada. Maior quantidade atual: ${maiorTotalSemMesada}.`,
+    };
+  }
+
+  return { ok: true as const };
+}
 
 /** Identifica o registro de “Não fez” que alcança o limite atual de cada filho e vigência. */
 export function ocorrenciasPenalizadas(ocorrencias: Ocorrencia[], vigencias: Vigencia[]): Set<number> {
