@@ -81,7 +81,7 @@ const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { t
 const diaCampo = (valor: string) => valor.slice(0, 10);
 const dadosRegra = (v: Pick<VigenciaForm, "valor_debito">) => ({ tipo_penalidade: "texto", valor_debito: Number(v.valor_debito.replace(",", ".")) });
 
-function diasDoCiclo(inicioCampo: string, fimCampo: string) {
+function diasDaVigencia(inicioCampo: string, fimCampo: string) {
   const dataUtc = (valor: string) => {
     const partes = valor.slice(0, 10).split("-").map(Number);
     if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
@@ -94,7 +94,7 @@ function diasDoCiclo(inicioCampo: string, fimCampo: string) {
 }
 
 function RegrasVigencia({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
-  const dias = diasDoCiclo(value.data_inicio, value.data_fim);
+  const dias = diasDaVigencia(value.data_inicio, value.data_fim);
   return <div className="space-y-3">
     <div className="rounded-lg border border-amber-400 bg-amber-50/60 md:border-amber-300/70 md:bg-amber-50/30 p-3 space-y-2 dark:border-amber-700/60 dark:bg-amber-950/10">
       <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
