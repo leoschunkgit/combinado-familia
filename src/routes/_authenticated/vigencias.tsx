@@ -104,7 +104,7 @@ function RegrasVigencia({ value, onChange, prefix }: { value: VigenciaForm; onCh
       <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
     </div>
     <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 md:border-emerald-300/70 md:bg-emerald-50/30 p-3 space-y-2 dark:border-emerald-700/60 dark:bg-emerald-950/10">
-      <p className="text-sm font-semibold">2 — Para filhos com mesada</p>
+      <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
       <Label htmlFor={`${prefix}-valor`}>Desconto por cada “Não fez” na mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label>
       <CurrencyInput id={`${prefix}-valor`} value={value.valor_debito} onValueChange={(valor_debito) => onChange({ ...value, valor_debito })} />
     </div>
@@ -317,7 +317,7 @@ function VigenciasPage() {
                 {v.penalidade && <><span className="text-muted-foreground"> · </span><span className="font-semibold text-foreground">Penalidade aplicada:</span>{" "}<span className="text-muted-foreground">{v.penalidade}</span></>}
               </div>
               <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 md:border-emerald-300/70 md:bg-emerald-50/30 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10">
-                <span className="font-semibold text-foreground">Para filhos com mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} de desconto por cada “Não fez”` : "Não cadastrado"}</span>
+                <span className="font-semibold text-foreground">Para filhos marcados com mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} de desconto por cada “Não fez”` : "Não cadastrado"}</span>
               </div>
             </div>
           </div>;
