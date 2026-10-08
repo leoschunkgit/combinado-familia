@@ -63,7 +63,7 @@ export function OnboardingInicial() {
   const fimPadrao = new Date(agora.getTime() + 30 * 24 * 60 * 60 * 1000);
   const [inicioVigencia, setInicioVigencia] = useState(() => paraCampoDataHoraBrasil(agora.toISOString()));
   const [fimVigencia, setFimVigencia] = useState(() => paraCampoDataHoraBrasil(fimPadrao.toISOString()));
-  const [quantidade, setQuantidade] = useState("3");
+  const [quantidade, setQuantidade] = useState("0");
   const [desconto, setDesconto] = useState("");
 
   const [filhoSelecionado, setFilhoSelecionado] = useState("");
