@@ -480,7 +480,7 @@ function CadastroUnicoPage() {
                   <div className="space-y-1.5"><Label>Fim</Label><BrDateTimeField id="lote-fim" value={vigenciaDraft.data_fim} min={vigenciaDraft.data_inicio} onChange={(data_fim) => setVigenciaDraft({ ...vigenciaDraft, data_fim })} /></div>
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
+                  <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
                       {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)} {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) === 1 ? "dia" : "dias"}.</p>}
@@ -489,7 +489,7 @@ function CadastroUnicoPage() {
                       <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
+                  <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
                       <Label>Desconto por cada “Não fez” na mesada (R$)</Label>
