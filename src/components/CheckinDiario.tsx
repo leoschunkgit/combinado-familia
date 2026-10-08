@@ -495,6 +495,5 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    </>
-  );
+    </>;
 }
