@@ -491,7 +491,7 @@ function CadastroUnicoPage() {
                   </div>
                   <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
                     <div className="space-y-2">
-                      <p className="text-sm font-semibold">2 — Para filhos com mesada</p>
+                      <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
                       <Label>Desconto por cada “Não fez” na mesada (R$)</Label>
                       <CurrencyInput value={vigenciaDraft.valor_debito} onValueChange={(valor_debito) => setVigenciaDraft({ ...vigenciaDraft, valor_debito })} />
                     </div>
