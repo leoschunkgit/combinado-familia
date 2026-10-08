@@ -14,17 +14,24 @@ export function contarNaoFezPorFilhoVigencia(
   ).length;
 }
 
+export function existeFilhoSemMesadaNoLimite(
+  vigencia: Pick<Vigencia, "id" | "qtd_ocorrencia" | "valor_debito">,
+  filhos: Filho[],
+  ocorrencias: Ocorrencia[],
+) {
+  return filhos.some((filho) => {
+    if (usaDesconto(filho, vigencia)) return false;
+    return contarNaoFezPorFilhoVigencia(ocorrencias, filho.id, vigencia.id) >= vigencia.qtd_ocorrencia;
+  });
+}
+
 export function penalidadeJaFoiAplicada(
   vigencia: Pick<Vigencia, "id" | "penalidade" | "qtd_ocorrencia" | "valor_debito">,
   filhos: Filho[],
   ocorrencias: Ocorrencia[],
 ) {
   if (!vigencia.penalidade?.trim()) return false;
-
-  return filhos.some((filho) => {
-    if (usaDesconto(filho, vigencia)) return false;
-    return contarNaoFezPorFilhoVigencia(ocorrencias, filho.id, vigencia.id) >= vigencia.qtd_ocorrencia;
-  });
+  return existeFilhoSemMesadaNoLimite(vigencia, filhos, ocorrencias);
 }
 
 export function validarAlteracaoLimiteNaoFez(params: {
