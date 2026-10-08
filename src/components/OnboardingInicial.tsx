@@ -388,7 +388,7 @@ export function OnboardingInicial() {
               <div className="space-y-2"><Label>Data início *</Label><BrDateTimeField id="onboarding-inicio-vigencia" value={inicioVigencia} onChange={setInicioVigencia} /></div>
               <div className="space-y-2"><Label>Data fim *</Label><BrDateTimeField id="onboarding-fim-vigencia" value={fimVigencia} onChange={setFimVigencia} /></div>
             </div>
-            <div className="rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
+            <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
               <div className="space-y-2">
                 <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
                 {diasDaVigencia(inicioVigencia, fimVigencia) !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasDaVigencia(inicioVigencia, fimVigencia)} {diasDaVigencia(inicioVigencia, fimVigencia) === 1 ? "dia" : "dias"}.</p>}
@@ -397,7 +397,7 @@ export function OnboardingInicial() {
                 <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
               </div>
             </div>
-            <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
+            <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
               <div className="space-y-2">
                 <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
                 <Label htmlFor="onboarding-desconto">Desconto por cada “Não fez” na mesada (R$) *</Label>
