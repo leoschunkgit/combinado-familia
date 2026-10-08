@@ -399,7 +399,7 @@ export function OnboardingInicial() {
             </div>
             <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
               <div className="space-y-2">
-                <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
+                <p className="text-sm font-semibold">2 — Para filhos com mesada</p>
                 <Label htmlFor="onboarding-desconto">Desconto por cada “Não fez” na mesada (R$) *</Label>
                 <CurrencyInput id="onboarding-desconto" value={desconto} onValueChange={setDesconto} placeholder="R$ 20,00" />
               </div>
