@@ -328,8 +328,8 @@ function VigenciasPage() {
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>Adicionar vigência</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-          <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm({ ...form, data_inicio })} /></div>
-          <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} onChange={(data_fim) => setForm({ ...form, data_fim })} /></div>
+          <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm((atual) => ({ ...atual, data_inicio }))} /></div>
+          <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} min={form.data_inicio} onChange={(data_fim) => setForm((atual) => ({ ...atual, data_fim }))} /></div>
           <RegrasVigencia value={form} onChange={setForm} prefix="novo" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setNovoAberto(false)}>Cancelar</Button>
