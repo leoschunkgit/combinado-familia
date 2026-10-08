@@ -48,7 +48,7 @@ const vigenciaInicial = (): VigenciaDraft => {
   return {
     data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
     data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
-    qtd_ocorrencia: "3",
+    qtd_ocorrencia: "0",
     valor_debito: "",
   };
 };
