@@ -330,7 +330,7 @@ function CadastroUnicoPage() {
           {etapaNovo === 1 && (
             <Card className="overflow-hidden border-primary/20">
               <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">1</span><span className="flex items-center gap-2"><Users className="h-4 w-4" /> Filhos</span></CardTitle></CardHeader>
-              <CardContent className="space-y-3 p-3.5">
+              <CardContent className="space-y-3 px-3.5 pb-3.5 pt-5">
                 <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar novo filho</p>
                                     <div className="mt-2 flex flex-wrap items-end gap-2">
@@ -409,7 +409,7 @@ function CadastroUnicoPage() {
           {etapaNovo === 2 && (
             <Card className="overflow-hidden border-primary/20">
               <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">2</span><span className="flex items-center gap-2"><ListTodo className="h-4 w-4" /> Tarefas</span></CardTitle></CardHeader>
-              <CardContent className="space-y-3 p-3.5">
+              <CardContent className="space-y-3 px-3.5 pb-3.5 pt-5">
                 <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar nova tarefa</p>
                   <div className="mt-2 flex flex-wrap items-end gap-2">
@@ -477,7 +477,7 @@ function CadastroUnicoPage() {
           {etapaNovo === 3 && (
             <Card className="overflow-hidden border-primary/20">
               <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span><span className="flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Vigência</span></CardTitle></CardHeader>
-              <CardContent className="space-y-3 p-3.5">
+              <CardContent className="space-y-3 px-3.5 pb-3.5 pt-5">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5"><Label>Início</Label><BrDateTimeField id="lote-inicio" value={vigenciaDraft.data_inicio} onChange={(data_inicio) => setVigenciaDraft({ ...vigenciaDraft, data_inicio })} /></div>
                   <div className="space-y-1.5"><Label>Fim</Label><BrDateTimeField id="lote-fim" value={vigenciaDraft.data_fim} min={vigenciaDraft.data_inicio} onChange={(data_fim) => setVigenciaDraft({ ...vigenciaDraft, data_fim })} /></div>
@@ -508,7 +508,7 @@ function CadastroUnicoPage() {
           {etapaNovo === 4 && (
             <Card className="overflow-hidden border-primary/20">
               <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">4</span><span className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Atribuições</span></CardTitle></CardHeader>
-              <CardContent className="space-y-3 p-3.5">
+              <CardContent className="space-y-3 px-3.5 pb-3.5 pt-5">
                 <p className="text-sm text-muted-foreground">Escolha quais tarefas pertencem a cada filho.</p>
 
                 <div className="space-y-2">
