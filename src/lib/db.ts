@@ -40,7 +40,7 @@ export type Tarefa = Tables<"t_tarefa">;
 export type FilhoTarefa = Tables<"t_filho_tarefa"> & {
   t_filho: Pick<Filho, "nome"> | null;
   t_tarefa: Pick<Tarefa, "nome"> | null;
-  t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade" | "qtd_ocorrencia" | "tipo_penalidade" | "valor_debito"> | null;
+  t_vigencia: Pick<Vigencia, "id" | "data_inicio" | "data_fim" | "penalidade" | "qtd_ocorrencia" | "tipo_penalidade" | "valor_debito"> | null;
 };
 
 async function unwrap<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>) {
@@ -78,7 +78,7 @@ export const useTarefas = () =>
   });
 
 export const FT_SELECT =
-  "*, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim, penalidade, qtd_ocorrencia, tipo_penalidade, valor_debito)";
+  "*, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(id, data_inicio, data_fim, penalidade, qtd_ocorrencia, tipo_penalidade, valor_debito)";
 
 export const useFilhoTarefas = () =>
   useQuery({

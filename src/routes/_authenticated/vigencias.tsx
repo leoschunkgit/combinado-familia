@@ -85,7 +85,9 @@ function diasDaVigencia(inicioCampo: string, fimCampo: string) {
   const dataUtc = (valor: string) => {
     const partes = valor.slice(0, 10).split("-").map(Number);
     if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
-    return Date.UTC(partes[0], partes[1] - 1, partes[2]);
+    const [ano, mes, dia] = partes;
+    if (ano === undefined || mes === undefined || dia === undefined) return null;
+    return Date.UTC(ano, mes - 1, dia);
   };
   const inicio = dataUtc(inicioCampo);
   const fim = dataUtc(fimCampo);

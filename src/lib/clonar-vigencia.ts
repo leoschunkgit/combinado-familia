@@ -55,7 +55,8 @@ export async function clonarUltimaVigencia(
     p_modelo_id: origem.id,
     p_data_inicio: paraIsoDataHoraBrasil(dataInicio),
     p_data_fim: paraIsoDataHoraBrasil(dataFim),
-    p_penalidade: null,
+    // PostgreSQL accepts null here; generated RPC argument types omit nullability.
+    p_penalidade: null as unknown as string,
     p_qtd_ocorrencia: Number(origem.qtd_ocorrencia),
     p_valor_debito: Number(origem.valor_debito),
   });
