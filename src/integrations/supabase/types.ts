@@ -450,7 +450,7 @@ export type Database = {
           p_data_fim: string
           p_data_inicio: string
           p_modelo_id: number
-          p_penalidade: string | null
+          p_penalidade: string
           p_qtd_ocorrencia: number
           p_valor_debito: number
         }
