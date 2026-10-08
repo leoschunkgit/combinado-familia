@@ -29,6 +29,18 @@ import { useActionLoading } from "@/components/ActionLoading";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 
+function diasDoCiclo(inicioCampo: string, fimCampo: string) {
+  const dataUtc = (valor: string) => {
+    const partes = valor.slice(0, 10).split("-").map(Number);
+    if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
+    return Date.UTC(partes[0], partes[1] - 1, partes[2]);
+  };
+  const inicio = dataUtc(inicioCampo);
+  const fim = dataUtc(fimCampo);
+  if (inicio === null || fim === null || fim < inicio) return null;
+  return Math.floor((fim - inicio) / 86400000) + 1;
+}
+
 export function OnboardingInicial() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -51,7 +63,6 @@ export function OnboardingInicial() {
   const fimPadrao = new Date(agora.getTime() + 30 * 24 * 60 * 60 * 1000);
   const [inicioVigencia, setInicioVigencia] = useState(() => paraCampoDataHoraBrasil(agora.toISOString()));
   const [fimVigencia, setFimVigencia] = useState(() => paraCampoDataHoraBrasil(fimPadrao.toISOString()));
-  const [penalidade, setPenalidade] = useState("");
   const [quantidade, setQuantidade] = useState("3");
   const [desconto, setDesconto] = useState("");
 
@@ -178,7 +189,6 @@ export function OnboardingInicial() {
     setVigenciaEmCorrecaoId(vigencia.id);
     setInicioVigencia(paraCampoDataHoraBrasil(vigencia.data_inicio));
     setFimVigencia(paraCampoDataHoraBrasil(vigencia.data_fim));
-    setPenalidade(vigencia.penalidade ?? "");
     setQuantidade(String(vigencia.qtd_ocorrencia));
     setDesconto(vigencia.valor_debito === null ? "" : vigencia.valor_debito.toFixed(2).replace(".", ","));
   }
@@ -198,16 +208,6 @@ export function OnboardingInicial() {
 
     if (inicio > Date.now()) {
       toast.error("Para concluir o aprendizado agora, a vigência precisa começar agora ou antes");
-      return;
-    }
-
-    const textoPenalidade = penalidade.trim();
-    if (textoPenalidade.length < 2) {
-      toast.error("Informe a penalidade");
-      return;
-    }
-    if (textoPenalidade.length > 200) {
-      toast.error("A penalidade deve ter no máximo 200 caracteres");
       return;
     }
 
@@ -239,13 +239,12 @@ export function OnboardingInicial() {
     const payload = {
       data_inicio: paraIsoDataHoraBrasil(inicioVigencia),
       data_fim: paraIsoDataHoraBrasil(fimVigencia),
-      penalidade: textoPenalidade,
       qtd_ocorrencia: qtd,
       tipo_penalidade: "texto",
       valor_debito: valorDebito,
     };
     const resultado = vigenciaEmCorrecaoId === null
-      ? await supabase.from("t_vigencia").insert(payload).select("id").single()
+      ? await supabase.from("t_vigencia").insert({ ...payload, penalidade: null }).select("id").single()
       : await supabase.from("t_vigencia").update(payload).eq("id", vigenciaEmCorrecaoId).select("id").single();
     const { data: vigenciaSalva, error } = resultado;
     setSalvando(false);
@@ -391,20 +390,18 @@ export function OnboardingInicial() {
             </div>
             <div className="rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
               <div className="space-y-2">
-                <Label htmlFor="onboarding-penalidade">Penalidade *</Label>
-                <Input id="onboarding-penalidade" value={penalidade} onChange={(e) => setPenalidade(e.target.value)} placeholder="Ex.: Sem videogame no fim de semana" />
-              </div>
-              <div className="mt-3 space-y-2">
-                <Label htmlFor="onboarding-quantidade">Quantidade de “Não fez” para ser penalizado *</Label>
+                <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
+                {diasDoCiclo(inicioVigencia, fimVigencia) !== null && <p className="text-sm text-muted-foreground">Você escolheu um ciclo de {diasDoCiclo(inicioVigencia, fimVigencia)} {diasDoCiclo(inicioVigencia, fimVigencia) === 1 ? "dia" : "dias"}.</p>}
+                <Label htmlFor="onboarding-quantidade">Escolha o limite máximo de “Não fez” que seu filho pode ter neste ciclo *</Label>
                 <Input id="onboarding-quantidade" type="number" min="1" max="31" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} />
-                <p className="text-xs text-muted-foreground">Usado para filhos sem mesada.</p>
+                <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho no ciclo, independentemente da quantidade de tarefas atribuídas a ele.</p>
               </div>
             </div>
             <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
               <div className="space-y-2">
+                <p className="text-sm font-semibold">2 — Para filhos com mesada</p>
                 <Label htmlFor="onboarding-desconto">Desconto por cada “Não fez” na mesada (R$) *</Label>
                 <CurrencyInput id="onboarding-desconto" value={desconto} onValueChange={setDesconto} placeholder="R$ 20,00" />
-                <p className="text-xs text-muted-foreground">Usado para filhos com mesada.</p>
               </div>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
