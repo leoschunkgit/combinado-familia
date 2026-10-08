@@ -319,7 +319,6 @@ function Notificacoes() {
           })}
         </section>
       )}
-    </div>
 
     <Dialog open={Boolean(penalidadePendente)} onOpenChange={(novoEstado) => !novoEstado && !busy && setPenalidadePendente(null)}>
       <DialogContent className="sm:max-w-md">
