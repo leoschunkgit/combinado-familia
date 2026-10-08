@@ -53,7 +53,7 @@ const vigenciaInicial = (): VigenciaDraft => {
   };
 };
 
-function diasDoCiclo(inicioCampo: string, fimCampo: string) {
+function diasDaVigencia(inicioCampo: string, fimCampo: string) {
   const dataUtc = (valor: string) => {
     const partes = valor.slice(0, 10).split("-").map(Number);
     if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
@@ -483,7 +483,7 @@ function CadastroUnicoPage() {
                   <div className="rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-                      {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)} {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) === 1 ? "dia" : "dias"}.</p>}
+                      {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)} {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) === 1 ? "dia" : "dias"}.</p>}
                       <Label>Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência</Label>
                       <Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} />
                       <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
