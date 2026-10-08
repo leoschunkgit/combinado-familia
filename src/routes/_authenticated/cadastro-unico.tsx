@@ -316,11 +316,11 @@ function CadastroUnicoPage() {
       <div className="space-y-2">
           {etapaNovo > 1 && (
             <Card className="overflow-hidden">
-              <CardContent className="flex items-center gap-2.5 px-3 py-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">1. Filhos</p>
-                  <p className="truncate text-xs text-muted-foreground">{filhosSelecionados.length} filho(s) selecionado(s) para este fluxo</p>
+              <CardContent className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-2.5 px-3 py-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-5">1. Filhos</p>
+                  <p className="truncate text-xs leading-4 text-muted-foreground">{filhosSelecionados.length} filho(s) selecionado(s) para este fluxo</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setEtapaNovo(1)}>Editar</Button>
               </CardContent>
@@ -395,9 +395,12 @@ function CadastroUnicoPage() {
 
           {etapaNovo > 2 && (
             <Card className="overflow-hidden">
-              <CardContent className="flex items-center gap-2.5 px-3 py-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
-                <div className="min-w-0 flex-1"><p className="text-sm font-semibold">2. Tarefas</p><p className="truncate text-xs text-muted-foreground">{tarefasSelecionadas.length} tarefa(s) selecionada(s)</p></div>
+              <CardContent className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-2.5 px-3 py-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-5">2. Tarefas</p>
+                  <p className="truncate text-xs leading-4 text-muted-foreground">{tarefasSelecionadas.length} tarefa(s) selecionada(s)</p>
+                </div>
                 <Button variant="ghost" size="sm" onClick={() => setEtapaNovo(2)}>Editar</Button>
               </CardContent>
             </Card>
