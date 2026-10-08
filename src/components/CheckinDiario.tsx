@@ -459,7 +459,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
     </Dialog>
 
     <Dialog open={Boolean(penalidadePendente)} onOpenChange={(novoEstado) => !novoEstado && !busy && setPenalidadePendente(null)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="top-[calc(env(safe-area-inset-top)+1rem)] translate-y-0 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Aplicar penalidade</DialogTitle>
           <DialogDescription>Qual será a penalidade aplicada agora?</DialogDescription>
