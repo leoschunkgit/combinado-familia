@@ -22,7 +22,7 @@ export const Route = createFileRoute("/acompanhar/$token")({
 
 type Ocorrencia = { tipo: "FEZ" | "NAO_FEZ"; data: string; bonificacao_tipo: "TEXTO" | "VALOR" | null; bonificacao_descricao: string | null; bonificacao_valor: number | null };
 type Tarefa = { id: number; nome: string; ocorrencias: Ocorrencia[] };
-type Vigencia = { id: number; data_inicio: string; data_fim: string; penalidade: string; qtd_ocorrencia: number; valor_debito: number | null; tarefas: Tarefa[] };
+type Vigencia = { id: number; data_inicio: string; data_fim: string; penalidade: string | null; qtd_ocorrencia: number; valor_debito: number | null; tarefas: Tarefa[] };
 type Painel = { filho: { nome: string; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
 
 const dataHora = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(v));
