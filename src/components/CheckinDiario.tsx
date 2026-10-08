@@ -251,7 +251,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
   }
 
 
-  return <>
+  return (<>
     <Dialog open={aberto} onOpenChange={(novoEstado) => !busy && onOpenChange(novoEstado)}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>

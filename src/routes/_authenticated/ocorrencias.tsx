@@ -31,7 +31,7 @@ type BonusTipo="NENHUMA"|"TEXTO"|"VALOR";
 type FezDraft={modo:"REGISTRAR"|"EDITAR";ocorrenciaId?:number;tarefa:FilhoTarefa;total:number;data:string;bonusTipo:BonusTipo;descricao:string;valor:string};
 type Troca={direcao:"PARA_FEZ"|"PARA_NAO_FEZ";tarefa:FilhoTarefa;total:number;ocorrencia:Ocorrencia;fez?:FezDraft};
 type ExcluirSelecionadasDraft={tarefa:FilhoTarefa;ids:number[]};
-type PenalidadeDraft={tarefa:FilhoTarefa;total:number;existente?:Ocorrencia;descricao:string};
+type PenalidadeDraft={tarefa:FilhoTarefa;total:number;existente?:Ocorrencia | undefined;descricao:string};
 
 function OcorrenciasPage(){
  const qc=useQueryClient();const {runAction}=useActionLoading();const {data:vigencias=[]}=useVigencias();const {data:filhos=[]}=useFilhos();const {data:todas=[],isLoading}=useFilhoTarefas();const {data:tarefas=[]}=useTarefas();const {data:ocorrencias=[]}=useOcorrencias();
