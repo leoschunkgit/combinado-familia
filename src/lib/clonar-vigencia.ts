@@ -29,8 +29,9 @@ function montarPeriodoClone(vigencias: Vigencia[], origem: Vigencia) {
     : new Date(origem.data_fim);
   inicio.setDate(inicio.getDate() + 1);
 
-  const fim = new Date(inicio);
-  fim.setMonth(fim.getMonth() + 1);
+  const duracaoVigenciaMs =
+    new Date(origem.data_fim).getTime() - new Date(origem.data_inicio).getTime();
+  const fim = new Date(inicio.getTime() + duracaoVigenciaMs);
 
   return {
     dataInicio: paraCampoDataHoraBrasil(inicio.toISOString()),
