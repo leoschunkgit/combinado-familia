@@ -46,7 +46,7 @@ const schema = z.object({
 .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
 type VigenciaForm = { data_inicio: string; data_fim: string; valor_debito: string; qtd_ocorrencia: string };
-const vazio: VigenciaForm = { data_inicio: "", data_fim: "", valor_debito: "", qtd_ocorrencia: "3" };
+const vazio: VigenciaForm = { data_inicio: "", data_fim: "", valor_debito: "", qtd_ocorrencia: "0" };
 
 function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, base: VigenciaForm = vazio): VigenciaForm {
   if (vigencias.length === 0) {
