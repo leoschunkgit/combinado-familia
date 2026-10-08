@@ -38,7 +38,6 @@ type TarefaNovaFluxo = {
 type VigenciaDraft = {
   data_inicio: string;
   data_fim: string;
-  penalidade: string;
   qtd_ocorrencia: string;
   valor_debito: string;
 };
@@ -49,11 +48,22 @@ const vigenciaInicial = (): VigenciaDraft => {
   return {
     data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
     data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
-    penalidade: "",
     qtd_ocorrencia: "3",
     valor_debito: "",
   };
 };
+
+function diasDoCiclo(inicioCampo: string, fimCampo: string) {
+  const dataUtc = (valor: string) => {
+    const partes = valor.slice(0, 10).split("-").map(Number);
+    if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
+    return Date.UTC(partes[0], partes[1] - 1, partes[2]);
+  };
+  const inicio = dataUtc(inicioCampo);
+  const fim = dataUtc(fimCampo);
+  if (inicio === null || fim === null || fim < inicio) return null;
+  return Math.floor((fim - inicio) / 86400000) + 1;
+}
 
 function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, atual: VigenciaDraft): VigenciaDraft {
   if (vigencias.length === 0) return atual;
@@ -201,8 +211,6 @@ function CadastroUnicoPage() {
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft.data_inicio) || Number.isNaN(new Date(draft.data_inicio).getTime())) return "Informe uma data e hora de início válidas";
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft.data_fim) || Number.isNaN(new Date(draft.data_fim).getTime())) return "Informe uma data e hora de fim válidas";
     if (new Date(draft.data_fim).getTime() <= new Date(draft.data_inicio).getTime()) return "A data/hora fim deve ser posterior à data/hora início";
-    if (draft.penalidade.trim().length < 2) return "Informe a penalidade";
-    if (draft.penalidade.trim().length > 200) return "A penalidade deve ter no máximo 200 caracteres";
     const qtd = Number(draft.qtd_ocorrencia);
     if (!Number.isInteger(qtd) || qtd < 1) return "Mínimo de 1 ocorrência";
     if (qtd > 31) return "Máximo de 31";
@@ -232,7 +240,7 @@ function CadastroUnicoPage() {
     const payload = {
       data_inicio: paraIsoDataHoraBrasil(vigenciaDraft.data_inicio),
       data_fim: paraIsoDataHoraBrasil(vigenciaDraft.data_fim),
-      penalidade: vigenciaDraft.penalidade.trim(),
+      penalidade: null,
       qtd_ocorrencia: Number(vigenciaDraft.qtd_ocorrencia),
       tipo_penalidade: "texto",
       valor_debito: Number(vigenciaDraft.valor_debito.replace(",", ".")),
@@ -471,10 +479,23 @@ function CadastroUnicoPage() {
                   <div className="space-y-1.5"><Label>Início</Label><BrDateTimeField id="lote-inicio" value={vigenciaDraft.data_inicio} onChange={(data_inicio) => setVigenciaDraft({ ...vigenciaDraft, data_inicio })} /></div>
                   <div className="space-y-1.5"><Label>Fim</Label><BrDateTimeField id="lote-fim" value={vigenciaDraft.data_fim} min={vigenciaDraft.data_inicio} onChange={(data_fim) => setVigenciaDraft({ ...vigenciaDraft, data_fim })} /></div>
                 </div>
-                <div className="grid gap-3 md:grid-cols-[1.4fr_0.8fr_1fr]">
-                  <div className="space-y-1.5"><Label>Penalidade</Label><Input value={vigenciaDraft.penalidade} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, penalidade: e.target.value })} /></div>
-                  <div className="space-y-1.5"><Label>Quantidade de “Não fez”</Label><Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} /></div>
-                  <div className="space-y-1.5"><Label>Desconto por “Não fez”</Label><CurrencyInput value={vigenciaDraft.valor_debito} onValueChange={(valor_debito) => setVigenciaDraft({ ...vigenciaDraft, valor_debito })} /></div>
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
+                      {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) !== null && <p className="text-sm text-muted-foreground">Você escolheu um ciclo de {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)} {diasDoCiclo(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) === 1 ? "dia" : "dias"}.</p>}
+                      <Label>Escolha o limite máximo de “Não fez” que seu filho pode ter neste ciclo</Label>
+                      <Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} />
+                      <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho no ciclo, independentemente da quantidade de tarefas atribuídas a ele.</p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold">2 — Para filhos com mesada</p>
+                      <Label>Desconto por cada “Não fez” na mesada (R$)</Label>
+                      <CurrencyInput value={vigenciaDraft.valor_debito} onValueChange={(valor_debito) => setVigenciaDraft({ ...vigenciaDraft, valor_debito })} />
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between border-t pt-2.5"><Button variant="ghost" size="sm" onClick={() => setEtapaNovo(2)}>Anterior</Button><Button onClick={() => void runAction(criarVigencia)}>Criar vigência e continuar</Button></div>
               </CardContent>
