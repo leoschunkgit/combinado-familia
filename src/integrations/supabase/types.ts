@@ -398,7 +398,7 @@ export type Database = {
           data_inicio: string
           id: number
           id_usuario_pai: number
-          penalidade: string
+          penalidade: string | null
           qtd_ocorrencia: number
           tipo_penalidade: string
           valor_debito: number | null
@@ -409,7 +409,7 @@ export type Database = {
           data_inicio: string
           id?: never
           id_usuario_pai?: number
-          penalidade: string
+          penalidade?: string | null
           qtd_ocorrencia?: number
           tipo_penalidade?: string
           valor_debito?: number | null
@@ -420,7 +420,7 @@ export type Database = {
           data_inicio?: string
           id?: never
           id_usuario_pai?: number
-          penalidade?: string
+          penalidade?: string | null
           qtd_ocorrencia?: number
           tipo_penalidade?: string
           valor_debito?: number | null
@@ -450,7 +450,7 @@ export type Database = {
           p_data_fim: string
           p_data_inicio: string
           p_modelo_id: number
-          p_penalidade: string
+          p_penalidade: string | null
           p_qtd_ocorrencia: number
           p_valor_debito: number
         }
