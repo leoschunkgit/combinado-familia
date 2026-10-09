@@ -315,7 +315,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
       if (resultado.comDesconto && filho) {
         toast.success(
-          `Não fez registrado · Desconto acumulado: ${reais(
+          `“Não fez” registrado · Desconto acumulado: ${reais(
             valorDebitado(filho, vigencia, resultado.novoTotal),
           )}`,
         );
@@ -323,7 +323,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
       } else {
         toast.success(
-          `Não fez registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})`,
+          `“Não fez” registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})`,
         );
       }
     } catch (error) {
@@ -526,8 +526,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       setTroca(null);
       toast.success(
         draft.bonusTipo === "NENHUMA"
-          ? "Fez registrado"
-          : "Fez registrado com bonificação",
+          ? "“Fez” registrado"
+          : "“Fez” registrado com bonificação",
       );
     } catch (error) {
       toast.error(
@@ -546,7 +546,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         (o) => o.id === fez.ocorrenciaId && o.tipo === "FEZ",
       );
       if (!existente) {
-        toast.error("Registro de Fez não encontrado");
+        toast.error("Registro de “Fez” não encontrado");
         return;
       }
       await salvarFez(fez, existente);

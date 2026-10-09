@@ -119,12 +119,12 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
 
       if (resultado.comDesconto && filho) {
         toast.success(
-          `Não fez registrado · Desconto acumulado: ${reais(valorDebitado(filho, v, resultado.novoTotal))}`,
+          `“Não fez” registrado · Desconto acumulado: ${reais(valorDebitado(filho, v, resultado.novoTotal))}`,
         );
       } else if (resultado.penalizado) {
         toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
       } else {
-        toast.success(`Não fez registrado (${resultado.novoTotal}/${v.qtd_ocorrencia})`);
+        toast.success(`“Não fez” registrado (${resultado.novoTotal}/${v.qtd_ocorrencia})`);
       }
     } catch (e) {
       toast.error(msgErro(e as { message?: string }));
@@ -175,7 +175,7 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
       await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
       setFez(null);
       toast.success(
-        d.bonusTipo === "NENHUMA" ? "Fez registrado" : "Fez registrado com bonificação",
+        d.bonusTipo === "NENHUMA" ? "“Fez” registrado" : "“Fez” registrado com bonificação",
       );
     } catch (e) {
       toast.error(msgErro(e as { message?: string }));

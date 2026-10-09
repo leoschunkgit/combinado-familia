@@ -272,7 +272,7 @@ function VigenciasPage() {
 
       const novoInicioDia = diaCampo(p.data.data_inicio); const novoFimDia = diaCampo(p.data.data_fim);
       const fora = (registros ?? []).filter((o) => { const d = diaBrasil(o.created_at); return d < novoInicioDia || d > novoFimDia; });
-      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} registro(s) de Fez/Não fez fora das novas datas. Ajuste ou remova esses registros em Fez / Não fez antes de salvar.`); return; }
+      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} registro(s) de “Fez”/“Não fez” fora das novas datas. Ajuste ou remova esses registros em “Fez” / “Não fez” antes de salvar.`); return; }
     }
     const { error } = await supabase.from("t_vigencia").update({ ...p.data, ...dadosRegra(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }

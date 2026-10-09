@@ -61,7 +61,7 @@ function AtribuicoesPage() {
         .select("id", { count: "exact", head: true })
         .eq("id_filho_tarefa", alvo.id);
       if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
-      if (count) { toast.error("Esta atribuição já tem registros de Fez/Não fez e não pode ser excluída."); return; }
+      if (count) { toast.error("Esta atribuição já tem registros de “Fez”/“Não fez” e não pode ser excluída."); return; }
     }
 
     const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
