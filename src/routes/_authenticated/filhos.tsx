@@ -14,10 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type Filho } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos, useTarefas, useVigencias, type Filho } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
-import { penalidadeJaFoiAplicada } from "@/lib/penalidade";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -68,8 +67,6 @@ function FilhosPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: vigencias = [] } = useVigencias();
-  const { data: atribuicoes = [] } = useFilhoTarefas();
-  const { data: ocorrencias = [] } = useOcorrencias();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [novoAberto, setNovoAberto] = useState(false);
@@ -105,29 +102,8 @@ function FilhosPage() {
   }
 
   async function excluir(id: number) {
-    const vigenciasAfetadas = [...new Set(atribuicoes.filter((item) => item.id_filho === id).map((item) => item.id_vigencia))];
-    const filhosRestantes = filhos.filter((filho) => filho.id !== id);
-    const ocorrenciasRestantes = ocorrencias.filter((ocorrencia) => ocorrencia.t_filho_tarefa?.id_filho !== id);
-
     const { error } = await supabase.from("t_filho").delete().eq("id", id);
     if (error) { toast.error(msgErro(error)); return; }
-
-    for (const idVigencia of vigenciasAfetadas) {
-      const vigencia = vigencias.find((item) => item.id === idVigencia);
-      if (!vigencia?.penalidade?.trim()) continue;
-      if (penalidadeJaFoiAplicada(vigencia, filhosRestantes, ocorrenciasRestantes)) continue;
-
-      const { error: erroPenalidade } = await supabase
-        .from("t_vigencia")
-        .update({ penalidade: null })
-        .eq("id", idVigencia);
-      if (erroPenalidade) {
-        toast.error("O filho foi excluído, mas não foi possível recalcular a penalidade da vigência.");
-        await qc.invalidateQueries();
-        return;
-      }
-    }
-
     await qc.invalidateQueries();
   }
 
