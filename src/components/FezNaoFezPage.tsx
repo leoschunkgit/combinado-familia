@@ -671,7 +671,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
       <div className="space-y-8">
         {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
-          const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
+          const vigenciaAberta =
+            vigenciasAbertas[vigencia.id] ?? vigenciaEmAndamento(vigencia);
           return (
             <section
               key={vigencia.id}
@@ -716,6 +717,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                         ocorrencia.t_filho_tarefa?.id_filho === filho.id &&
                         ocorrencia.t_filho_tarefa?.id_vigencia === vigencia.id,
                     ).length;
+                    const totalPendencias =
+                      modo === "pendentes"
+                        ? tarefasDoFilho.reduce(
+                            (soma, tarefa) =>
+                              soma + datasDaTarefa(tarefa, vigencia).length,
+                            0,
+                          )
+                        : 0;
                     const comDesconto = usaDesconto(filho, vigencia);
                     const penalizado =
                       !comDesconto &&
@@ -749,11 +758,22 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               </h3>
                             </div>
                           </div>
-                          {!comDesconto && (
-                            <span className="shrink-0 text-sm font-semibold tabular-nums">
-                              Não fez: {totalNaoFez} de {vigencia.qtd_ocorrencia}
-                            </span>
-                          )}
+                          <div className="flex shrink-0 flex-col items-end gap-0.5 text-sm">
+                            {modo === "pendentes" && (
+                              <span className="font-semibold text-primary tabular-nums">
+                                {totalPendencias}{" "}
+                                {totalPendencias === 1
+                                  ? "pendência"
+                                  : "pendências"}
+                              </span>
+                            )}
+                            {!comDesconto && (
+                              <span className="font-semibold tabular-nums">
+                                Não fez: {totalNaoFez} de{" "}
+                                {vigencia.qtd_ocorrencia}
+                              </span>
+                            )}
+                          </div>
                         </button>
 
                         {filhoAberto && (
