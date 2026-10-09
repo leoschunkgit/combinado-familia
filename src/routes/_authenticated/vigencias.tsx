@@ -46,6 +46,7 @@ const schema = z.object({
 .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
 type VigenciaForm = { data_inicio: string; data_fim: string; valor_debito: string; qtd_ocorrencia: string };
+type PeriodoNovoModo = "DATAS" | "DIAS";
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", valor_debito: "", qtd_ocorrencia: "0" };
 
 function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, base: VigenciaForm = vazio): VigenciaForm {
@@ -78,7 +79,21 @@ function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, base: Vi
   };
 }
 const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
+const dataHoraBrasil = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const diaCampo = (valor: string) => valor.slice(0, 10);
+
+function calcularPeriodoPorDias(quantidade: string, inicioIso: string | null) {
+  const dias = Number(quantidade);
+  if (!inicioIso || !Number.isSafeInteger(dias) || dias < 1) return null;
+  const inicio = new Date(inicioIso);
+  const fim = new Date(inicio.getTime() + dias * 86_400_000);
+  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime())) return null;
+  return {
+    data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
+    data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
+    resumo: `${dataHoraBrasil.format(inicio)} até ${dataHoraBrasil.format(fim)}`,
+  };
+}
 const dadosRegra = (v: Pick<VigenciaForm, "valor_debito">) => ({ tipo_penalidade: "texto", valor_debito: Number(v.valor_debito.replace(",", ".")) });
 
 function diasDaVigencia(inicioCampo: string, fimCampo: string) {
@@ -119,6 +134,9 @@ function VigenciasPage() {
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const [form, setForm] = useState<VigenciaForm>(vazio);
+  const [modoPeriodoNovo, setModoPeriodoNovo] = useState<PeriodoNovoModo>("DATAS");
+  const [quantidadeDias, setQuantidadeDias] = useState("");
+  const [inicioPeriodoDias, setInicioPeriodoDias] = useState<string | null>(null);
   const [novoAberto, setNovoAberto] = useState(false);
   const [editando, setEditando] = useState<Vigencia | null>(null);
   const [edicao, setEdicao] = useState(form);
@@ -128,11 +146,27 @@ function VigenciasPage() {
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
+  const periodoDiasCalculado = calcularPeriodoPorDias(quantidadeDias, inicioPeriodoDias);
+
   useEffect(() => {
-    if (!form.data_inicio && !form.data_fim) {
+    if (modoPeriodoNovo === "DATAS" && !form.data_inicio && !form.data_fim) {
       setForm((atual) => sugerirPeriodoVigencia(vigencias, atual));
     }
-  }, [vigencias, form.data_inicio, form.data_fim]);
+  }, [vigencias, form.data_inicio, form.data_fim, modoPeriodoNovo]);
+
+  function selecionarModoPeriodoNovo(modo: PeriodoNovoModo) {
+    if (modo === modoPeriodoNovo) return;
+    setModoPeriodoNovo(modo);
+    if (modo === "DIAS") {
+      setQuantidadeDias("");
+      setInicioPeriodoDias(new Date().toISOString());
+      setForm((atual) => ({ ...atual, data_inicio: "", data_fim: "" }));
+      return;
+    }
+    setQuantidadeDias("");
+    setInicioPeriodoDias(null);
+    setForm((atual) => sugerirPeriodoVigencia(vigencias, { ...atual, data_inicio: "", data_fim: "" }));
+  }
 
   function conflitaComVigenciaExistente(inicioCampo: string, fimCampo: string, ignorarId?: number) {
     const inicio = new Date(inicioCampo).getTime();
@@ -147,7 +181,13 @@ function VigenciasPage() {
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
-    const p = schema.safeParse(form);
+    const dadosPeriodo = modoPeriodoNovo === "DIAS" ? periodoDiasCalculado : { data_inicio: form.data_inicio, data_fim: form.data_fim };
+    if (!dadosPeriodo) {
+      toast.error("Informe uma quantidade inteira de dias maior que zero");
+      return;
+    }
+    const formParaSalvar = { ...form, data_inicio: dadosPeriodo.data_inicio, data_fim: dadosPeriodo.data_fim };
+    const p = schema.safeParse(formParaSalvar);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     if (conflitaComVigenciaExistente(p.data.data_inicio, p.data.data_fim)) {
       toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
@@ -157,6 +197,9 @@ function VigenciasPage() {
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada");
     setForm(vazio);
+    setModoPeriodoNovo("DATAS");
+    setQuantidadeDias("");
+    setInicioPeriodoDias(null);
     setNovoAberto(false);
     qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
@@ -328,8 +371,44 @@ function VigenciasPage() {
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>Adicionar vigência</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-          <div className="space-y-2"><Label htmlFor="inicio">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm((atual) => ({ ...atual, data_inicio }))} /></div>
-          <div className="space-y-2"><Label htmlFor="fim">Data fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="fim" value={form.data_fim} min={form.data_inicio} onChange={(data_fim) => setForm((atual) => ({ ...atual, data_fim }))} /></div>
+          <div className="space-y-2">
+            <Label>Como deseja definir o período?</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button type="button" variant={modoPeriodoNovo === "DATAS" ? "default" : "outline"} aria-pressed={modoPeriodoNovo === "DATAS"} onClick={() => selecionarModoPeriodoNovo("DATAS")}>
+                Escolher datas
+              </Button>
+              <Button type="button" variant={modoPeriodoNovo === "DIAS" ? "default" : "outline"} aria-pressed={modoPeriodoNovo === "DIAS"} onClick={() => selecionarModoPeriodoNovo("DIAS")}>
+                Quantidade de dias
+              </Button>
+            </div>
+          </div>
+
+          {modoPeriodoNovo === "DATAS" ? (
+            <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end">
+              <div className="min-w-0 space-y-2">
+                <Label htmlFor="inicio">Início <span className="text-destructive" aria-hidden="true">*</span></Label>
+                <BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm((atual) => ({ ...atual, data_inicio }))} />
+              </div>
+              <span className="pb-2 text-center text-sm text-muted-foreground">até</span>
+              <div className="min-w-0 space-y-2">
+                <Label htmlFor="fim">Fim <span className="text-destructive" aria-hidden="true">*</span></Label>
+                <BrDateTimeField id="fim" value={form.data_fim} min={form.data_inicio} onChange={(data_fim) => setForm((atual) => ({ ...atual, data_fim }))} />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="quantidade-dias">Quantos dias a partir de agora? <span className="text-destructive" aria-hidden="true">*</span></Label>
+              <Input id="quantidade-dias" type="number" min="1" step="1" inputMode="numeric" value={quantidadeDias} onChange={(e) => setQuantidadeDias(e.target.value)} placeholder="Ex.: 5" />
+              <p className="text-xs text-muted-foreground">Ex.: 5 dias = agora até o mesmo horário daqui a 5 dias.</p>
+              {periodoDiasCalculado && (
+                <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">Período calculado: </span>
+                  <span className="font-medium">{periodoDiasCalculado.resumo}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <RegrasVigencia value={form} onChange={setForm} prefix="novo" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setNovoAberto(false)}>Cancelar</Button>
