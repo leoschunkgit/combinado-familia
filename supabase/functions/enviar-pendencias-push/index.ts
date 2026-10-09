@@ -128,7 +128,7 @@ async function enviarFcm(
             body: mensagemPendencia(pendencia.nomeFilho, pendencia.quantidade),
           },
           data: {
-            route: "/notificacoes",
+            route: "/ocorrencias",
             id_filho: String(pendencia.idFilho),
           },
           android: { priority: "high" },
