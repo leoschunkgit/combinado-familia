@@ -87,13 +87,13 @@ export type ResultadoRegistrarNaoFez =
 
 export async function registrarNaoFezComPenalidade(params: {
   tarefa: FilhoTarefa;
-  filho?: Filho;
-  vigenciaCompleta?: Vigencia;
+  filho?: Filho | undefined;
+  vigenciaCompleta?: Vigencia | undefined;
   filhos: Filho[];
   ocorrencias: Ocorrencia[];
   dataIso: string;
-  existente?: Ocorrencia;
-  penalidadeTexto?: string;
+  existente?: Ocorrencia | undefined;
+  penalidadeTexto?: string | undefined;
 }): Promise<ResultadoRegistrarNaoFez> {
   const {
     tarefa,
@@ -123,7 +123,12 @@ export async function registrarNaoFezComPenalidade(params: {
   const novoTotal = totalAtual + 1;
   const penalizado = !comDesconto && novoTotal >= vigencia.qtd_ocorrencia;
   const regraVigencia =
-    vigenciaCompleta ?? ({ ...vigencia, id: tarefa.id_vigencia } as Vigencia);
+    vigenciaCompleta ?? {
+      id: tarefa.id_vigencia,
+      penalidade: vigencia.penalidade,
+      qtd_ocorrencia: vigencia.qtd_ocorrencia,
+      valor_debito: vigencia.valor_debito,
+    };
   const penalidadeAtual = regraVigencia.penalidade?.trim() ?? "";
   const penalidadeInformada = penalidadeTexto?.trim() ?? "";
   const jaAplicada = penalidadeJaFoiAplicada(regraVigencia, filhos, ocorrencias);
