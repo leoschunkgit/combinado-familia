@@ -209,6 +209,167 @@ BEGIN
 END;
 $$;
 
+
+
+-- Registra NAO_FEZ e, quando necessario, a penalidade escrita na mesma transacao.
+-- Evita estado intermediario em que a penalidade fique salva sem a ocorrencia que atingiu o limite.
+CREATE OR REPLACE FUNCTION public.registrar_nao_fez_com_penalidade(
+  p_id_filho_tarefa bigint,
+  p_created_at timestamptz,
+  p_id_ocorrencia bigint DEFAULT NULL,
+  p_penalidade text DEFAULT NULL
+)
+RETURNS TABLE(
+  novo_total integer,
+  penalizado boolean,
+  penalidade text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $
+DECLARE
+  v_pai_id bigint;
+  v_id_filho bigint;
+  v_id_vigencia bigint;
+  v_limite integer;
+  v_tem_mesada boolean;
+  v_valor_debito numeric;
+  v_penalidade_atual text;
+  v_total_atual integer;
+  v_novo_total integer;
+  v_precisa_penalidade boolean;
+  v_penalidade_informada text;
+BEGIN
+  SELECT p.id
+    INTO v_pai_id
+  FROM public.t_usuario_pai p
+  WHERE p.auth_user_id = auth.uid();
+
+  IF v_pai_id IS NULL THEN
+    RAISE EXCEPTION 'Responsável não encontrado';
+  END IF;
+
+  SELECT
+    ft.id_filho,
+    ft.id_vigencia,
+    v.qtd_ocorrencia,
+    COALESCE(f.tem_mesada_opcional, false) AND f.valor_mesada IS NOT NULL,
+    v.valor_debito,
+    v.penalidade
+  INTO
+    v_id_filho,
+    v_id_vigencia,
+    v_limite,
+    v_tem_mesada,
+    v_valor_debito,
+    v_penalidade_atual
+  FROM public.t_filho_tarefa ft
+  JOIN public.t_filho f
+    ON f.id = ft.id_filho
+   AND f.id_usuario_pai = ft.id_usuario_pai
+  JOIN public.t_vigencia v
+    ON v.id = ft.id_vigencia
+   AND v.id_usuario_pai = ft.id_usuario_pai
+  WHERE ft.id = p_id_filho_tarefa
+    AND ft.id_usuario_pai = v_pai_id;
+
+  IF v_id_filho IS NULL THEN
+    RAISE EXCEPTION 'Atribuição não encontrada';
+  END IF;
+
+  IF p_id_ocorrencia IS NOT NULL AND NOT EXISTS (
+    SELECT 1
+    FROM public.t_ocorrencia o
+    WHERE o.id = p_id_ocorrencia
+      AND o.id_filho_tarefa = p_id_filho_tarefa
+      AND o.id_usuario_pai = v_pai_id
+  ) THEN
+    RAISE EXCEPTION 'Registro de Fez/Não fez não encontrado';
+  END IF;
+
+  SELECT count(*)::integer
+    INTO v_total_atual
+  FROM public.t_ocorrencia o
+  JOIN public.t_filho_tarefa ft
+    ON ft.id = o.id_filho_tarefa
+  WHERE ft.id_filho = v_id_filho
+    AND ft.id_vigencia = v_id_vigencia
+    AND o.tipo = 'NAO_FEZ'
+    AND (p_id_ocorrencia IS NULL OR o.id <> p_id_ocorrencia);
+
+  v_novo_total := v_total_atual + 1;
+
+  IF NOT (v_tem_mesada AND v_valor_debito IS NOT NULL)
+     AND v_total_atual >= v_limite THEN
+    RAISE EXCEPTION 'O limite de Não fez desta vigência já foi atingido';
+  END IF;
+
+  v_precisa_penalidade :=
+    NOT (v_tem_mesada AND v_valor_debito IS NOT NULL)
+    AND v_novo_total >= v_limite
+    AND NULLIF(BTRIM(v_penalidade_atual), '') IS NULL;
+
+  v_penalidade_informada := NULLIF(BTRIM(p_penalidade), '');
+
+  IF v_precisa_penalidade THEN
+    IF v_penalidade_informada IS NULL
+       OR length(v_penalidade_informada) < 2
+       OR length(v_penalidade_informada) > 200 THEN
+      RAISE EXCEPTION 'Informe a penalidade para registrar o Não fez que atingiu o limite';
+    END IF;
+
+    UPDATE public.t_vigencia
+    SET penalidade = v_penalidade_informada
+    WHERE id = v_id_vigencia
+      AND id_usuario_pai = v_pai_id;
+
+    v_penalidade_atual := v_penalidade_informada;
+  END IF;
+
+  IF p_id_ocorrencia IS NULL THEN
+    INSERT INTO public.t_ocorrencia (
+      id_usuario_pai,
+      id_filho_tarefa,
+      tipo,
+      bonificacao_tipo,
+      bonificacao_descricao,
+      bonificacao_valor,
+      created_at
+    )
+    VALUES (
+      v_pai_id,
+      p_id_filho_tarefa,
+      'NAO_FEZ',
+      NULL,
+      NULL,
+      NULL,
+      p_created_at
+    );
+  ELSE
+    UPDATE public.t_ocorrencia
+    SET
+      tipo = 'NAO_FEZ',
+      bonificacao_tipo = NULL,
+      bonificacao_descricao = NULL,
+      bonificacao_valor = NULL
+    WHERE id = p_id_ocorrencia
+      AND id_filho_tarefa = p_id_filho_tarefa
+      AND id_usuario_pai = v_pai_id;
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    v_novo_total,
+    NOT (v_tem_mesada AND v_valor_debito IS NOT NULL) AND v_novo_total >= v_limite,
+    NULLIF(BTRIM(v_penalidade_atual), '');
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.registrar_nao_fez_com_penalidade(bigint, timestamptz, bigint, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.registrar_nao_fez_com_penalidade(bigint, timestamptz, bigint, text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.registrar_nao_fez_com_penalidade(bigint, timestamptz, bigint, text) TO authenticated;
+
 COMMENT ON FUNCTION public.recalcular_penalidade_vigencia(bigint) IS
   'Mantem t_vigencia.penalidade somente enquanto existir filho sem mesada no limite de NAO_FEZ.';
 
