@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ClipboardCheck, Copy, LayoutDashboard, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus } from "lucide-react";
+import { Bell, CalendarRange, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -72,7 +72,6 @@ const NAV_GRUPOS: { titulo: string; itens: NavItem[] }[] = [
   {
     titulo: "Acompanhamento",
     itens: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { to: "/relatorio", label: "Relatório / Histórico", icon: FileText },
     ],
   },
