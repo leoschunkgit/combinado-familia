@@ -1,138 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { AlertTriangle, CalendarDays, CalendarRange, ChevronsDownUp, ChevronsUpDown, ClipboardCheck, Pencil, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { BrDateField } from "@/components/BrDateField";
-import { CurrencyInput } from "@/components/CurrencyInput";
-import { CollapseChevron } from "@/components/CollapseChevron";
-import { ResponsiveFilters } from "@/components/ResponsiveFilters";
-import { Pick } from "@/components/Pick";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, useTarefas, type FilhoTarefa, type Ocorrencia } from "@/lib/db";
-import { ocorrenciasPenalizadas, registrarNaoFezComPenalidade } from "@/lib/penalidade";
-import { reais, resumoMesada, usaDesconto, valorDebitado } from "@/lib/mesada";
-import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
-import { useActionLoading } from "@/components/ActionLoading";
-import { compararVigencias, situacaoVigencia, VigenciaStatus, vigenciaEmAndamento } from "@/components/VigenciaStatus";
-import { uiTypography } from "@/lib/ui-typography";
-import { PenalidadeDialog } from "@/components/PenalidadeDialog";
+import { FezNaoFezPage } from "@/components/FezNaoFezPage";
 
-export const Route=createFileRoute("/_authenticated/ocorrencias")({head:()=>({meta:[{title:"Fez / Não fez — Combinado"},{name:"description",content:"Registre e consulte os registros de Fez / Não fez de cada filho e tarefa por vigência."}]}),component:OcorrenciasPage});
-function localDate(value:Date){return new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(value);}
-const occurrenceDate=new Intl.DateTimeFormat("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",year:"numeric"});
-type BonusTipo="NENHUMA"|"TEXTO"|"VALOR";
-type FezDraft={modo:"REGISTRAR"|"EDITAR";ocorrenciaId?:number;tarefa:FilhoTarefa;total:number;data:string;bonusTipo:BonusTipo;descricao:string;valor:string};
-type Troca={direcao:"PARA_FEZ"|"PARA_NAO_FEZ";tarefa:FilhoTarefa;total:number;ocorrencia:Ocorrencia;fez?:FezDraft};
-type ExcluirSelecionadasDraft={tarefa:FilhoTarefa;ids:number[]};
-type PenalidadeDraft={tarefa:FilhoTarefa;total:number;existente?:Ocorrencia;descricao:string};
+export const Route = createFileRoute("/_authenticated/ocorrencias")({
+  head: () => ({
+    meta: [
+      { title: "Fez / Não fez — Combinado" },
+      {
+        name: "description",
+        content:
+          "Registre e consulte Fez / Não fez de cada filho, tarefa e data por vigência.",
+      },
+    ],
+  }),
+  component: OcorrenciasPage,
+});
 
-function OcorrenciasPage(){
- const qc=useQueryClient();const {runAction}=useActionLoading();const {data:vigencias=[]}=useVigencias();const {data:filhos=[]}=useFilhos();const {data:todas=[],isLoading}=useFilhoTarefas();const {data:tarefas=[]}=useTarefas();const {data:ocorrencias=[]}=useOcorrencias();
- const penalizadas=ocorrenciasPenalizadas(ocorrencias,vigencias);const [f,setF]=useState({vig:"all",filho:"all",tarefa:"all"});const [filtro,setFiltro]=useState(f);const [datas,setDatas]=useState<Record<number,string>>({});const [busy,setBusy]=useState(false);const [registro,setRegistro]=useState<{tarefa:FilhoTarefa;total:number}|null>(null);const [fez,setFez]=useState<FezDraft|null>(null);const [troca,setTroca]=useState<Troca|null>(null);const [selecionadas,setSelecionadas]=useState<Set<number>>(new Set());const [confirmarExcluirSelecionadas,setConfirmarExcluirSelecionadas]=useState<ExcluirSelecionadasDraft|null>(null);const [penalidadePendente,setPenalidadePendente]=useState<PenalidadeDraft|null>(null);const [vigenciasAbertas,setVigenciasAbertas]=useState<Record<number,boolean>>({});const [filhosAbertos,setFilhosAbertos]=useState<Record<string,boolean>>({});
- const dataDe=(r:FilhoTarefa)=>{const agora=localDate(new Date()),inicio=r.t_vigencia?localDate(new Date(r.t_vigencia.data_inicio)):agora,fim=r.t_vigencia?localDate(new Date(r.t_vigencia.data_fim)):agora,escolhida=datas[r.id];if(escolhida!==undefined)return escolhida;return agora<inicio?inicio:agora>fim?fim:agora;};
- const vigenciasOrdenadas=[...vigencias].sort(compararVigencias);
- const grupos=vigenciasOrdenadas.filter(v=>filtro.vig==="all"||v.id===Number(filtro.vig)).map(vigencia=>({vigencia,filhos:filhos.filter(filho=>filtro.filho==="all"||filho.id===Number(filtro.filho)).map(filho=>({filho,tarefas:todas.filter(r=>r.id_vigencia===vigencia.id&&r.id_filho===filho.id&&(filtro.tarefa==="all"||r.id_tarefa===Number(filtro.tarefa)))})).filter(x=>x.tarefas.length>0)})).filter(x=>x.filhos.length>0);
- function definirTudo(aberto:boolean){setVigenciasAbertas(Object.fromEntries(grupos.map(({vigencia})=>[vigencia.id,aberto])));setFilhosAbertos(Object.fromEntries(grupos.flatMap(({vigencia,filhos:gf})=>gf.map(({filho})=>[`${vigencia.id}-${filho.id}`,aberto]))));}
- const registroNaData=(r:FilhoTarefa,data:string)=>ocorrencias.find(o=>o.id_filho_tarefa===r.id&&localDate(new Date(o.created_at))===data);
- const dataValida=(r:FilhoTarefa,data:string)=>{const v=r.t_vigencia;if(!v)return false;const fim=localDate(new Date(Math.min(new Date(v.data_fim).getTime(),Date.now())));return /^\d{4}-\d{2}-\d{2}$/.test(data)&&data>=localDate(new Date(v.data_inicio))&&data<=fim&&data<=localDate(new Date());};
-  async function salvarNaoFez(r:FilhoTarefa,_total:number,existente?:Ocorrencia,penalidadeTexto?:string){
-  const v=r.t_vigencia;
-  if(!v||!vigenciaEmAndamento(v)){
-    toast.error("Ações só podem ser feitas em uma vigência em andamento");
-    return;
-  }
-
-  const selecionada=existente?localDate(new Date(existente.created_at)):(datas[r.id]??dataDe(r));
-  if(!dataValida(r,selecionada)){
-    toast.error("A data do “Não fez” deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência");
-    return;
-  }
-
-  const filho=filhos.find(x=>x.id===r.id_filho);
-  const vigenciaCompleta=vigencias.find(item=>item.id===r.id_vigencia);
-
-  setBusy(true);
-  try{
-    const resultado=await registrarNaoFezComPenalidade({
-      tarefa:r,
-      filho,
-      vigenciaCompleta,
-      filhos,
-      ocorrencias,
-      dataIso:new Date(selecionada+"T12:00:00-03:00").toISOString(),
-      existente,
-      penalidadeTexto,
-    });
-
-    if(resultado.status==="PRECISA_PENALIDADE"){
-      setRegistro(null);
-      setTroca(null);
-      setPenalidadePendente({tarefa:r,total:resultado.totalAtual,existente,descricao:""});
-      return;
-    }
-
-    await Promise.all([
-      qc.invalidateQueries({queryKey:["ocorrencias"]}),
-      qc.invalidateQueries({queryKey:["vigencias"]}),
-      qc.invalidateQueries({queryKey:["filho_tarefas"]}),
-    ]);
-    setRegistro(null);
-    setTroca(null);
-    setPenalidadePendente(null);
-
-    if(resultado.comDesconto&&filho){
-      toast.success(`Não fez registrado · Desconto acumulado: ${reais(valorDebitado(filho,v,resultado.novoTotal))}`);
-    }else if(resultado.penalizado){
-      toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
-    }else{
-      toast.success(`Não fez registrado (${resultado.novoTotal}/${v.qtd_ocorrencia})`);
-    }
-  }catch(error){
-    toast.error(msgErro(error instanceof Error?{message:error.message}:error as {message?:string}));
-  }finally{
-    setBusy(false);
-  }
-}
- async function confirmarNaoFez(){if(!registro)return;const data=datas[registro.tarefa.id]??dataDe(registro.tarefa);const existente=registroNaData(registro.tarefa,data);if(existente){if(existente.tipo==="FEZ"){setTroca({direcao:"PARA_NAO_FEZ",tarefa:registro.tarefa,total:registro.total,ocorrencia:existente});setRegistro(null);return;}toast.error("Já existe um “Não fez” para esta tarefa nesta data");return;}await salvarNaoFez(registro.tarefa,registro.total);}
- async function confirmarPenalidade(){if(!penalidadePendente)return;await salvarNaoFez(penalidadePendente.tarefa,penalidadePendente.total,penalidadePendente.existente,penalidadePendente.descricao.trim());}
- function abrirFez(r:FilhoTarefa,total:number){if(!r.t_vigencia||!vigenciaEmAndamento(r.t_vigencia)){toast.error("Ações só podem ser feitas em uma vigência em andamento");return;}setFez({modo:"REGISTRAR",tarefa:r,total,data:dataDe(r),bonusTipo:"NENHUMA",descricao:"",valor:""});}
- function editarBonificacao(r:FilhoTarefa,total:number,o:Ocorrencia){if(!r.t_vigencia||!vigenciaEmAndamento(r.t_vigencia)){toast.error("Ações só podem ser feitas em uma vigência em andamento");return;}setFez({modo:"EDITAR",ocorrenciaId:o.id,tarefa:r,total,data:localDate(new Date(o.created_at)),bonusTipo:o.bonificacao_tipo==="TEXTO"?"TEXTO":o.bonificacao_tipo==="VALOR"?"VALOR":"NENHUMA",descricao:o.bonificacao_descricao??"",valor:o.bonificacao_valor==null?"":String(o.bonificacao_valor).replace(".",",")});}
- async function salvarFez(draft:FezDraft,existente?:Ocorrencia){const r=draft.tarefa,v=r.t_vigencia;if(!v||!vigenciaEmAndamento(v)){toast.error("Ações só podem ser feitas em uma vigência em andamento");return;}if(!dataValida(r,draft.data)){toast.error("A data do “Fez” deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência");return;}if(draft.bonusTipo==="TEXTO"&&!draft.descricao.trim()){toast.error("Informe a bonificação escrita");return;}const valor=draft.bonusTipo==="VALOR"?Number(draft.valor.replace(",",".")):null;if(draft.bonusTipo==="VALOR"&&(valor===null||!Number.isFinite(valor)||valor<0)){toast.error("Informe um valor de bonificação válido");return;}setBusy(true);try{const payload={tipo:"FEZ",bonificacao_tipo:draft.bonusTipo==="NENHUMA"?null:draft.bonusTipo,bonificacao_descricao:draft.bonusTipo==="TEXTO"?draft.descricao.trim():null,bonificacao_valor:draft.bonusTipo==="VALOR"?valor:null};const res=existente?await supabase.from("t_ocorrencia").update(payload).eq("id",existente.id):await supabase.from("t_ocorrencia").insert({...payload,id_filho_tarefa:r.id,created_at:new Date(draft.data+"T12:00:00-03:00").toISOString()});if(res.error){toast.error(msgErro(res.error));return;}await Promise.all([qc.invalidateQueries({queryKey:["ocorrencias"]}),qc.invalidateQueries({queryKey:["vigencias"]})]);setFez(null);setTroca(null);toast.success(draft.bonusTipo==="NENHUMA"?"Fez registrado":"Fez registrado com bonificação");}catch(error){toast.error(msgErro(error instanceof Error?{message:error.message}:null));}finally{setBusy(false);}}
- async function confirmarFez(){if(!fez)return;if(fez.modo==="EDITAR"){const existente=ocorrencias.find(o=>o.id===fez.ocorrenciaId&&o.tipo==="FEZ");if(!existente){toast.error("Registro de Fez não encontrado");return;}await salvarFez(fez,existente);return;}const existente=registroNaData(fez.tarefa,fez.data);if(existente){if(existente.tipo!=="FEZ"){setTroca({direcao:"PARA_FEZ",tarefa:fez.tarefa,total:fez.total,ocorrencia:existente,fez});setFez(null);return;}toast.error("Já existe um “Fez” para esta tarefa nesta data. Use o lápis para editar a bonificação.");return;}await salvarFez(fez);}
- async function excluirSelecionadas(item:ExcluirSelecionadasDraft){const {tarefa:r,ids}=item,v=r.t_vigencia;if(!v||!vigenciaEmAndamento(v)){toast.error("Ações só podem ser feitas em uma vigência em andamento");return;}if(ids.length===0)return;setBusy(true);try{const {error}=await supabase.from("t_ocorrencia").delete().in("id",ids);if(error){toast.error(msgErro(error));return;}const projetadas=ocorrencias.filter(o=>!ids.includes(o.id));qc.setQueryData<Ocorrencia[]>(["ocorrencias"],projetadas);setSelecionadas(atual=>{const proximo=new Set(atual);ids.forEach(id=>proximo.delete(id));return proximo;});await Promise.all([qc.invalidateQueries({queryKey:["ocorrencias"],refetchType:"all"}),qc.invalidateQueries({queryKey:["vigencias"],refetchType:"all"}),qc.invalidateQueries({queryKey:["filho_tarefas"],refetchType:"all"})]);setConfirmarExcluirSelecionadas(null);toast.success(ids.length===1?"Marcação excluída":"Marcações selecionadas excluídas");}catch(error){toast.error(msgErro(error instanceof Error?{message:error.message}:null));}finally{setBusy(false);}}
- return <>
- <PageHeader title="Fez / Não fez" description="Acompanhe os registros de Fez / Não fez de cada filho por vigência." icon={<ClipboardCheck className="h-6 w-6"/>}/>
- <ResponsiveFilters desktopClassName="md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" onApply={()=>setFiltro(f)} renderFilters={()=>(
-  <>
-    <Pick label="Vigência" value={f.vig} onChange={v=>setF({...f,vig:v})} allLabel="Todas" options={vigenciasOrdenadas.map(v=>({value:String(v.id),label:fmtVigencia(v),status:situacaoVigencia(v)}))}/>
-    <Pick label="Filho" value={f.filho} onChange={v=>setF({...f,filho:v})} allLabel="Todos" options={filhos.map(x=>({value:String(x.id),label:x.nome}))}/>
-    <Pick label="Tarefa" value={f.tarefa} onChange={v=>setF({...f,tarefa:v})} allLabel="Todas" options={tarefas.map(t=>({value:String(t.id),label:t.nome}))}/>
-  </>
-)}/>
- <div className="mb-6 flex flex-wrap justify-end gap-2"><Button variant="outline" size="sm" onClick={()=>definirTudo(true)}><ChevronsDownUp className="h-4 w-4"/> Expandir tudo</Button><Button variant="outline" size="sm" onClick={()=>definirTudo(false)}><ChevronsUpDown className="h-4 w-4"/> Recolher tudo</Button></div>
- {!isLoading&&grupos.length===0&&<EmptyState>Nenhuma tarefa encontrada. Crie atribuições na aba "Atribuições".</EmptyState>}
- <div className="space-y-10">{grupos.map(({vigencia,filhos:gf})=>{const va=vigenciasAbertas[vigencia.id]===true;return <section key={vigencia.id}><button type="button" className="mb-5 flex w-full min-w-0 cursor-pointer items-start gap-3 border-b pb-4 text-left" onClick={()=>setVigenciasAbertas(a=>({...a,[vigencia.id]:!va}))}><CollapseChevron open={va} className="mt-0.5 text-primary" /><CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary"/><div className="min-w-0"><p className="text-xs font-semibold uppercase text-muted-foreground">Vigência</p><div className="flex flex-wrap items-center gap-2"><h2 className={uiTypography.secondaryTitleStrongLargeDesktop}>{fmtVigencia(vigencia)}</h2><VigenciaStatus vigencia={vigencia}/></div></div></button>{va&&<div className="space-y-7">{gf.map(({filho,tarefas:ts})=>{const chave=`${vigencia.id}-${filho.id}`,fa=filhosAbertos[chave]===true,total=ocorrencias.filter(o=>o.tipo!=="FEZ"&&o.t_filho_tarefa?.id_filho===filho.id&&o.t_filho_tarefa?.id_vigencia===vigencia.id).length,comDesconto=usaDesconto(filho,vigencia),penalizado=!comDesconto&&total>=vigencia.qtd_ocorrencia;return <div key={filho.id} className="border-b pb-6 last:border-b-0"><button type="button" className="grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-start gap-3 pb-3 text-left sm:flex sm:items-center sm:justify-between" onClick={()=>setFilhosAbertos(a=>({...a,[chave]:!fa}))}><div className="flex min-w-0 items-center gap-3"><CollapseChevron open={fa} /><h3 className={`min-w-0 truncate ${uiTypography.secondaryTitleStrong}`}>{filho.nome}</h3></div><div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">{!comDesconto&&<span className="text-sm font-semibold tabular-nums">Não fez: {total} de {vigencia.qtd_ocorrencia}</span>}</div></button>{fa&&<>{comDesconto?<p className="mb-3 text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada??0)} · {resumoMesada(filho,vigencia,total)}</p>:penalizado?<div className="mb-3"><Badge variant="destructive"><AlertTriangle className="mr-1 h-3 w-3"/> Penalidade: {vigencia.penalidade}</Badge></div>:null}<div className="divide-y border-t">{ts.map(r=>{const registros=ocorrencias.filter(o=>o.id_filho_tarefa===r.id).sort((a,b)=>a.id-b.id),bloqueada=!vigenciaEmAndamento(vigencia);return <div key={r.id} className="py-3"><div className="grid min-w-0 grid-cols-1 items-start gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-3 sm:gap-y-2"><p className="min-w-0 break-words pt-1 font-semibold">{r.t_tarefa?.nome}</p>{!bloqueada&&<div className="flex shrink-0 flex-wrap gap-2"><Button size="sm" variant="outline" className={botaoFezClass} disabled={busy} onClick={()=>abrirFez(r,total)}><ThumbsUp className="h-5 w-5 text-green-600"/> Fez</Button><Button size="sm" variant="outline" className={botaoNaoFezClass} disabled={busy} onClick={()=>setRegistro({tarefa:r,total})}><ThumbsDown className="h-5 w-5 text-red-600"/> Não fez</Button>{registros.some(o=>selecionadas.has(o.id))&&<Button size="sm" variant="outline" className="text-destructive hover:text-destructive" disabled={busy} onClick={()=>{const escolhidas=registros.filter(o=>selecionadas.has(o.id));setConfirmarExcluirSelecionadas({tarefa:r,ids:escolhidas.map(o=>o.id)});}}><Trash2 className="h-4 w-4"/> Excluir selecionadas ({registros.filter(o=>selecionadas.has(o.id)).length})</Button>}</div>}{registros.length>0&&<div className="space-y-2 sm:col-span-2">{!bloqueada&&<label className="inline-flex cursor-pointer items-center gap-2 px-2.5 py-1 text-xs font-medium text-muted-foreground"><Checkbox checked={registros.every(o=>selecionadas.has(o.id))?true:registros.some(o=>selecionadas.has(o.id))?"indeterminate":false} onCheckedChange={checked=>setSelecionadas(atual=>{const proximo=new Set(atual);if(checked===true)registros.forEach(o=>proximo.add(o.id));else registros.forEach(o=>proximo.delete(o.id));return proximo;})} aria-label={`Selecionar todas as marcações de ${r.t_tarefa?.nome??"tarefa"}`}/><span>Selecionar tudo</span></label>}<ul className="flex flex-wrap gap-2">{registros.map(o=><li key={o.id} className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs tabular-nums text-muted-foreground">{!bloqueada&&<Checkbox checked={selecionadas.has(o.id)} onCheckedChange={checked=>setSelecionadas(atual=>{const proximo=new Set(atual);if(checked===true)proximo.add(o.id);else proximo.delete(o.id);return proximo;})} aria-label={`Selecionar ${o.tipo==="FEZ"?"Fez":"Não fez"} de ${occurrenceDate.format(new Date(o.created_at))}`}/>} {o.tipo==="FEZ"?<ThumbsUp className="h-5 w-5 shrink-0 stroke-[2.5] text-green-600"/>:<ThumbsDown className="h-5 w-5 shrink-0 stroke-[2.5] text-destructive"/>}<CalendarDays className="h-3.5 w-3.5"/><span>{occurrenceDate.format(new Date(o.created_at))}</span>{o.tipo==="FEZ"&&o.bonificacao_tipo==="TEXTO"&&<span>· {o.bonificacao_descricao}</span>}{o.tipo==="FEZ"&&o.bonificacao_tipo==="VALOR"&&<span>· {reais(o.bonificacao_valor??0)}</span>}{o.tipo==="FEZ"&&o.bonificacao_tipo===null&&<span>· Sem bonificação</span>}{o.tipo!=="FEZ"&&!comDesconto&&penalizadas.has(o.id)&&<AlertTriangle className="h-3.5 w-3.5 text-destructive"/>}{o.tipo==="FEZ"&&<Button variant="ghost" size="icon" className="h-6 w-6" disabled={busy||!vigenciaEmAndamento(vigencia)} title="Editar bonificação" aria-label="Editar bonificação" onClick={()=>editarBonificacao(r,total,o)}><Pencil className="h-3 w-3"/></Button>}</li>)}</ul></div>}</div></div>})}</div></>}</div>})}</div>}</section>})}</div>
- <Dialog open={Boolean(registro)} onOpenChange={open=>!open&&!busy&&setRegistro(null)}><DialogContent><DialogHeader><DialogTitle>Registrar “Não fez”</DialogTitle><DialogDescription>{registro?.tarefa.t_tarefa?.nome}</DialogDescription></DialogHeader>{registro?.tarefa.t_vigencia&&<div className="space-y-2"><Label>Data</Label><BrDateField id="data-registro-nao-fez" value={dataDe(registro.tarefa)} min={localDate(new Date(registro.tarefa.t_vigencia.data_inicio))} max={localDate(new Date(Math.min(new Date(registro.tarefa.t_vigencia.data_fim).getTime(),Date.now())))} onChange={date=>setDatas({...datas,[registro.tarefa.id]:date})}/></div>}<DialogFooter><Button variant="outline" disabled={busy} onClick={()=>setRegistro(null)}>Cancelar</Button><Button variant="destructive" disabled={busy||!registro} onClick={()=>void runAction(confirmarNaoFez)}><ThumbsDown className="h-4 w-4"/> Confirmar</Button></DialogFooter></DialogContent></Dialog>
- <PenalidadeDialog
-  open={Boolean(penalidadePendente)}
-  value={penalidadePendente?.descricao??""}
-  busy={busy}
-  inputId="penalidade-limite"
-  onChange={descricao=>setPenalidadePendente(atual=>atual?{...atual,descricao}:atual)}
-  onCancel={()=>setPenalidadePendente(null)}
-  onConfirm={()=>void runAction(confirmarPenalidade)}
-/>
- <Dialog open={Boolean(fez)} onOpenChange={open=>!open&&!busy&&setFez(null)}><DialogContent><DialogHeader><DialogTitle>{fez?.modo==="EDITAR"?"Editar bonificação":"Registrar “Fez”"}</DialogTitle><DialogDescription>{fez?.tarefa.t_tarefa?.nome} · A bonificação é opcional.</DialogDescription></DialogHeader>{fez&&<div className="space-y-4">{fez.modo==="REGISTRAR"&&<div className="space-y-2"><Label>Data</Label><BrDateField id="data-registro-fez" value={fez.data} {...(fez.tarefa.t_vigencia ? {min:localDate(new Date(fez.tarefa.t_vigencia.data_inicio)),max:localDate(new Date(Math.min(new Date(fez.tarefa.t_vigencia.data_fim).getTime(),Date.now())))} : {})} onChange={data=>setFez({...fez,data})}/></div>}<div className="space-y-2"><Label>Bonificação</Label><Select value={fez.bonusTipo} onValueChange={valor=>setFez({...fez,bonusTipo:valor as BonusTipo})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NENHUMA">Nenhuma</SelectItem><SelectItem value="TEXTO">Escrita</SelectItem><SelectItem value="VALOR">Valor</SelectItem></SelectContent></Select></div>{fez.bonusTipo==="TEXTO"&&<div className="space-y-2"><Label htmlFor="bonus-texto">Bonificação escrita</Label><input id="bonus-texto" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Ex.: Escolher o filme no sábado" value={fez.descricao} onChange={e=>setFez({...fez,descricao:e.target.value})}/></div>}{fez.bonusTipo==="VALOR"&&<div className="space-y-2"><Label htmlFor="bonus-valor">Valor da bonificação (R$)</Label><CurrencyInput id="bonus-valor" value={fez.valor} onValueChange={valor=>setFez({...fez,valor})}/></div>}</div>}<DialogFooter><Button variant="outline" disabled={busy} onClick={()=>setFez(null)}>Cancelar</Button><Button disabled={busy||!fez} onClick={()=>void runAction(confirmarFez)}><ThumbsUp className="h-4 w-4"/> {fez?.modo==="EDITAR"?"Salvar bonificação":"Salvar Fez"}</Button></DialogFooter></DialogContent></Dialog>
- <Dialog open={Boolean(troca)} onOpenChange={open=>!open&&!busy&&setTroca(null)}><DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>{troca?.direcao==="PARA_FEZ"?"Alterar para “Fez”?":"Alterar para “Não fez”?"}</DialogTitle><DialogDescription>{troca&&<>Esta tarefa está marcada como {troca.direcao==="PARA_FEZ"?"“Não fez”":"“Fez”"} em {occurrenceDate.format(new Date(troca.ocorrencia.created_at))}. Ao continuar, o resultado será substituído{troca.direcao==="PARA_NAO_FEZ"?" e qualquer bonificação será removida":""}.</>}</DialogDescription></DialogHeader>{troca?.direcao==="PARA_FEZ"&&troca.fez&&<div className="space-y-4"><div className="space-y-2"><Label>Bonificação</Label><Select value={troca.fez.bonusTipo} onValueChange={valor=>setTroca({...troca,fez:{...troca.fez!,bonusTipo:valor as BonusTipo}})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NENHUMA">Nenhuma</SelectItem><SelectItem value="TEXTO">Escrita</SelectItem><SelectItem value="VALOR">Valor</SelectItem></SelectContent></Select></div>{troca.fez.bonusTipo==="TEXTO"&&<div className="space-y-2"><Label htmlFor="troca-bonus-texto">Bonificação escrita</Label><input id="troca-bonus-texto" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Ex.: Escolher o filme no sábado" value={troca.fez.descricao} onChange={e=>setTroca({...troca,fez:{...troca.fez!,descricao:e.target.value}})}/></div>}{troca.fez.bonusTipo==="VALOR"&&<div className="space-y-2"><Label htmlFor="troca-bonus-valor">Valor da bonificação (R$)</Label><CurrencyInput id="troca-bonus-valor" value={troca.fez.valor} onValueChange={valor=>setTroca({...troca,fez:{...troca.fez!,valor}})}/></div>}</div>}<DialogFooter><Button variant="outline" disabled={busy} onClick={()=>setTroca(null)}>Cancelar</Button><Button disabled={busy||!troca} onClick={()=>troca&&void runAction(()=>troca.direcao==="PARA_FEZ"&&troca.fez?salvarFez(troca.fez,troca.ocorrencia):salvarNaoFez(troca.tarefa,troca.total,troca.ocorrencia))}>Confirmar alteração</Button></DialogFooter></DialogContent></Dialog>
- <Dialog open={Boolean(confirmarExcluirSelecionadas)} onOpenChange={open=>!open&&!busy&&setConfirmarExcluirSelecionadas(null)}><DialogContent className="sm:max-w-sm"><DialogHeader><DialogTitle>Excluir marcações selecionadas?</DialogTitle><DialogDescription>{confirmarExcluirSelecionadas?.tarefa.t_tarefa?.nome} · {confirmarExcluirSelecionadas?.ids.length??0} marcação(ões) serão excluídas. Os dias que ficarem sem Fez ou Não fez voltarão para as pendências.</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" disabled={busy} onClick={()=>setConfirmarExcluirSelecionadas(null)}>Cancelar</Button><Button variant="destructive" disabled={busy||!confirmarExcluirSelecionadas} onClick={()=>confirmarExcluirSelecionadas&&void runAction(()=>excluirSelecionadas(confirmarExcluirSelecionadas))}><Trash2 className="h-4 w-4"/> Sim</Button></DialogFooter></DialogContent></Dialog>
-
- </>;
+function OcorrenciasPage() {
+  return <FezNaoFezPage modo="todos" />;
 }
