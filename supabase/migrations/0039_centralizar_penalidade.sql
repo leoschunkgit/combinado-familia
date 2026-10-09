@@ -211,6 +211,40 @@ $$;
 
 
 
+
+-- Impede que qualquer codigo futuro grave uma penalidade sem que o limite esteja realmente atingido.
+CREATE OR REPLACE FUNCTION public.guard_penalidade_vigencia()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $
+BEGIN
+  IF NULLIF(BTRIM(NEW.penalidade), '') IS NULL THEN
+    NEW.penalidade := NULL;
+    RETURN NEW;
+  END IF;
+
+  IF NEW.id IS NULL OR NOT public.existe_filho_sem_mesada_no_limite(NEW.id) THEN
+    RAISE EXCEPTION 'Penalidade só pode ser informada quando um filho sem mesada atingir o limite de Não fez';
+  END IF;
+
+  RETURN NEW;
+END;
+$;
+
+DROP TRIGGER IF EXISTS guard_penalidade_vigencia_before_change
+ON public.t_vigencia;
+
+CREATE TRIGGER guard_penalidade_vigencia_before_change
+BEFORE UPDATE OF penalidade
+ON public.t_vigencia
+FOR EACH ROW
+WHEN (OLD.penalidade IS DISTINCT FROM NEW.penalidade)
+EXECUTE FUNCTION public.guard_penalidade_vigencia();
+
+REVOKE ALL ON FUNCTION public.guard_penalidade_vigencia() FROM PUBLIC;
+
 -- Registra NAO_FEZ e, quando necessario, a penalidade escrita na mesma transacao.
 -- Evita estado intermediario em que a penalidade fique salva sem a ocorrencia que atingiu o limite.
 CREATE OR REPLACE FUNCTION public.registrar_nao_fez_com_penalidade(
@@ -312,19 +346,13 @@ BEGIN
 
   v_penalidade_informada := NULLIF(BTRIM(p_penalidade), '');
 
-  IF v_precisa_penalidade THEN
-    IF v_penalidade_informada IS NULL
+  IF v_precisa_penalidade
+     AND (
+       v_penalidade_informada IS NULL
        OR length(v_penalidade_informada) < 2
-       OR length(v_penalidade_informada) > 200 THEN
-      RAISE EXCEPTION 'Informe a penalidade para registrar o Não fez que atingiu o limite';
-    END IF;
-
-    UPDATE public.t_vigencia
-    SET penalidade = v_penalidade_informada
-    WHERE id = v_id_vigencia
-      AND id_usuario_pai = v_pai_id;
-
-    v_penalidade_atual := v_penalidade_informada;
+       OR length(v_penalidade_informada) > 200
+     ) THEN
+    RAISE EXCEPTION 'Informe a penalidade para registrar o Não fez que atingiu o limite';
   END IF;
 
   IF p_id_ocorrencia IS NULL THEN
@@ -356,6 +384,15 @@ BEGIN
     WHERE id = p_id_ocorrencia
       AND id_filho_tarefa = p_id_filho_tarefa
       AND id_usuario_pai = v_pai_id;
+  END IF;
+
+  IF v_precisa_penalidade THEN
+    UPDATE public.t_vigencia
+    SET penalidade = v_penalidade_informada
+    WHERE id = v_id_vigencia
+      AND id_usuario_pai = v_pai_id;
+
+    v_penalidade_atual := v_penalidade_informada;
   END IF;
 
   RETURN QUERY
