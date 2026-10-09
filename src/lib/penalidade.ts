@@ -141,48 +141,29 @@ export async function registrarNaoFezComPenalidade(params: {
     throw new Error("A penalidade deve ter entre 2 e 200 caracteres");
   }
 
-  let penalidadeSalvaAgora = false;
-  if (penalizado && !jaAplicada && penalidadeInformada) {
-    const { error } = await supabase
-      .from("t_vigencia")
-      .update({ penalidade: penalidadeInformada })
-      .eq("id", tarefa.id_vigencia);
-    if (error) throw error;
-    penalidadeSalvaAgora = true;
-  }
+  const { data, error } = await supabase.rpc("registrar_nao_fez_com_penalidade", {
+    p_id_filho_tarefa: tarefa.id,
+    p_created_at: dataIso,
+    p_id_ocorrencia: existente?.id ?? null,
+    p_penalidade: penalidadeInformada || null,
+  });
 
-  const payload = {
-    tipo: "NAO_FEZ",
-    bonificacao_tipo: null,
-    bonificacao_descricao: null,
-    bonificacao_valor: null,
-  };
+  if (error) throw error;
 
-  const resultado = existente
-    ? await supabase.from("t_ocorrencia").update(payload).eq("id", existente.id)
-    : await supabase.from("t_ocorrencia").insert({
-        ...payload,
-        id_filho_tarefa: tarefa.id,
-        created_at: dataIso,
-      });
+  const salvo = data?.[0];
+  if (!salvo) throw new Error("Não foi possível confirmar o registro de Não fez");
 
-  if (resultado.error) {
-    if (penalidadeSalvaAgora) {
-      await supabase
-        .from("t_vigencia")
-        .update({ penalidade: penalidadeAtual || null })
-        .eq("id", tarefa.id_vigencia);
-    }
-    throw resultado.error;
-  }
+  const totalConfirmado = salvo.novo_total;
+  const penalizadoConfirmado = salvo.penalizado;
+  const penalidadeConfirmada = salvo.penalidade?.trim() ?? penalidadeAtual;
 
   return {
     status: "SALVO",
     comDesconto,
     totalAtual,
-    novoTotal,
-    penalizado,
-    penalidade: penalidadeInformada || penalidadeAtual,
+    novoTotal: totalConfirmado,
+    penalizado: penalizadoConfirmado,
+    penalidade: penalidadeConfirmada,
   };
 }
 
