@@ -832,8 +832,30 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                       </button>
 
                                       {!bloqueada && registros.length > 0 && (
-                                        <div className="flex flex-wrap items-center justify-end gap-2">
-                                          <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
+                                        <div className="flex w-full items-center gap-2 sm:w-auto">
+                                          {selecionadasDaTarefa.length > 0 && (
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-destructive hover:text-destructive"
+                                              disabled={busy}
+                                              onClick={() =>
+                                                setConfirmarExcluirSelecionadas({
+                                                  tarefa,
+                                                  ids: selecionadasDaTarefa.map(
+                                                    (registro) => registro.id,
+                                                  ),
+                                                })
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                              Excluir (
+                                              {selecionadasDaTarefa.length})
+                                            </Button>
+                                          )}
+
+                                          <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
+                                            <span>Selecionar tudo</span>
                                             <Checkbox
                                               checked={
                                                 registros.every((registro) =>
@@ -869,29 +891,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                               }
                                               aria-label={`Selecionar todas as marcações de ${tarefa.t_tarefa?.nome ?? "tarefa"}`}
                                             />
-                                            Selecionar tudo
                                           </label>
-
-                                          {selecionadasDaTarefa.length > 0 && (
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="text-destructive hover:text-destructive"
-                                              disabled={busy}
-                                              onClick={() =>
-                                                setConfirmarExcluirSelecionadas({
-                                                  tarefa,
-                                                  ids: selecionadasDaTarefa.map(
-                                                    (registro) => registro.id,
-                                                  ),
-                                                })
-                                              }
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                              Excluir (
-                                              {selecionadasDaTarefa.length})
-                                            </Button>
-                                          )}
                                         </div>
                                       )}
                                     </div>
