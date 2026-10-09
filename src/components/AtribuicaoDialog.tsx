@@ -281,14 +281,18 @@ export function AtribuicaoDialog({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                        <DropdownMenuCheckboxItem
-                          checked={tarefas.length > 0 && tarefasSelecionadas.length === tarefas.length}
-                          onSelect={(e) => e.preventDefault()}
-                          onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
-                        >
-                          Selecionar todas
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuSeparator />
+                        {tarefas.length > 0 && (
+                          <>
+                            <DropdownMenuCheckboxItem
+                              checked={tarefasSelecionadas.length === tarefas.length}
+                              onSelect={(e) => e.preventDefault()}
+                              onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
+                            >
+                              Selecionar todas
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
                         {tarefas.map((t) => (
                           <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
                             {t.nome}
@@ -371,14 +375,18 @@ export function AtribuicaoDialog({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                            <DropdownMenuCheckboxItem
-                              checked={tarefas.length > 0 && tarefasSelecionadas.length === tarefas.length}
-                              onSelect={(e) => e.preventDefault()}
-                              onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
-                            >
-                              Selecionar todas
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuSeparator />
+                            {tarefas.length > 0 && (
+                              <>
+                                <DropdownMenuCheckboxItem
+                                  checked={tarefasSelecionadas.length === tarefas.length}
+                                  onSelect={(e) => e.preventDefault()}
+                                  onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
+                                >
+                                  Selecionar todas
+                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
                             {tarefas.map((t) => (
                               <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
                                 {t.nome}
@@ -410,14 +418,18 @@ export function AtribuicaoDialog({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                            <DropdownMenuCheckboxItem
-                              checked={filhos.length > 0 && filhosSelecionados.length === filhos.length}
-                              onSelect={(e) => e.preventDefault()}
-                              onCheckedChange={(checked) => setFilhosSelecionados(checked ? filhos.map((f) => f.id) : [])}
-                            >
-                              Selecionar todos
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuSeparator />
+                            {filhos.length > 0 && (
+                              <>
+                                <DropdownMenuCheckboxItem
+                                  checked={filhosSelecionados.length === filhos.length}
+                                  onSelect={(e) => e.preventDefault()}
+                                  onCheckedChange={(checked) => setFilhosSelecionados(checked ? filhos.map((f) => f.id) : [])}
+                                >
+                                  Selecionar todos
+                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
                             {filhos.map((f) => (
                               <DropdownMenuCheckboxItem key={f.id} checked={filhosSelecionados.includes(f.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarFilho(f.id)}>
                                 {f.nome}
