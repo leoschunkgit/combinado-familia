@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Bell, CalendarRange, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,6 @@ import { CheckinDiario } from "@/components/CheckinDiario";
 import { msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
-import { CollapseChevron } from "@/components/CollapseChevron";
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { AppPushNotifications } from "@/components/AppPushNotifications";
 import { desativarPushAtual } from "@/lib/push-notifications";
@@ -45,42 +44,21 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 type NavItem = {
-  to: "/inicio" | "/ocorrencias" | "/notificacoes" | "/filhos" | "/tarefas" | "/vigencias" | "/atribuicoes" | "/link-filhos" | "/dashboard" | "/relatorio";
+  to: "/inicio" | "/ocorrencias" | "/filhos" | "/tarefas" | "/vigencias" | "/atribuicoes" | "/link-filhos" | "/relatorio";
   label: string;
   icon: typeof Home;
 };
 
-const NAV_GRUPOS: { titulo: string; itens: NavItem[] }[] = [
-  {
-    titulo: "Dia a dia",
-    itens: [
-      { to: "/inicio", label: "Início", icon: Home },
-      { to: "/ocorrencias", label: "Fez / Não fez", icon: ClipboardCheck },
-    ],
-  },
-  {
-    titulo: "Configuração",
-    itens: [
-      { to: "/filhos", label: "Filhos", icon: Users },
-      { to: "/tarefas", label: "Tarefas", icon: ListTodo },
-      { to: "/vigencias", label: "Vigências", icon: CalendarRange },
-      { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
-      { to: "/link-filhos", label: "Gerar Link / Filho", icon: Link2 },
-    ],
-  },
-  {
-    titulo: "Acompanhamento",
-    itens: [
-      { to: "/relatorio", label: "Relatório / Histórico", icon: FileText },
-    ],
-  },
+const NAV_ITENS: NavItem[] = [
+  { to: "/inicio", label: "Início", icon: Home },
+  { to: "/ocorrencias", label: "Fez / Não fez", icon: ClipboardCheck },
+  { to: "/filhos", label: "Filhos", icon: Users },
+  { to: "/tarefas", label: "Tarefas", icon: ListTodo },
+  { to: "/vigencias", label: "Vigências", icon: CalendarRange },
+  { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
+  { to: "/link-filhos", label: "Gerar Link / Filho", icon: Link2 },
+  { to: "/relatorio", label: "Relatório / Histórico", icon: FileText },
 ];
-
-function grupoDoPath(pathname: string): string | null {
-  return NAV_GRUPOS.find((grupo) =>
-    grupo.itens.some((item) => pathname === item.to || pathname.startsWith(item.to + "/")),
-  )?.titulo ?? null;
-}
 
 const ETAPAS = [
   { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se marcar ‘Tem mesada’, preencha também o valor: nesse caso, cada ‘Não fez’ gera o desconto definido na vigência." },
@@ -109,12 +87,6 @@ function AuthenticatedLayout() {
   const [saindo, setSaindo] = useState(false);
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
-  const [grupoMenuAberto, setGrupoMenuAberto] = useState<string | null>(() => grupoDoPath(pathname));
-
-  useEffect(() => {
-    const grupo = grupoDoPath(pathname);
-    if (grupo) setGrupoMenuAberto(grupo);
-  }, [pathname]);
 
   async function clonarPeloMenu() {
     try {
@@ -219,59 +191,29 @@ function AuthenticatedLayout() {
     </div>
   );
 
-  const GrupoMenu = ({ grupo, mobile = false }: { grupo: (typeof NAV_GRUPOS)[number]; mobile?: boolean }) => {
-    const aberto = grupoMenuAberto === grupo.titulo;
-    const grupoAtual = grupoDoPath(pathname) === grupo.titulo;
-    const grupoFechadoAtual = grupoAtual && !aberto;
-    return (
-      <div className={mobile ? "mb-1.5" : "mb-1"}>
-        <button
-          type="button"
-          onClick={() => setGrupoMenuAberto(aberto ? null : grupo.titulo)}
+  const MenuPrincipal = ({ mobile = false }: { mobile?: boolean }) => (
+    <div className={mobile ? "space-y-1" : "space-y-1.5"}>
+      {NAV_ITENS.map(({ to, label, icon: Icon }) => (
+        <Link
+          key={to}
+          to={to}
+          onClick={() => mobile && setMenuMobileAberto(false)}
           className={mobile
-            ? `group flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[12px] font-extrabold uppercase tracking-wide transition ${grupoFechadoAtual ? "bg-primary/10 text-primary" : "text-foreground hover:bg-sidebar-accent/60"}`
-            : `group flex w-full items-center justify-between rounded-md px-1.5 py-1.5 text-left text-[11px] font-extrabold uppercase tracking-wide transition ${grupoFechadoAtual ? "bg-primary/10 text-primary" : "text-foreground hover:bg-sidebar-accent/60"}`}
-          aria-expanded={aberto}
-          aria-current={grupoFechadoAtual ? "location" : undefined}
+            ? "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            : "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}
+          activeProps={{ className: "!bg-primary/10 !text-primary" }}
         >
-          <span className="flex min-w-0 items-center gap-2">
-            <span>{grupo.titulo}</span>
-            {!aberto && grupo.titulo === "Dia a dia" && quantidadeNotificacoes > 0 && (
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full bg-destructive ring-2 ring-sidebar"
-                aria-label={`${quantidadeNotificacoes} pendência(s)`}
-                title={`${quantidadeNotificacoes} pendência(s)`}
-              />
-            )}
-          </span>
-          <CollapseChevron open={aberto} className={mobile ? "h-7 w-7" : "h-6 w-6"} />
-        </button>
-        {aberto && (
-          <div className={mobile ? "mt-1 space-y-1 pl-1" : "mt-1 space-y-1.5 pl-1"}>
-            {grupo.itens.map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => mobile && setMenuMobileAberto(false)}
-                className={mobile
-                  ? "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  : "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[12px] font-medium leading-tight text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}
-                activeProps={{ className: "!bg-primary/10 !text-primary" }}
-              >
-                <Icon className={mobile ? "h-5 w-5" : "h-3.5 w-3.5"} />
-                <span className="min-w-0 flex-1">{label}</span>
-                {to === "/ocorrencias" && quantidadeNotificacoes > 0 && (
-                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
-                    {quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+          <Icon className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+          <span className="min-w-0 flex-1">{label}</span>
+          {to === "/ocorrencias" && quantidadeNotificacoes > 0 && (
+            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+              {quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}
+            </span>
+          )}
+        </Link>
+      ))}
+    </div>
+  );
 
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary/10 !text-primary" }}>
@@ -295,7 +237,7 @@ function AuthenticatedLayout() {
           </div>
 
           <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-1.5 md:pb-1 md:pt-1">
-            {NAV_GRUPOS.map((grupo) => <GrupoMenu key={grupo.titulo} grupo={grupo} />)}
+            <MenuPrincipal />
             <AtalhosPrincipais />
             <div className="mt-auto border-t pt-2">
               <Button variant="ghost" className="h-auto w-full justify-start gap-2.5 rounded-md px-1.5 py-1 text-[12px] text-muted-foreground" onClick={abrirGuia} aria-label="Ajuda: rever guia de primeiros passos"><CircleHelp className="h-4 w-4" /> Ajuda</Button>
@@ -361,7 +303,7 @@ function AuthenticatedLayout() {
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto flex items-center gap-2.5" onClick={() => setMenuMobileAberto(false)}><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Home className="h-[18px] w-[18px]" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-xl font-bold">Combinado</span><span className="mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span></span></Link><button type="button" className={modalCloseInlineButtonClass} onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><ModalCloseIcon /></button></div>
           <nav className="flex flex-col px-2 pb-28 pt-3">
-            {NAV_GRUPOS.map((grupo) => <GrupoMenu key={grupo.titulo} grupo={grupo} mobile />)}
+            <MenuPrincipal mobile />
             <AtalhosPrincipais mobile />
             <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></div>
           </nav>
