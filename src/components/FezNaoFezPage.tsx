@@ -77,6 +77,7 @@ import { PenalidadeDialog } from "@/components/PenalidadeDialog";
 import {
   dataBrasil,
   datasDaVigenciaAteHoje,
+  useDataBrasilAtual,
 } from "@/lib/notificacoes";
 
 type ModoPagina = "todos" | "pendentes";
@@ -130,6 +131,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const { data: atribuicoes = [], isLoading } = useFilhoTarefas();
   const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
+  const hoje = useDataBrasilAtual();
+  const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
@@ -167,7 +170,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const datasDaTarefa = (tarefa: FilhoTarefa, vigencia: Vigencia) => {
     if (modo === "pendentes" && !vigenciaEmAndamento(vigencia)) return [];
 
-    const datasGeradas = datasDaVigenciaAteHoje(vigencia);
+    const datasGeradas = datasDaVigenciaAteHoje(vigencia, agoraBrasil);
     const datasComRegistro = ocorrenciasDaTarefa(tarefa).map((o) =>
       dataBrasil(o.created_at),
     );
@@ -239,7 +242,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       /^\d{4}-\d{2}-\d{2}$/.test(data) &&
       data >= dataBrasil(vigencia.data_inicio) &&
       data <= fim &&
-      data <= dataBrasil()
+      data <= hoje
     );
   }
 
