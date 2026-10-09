@@ -459,6 +459,10 @@ export type Database = {
           qtd_atribuicoes: number
         }[]
       }
+      excluir_vigencia_com_regra: {
+        Args: { p_id_vigencia: number }
+        Returns: boolean
+      }
       gerar_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: {
