@@ -362,12 +362,11 @@ function VigenciasPage() {
           </div>
 
           {modoPeriodoNovo === "DATAS" ? (
-            <div className="grid min-w-0 gap-x-2 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end sm:gap-y-2">
+            <div className="grid min-w-0 gap-2 sm:grid-cols-2">
               <div className="min-w-0 space-y-2">
                 <Label htmlFor="inicio">Início <span className="text-destructive" aria-hidden="true">*</span></Label>
                 <BrDateTimeField id="inicio" value={form.data_inicio} onChange={(data_inicio) => setForm((atual) => ({ ...atual, data_inicio }))} />
               </div>
-              <span className="py-0 text-center text-sm leading-none text-muted-foreground sm:pb-2 sm:leading-normal">até</span>
               <div className="min-w-0 space-y-2">
                 <Label htmlFor="fim">Fim <span className="text-destructive" aria-hidden="true">*</span></Label>
                 <BrDateTimeField id="fim" value={form.data_fim} min={form.data_inicio} onChange={(data_fim) => setForm((atual) => ({ ...atual, data_fim }))} />
