@@ -86,15 +86,6 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
     !carregandoOcorrencias &&
     pendencias.length > 0;
 
-  function totalNaoFez(r: FilhoTarefa) {
-    return ocorrencias.filter(
-      (o) =>
-        o.tipo !== "FEZ" &&
-        o.t_filho_tarefa?.id_filho === r.id_filho &&
-        o.t_filho_tarefa?.id_vigencia === r.id_vigencia,
-    ).length;
-  }
-
   async function registrarNaoFez(r: FilhoTarefa, data: string, penalidadeTexto?: string) {
     const v = r.t_vigencia;
     if (!v || !vigenciaEmAndamento(v)) return;
