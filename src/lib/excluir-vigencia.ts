@@ -5,6 +5,6 @@ export async function excluirVigenciaComRegra(idVigencia: number) {
     p_id_vigencia: idVigencia,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   if (!data) throw new Error("A vigência não foi excluída");
 }
