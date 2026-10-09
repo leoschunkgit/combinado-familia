@@ -261,7 +261,7 @@ function AuthenticatedLayout() {
               >
                 <Icon className={mobile ? "h-5 w-5" : "h-3.5 w-3.5"} />
                 <span className="min-w-0 flex-1">{label}</span>
-                {to === "/notificacoes" && quantidadeNotificacoes > 0 && (
+                {to === "/ocorrencias" && quantidadeNotificacoes > 0 && (
                   <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
                     {quantidadeNotificacoes > 99 ? "99+" : quantidadeNotificacoes}
                   </span>
