@@ -10,6 +10,7 @@ export function Pick({
   placeholder = "Selecione",
   allLabel,
   required = false,
+  disabled = false,
 }: {
   label: string;
   value: string;
@@ -18,11 +19,12 @@ export function Pick({
   placeholder?: string;
   allLabel?: string;
   required?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <div className={uiSpacing.fieldStack}>
       <Label>{label}{required && <span className="text-destructive" aria-hidden="true"> *</span>}</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger className="w-full"><SelectValue placeholder={placeholder} /></SelectTrigger>
         <SelectContent>
           {allLabel && <SelectItem value="all">{allLabel}</SelectItem>}
