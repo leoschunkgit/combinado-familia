@@ -114,6 +114,7 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/O limite de Não fez desta vigência já foi atingido|O limite de Nao fez desta vigencia ja foi atingido/i, "O limite de Não fez desta vigência já foi atingido"],
   [/Atribuicao com Fez\/Nao fez nao pode ser excluida diretamente|Atribuição com Fez\/Não fez não pode ser excluída diretamente/i, "Esta atribuição já tem registros de Fez/Não fez e não pode ser excluída"],
   [/Atribuicao com Fez\/Nao fez nao pode ser editada|Atribuição com Fez\/Não fez não pode ser editada/i, "Esta atribuição já tem registros de Fez/Não fez e não pode ser alterada"],
   [/Vigência com atribuições não pode ser excluída|Vigencia com atribuicoes nao pode ser excluida/i, "Esta vigência tem atribuições e não pode ser excluída"],
