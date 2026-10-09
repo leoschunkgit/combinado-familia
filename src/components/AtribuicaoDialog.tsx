@@ -89,6 +89,10 @@ export function AtribuicaoDialog({
   const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
   const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada");
   const vigenciaSelecionadaFutura = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "futura");
+  const semVigencias = vigencias.length === 0;
+  const semFilhos = filhos.length === 0;
+  const semTarefas = tarefas.length === 0;
+  const faltamCadastrosNormal = semVigencias || semFilhos || semTarefas;
 
   const statusVigencia = (v: (typeof vigencias)[number]) => ({
     value: String(v.id),
@@ -243,14 +247,36 @@ export function AtribuicaoDialog({
             {mode === "NORMAL" ? (
               <>
                 <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-end">
-                  <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
-                  <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
+                  <Pick
+                    required
+                    label="Vigência"
+                    value={vig}
+                    onChange={setVig}
+                    options={vigenciasOrdenadas.map(statusVigencia)}
+                    placeholder={semVigencias ? "Nenhuma vigência cadastrada" : "Selecione"}
+                    disabled={semVigencias}
+                  />
+                  <Pick
+                    required
+                    label="Filho"
+                    value={filho}
+                    onChange={setFilho}
+                    options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))}
+                    placeholder={semFilhos ? "Nenhum filho cadastrado" : "Selecione"}
+                    disabled={semFilhos}
+                  />
                   <div className="min-w-0 space-y-2">
                     <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="outline" className="w-full justify-between font-normal">
-                          <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
+                        <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={semTarefas}>
+                          <span className="truncate">
+                            {semTarefas
+                              ? "Nenhuma tarefa cadastrada"
+                              : tarefasSelecionadas.length === 0
+                                ? "Selecione"
+                                : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}
+                          </span>
                           <ChevronsUpDown className="h-4 w-4 opacity-50" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -271,11 +297,21 @@ export function AtribuicaoDialog({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <Button className="w-full md:w-fit" variant="secondary" onClick={adicionarNormal} disabled={!vig || vigenciaSelecionadaFinalizada}>
+                  <Button
+                    className="w-full md:w-fit"
+                    variant="secondary"
+                    onClick={adicionarNormal}
+                    disabled={!vig || !filho || tarefasSelecionadas.length === 0 || vigenciaSelecionadaFinalizada || faltamCadastrosNormal}
+                  >
                     <Plus className="h-4 w-4" /> Adicionar
                   </Button>
                 </div>
 
+                {faltamCadastrosNormal && (
+                  <p className="text-xs text-muted-foreground">
+                    Para fazer uma atribuição, cadastre uma vigência, ao menos um filho e ao menos uma tarefa.
+                  </p>
+                )}
                 {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
                 {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Esta vigência ainda vai começar. Você pode preparar e ajustar as atribuições normalmente.</p>}
 
@@ -323,8 +359,14 @@ export function AtribuicaoDialog({
                         <Label>Tarefas <span className="text-destructive">*</span></Label>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button type="button" variant="outline" className="w-full justify-between font-normal">
-                              <span className="truncate">{tarefasSelecionadas.length === 0 ? "Selecione" : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}</span>
+                            <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={semTarefas}>
+                              <span className="truncate">
+                                {semTarefas
+                                  ? "Nenhuma tarefa cadastrada"
+                                  : tarefasSelecionadas.length === 0
+                                    ? "Selecione"
+                                    : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}
+                              </span>
                               <ChevronsUpDown className="h-4 w-4 opacity-50" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -356,8 +398,14 @@ export function AtribuicaoDialog({
                         <Label>Filhos <span className="text-destructive">*</span></Label>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button type="button" variant="outline" className="w-full justify-between font-normal">
-                              <span className="truncate">{filhosSelecionados.length === 0 ? "Selecione" : `${filhosSelecionados.length} filho(s) selecionado(s)`}</span>
+                            <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={semFilhos}>
+                              <span className="truncate">
+                                {semFilhos
+                                  ? "Nenhum filho cadastrado"
+                                  : filhosSelecionados.length === 0
+                                    ? "Selecione"
+                                    : `${filhosSelecionados.length} filho(s) selecionado(s)`}
+                              </span>
                               <ChevronsUpDown className="h-4 w-4 opacity-50" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -389,7 +437,11 @@ export function AtribuicaoDialog({
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-                  <Button type="button" onClick={() => void runAction(cadastrarContextual)} disabled={saving}>
+                  <Button
+                    type="button"
+                    onClick={() => void runAction(cadastrarContextual)}
+                    disabled={saving || (mode === "POS_CADASTRO_FILHO" ? semTarefas || tarefasSelecionadas.length === 0 : semFilhos || filhosSelecionados.length === 0)}
+                  >
                     Cadastrar atribuição
                   </Button>
                 </div>
