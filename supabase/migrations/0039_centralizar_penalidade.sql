@@ -228,7 +228,7 @@ RETURNS TABLE(
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
 DECLARE
   v_pai_id bigint;
   v_id_filho bigint;
@@ -368,7 +368,7 @@ BEGIN
     NOT (v_tem_mesada AND v_valor_debito IS NOT NULL) AND v_novo_total >= v_limite,
     NULLIF(BTRIM(v_penalidade_atual), '');
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.registrar_nao_fez_com_penalidade(bigint, timestamptz, bigint, text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_nao_fez_com_penalidade(bigint, timestamptz, bigint, text) FROM anon;
