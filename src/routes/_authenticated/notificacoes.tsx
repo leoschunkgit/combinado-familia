@@ -58,15 +58,6 @@ function Notificacoes() {
     }))
     .filter((g) => g.filhos.length > 0);
 
-  function totalNaoFez(r: FilhoTarefa) {
-    return ocorrencias.filter(
-      (o) =>
-        o.tipo !== "FEZ" &&
-        o.t_filho_tarefa?.id_filho === r.id_filho &&
-        o.t_filho_tarefa?.id_vigencia === r.id_vigencia,
-    ).length;
-  }
-
   async function registrarNaoFezAnterior(r: FilhoTarefa, data: string, penalidadeTexto?: string) {
     const v = r.t_vigencia;
     if (!v || !vigenciaEmAndamento(v)) return;
