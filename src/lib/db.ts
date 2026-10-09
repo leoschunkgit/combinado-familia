@@ -118,6 +118,8 @@ const ERROS: [RegExp, string][] = [
   [/O limite de Não fez desta vigência já foi atingido|O limite de Nao fez desta vigencia ja foi atingido/i, "O limite de Não fez desta vigência já foi atingido"],
   [/Atribuicao com Fez\/Nao fez nao pode ser excluida diretamente|Atribuição com Fez\/Não fez não pode ser excluída diretamente/i, "Esta atribuição já tem registros de Fez/Não fez e não pode ser excluída"],
   [/Atribuicao com Fez\/Nao fez nao pode ser editada|Atribuição com Fez\/Não fez não pode ser editada/i, "Esta atribuição já tem registros de Fez/Não fez e não pode ser alterada"],
+  [/Vigência com registros de Fez\/Não fez não pode ser excluída|Vigencia com registros de Fez\/Nao fez nao pode ser excluida/i, "Esta vigência possui registros de Fez/Não fez e não pode ser excluída"],
+  [/Vigência em andamento com atribuições não pode ser excluída|Vigencia em andamento com atribuicoes nao pode ser excluida/i, "Esta vigência está em andamento e tem atribuições, por isso não pode ser excluída"],
   [/Vigência com atribuições não pode ser excluída|Vigencia com atribuicoes nao pode ser excluida/i, "Esta vigência tem atribuições e não pode ser excluída"],
   [/Há registros de Fez\/Não fez fora do novo período da vigência|Ha registros de Fez\/Nao fez fora do novo periodo da vigencia/i, "Há registros de Fez/Não fez fora do novo período. Corrija-os antes de salvar"],
   [/Já existe uma vigência nesse período|Ja existe uma vigencia nesse periodo/i, "Já existe uma vigência nesse período. As vigências não podem se sobrepor"],
