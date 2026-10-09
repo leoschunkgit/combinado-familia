@@ -392,6 +392,45 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     });
   }
 
+  function abrirTrocaMarcacao(
+    tarefa: FilhoTarefa,
+    total: number,
+    data: string,
+    registro: Ocorrencia,
+  ) {
+    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
+      toast.error("Ações só podem ser feitas em uma vigência em andamento");
+      return;
+    }
+
+    if (registro.tipo === "FEZ") {
+      setTroca({
+        direcao: "PARA_NAO_FEZ",
+        tarefa,
+        total,
+        ocorrencia: registro,
+      });
+      return;
+    }
+
+    setTroca({
+      direcao: "PARA_FEZ",
+      tarefa,
+      total,
+      ocorrencia: registro,
+      fez: {
+        modo: "REGISTRAR",
+        ocorrenciaId: registro.id,
+        tarefa,
+        total,
+        data,
+        bonusTipo: "NENHUMA",
+        descricao: "",
+        valor: "",
+      },
+    });
+  }
+
   function editarBonificacao(
     tarefa: FilhoTarefa,
     total: number,
@@ -942,6 +981,35 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                         : "Não fez"}
                                                     </span>
 
+                                                    {!bloqueada && (
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 shrink-0"
+                                                        disabled={busy}
+                                                        title={
+                                                          registro.tipo === "FEZ"
+                                                            ? "Alterar para Não fez"
+                                                            : "Alterar para Fez"
+                                                        }
+                                                        aria-label={
+                                                          registro.tipo === "FEZ"
+                                                            ? "Alterar marcação para Não fez"
+                                                            : "Alterar marcação para Fez"
+                                                        }
+                                                        onClick={() =>
+                                                          abrirTrocaMarcacao(
+                                                            tarefa,
+                                                            totalNaoFez,
+                                                            data,
+                                                            registro,
+                                                          )
+                                                        }
+                                                      >
+                                                        <Pencil className="h-4 w-4" />
+                                                      </Button>
+                                                    )}
+
                                                     {registro.tipo === "FEZ" &&
                                                       registro.bonificacao_tipo ===
                                                         "TEXTO" && (
@@ -1041,50 +1109,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                     </Button>
                                                   </>
                                                 )}
-
-                                                {registro &&
-                                                  !bloqueada &&
-                                                  registro.tipo === "FEZ" && (
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      className={botaoNaoFezClass}
-                                                      disabled={busy}
-                                                      onClick={() =>
-                                                        solicitarNaoFez(
-                                                          tarefa,
-                                                          totalNaoFez,
-                                                          data,
-                                                          registro,
-                                                        )
-                                                      }
-                                                    >
-                                                      <ThumbsDown className="h-4 w-4 text-red-600" />
-                                                      Não fez
-                                                    </Button>
-                                                  )}
-
-                                                {registro &&
-                                                  !bloqueada &&
-                                                  registro.tipo !== "FEZ" && (
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      className={botaoFezClass}
-                                                      disabled={busy}
-                                                      onClick={() =>
-                                                        abrirFez(
-                                                          tarefa,
-                                                          totalNaoFez,
-                                                          data,
-                                                          registro,
-                                                        )
-                                                      }
-                                                    >
-                                                      <ThumbsUp className="h-4 w-4 text-green-600" />
-                                                      Fez
-                                                    </Button>
-                                                  )}
 
                                                 {registro && !bloqueada && (
                                                   <Checkbox
