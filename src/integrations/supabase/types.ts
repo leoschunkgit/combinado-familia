@@ -478,6 +478,19 @@ export type Database = {
         Args: { p_id: number }
         Returns: undefined
       }
+      registrar_nao_fez_com_penalidade: {
+        Args: {
+          p_created_at: string
+          p_id_filho_tarefa: number
+          p_id_ocorrencia?: number | null
+          p_penalidade?: string | null
+        }
+        Returns: {
+          novo_total: number
+          penalidade: string | null
+          penalizado: boolean
+        }[]
+      }
       regenerar_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: {
