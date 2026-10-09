@@ -981,11 +981,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                         </span>
                                                       )}
                                                   </div>
-                                                ) : (
-                                                  <span className="text-sm text-muted-foreground">
-                                                    Sem marcação
-                                                  </span>
-                                                )}
+                                                ) : null}
                                               </div>
 
                                               <div className="flex flex-wrap items-center justify-end gap-2">
