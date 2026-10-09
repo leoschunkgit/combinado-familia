@@ -234,7 +234,7 @@ export function AtribuicaoDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !saving && onOpenChange(next)}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
+      <DialogContent className="max-h-[92vh] overflow-x-hidden overflow-y-auto sm:max-w-3xl">
         <DialogHeader><DialogTitle>{titulo}</DialogTitle></DialogHeader>
 
         <Card className="border-0 shadow-none">
@@ -242,10 +242,10 @@ export function AtribuicaoDialog({
           <CardContent className="space-y-6">
             {mode === "NORMAL" ? (
               <>
-                <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+                <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-end">
                   <Pick required label="Vigência" value={vig} onChange={setVig} options={vigenciasOrdenadas.map(statusVigencia)} />
                   <Pick required label="Filho" value={filho} onChange={setFilho} options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))} />
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -271,7 +271,7 @@ export function AtribuicaoDialog({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <Button variant="secondary" onClick={adicionarNormal} disabled={!vig || vigenciaSelecionadaFinalizada}>
+                  <Button className="w-full md:w-fit" variant="secondary" onClick={adicionarNormal} disabled={!vig || vigenciaSelecionadaFinalizada}>
                     <Plus className="h-4 w-4" /> Adicionar
                   </Button>
                 </div>
