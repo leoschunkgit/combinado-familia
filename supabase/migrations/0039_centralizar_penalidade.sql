@@ -243,6 +243,16 @@ FOR EACH ROW
 WHEN (OLD.penalidade IS DISTINCT FROM NEW.penalidade)
 EXECUTE FUNCTION public.guard_penalidade_vigencia();
 
+DROP TRIGGER IF EXISTS guard_penalidade_vigencia_before_insert
+ON public.t_vigencia;
+
+CREATE TRIGGER guard_penalidade_vigencia_before_insert
+BEFORE INSERT
+ON public.t_vigencia
+FOR EACH ROW
+WHEN (NEW.penalidade IS NOT NULL)
+EXECUTE FUNCTION public.guard_penalidade_vigencia();
+
 REVOKE ALL ON FUNCTION public.guard_penalidade_vigencia() FROM PUBLIC;
 
 -- Registra NAO_FEZ e, quando necessario, a penalidade escrita na mesma transacao.
