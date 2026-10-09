@@ -42,7 +42,7 @@ export function AppPushNotifications() {
 
         const action = await PushNotifications.addListener("pushNotificationActionPerformed", () => {
           void queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
-          navigate({ to: "/notificacoes" });
+          navigate({ to: "/ocorrencias" });
         });
         removerListeners.push(() => action.remove());
 
