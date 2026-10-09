@@ -5,7 +5,6 @@ import { Bell, CheckCircle2, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } fr
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
