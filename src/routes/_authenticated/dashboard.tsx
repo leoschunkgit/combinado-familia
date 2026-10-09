@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AlertTriangle, BarChart3, CalendarDays, ThumbsDown, ThumbsUp, TrendingDown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,13 @@ import { ocorrenciasPenalizadas } from "@/lib/penalidade";
 import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
 import { reais, usaDesconto, valorDebitado } from "@/lib/mesada";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({head:()=>({meta:[{title:"Dashboard — Combinado"},{name:"description",content:"Visão resumida de Fez, Não fez, penalidades e descontos."}]}),component:DashboardPage});
+export const Route = createFileRoute("/_authenticated/dashboard")({
+  beforeLoad: () => {
+    throw redirect({ to: "/relatorio" });
+  },
+  head:()=>({meta:[{title:"Dashboard — Combinado"},{name:"description",content:"Visão resumida de Fez, Não fez, penalidades e descontos."}]}),
+  component:DashboardPage,
+});
 function mesAno(data:string){return new Intl.DateTimeFormat("pt-BR",{month:"short",year:"2-digit",timeZone:"America/Sao_Paulo"}).format(new Date(data));}
 
 function DashboardPage(){
