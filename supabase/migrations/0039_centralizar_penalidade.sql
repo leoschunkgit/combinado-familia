@@ -212,49 +212,6 @@ $$;
 
 
 
--- Impede que qualquer codigo futuro grave uma penalidade sem que o limite esteja realmente atingido.
-CREATE OR REPLACE FUNCTION public.guard_penalidade_vigencia()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $
-BEGIN
-  IF NULLIF(BTRIM(NEW.penalidade), '') IS NULL THEN
-    NEW.penalidade := NULL;
-    RETURN NEW;
-  END IF;
-
-  IF NEW.id IS NULL OR NOT public.existe_filho_sem_mesada_no_limite(NEW.id) THEN
-    RAISE EXCEPTION 'Penalidade só pode ser informada quando um filho sem mesada atingir o limite de Não fez';
-  END IF;
-
-  RETURN NEW;
-END;
-$;
-
-DROP TRIGGER IF EXISTS guard_penalidade_vigencia_before_change
-ON public.t_vigencia;
-
-CREATE TRIGGER guard_penalidade_vigencia_before_change
-BEFORE UPDATE OF penalidade
-ON public.t_vigencia
-FOR EACH ROW
-WHEN (OLD.penalidade IS DISTINCT FROM NEW.penalidade)
-EXECUTE FUNCTION public.guard_penalidade_vigencia();
-
-DROP TRIGGER IF EXISTS guard_penalidade_vigencia_before_insert
-ON public.t_vigencia;
-
-CREATE TRIGGER guard_penalidade_vigencia_before_insert
-BEFORE INSERT
-ON public.t_vigencia
-FOR EACH ROW
-WHEN (NEW.penalidade IS NOT NULL)
-EXECUTE FUNCTION public.guard_penalidade_vigencia();
-
-REVOKE ALL ON FUNCTION public.guard_penalidade_vigencia() FROM PUBLIC;
-
 -- Registra NAO_FEZ e, quando necessario, a penalidade escrita na mesma transacao.
 -- Evita estado intermediario em que a penalidade fique salva sem a ocorrencia que atingiu o limite.
 CREATE OR REPLACE FUNCTION public.registrar_nao_fez_com_penalidade(
