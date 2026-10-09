@@ -148,6 +148,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     Record<number, boolean>
   >({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
+  const [tarefasAbertas, setTarefasAbertas] = useState<Record<number, boolean>>({});
 
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
 
@@ -226,6 +227,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             `${vigencia.id}-${filho.id}`,
             aberto,
           ]),
+        ),
+      ),
+    );
+    setTarefasAbertas(
+      Object.fromEntries(
+        grupos.flatMap(({ filhos: gruposFilhos }) =>
+          gruposFilhos.flatMap(({ tarefas: tarefasDoFilho }) =>
+            tarefasDoFilho.map((tarefa) => [tarefa.id, aberto]),
+          ),
         ),
       ),
     );
@@ -784,6 +794,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 const registros = ocorrenciasDaTarefa(tarefa);
                                 const datas = datasDaTarefa(tarefa, vigencia);
                                 const bloqueada = !vigenciaEmAndamento(vigencia);
+                                const tarefaAberta =
+                                  tarefasAbertas[tarefa.id] === true;
                                 const selecionadasDaTarefa = registros.filter(
                                   (registro) => selecionadas.has(registro.id),
                                 );
@@ -794,14 +806,30 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                     className="overflow-hidden rounded-xl border"
                                   >
                                     <div className="flex flex-col gap-2 border-b bg-muted/20 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-                                      <div className="min-w-0">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                          Tarefa
-                                        </p>
-                                        <p className="break-words font-semibold">
-                                          {tarefa.t_tarefa?.nome}
-                                        </p>
-                                      </div>
+                                      <button
+                                        type="button"
+                                        className="flex min-w-0 items-center gap-2 text-left"
+                                        onClick={() =>
+                                          setTarefasAbertas((atual) => ({
+                                            ...atual,
+                                            [tarefa.id]: !tarefaAberta,
+                                          }))
+                                        }
+                                        aria-expanded={tarefaAberta}
+                                      >
+                                        <CollapseChevron
+                                          open={tarefaAberta}
+                                          className="shrink-0"
+                                        />
+                                        <div className="min-w-0">
+                                          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                            Tarefa
+                                          </p>
+                                          <p className="break-words font-semibold">
+                                            {tarefa.t_tarefa?.nome}
+                                          </p>
+                                        </div>
+                                      </button>
 
                                       {!bloqueada && registros.length > 0 && (
                                         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -868,7 +896,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                       )}
                                     </div>
 
-                                    {datas.length === 0 ? (
+                                    {tarefaAberta && (datas.length === 0 ? (
                                       <p className="px-4 py-4 text-sm text-muted-foreground">
                                         {modo === "pendentes"
                                           ? "Nenhuma pendência nesta tarefa."
@@ -1092,7 +1120,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                           );
                                         })}
                                       </div>
-                                    )}
+                                    ))}
                                   </section>
                                 );
                               })}
