@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -601,25 +600,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         }
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
-
-      <div className="mb-5 flex w-fit rounded-lg border bg-muted/30 p-1">
-        <Button
-          asChild
-          size="sm"
-          variant={modo === "todos" ? "default" : "ghost"}
-          className="min-w-24"
-        >
-          <Link to="/ocorrencias">Tudo</Link>
-        </Button>
-        <Button
-          asChild
-          size="sm"
-          variant={modo === "pendentes" ? "default" : "ghost"}
-          className="min-w-24"
-        >
-          <Link to="/notificacoes">Pendências</Link>
-        </Button>
-      </div>
 
       <ResponsiveFilters
         desktopClassName="md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
