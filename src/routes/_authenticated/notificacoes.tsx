@@ -14,7 +14,7 @@ import { uiTypography } from "@/lib/ui-typography";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type FilhoTarefa } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
-import { reais, usaDesconto, valorDebitado } from "@/lib/mesada";
+import { reais, valorDebitado } from "@/lib/mesada";
 import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
 import { useActionLoading } from "@/components/ActionLoading";
 import { registrarNaoFezComPenalidade } from "@/lib/penalidade";
