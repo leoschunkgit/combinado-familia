@@ -327,11 +327,11 @@ function AuthenticatedLayout() {
           <Outlet />
         </div></main>
 
-        {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/notificacoes" && (
+        {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/ocorrencias" && (
           <Button
             type="button"
             size="icon"
-            onClick={() => setModalPendenciasAberto(true)}
+            onClick={() => navigate({ to: "/ocorrencias" })}
             style={{
               right: "calc(1rem + env(safe-area-inset-right))",
               bottom: mostrarAtalhoLinkFilho
@@ -339,8 +339,8 @@ function AuthenticatedLayout() {
                 : "calc(1rem + env(safe-area-inset-bottom))",
             }}
             className="fixed z-30 h-12 w-12 rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 md:hidden"
-            aria-label="Abrir pendências de Fez ou Não fez"
-            title="Pendências"
+            aria-label="Ir para Fez / Não fez"
+            title="Fez / Não fez"
           >
             <Bell className="animate-notification-bell h-5 w-5" />
             <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-red-600 ring-2 ring-white" aria-hidden="true" />
