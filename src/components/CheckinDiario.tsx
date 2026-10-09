@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ChevronsDown, ChevronsUp, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,8 @@ import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib
 import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
 import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
 import { useActionLoading } from "@/components/ActionLoading";
-import { penalidadeJaFoiAplicada } from "@/lib/penalidade";
+import { registrarNaoFezComPenalidade } from "@/lib/penalidade";
+import { PenalidadeDialog } from "@/components/PenalidadeDialog";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 type FezDraft = { tarefa: FilhoTarefa; data: string; bonusTipo: BonusTipo; descricao: string; valor: string };
@@ -99,53 +100,23 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
     if (!v || !vigenciaEmAndamento(v)) return;
 
     const filho = filhos.find((x) => x.id === r.id_filho);
-    const comDesconto = filho ? usaDesconto(filho, v) : false;
-    const total = totalNaoFez(r);
-
-    if (!comDesconto && total >= v.qtd_ocorrencia) {
-      toast.error("O limite de Não fez desta vigência já foi atingido");
-      return;
-    }
-
-    const novo = total + 1;
-    const penalizado = !comDesconto && novo >= v.qtd_ocorrencia;
-    const penalidadeAtual = v.penalidade?.trim() ?? "";
-    const penalidadeInformada = penalidadeTexto?.trim() ?? "";
     const vigenciaCompleta = vigencias.find((item) => item.id === r.id_vigencia);
-    const penalidadeJaAplicada = vigenciaCompleta
-      ? penalidadeJaFoiAplicada(vigenciaCompleta, filhos, ocorrencias)
-      : Boolean(penalidadeAtual);
-
-    if (penalizado && !penalidadeJaAplicada && !penalidadeInformada) {
-      setPenalidadePendente({ tarefa: r, data, descricao: "" });
-      return;
-    }
 
     setBusy(true);
-    let penalidadeSalvaAgora = false;
     try {
-      if (penalizado && !penalidadeJaAplicada && penalidadeInformada) {
-        const atualizacao = await supabase
-          .from("t_vigencia")
-          .update({ penalidade: penalidadeInformada })
-          .eq("id", r.id_vigencia);
-        if (atualizacao.error) throw atualizacao.error;
-        penalidadeSalvaAgora = true;
-      }
-
-      const { error } = await supabase.from("t_ocorrencia").insert({
-        tipo: "NAO_FEZ",
-        bonificacao_tipo: null,
-        bonificacao_descricao: null,
-        bonificacao_valor: null,
-        id_filho_tarefa: r.id,
-        created_at: new Date(data + "T12:00:00-03:00").toISOString(),
+      const resultado = await registrarNaoFezComPenalidade({
+        tarefa: r,
+        filho,
+        vigenciaCompleta,
+        filhos,
+        ocorrencias,
+        dataIso: new Date(data + "T12:00:00-03:00").toISOString(),
+        penalidadeTexto,
       });
-      if (error) {
-        if (penalidadeSalvaAgora) {
-          await supabase.from("t_vigencia").update({ penalidade: penalidadeAtual || null }).eq("id", v.id);
-        }
-        throw error;
+
+      if (resultado.status === "PRECISA_PENALIDADE") {
+        setPenalidadePendente({ tarefa: r, data, descricao: "" });
+        return;
       }
 
       await Promise.all([
@@ -155,14 +126,14 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
       ]);
       setPenalidadePendente(null);
 
-      if (comDesconto && filho) {
+      if (resultado.comDesconto && filho) {
         toast.success(
-          `Não fez registrado · Desconto acumulado: ${reais(valorDebitado(filho, v, novo))}`,
+          `Não fez registrado · Desconto acumulado: ${reais(valorDebitado(filho, v, resultado.novoTotal))}`,
         );
-      } else if (penalizado) {
-        toast.warning(`Limite atingido! Penalidade: ${penalidadeInformada || penalidadeAtual}`);
+      } else if (resultado.penalizado) {
+        toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
       } else {
-        toast.success(`Não fez registrado (${novo}/${v.qtd_ocorrencia})`);
+        toast.success(`Não fez registrado (${resultado.novoTotal}/${v.qtd_ocorrencia})`);
       }
     } catch (e) {
       toast.error(msgErro(e as { message?: string }));
@@ -458,42 +429,16 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
       </DialogContent>
     </Dialog>
 
-    <Dialog open={Boolean(penalidadePendente)} onOpenChange={(novoEstado) => !novoEstado && !busy && setPenalidadePendente(null)}>
-      <DialogContent className="top-[calc(env(safe-area-inset-top)+1rem)] translate-y-0 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Aplicar penalidade</DialogTitle>
-          <DialogDescription>Qual será a penalidade aplicada agora?</DialogDescription>
-        </DialogHeader>
-        {penalidadePendente && (
-          <div className="space-y-2">
-            <Label htmlFor="penalidade-pendencias">Penalidade *</Label>
-            <input
-              id="penalidade-pendencias"
-              autoFocus
-              maxLength={200}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Ex.: Sem celular por 30 minutos"
-              value={penalidadePendente.descricao}
-              onChange={(e) => setPenalidadePendente({ ...penalidadePendente, descricao: e.target.value })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Obrigatória para registrar o “Não fez” que atingiu o limite.
-            </p>
-          </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" disabled={busy} onClick={() => setPenalidadePendente(null)}>
-            Cancelar
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={busy || !penalidadePendente || penalidadePendente.descricao.trim().length < 2}
-            onClick={() => void runAction(confirmarPenalidade)}
-          >
-            <AlertTriangle className="h-4 w-4" /> Salvar penalidade e “Não fez”
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <PenalidadeDialog
+      open={Boolean(penalidadePendente)}
+      value={penalidadePendente?.descricao ?? ""}
+      busy={busy}
+      inputId="penalidade-pendencias"
+      onChange={(descricao) =>
+        setPenalidadePendente((atual) => atual ? { ...atual, descricao } : atual)
+      }
+      onCancel={() => setPenalidadePendente(null)}
+      onConfirm={() => void runAction(confirmarPenalidade)}
+    />
     </>;
 }
