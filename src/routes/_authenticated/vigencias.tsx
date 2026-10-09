@@ -21,6 +21,7 @@ import { reais } from "@/lib/mesada";
 import { validarAlteracaoLimiteNaoFez } from "@/lib/penalidade";
 import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
+import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -214,36 +215,13 @@ function VigenciasPage() {
   }
 
   async function excluir(id: number) {
-    const vigencia = vigencias.find((v) => v.id === id);
-    if (!vigencia) return;
-
-    const agora = Date.now();
-    const inicio = new Date(vigencia.data_inicio).getTime();
-    const fim = new Date(vigencia.data_fim).getTime();
-    const finalizada = fim < agora;
-    const futura = inicio > agora;
-
-    if (finalizada) {
-      toast.error("Vigências finalizadas não podem ser excluídas");
-      return;
+    try {
+      await excluirVigenciaComRegra(id);
+      toast.success("Vigência excluída");
+      qc.invalidateQueries();
+    } catch (error) {
+      toast.error(msgErro(error instanceof Error ? { message: error.message } : null));
     }
-
-    const { count, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id", { count: "exact", head: true }).eq("id_vigencia", id);
-    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
-
-    if (count && !futura) {
-      toast.error("Esta vigência está em andamento e tem atribuições, por isso não pode ser excluída");
-      return;
-    }
-
-    if (count && futura) {
-      const { error: erroAtribuicoes } = await supabase.from("t_filho_tarefa").delete().eq("id_vigencia", id);
-      if (erroAtribuicoes) { toast.error(msgErro(erroAtribuicoes)); return; }
-    }
-
-    const { error } = await supabase.from("t_vigencia").delete().eq("id", id);
-    if (error) { toast.error(msgErro(error)); return; }
-    qc.invalidateQueries();
   }
 
   async function confirmarClone() {
