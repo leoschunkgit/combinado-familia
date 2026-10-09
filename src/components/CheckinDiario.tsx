@@ -135,18 +135,12 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
 
   async function confirmarPenalidade() {
     if (!penalidadePendente) return;
-    const texto = penalidadePendente.descricao.trim();
-    if (texto.length < 2) {
-      toast.error("Escreva a penalidade para continuar");
-      return;
-    }
-    if (texto.length > 200) {
-      toast.error("A penalidade deve ter no máximo 200 caracteres");
-      return;
-    }
-    await registrarNaoFez(penalidadePendente.tarefa, penalidadePendente.data, texto);
+    await registrarNaoFez(
+      penalidadePendente.tarefa,
+      penalidadePendente.data,
+      penalidadePendente.descricao.trim(),
+    );
   }
-
   async function registrarFez(d: FezDraft) {
     const r = d.tarefa;
     const v = r.t_vigencia;
