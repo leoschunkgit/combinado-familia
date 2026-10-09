@@ -42,6 +42,15 @@ BEGIN
     RAISE EXCEPTION 'Vigência não encontrada';
   END IF;
 
+  -- Bloqueia as atribuicoes desta vigencia durante a verificacao/exclusao.
+  -- Isso evita que um Fez/Nao fez seja criado concorrentemente entre a checagem
+  -- de historico e a remocao das atribuicoes.
+  PERFORM 1
+  FROM public.t_filho_tarefa ft
+  WHERE ft.id_vigencia = p_id_vigencia
+    AND ft.id_usuario_pai = v_pai_id
+  FOR UPDATE;
+
   SELECT EXISTS (
     SELECT 1
     FROM public.t_filho_tarefa ft
