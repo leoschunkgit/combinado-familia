@@ -43,6 +43,23 @@ function proximoDiaBrasil(data: string) {
   return dataBrasil(d);
 }
 
+export function datasDaVigenciaAteHoje(vigencia: Pick<Vigencia, "data_inicio" | "data_fim">, agora = new Date()) {
+  const hoje = dataBrasil(agora);
+  const inicio = dataBrasil(vigencia.data_inicio);
+  const fim = dataBrasil(vigencia.data_fim);
+  const limite = fim < hoje ? fim : hoje;
+
+  if (inicio > limite) return [];
+
+  const datas: string[] = [];
+  let data = inicio;
+  while (data <= limite) {
+    datas.push(data);
+    data = proximoDiaBrasil(data);
+  }
+  return datas;
+}
+
 export function pendenciasAnteriores(
   vigencias: Vigencia[],
   atribuicoes: FilhoTarefa[],
@@ -64,12 +81,11 @@ export function pendenciasAnteriores(
     const vigencia = vigenciaPorId.get(tarefa.id_vigencia);
     if (!vigencia) continue;
 
-    let data = dataBrasil(vigencia.data_inicio);
-    while (data < hoje) {
+    for (const data of datasDaVigenciaAteHoje(vigencia, agora)) {
+      if (data >= hoje) continue;
       if (!registros.has(`${tarefa.id}|${data}`)) {
         resultado.push({ tarefa, data });
       }
-      data = proximoDiaBrasil(data);
     }
   }
 
