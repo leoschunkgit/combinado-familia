@@ -831,7 +831,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                         </div>
                                       </button>
 
-                                      {!bloqueada && registros.length > 0 && (
+                                      {tarefaAberta && !bloqueada && registros.length > 0 && (
                                         <div className="flex w-full items-center gap-2 sm:w-auto">
                                           {selecionadasDaTarefa.length > 0 && (
                                             <Button
