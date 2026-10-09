@@ -107,12 +107,12 @@ function Notificacoes() {
 
   async function confirmarPenalidade() {
     if (!penalidadePendente) return;
-    const texto = penalidadePendente.descricao.trim();
-    if (texto.length < 2) { toast.error("Escreva a penalidade para continuar"); return; }
-    if (texto.length > 200) { toast.error("A penalidade deve ter no máximo 200 caracteres"); return; }
-    await registrarNaoFezAnterior(penalidadePendente.tarefa, penalidadePendente.data, texto);
+    await registrarNaoFezAnterior(
+      penalidadePendente.tarefa,
+      penalidadePendente.data,
+      penalidadePendente.descricao.trim(),
+    );
   }
-
   async function registrarFezAnterior(d: FezAnterior) {
     if (d.bonusTipo === "TEXTO" && !d.descricao.trim()) { toast.error("Informe a bonificação escrita"); return; }
     const valor = d.bonusTipo === "VALOR" ? Number(d.valor.replace(",",".")) : null;
