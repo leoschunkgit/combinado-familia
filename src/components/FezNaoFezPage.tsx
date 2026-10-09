@@ -951,7 +951,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                           return (
                                             <div
                                               key={data}
-                                              className="grid gap-3 px-3 py-3 sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:items-center sm:px-4"
+                                              className={
+                                                registro
+                                                  ? "grid gap-3 px-3 py-3 sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:items-center sm:px-4"
+                                                  : "flex items-center justify-between gap-2 px-3 py-3 sm:grid sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:px-4"
+                                              }
                                             >
                                               <div className="flex items-center gap-2">
                                                 <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -1072,13 +1076,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 ) : null}
                                               </div>
 
-                                              <div className="flex flex-wrap items-center justify-end gap-2">
+                                              <div className={registro ? "flex flex-wrap items-center justify-end gap-2" : "flex shrink-0 flex-nowrap items-center justify-end gap-2"}>
                                                 {!registro && !bloqueada && (
                                                   <>
                                                     <Button
                                                       size="sm"
                                                       variant="outline"
-                                                      className={`min-w-24 ${botaoFezClass}`}
+                                                      className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoFezClass}`}
                                                       disabled={busy}
                                                       onClick={() =>
                                                         abrirFez(
@@ -1094,7 +1098,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                     <Button
                                                       size="sm"
                                                       variant="outline"
-                                                      className={`min-w-24 ${botaoNaoFezClass}`}
+                                                      className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
                                                       disabled={busy}
                                                       onClick={() =>
                                                         solicitarNaoFez(
