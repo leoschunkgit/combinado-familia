@@ -967,6 +967,26 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                           Sem bonificação
                                                         </span>
                                                       )}
+                                                    {registro.tipo === "FEZ" &&
+                                                      !bloqueada && (
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="icon"
+                                                          className="h-7 w-7 shrink-0"
+                                                          disabled={busy}
+                                                          title="Editar bonificação"
+                                                          aria-label="Editar bonificação"
+                                                          onClick={() =>
+                                                            editarBonificacao(
+                                                              tarefa,
+                                                              totalNaoFez,
+                                                              registro,
+                                                            )
+                                                          }
+                                                        >
+                                                          <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                      )}
                                                     {registro.tipo !== "FEZ" &&
                                                       !comDesconto &&
                                                       penalizadas.has(
@@ -1025,42 +1045,23 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 {registro &&
                                                   !bloqueada &&
                                                   registro.tipo === "FEZ" && (
-                                                    <>
-                                                      <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={botaoNaoFezClass}
-                                                        disabled={busy}
-                                                        onClick={() =>
-                                                          solicitarNaoFez(
-                                                            tarefa,
-                                                            totalNaoFez,
-                                                            data,
-                                                            registro,
-                                                          )
-                                                        }
-                                                      >
-                                                        <ThumbsDown className="h-4 w-4 text-red-600" />
-                                                        Não fez
-                                                      </Button>
-                                                      <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        disabled={busy}
-                                                        title="Editar bonificação"
-                                                        aria-label="Editar bonificação"
-                                                        onClick={() =>
-                                                          editarBonificacao(
-                                                            tarefa,
-                                                            totalNaoFez,
-                                                            registro,
-                                                          )
-                                                        }
-                                                      >
-                                                        <Pencil className="h-4 w-4" />
-                                                      </Button>
-                                                    </>
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      className={botaoNaoFezClass}
+                                                      disabled={busy}
+                                                      onClick={() =>
+                                                        solicitarNaoFez(
+                                                          tarefa,
+                                                          totalNaoFez,
+                                                          data,
+                                                          registro,
+                                                        )
+                                                      }
+                                                    >
+                                                      <ThumbsDown className="h-4 w-4 text-red-600" />
+                                                      Não fez
+                                                    </Button>
                                                   )}
 
                                                 {registro &&
