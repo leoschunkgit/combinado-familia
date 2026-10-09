@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, msgErro, type FilhoTarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
-import { usaDesconto, valorDebitado, reais } from "@/lib/mesada";
+import { valorDebitado, reais } from "@/lib/mesada";
 import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
 import { useActionLoading } from "@/components/ActionLoading";
 import { registrarNaoFezComPenalidade } from "@/lib/penalidade";
