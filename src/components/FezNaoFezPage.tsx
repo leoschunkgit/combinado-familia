@@ -694,10 +694,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     }
   }
 
+  const filtrosAtivos = Object.values(filtro).some((value) => value !== "all");
   const vazio =
     modo === "pendentes"
       ? "Tudo em dia. Não há datas pendentes para os filtros selecionados."
-      : 'Nenhuma tarefa encontrada. Crie atribuições na aba "Atribuições".';
+      : filtrosAtivos
+        ? "Nenhum resultado encontrado para os filtros selecionados."
+        : 'Nenhuma tarefa encontrada. Crie atribuições na aba "Atribuições".';
 
   return (
     <>
@@ -714,7 +717,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       <ResponsiveFilters
         desktopClassName={modo === "todos" ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
         onApply={() => setFiltro(f)}
-        hasActiveFilters={Object.values(filtro).some((value) => value !== "all")}
+        hasActiveFilters={filtrosAtivos}
         onClear={() => {
           const limpos = { vig: "all", filho: "all", tarefa: "all", resultado: "all" };
           setF(limpos);
@@ -908,8 +911,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                             <div className="space-y-4">
                               {tarefasDoFilho.map((tarefa) => {
-                                const registros = ocorrenciasDaTarefa(tarefa);
                                 const datas = datasDaTarefa(tarefa, vigencia);
+                                const datasVisiveis = new Set(datas);
+                                const registros = ocorrenciasDaTarefa(tarefa).filter((registro) =>
+                                  datasVisiveis.has(dataBrasil(registro.created_at)),
+                                );
                                 const bloqueada = !vigenciaEmAndamento(vigencia);
                                 const tarefaAberta =
                                   tarefasAbertas[tarefa.id] === true;
