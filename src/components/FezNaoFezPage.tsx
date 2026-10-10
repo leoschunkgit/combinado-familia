@@ -236,9 +236,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       grupos.find(({ vigencia }) => vigenciaEmAndamento(vigencia)) ?? grupos[0];
     if (!grupoInicial) return;
 
-    const filhoInicial = grupoInicial.filhos[0];
-    const tarefaInicial = filhoInicial?.tarefas[0];
-
     setVigenciasAbertas(
       Object.fromEntries(
         grupos.map(({ vigencia }) => [
@@ -253,8 +250,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
           gruposFilhos.map(({ filho }) => [
             `${vigencia.id}-${filho.id}`,
-            vigencia.id === grupoInicial.vigencia.id &&
-              filho.id === filhoInicial?.filho.id,
+            true,
           ]),
         ),
       ),
@@ -264,10 +260,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       Object.fromEntries(
         grupos.flatMap(({ filhos: gruposFilhos }) =>
           gruposFilhos.flatMap(({ tarefas: tarefasDoFilho }) =>
-            tarefasDoFilho.map((tarefa) => [
-              tarefa.id,
-              tarefa.id === tarefaInicial?.id,
-            ]),
+            tarefasDoFilho.map((tarefa) => [tarefa.id, true]),
           ),
         ),
       ),
