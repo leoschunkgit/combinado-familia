@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Eye, EyeOff, Home, ShieldCheck, Users } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Fingerprint, Home, ShieldCheck, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,11 @@ import { msgErro } from "@/lib/db";
 import { getAuthRedirectUrl, getPublicRouteFromUrl } from "@/lib/app-runtime";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
+import {
+  autenticarComBiometria,
+  biometriaAtivaNesteAparelho,
+  liberarBiometriaNestaExecucao,
+} from "@/lib/biometric-auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Combinado Família" }, { name: "description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:title", content: "Combinado — Tarefas da família com regras claras" }, { property: "og:description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -47,6 +52,9 @@ function Index() {
   const [login, setLogin] = useState({ email: "", senha: "" });
   const [recuperar, setRecuperar] = useState(false);
   const [emailRecuperacao, setEmailRecuperacao] = useState("");
+  const [biometriaAtiva, setBiometriaAtiva] = useState(false);
+  const [sessaoBiometricaDisponivel, setSessaoBiometricaDisponivel] = useState(false);
+  const [biometriaCarregando, setBiometriaCarregando] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -61,7 +69,35 @@ function Index() {
       }
 
       const { data } = await supabase.auth.getSession();
-      if (ativo && data.session) navigate({ to: "/inicio" });
+      if (!ativo || !data.session) return;
+
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const ativa = await biometriaAtivaNesteAparelho();
+          if (!ativo) return;
+          setBiometriaAtiva(ativa);
+          setSessaoBiometricaDisponivel(true);
+
+          if (ativa) {
+            setBiometriaCarregando(true);
+            try {
+              const autorizado = await autenticarComBiometria();
+              if (ativo && autorizado) navigate({ to: "/inicio" });
+            } catch {
+              // Cancelar a biometria mantém o usuário na tela de login,
+              // onde ainda é possível entrar normalmente com email e senha.
+            } finally {
+              if (ativo) setBiometriaCarregando(false);
+            }
+            return;
+          }
+        } catch {
+          // Se o recurso biométrico não puder ser consultado, preserve o
+          // comportamento anterior e não bloqueie uma sessão válida.
+        }
+      }
+
+      if (ativo) navigate({ to: "/inicio" });
     }
 
     void encaminharSessaoExistente();
@@ -73,7 +109,27 @@ function Index() {
     const { error } = await supabase.auth.signInWithPassword({ email: login.email.trim(), password: login.senha });
     setLoading(false);
     if (error) { toast.error("Email ou senha incorretos, ou email ainda não confirmado."); return; }
+    liberarBiometriaNestaExecucao();
     navigate({ to: "/inicio" });
+  }
+
+  async function entrarComBiometria() {
+    setBiometriaCarregando(true);
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setSessaoBiometricaDisponivel(false);
+        toast.error("Sua sessão expirou. Entre novamente com email e senha.");
+        return;
+      }
+
+      const autorizado = await autenticarComBiometria();
+      if (autorizado) navigate({ to: "/inicio" });
+    } catch {
+      toast.error("Não foi possível validar a biometria. Você pode entrar com sua senha.");
+    } finally {
+      setBiometriaCarregando(false);
+    }
   }
 
   async function recuperarSenha(e: FormEvent) {
@@ -137,7 +193,20 @@ function Index() {
                   <div className="space-y-2"><Label htmlFor="le">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="le" type="email" required autoComplete="email" inputMode="email" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} /></div>
                   <div className="space-y-2"><Label htmlFor="ls">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ls" required autoComplete="current-password" value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} /></div>
                   <div className="text-right"><button type="button" className="text-sm font-medium text-primary underline-offset-4 hover:underline" onClick={() => { setEmailRecuperacao(login.email); setRecuperar(true); }}>Esqueci minha senha</button></div>
-                  <Button type="submit" className="w-full" size="lg" disabled={loading}>Entrar</Button>
+                  <Button type="submit" className="w-full" size="lg" disabled={loading || biometriaCarregando}>Entrar</Button>
+                  {biometriaAtiva && sessaoBiometricaDisponivel && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                      disabled={loading || biometriaCarregando}
+                      onClick={() => void entrarComBiometria()}
+                    >
+                      <Fingerprint className="h-5 w-5" />
+                      {biometriaCarregando ? "Validando biometria..." : "Entrar com biometria"}
+                    </Button>
+                  )}
                 </form>
               )}
             </TabsContent>
