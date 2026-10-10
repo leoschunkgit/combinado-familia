@@ -122,6 +122,12 @@ function AtribuicoesPage() {
         <ResponsiveFilters
           desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
           onApply={aplicarFiltros}
+          hasActiveFilters={Object.values(filtrosAplicados).some((value) => value !== "all")}
+          onClear={() => {
+            const limpos = { vig: "all", filho: "all", tarefa: "all" };
+            setFiltrosRascunho(limpos);
+            setFiltrosAplicados(limpos);
+          }}
           renderFilters={() => (
             <>
               <Pick label="Vigência" value={filtrosRascunho.vig} onChange={(vig) => setFiltrosRascunho((atual) => ({ ...atual, vig }))} allLabel="Todas" options={vigenciasOrdenadas.map(statusVigencia)} />
