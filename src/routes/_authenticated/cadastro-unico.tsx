@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useActionLoading } from "@/components/ActionLoading";
 import { msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
+import { calcularPeriodoPorDias, diasDaVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
@@ -52,18 +53,6 @@ const vigenciaInicial = (): VigenciaDraft => {
     valor_debito: "",
   };
 };
-
-function diasDaVigencia(inicioCampo: string, fimCampo: string) {
-  const dataUtc = (valor: string) => {
-    const partes = valor.slice(0, 10).split("-").map(Number);
-    if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
-    return Date.UTC(partes[0], partes[1] - 1, partes[2]);
-  };
-  const inicio = dataUtc(inicioCampo);
-  const fim = dataUtc(fimCampo);
-  if (inicio === null || fim === null || fim < inicio) return null;
-  return Math.floor((fim - inicio) / 86400000) + 1;
-}
 
 function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, atual: VigenciaDraft): VigenciaDraft {
   if (vigencias.length === 0) return atual;
@@ -105,15 +94,39 @@ function CadastroUnicoPage() {
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
   const [tarefasNovasPendentes, setTarefasNovasPendentes] = useState<TarefaNovaFluxo[]>([]);
   const [vigenciaDraft, setVigenciaDraft] = useState<VigenciaDraft>(() => vigenciaInicial());
+  const [modoPeriodoVigencia, setModoPeriodoVigencia] = useState<PeriodoVigenciaModo>("DATAS");
+  const [quantidadeDiasVigencia, setQuantidadeDiasVigencia] = useState("");
+  const [inicioPeriodoDiasVigencia, setInicioPeriodoDiasVigencia] = useState<string | null>(null);
   const [vigenciaCriadaId, setVigenciaCriadaId] = useState<number | null>(null);
   const [etapaNovo, setEtapaNovo] = useState<1 | 2 | 3 | 4>(1);
   const [tarefasPorFilho, setTarefasPorFilho] = useState<Record<number, number[]>>({});
 
   const totalCombinacoes = filhosSelecionados.reduce((total, idFilho) => total + (tarefasPorFilho[idFilho]?.length ?? 0), 0);
+  const periodoDiasCalculado = calcularPeriodoPorDias(quantidadeDiasVigencia, inicioPeriodoDiasVigencia);
+  const inicioPeriodoAtual = modoPeriodoVigencia === "DIAS" ? (periodoDiasCalculado?.data_inicio ?? "") : vigenciaDraft.data_inicio;
+  const fimPeriodoAtual = modoPeriodoVigencia === "DIAS" ? (periodoDiasCalculado?.data_fim ?? "") : vigenciaDraft.data_fim;
+  const diasPeriodoAtual = diasDaVigencia(inicioPeriodoAtual, fimPeriodoAtual);
 
   const alternar = (lista: number[], setLista: (v: number[]) => void, id: number) =>
     setLista(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]);
 
+  function selecionarModoPeriodoVigencia(modo: PeriodoVigenciaModo) {
+    if (modo === modoPeriodoVigencia) return;
+    setModoPeriodoVigencia(modo);
+
+    if (modo === "DIAS") {
+      setQuantidadeDiasVigencia("");
+      setInicioPeriodoDiasVigencia(new Date().toISOString());
+      setVigenciaDraft((atual) => ({ ...atual, data_inicio: "", data_fim: "" }));
+      return;
+    }
+
+    setQuantidadeDiasVigencia("");
+    setInicioPeriodoDiasVigencia(null);
+    setVigenciaDraft((atual) =>
+      sugerirPeriodoVigencia(vigencias, { ...atual, data_inicio: "", data_fim: "" }),
+    );
+  }
 
   function adicionarFilhoAoFluxo() {
     const nome = nomeFilho.trim();
@@ -231,19 +244,35 @@ function CadastroUnicoPage() {
   }
 
   async function criarVigencia() {
-    const erro = validarVigencia(vigenciaDraft);
+    const dadosPeriodo =
+      modoPeriodoVigencia === "DIAS"
+        ? periodoDiasCalculado
+        : { data_inicio: vigenciaDraft.data_inicio, data_fim: vigenciaDraft.data_fim };
+
+    if (!dadosPeriodo) {
+      toast.error("Informe uma quantidade inteira de dias maior que zero");
+      return;
+    }
+
+    const draftParaSalvar = {
+      ...vigenciaDraft,
+      data_inicio: dadosPeriodo.data_inicio,
+      data_fim: dadosPeriodo.data_fim,
+    };
+
+    const erro = validarVigencia(draftParaSalvar);
     if (erro) { toast.error(erro); return; }
-    if (conflitaComVigenciaExistente(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)) {
+    if (conflitaComVigenciaExistente(draftParaSalvar.data_inicio, draftParaSalvar.data_fim)) {
       toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
       return;
     }
     const payload = {
-      data_inicio: paraIsoDataHoraBrasil(vigenciaDraft.data_inicio),
-      data_fim: paraIsoDataHoraBrasil(vigenciaDraft.data_fim),
+      data_inicio: paraIsoDataHoraBrasil(draftParaSalvar.data_inicio),
+      data_fim: paraIsoDataHoraBrasil(draftParaSalvar.data_fim),
       penalidade: null,
-      qtd_ocorrencia: Number(vigenciaDraft.qtd_ocorrencia),
+      qtd_ocorrencia: Number(draftParaSalvar.qtd_ocorrencia),
       tipo_penalidade: "texto",
-      valor_debito: Number(vigenciaDraft.valor_debito.replace(",", ".")),
+      valor_debito: Number(draftParaSalvar.valor_debito.replace(",", ".")),
     };
     const { data, error } = await supabase.from("t_vigencia").insert(payload).select("id").single();
     if (error || !data) { toast.error(msgErro(error)); return; }
@@ -301,6 +330,9 @@ function CadastroUnicoPage() {
     setTarefasSelecionadas([]);
     setTarefasNovasPendentes([]);
     setVigenciaDraft(vigenciaInicial());
+    setModoPeriodoVigencia("DATAS");
+    setQuantidadeDiasVigencia("");
+    setInicioPeriodoDiasVigencia(null);
     setVigenciaCriadaId(null);
     setTarefasPorFilho({});
     setEtapaNovo(1);
@@ -478,15 +510,77 @@ function CadastroUnicoPage() {
             <Card className="overflow-hidden border-primary/20">
               <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span><span className="flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Vigência</span></CardTitle></CardHeader>
               <CardContent className="space-y-3 !p-3.5">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5"><Label>Início</Label><BrDateTimeField id="lote-inicio" value={vigenciaDraft.data_inicio} onChange={(data_inicio) => setVigenciaDraft({ ...vigenciaDraft, data_inicio })} /></div>
-                  <div className="space-y-1.5"><Label>Fim</Label><BrDateTimeField id="lote-fim" value={vigenciaDraft.data_fim} min={vigenciaDraft.data_inicio} onChange={(data_fim) => setVigenciaDraft({ ...vigenciaDraft, data_fim })} /></div>
+                <div className="space-y-2">
+                  <Label>Como deseja definir o período?</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={modoPeriodoVigencia === "DATAS" ? "default" : "outline"}
+                      aria-pressed={modoPeriodoVigencia === "DATAS"}
+                      onClick={() => selecionarModoPeriodoVigencia("DATAS")}
+                    >
+                      Escolher datas
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={modoPeriodoVigencia === "DIAS" ? "default" : "outline"}
+                      aria-pressed={modoPeriodoVigencia === "DIAS"}
+                      onClick={() => selecionarModoPeriodoVigencia("DIAS")}
+                    >
+                      Quantidade de dias
+                    </Button>
+                  </div>
                 </div>
+
+                {modoPeriodoVigencia === "DATAS" ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label>Início</Label>
+                      <BrDateTimeField
+                        id="lote-inicio"
+                        value={vigenciaDraft.data_inicio}
+                        onChange={(data_inicio) => setVigenciaDraft({ ...vigenciaDraft, data_inicio })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Fim</Label>
+                      <BrDateTimeField
+                        id="lote-fim"
+                        value={vigenciaDraft.data_fim}
+                        min={vigenciaDraft.data_inicio}
+                        onChange={(data_fim) => setVigenciaDraft({ ...vigenciaDraft, data_fim })}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="lote-quantidade-dias">Quantos dias a partir de agora?</Label>
+                    <Input
+                      id="lote-quantidade-dias"
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputMode="numeric"
+                      value={quantidadeDiasVigencia}
+                      onChange={(e) => setQuantidadeDiasVigencia(e.target.value)}
+                      placeholder="Ex.: 5"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ex.: 5 dias = agora até o mesmo horário daqui a 5 dias.
+                    </p>
+                    {periodoDiasCalculado && (
+                      <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                        <span className="text-muted-foreground">Período calculado: </span>
+                        <span className="font-medium">{periodoDiasCalculado.resumo}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-3">
                   <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-                      {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim)} {diasDaVigencia(vigenciaDraft.data_inicio, vigenciaDraft.data_fim) === 1 ? "dia" : "dias"}.</p>}
+                      {diasPeriodoAtual !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasPeriodoAtual} {diasPeriodoAtual === 1 ? "dia" : "dias"}.</p>}
                       <Label>Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência</Label>
                       <Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} />
                       <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
