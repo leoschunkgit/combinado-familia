@@ -16,10 +16,17 @@ import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { AppPushNotifications } from "@/components/AppPushNotifications";
 import { desativarPushAtual } from "@/lib/push-notifications";
+import {
+  desativarBiometriaNesteAparelho,
+  podeAcessarAreaAutenticada,
+} from "@/lib/biometric-auth";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
+    const podeAcessar = await podeAcessarAreaAutenticada();
+    if (!podeAcessar) throw redirect({ to: "/" });
+
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/" });
     const user = data.user;
@@ -130,6 +137,11 @@ function AuthenticatedLayout() {
       await desativarPushAtual();
     } catch (error) {
       console.error("Não foi possível desativar o push deste aparelho ao sair:", error);
+    }
+    try {
+      await desativarBiometriaNesteAparelho();
+    } catch (error) {
+      console.error("Não foi possível remover a biometria local ao sair:", error);
     }
     await supabase.auth.signOut();
     qc.clear();
