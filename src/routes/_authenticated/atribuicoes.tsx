@@ -15,6 +15,10 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    adicionar: search.adicionar === "1",
+    vigencia: typeof search.vigencia === "string" ? search.vigencia : undefined,
+  }),
   head: () => ({ meta: [
     { title: "Atribuições — Combinado" },
     { name: "description", content: "Associe tarefas aos filhos dentro de cada vigência." },
@@ -27,13 +31,14 @@ export const Route = createFileRoute("/_authenticated/atribuicoes")({
 });
 
 function AtribuicoesPage() {
+  const { adicionar, vigencia } = Route.useSearch();
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
-  const [novoAberto, setNovoAberto] = useState(false);
+  const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filtrosRascunho, setFiltrosRascunho] = useState({ vig: "all", filho: "all", tarefa: "all" });
   const [filtrosAplicados, setFiltrosAplicados] = useState({ vig: "all", filho: "all", tarefa: "all" });
@@ -198,6 +203,7 @@ function AtribuicoesPage() {
         open={novoAberto}
         onOpenChange={setNovoAberto}
         mode="NORMAL"
+        vigenciaInicialId={vigencia ? Number(vigencia) : null}
       />
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
