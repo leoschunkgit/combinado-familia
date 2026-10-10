@@ -56,7 +56,6 @@ import {
 } from "@/lib/penalidade";
 import {
   reais,
-  resumoMesada,
   usaDesconto,
   valorDebitado,
 } from "@/lib/mesada";
@@ -839,6 +838,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                           )
                         : 0;
                     const comDesconto = usaDesconto(filho, vigencia);
+                    const totalDescontado = comDesconto
+                      ? valorDebitado(filho, vigencia, totalNaoFez)
+                      : 0;
+                    const saldoMesada = Math.max(
+                      0,
+                      (filho.valor_mesada ?? 0) - totalDescontado,
+                    );
                     const penalizado =
                       !comDesconto &&
                       totalNaoFez >= vigencia.qtd_ocorrencia;
@@ -892,14 +898,20 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                         {filhoAberto && (
                           <div className="border-t p-3 sm:p-4">
                             {comDesconto ? (
-                              <p className="mb-4 text-sm font-medium tabular-nums">
-                                Mesada: {reais(filho.valor_mesada ?? 0)} ·{" "}
-                                {resumoMesada(
-                                  filho,
-                                  vigencia,
-                                  totalNaoFez,
-                                )}
-                              </p>
+                              <div className="mb-4 grid grid-cols-3 overflow-hidden rounded-lg border bg-muted/20 text-sm tabular-nums">
+                                <div className="px-3 py-2.5">
+                                  <p className="text-[11px] font-medium text-muted-foreground">Mesada</p>
+                                  <p className="mt-0.5 font-semibold">{reais(filho.valor_mesada ?? 0)}</p>
+                                </div>
+                                <div className="border-l px-3 py-2.5">
+                                  <p className="text-[11px] font-medium text-muted-foreground">Descontos</p>
+                                  <p className="mt-0.5 font-semibold text-destructive">-{reais(totalDescontado)}</p>
+                                </div>
+                                <div className="border-l px-3 py-2.5">
+                                  <p className="text-[11px] font-medium text-muted-foreground">Saldo atual</p>
+                                  <p className="mt-0.5 font-semibold text-primary">{reais(saldoMesada)}</p>
+                                </div>
+                              </div>
                             ) : penalizado ? (
                               <div className="mb-4">
                                 <Badge variant="destructive">
