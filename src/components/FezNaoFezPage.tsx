@@ -910,7 +910,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             ) : null}
 
                             <div className="space-y-4">
-                              {tarefasDoFilho.map((tarefa, indiceTarefa) => {
+                              {tarefasDoFilho.map((tarefa) => {
                                 const datas = datasDaTarefa(tarefa, vigencia);
                                 const datasVisiveis = new Set(datas);
                                 const registros = ocorrenciasDaTarefa(tarefa).filter((registro) =>
@@ -926,7 +926,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 return (
                                   <section
                                     key={tarefa.id}
-                                    className={`overflow-hidden rounded-xl border ${indiceTarefa % 2 === 0 ? "bg-white" : "bg-muted/20"}`}
+                                    className="overflow-hidden rounded-xl border bg-white"
                                   >
                                     <div className="flex flex-col gap-2 border-b bg-transparent px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
                                       <button
