@@ -134,7 +134,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
-  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all" });
+  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
@@ -183,6 +183,17 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       return datas.filter((data) => !registroNaData(tarefa, data));
     }
 
+    if (filtro.resultado === "FEZ") {
+      return datas.filter((data) => registroNaData(tarefa, data)?.tipo === "FEZ");
+    }
+
+    if (filtro.resultado === "NAO_FEZ") {
+      return datas.filter((data) => {
+        const registro = registroNaData(tarefa, data);
+        return Boolean(registro && registro.tipo !== "FEZ");
+      });
+    }
+
     return datas;
   };
 
@@ -194,7 +205,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
         return false;
       }
-      return modo === "todos" || datasDaTarefa(tarefa, vigencia).length > 0;
+      const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
+      if (filtro.resultado !== "all") return temDatasVisiveis;
+      return modo === "todos" || temDatasVisiveis;
     });
 
   const grupos = vigenciasOrdenadas
@@ -699,8 +712,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       />
 
       <ResponsiveFilters
-        desktopClassName="md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+        desktopClassName={modo === "todos" ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
         onApply={() => setFiltro(f)}
+        hasActiveFilters={Object.values(filtro).some((value) => value !== "all")}
+        onClear={() => {
+          const limpos = { vig: "all", filho: "all", tarefa: "all", resultado: "all" };
+          setF(limpos);
+          setFiltro(limpos);
+        }}
         renderFilters={() => (
           <>
             <Pick
@@ -734,6 +753,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 label: tarefa.nome,
               }))}
             />
+            {modo === "todos" && (
+              <Pick
+                label="Fez / Não fez"
+                value={f.resultado}
+                onChange={(resultado) => setF({ ...f, resultado })}
+                allLabel="Todos"
+                options={[
+                  { value: "FEZ", label: "Fez" },
+                  { value: "NAO_FEZ", label: "Não fez" },
+                ]}
+              />
+            )}
           </>
         )}
       />
