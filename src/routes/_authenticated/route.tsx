@@ -17,6 +17,8 @@ import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { AppPushNotifications } from "@/components/AppPushNotifications";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import {
+  biometriaAtivaNesteAparelho,
+  bloquearBiometriaNestaExecucao,
   desativarBiometriaNesteAparelho,
   podeAcessarAreaAutenticada,
 } from "@/lib/biometric-auth";
@@ -133,6 +135,19 @@ function AuthenticatedLayout() {
     setSalvando(true);
     setMenuMobileAberto(false);
     await qc.cancelQueries();
+
+    try {
+      const biometriaAtiva = await biometriaAtivaNesteAparelho();
+      if (biometriaAtiva) {
+        bloquearBiometriaNestaExecucao();
+        qc.clear();
+        navigate({ to: "/", replace: true });
+        return;
+      }
+    } catch (error) {
+      console.error("Não foi possível consultar a biometria local ao sair:", error);
+    }
+
     try {
       await desativarPushAtual();
     } catch (error) {
