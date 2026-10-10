@@ -13,7 +13,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { PageHeader } from "@/components/PageHeader";
 import { useActionLoading } from "@/components/ActionLoading";
-import { msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { msgErro, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 
