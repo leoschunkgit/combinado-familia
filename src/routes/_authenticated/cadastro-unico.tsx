@@ -104,9 +104,11 @@ function CadastroUnicoPage() {
 
     setQuantidadeDiasVigencia("");
     setInicioPeriodoDiasVigencia(null);
-    setVigenciaDraft((atual) =>
-      { ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" },
-    );
+    setVigenciaDraft((atual) => ({
+      ...atual,
+      data_inicio: sugerirInicioVigencia(vigencias),
+      data_fim: "",
+    }));
   }
 
   function adicionarFilhoAoFluxo() {
