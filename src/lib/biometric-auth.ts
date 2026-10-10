@@ -20,6 +20,10 @@ export function biometriaLiberadaNestaExecucao() {
   return desbloqueadoNestaExecucao;
 }
 
+export function bloquearBiometriaNestaExecucao() {
+  desbloqueadoNestaExecucao = false;
+}
+
 export async function biometriaDisponivelNesteAparelho() {
   if (!biometriaEhNativa()) return false;
   const resultado = await NativeBiometric.isAvailable({ useFallback: false });
