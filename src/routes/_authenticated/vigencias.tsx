@@ -58,9 +58,9 @@ const dadosRegra = (v: Pick<VigenciaForm, "valor_debito">) => ({ tipo_penalidade
 function RegrasVigencia({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
   const dias = diasDaVigencia(value.data_inicio, value.data_fim);
   return <div className="space-y-3">
+    {dias !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {dias} {dias === 1 ? "dia" : "dias"}.</p>}
     <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 md:border-amber-300/70 md:bg-amber-50/30 p-3 space-y-2 dark:border-amber-700/60 dark:bg-amber-950/10">
       <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-      {dias !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {dias} {dias === 1 ? "dia" : "dias"}.</p>}
       <Label htmlFor={`${prefix}-quantidade`} className="block leading-5">Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência <span className="text-destructive" aria-hidden="true">*</span></Label>
       <Input id={`${prefix}-quantidade`} type="number" min="1" max="31" value={value.qtd_ocorrencia} onChange={(e) => onChange({ ...value, qtd_ocorrencia: e.target.value })} />
       <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
