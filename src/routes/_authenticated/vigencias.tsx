@@ -289,7 +289,7 @@ function VigenciasPage() {
                 <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência"><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
-            <p className="mt-1 whitespace-nowrap text-[12px] font-semibold tracking-tight sm:text-base">{fmtVigencia(v)}</p>
+            <p className="mt-1 whitespace-nowrap text-[13px] font-semibold tracking-tight sm:text-base">{fmtVigencia(v)}</p>
             <div className="mt-2 space-y-1.5">
               <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 md:border-amber-300/70 md:bg-amber-50/30 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10">
                 <span className="font-semibold text-foreground">Para filhos sem mesada:</span>{" "}<span className="text-muted-foreground">limite máximo de {v.qtd_ocorrencia} “Não fez”</span>
