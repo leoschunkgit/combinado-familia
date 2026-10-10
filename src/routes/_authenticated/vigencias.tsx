@@ -267,11 +267,11 @@ function VigenciasPage() {
         </div>
       }
     />
-    <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-      <span className="font-medium">Legenda:</span>
-      <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" />Em andamento</span>
-      <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" />Finalizada</span>
-      <span className="flex shrink-0 items-center gap-2 whitespace-nowrap"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Irá começar</span>
+    <div className="mb-3 flex flex-nowrap items-center gap-x-2 rounded-lg border bg-muted/30 px-2 py-2 text-[10px] text-muted-foreground sm:gap-x-4 sm:px-3 sm:text-xs">
+      <span className="shrink-0 font-medium whitespace-nowrap">Legenda:</span>
+      <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" />Em andamento</span>
+      <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" />Finalizada</span>
+      <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Irá começar</span>
     </div>
     <div className="space-y-3">
         {vigencias.length === 0 && <EmptyState>Nenhuma vigência cadastrada ainda.</EmptyState>}
