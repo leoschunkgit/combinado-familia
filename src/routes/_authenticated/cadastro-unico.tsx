@@ -15,7 +15,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useActionLoading } from "@/components/ActionLoading";
 import { msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
-import { calcularPeriodoPorDias, diasDaVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
+import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
@@ -43,39 +43,12 @@ type VigenciaDraft = {
   valor_debito: string;
 };
 
-const vigenciaInicial = (): VigenciaDraft => {
-  const inicio = new Date();
-  const fim = new Date(inicio.getTime() + 30 * 24 * 60 * 60 * 1000);
-  return {
-    data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
-    data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
-    qtd_ocorrencia: "0",
-    valor_debito: "",
-  };
-};
-
-function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, atual: VigenciaDraft): VigenciaDraft {
-  if (vigencias.length === 0) return atual;
-
-  const maiorFim = vigencias.reduce((maior, vigencia) => {
-    const fim = new Date(vigencia.data_fim).getTime();
-    return fim > maior ? fim : maior;
-  }, Number.NEGATIVE_INFINITY);
-
-  if (!Number.isFinite(maiorFim)) return atual;
-
-  const inicio = new Date(maiorFim);
-  inicio.setDate(inicio.getDate() + 1);
-
-  const fim = new Date(inicio);
-  fim.setMonth(fim.getMonth() + 1);
-
-  return {
-    ...atual,
-    data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
-    data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
-  };
-}
+const vigenciaInicial = (): VigenciaDraft => ({
+  data_inicio: sugerirInicioVigencia([]),
+  data_fim: "",
+  qtd_ocorrencia: "0",
+  valor_debito: "",
+});
 
 function CadastroUnicoPage() {
   const qc = useQueryClient();
@@ -124,7 +97,7 @@ function CadastroUnicoPage() {
     setQuantidadeDiasVigencia("");
     setInicioPeriodoDiasVigencia(null);
     setVigenciaDraft((atual) =>
-      sugerirPeriodoVigencia(vigencias, { ...atual, data_inicio: "", data_fim: "" }),
+      { ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" },
     );
   }
 
@@ -214,7 +187,7 @@ function CadastroUnicoPage() {
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
     }
 
-    setVigenciaDraft((atual) => sugerirPeriodoVigencia(vigencias, atual));
+    setVigenciaDraft((atual) => ({ ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" }));
     setEtapaNovo(3);
   }
 
