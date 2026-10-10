@@ -1,4 +1,4 @@
-import { paraCampoDataHoraBrasil } from "@/lib/db";
+import { paraCampoDataHoraBrasil, paraIsoDataHoraBrasil } from "@/lib/db";
 
 export type PeriodoVigenciaModo = "DATAS" | "DIAS";
 
@@ -31,11 +31,11 @@ const dataHoraBrasil = new Intl.DateTimeFormat("pt-BR", {
   minute: "2-digit",
 });
 
-export function calcularPeriodoPorDias(quantidade: string, inicioIso: string | null) {
+export function calcularPeriodoPorDias(quantidade: string, inicioCampo: string | null) {
   const dias = Number(quantidade);
-  if (!inicioIso || !Number.isSafeInteger(dias) || dias < 1) return null;
+  if (!inicioCampo || !Number.isSafeInteger(dias) || dias < 1) return null;
 
-  const inicio = new Date(inicioIso);
+  const inicio = new Date(paraIsoDataHoraBrasil(inicioCampo));
   const fim = new Date(inicio.getTime() + dias * 86_400_000);
   if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime())) return null;
 
