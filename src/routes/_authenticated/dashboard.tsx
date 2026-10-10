@@ -38,7 +38,7 @@ function DashboardPage(){
  const porTarefa=tarefas.map(tarefa=>{const regs=lista.filter(o=>o.t_filho_tarefa?.id_tarefa===tarefa.id);return{id:tarefa.id,nome:tarefa.nome,fez:regs.filter(o=>o.tipo==="FEZ").length,naoFez:regs.filter(o=>o.tipo!=="FEZ").length};}).filter(x=>x.fez+x.naoFez>0).sort((a,b)=>b.naoFez-a.naoFez).slice(0,5);const maxTarefa=Math.max(1,...porTarefa.map(x=>x.naoFez));
  const evolucaoMap=new Map<string,{fez:number;naoFez:number}>();for(const o of [...lista].sort((a,b)=>new Date(a.created_at).getTime()-new Date(b.created_at).getTime())){const chave=mesAno(o.created_at),atual=evolucaoMap.get(chave)??{fez:0,naoFez:0};if(o.tipo==="FEZ")atual.fez++;else atual.naoFez++;evolucaoMap.set(chave,atual);}const evolucao=[...evolucaoMap.entries()].slice(-6).map(([periodo,v])=>({periodo,...v}));
  return <><PageHeader title="Dashboard" description="Visão resumida de Fez, Não fez, penalidades e descontos." icon={<BarChart3 className="h-6 w-6"/>}/>
- <ResponsiveFilters desktopClassName="md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]" onApply={()=>setFiltro(f)} renderFilters={()=>(
+ <ResponsiveFilters desktopClassName="md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]" onApply={()=>setFiltro(f)} hasActiveFilters={Object.values(filtro).some(value=>value!=="all")} onClear={()=>{const limpos={vig:"all",filho:"all"};setF(limpos);setFiltro(limpos);}} renderFilters={()=>(
     <>
       <Pick label="Vigência" value={f.vig} onChange={vig=>setF({...f,vig})} allLabel="Todas" options={vigenciasOrdenadas.map(v=>({value:String(v.id),label:fmtVigencia(v),status:situacaoVigencia(v)}))}/>
       <Pick label="Filho" value={f.filho} onChange={filho=>setF({...f,filho})} allLabel="Todos" options={filhos.map(x=>({value:String(x.id),label:x.nome}))}/>
