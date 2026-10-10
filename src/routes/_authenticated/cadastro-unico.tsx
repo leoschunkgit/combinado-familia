@@ -584,12 +584,27 @@ function CadastroUnicoPage() {
                     const todasSelecionadas = tarefasSelecionadas.length > 0 && tarefasSelecionadas.every((id) => selecionadas.includes(id));
 
                     return (
-                      <div key={filho.id} className="overflow-hidden rounded-lg border bg-background">
-                        <div className="flex flex-col gap-2 border-b bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">{filho.nome}</p>
+                      <div key={filho.id} className="overflow-hidden rounded-xl border bg-background">
+                        <div className="border-b bg-primary/5 px-3.5 py-3">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                              <Users className="h-4 w-4" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Filho</p>
+                              <p className="truncate text-base font-semibold">{filho.nome}</p>
+                            </div>
                           </div>
-                          <label className="flex w-fit cursor-pointer items-center gap-2.5 text-xs">
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 border-b bg-muted/15 px-3.5 py-2.5">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold">Tarefas</p>
+                            <p className="text-xs text-muted-foreground">
+                              {selecionadas.length} de {tarefasSelecionadas.length} selecionada(s)
+                            </p>
+                          </div>
+                          <label className="flex shrink-0 cursor-pointer items-center gap-2 text-xs font-medium">
                             <Checkbox
                               checked={todasSelecionadas}
                               onCheckedChange={() =>
@@ -607,7 +622,7 @@ function CadastroUnicoPage() {
                           {tarefas.filter((t) => tarefasSelecionadas.includes(t.id)).map((tarefa) => {
                             const marcada = selecionadas.includes(tarefa.id);
                             return (
-                              <label key={tarefa.id} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/30">
+                              <label key={tarefa.id} className="flex cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-muted/30">
                                 <Checkbox
                                   checked={marcada}
                                   onCheckedChange={() =>
