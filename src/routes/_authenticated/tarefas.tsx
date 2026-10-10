@@ -136,7 +136,7 @@ function TarefasPage() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <span>Tarefas cadastradas</span>
-                  <span className="text-sm font-medium text-muted-foreground">{tarefas.length}</span>
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{tarefas.length} {tarefas.length === 1 ? "tarefa" : "tarefas"}</span>
                 </CardTitle>
               </div>
               {tarefas.length > 0 && (
