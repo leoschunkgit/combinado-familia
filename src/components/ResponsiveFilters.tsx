@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,10 +16,14 @@ type FilterRenderer = (surface: "desktop" | "mobile") => ReactNode;
 export function ResponsiveFilters({
   renderFilters,
   onApply,
+  onClear,
+  hasActiveFilters = false,
   desktopClassName,
 }: {
   renderFilters: FilterRenderer;
   onApply: () => void;
+  onClear?: () => void;
+  hasActiveFilters?: boolean;
   desktopClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -29,9 +33,25 @@ export function ResponsiveFilters({
     setOpen(false);
   }
 
+  function limpar() {
+    onClear?.();
+    setOpen(false);
+  }
+
   return (
     <>
-      <div className="mb-4 flex justify-end md:hidden">
+      <div className="mb-4 flex justify-end gap-2 md:hidden">
+        {hasActiveFilters && onClear && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={limpar}
+          >
+            <X className="h-4 w-4" />
+            Limpar filtros
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
@@ -52,10 +72,18 @@ export function ResponsiveFilters({
           )}
         >
           {renderFilters("desktop")}
-          <Button type="button" onClick={onApply}>
-            <Search className="h-4 w-4" />
-            Pesquisar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" onClick={onApply}>
+              <Search className="h-4 w-4" />
+              Pesquisar
+            </Button>
+            {hasActiveFilters && onClear && (
+              <Button type="button" variant="ghost" onClick={limpar}>
+                <X className="h-4 w-4" />
+                Limpar
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -73,7 +101,13 @@ export function ResponsiveFilters({
 
           <div className="mt-6 space-y-4">{renderFilters("mobile")}</div>
 
-          <SheetFooter className="mt-6">
+          <SheetFooter className="mt-6 gap-2">
+            {hasActiveFilters && onClear && (
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={limpar}>
+                <X className="h-4 w-4" />
+                Limpar filtros
+              </Button>
+            )}
             <Button type="button" className="w-full sm:w-auto" onClick={aplicar}>
               <Search className="h-4 w-4" />
               Pesquisar
