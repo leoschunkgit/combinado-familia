@@ -931,7 +931,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 return (
                                   <section
                                     key={tarefa.id}
-                                    className="overflow-hidden rounded-xl border bg-white"
+                                    className="overflow-hidden rounded-xl border bg-card"
                                   >
                                     <div className="flex flex-col gap-2 border-b bg-transparent px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
                                       <button
