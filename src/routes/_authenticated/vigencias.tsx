@@ -22,6 +22,7 @@ import { validarAlteracaoLimiteNaoFez } from "@/lib/penalidade";
 import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
+import { calcularPeriodoPorDias, diasDaVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -47,7 +48,6 @@ const schema = z.object({
 .refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
 
 type VigenciaForm = { data_inicio: string; data_fim: string; valor_debito: string; qtd_ocorrencia: string };
-type PeriodoNovoModo = "DATAS" | "DIAS";
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", valor_debito: "", qtd_ocorrencia: "0" };
 
 function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, base: VigenciaForm = vazio): VigenciaForm {
@@ -80,34 +80,9 @@ function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, base: Vi
   };
 }
 const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
-const dataHoraBrasil = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const diaCampo = (valor: string) => valor.slice(0, 10);
 
-function calcularPeriodoPorDias(quantidade: string, inicioIso: string | null) {
-  const dias = Number(quantidade);
-  if (!inicioIso || !Number.isSafeInteger(dias) || dias < 1) return null;
-  const inicio = new Date(inicioIso);
-  const fim = new Date(inicio.getTime() + dias * 86_400_000);
-  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime())) return null;
-  return {
-    data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
-    data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
-    resumo: `${dataHoraBrasil.format(inicio)} até ${dataHoraBrasil.format(fim)}`,
-  };
-}
 const dadosRegra = (v: Pick<VigenciaForm, "valor_debito">) => ({ tipo_penalidade: "texto", valor_debito: Number(v.valor_debito.replace(",", ".")) });
-
-function diasDaVigencia(inicioCampo: string, fimCampo: string) {
-  const dataUtc = (valor: string) => {
-    const partes = valor.slice(0, 10).split("-").map(Number);
-    if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
-    return Date.UTC(partes[0], partes[1] - 1, partes[2]);
-  };
-  const inicio = dataUtc(inicioCampo);
-  const fim = dataUtc(fimCampo);
-  if (inicio === null || fim === null || fim < inicio) return null;
-  return Math.floor((fim - inicio) / 86400000) + 1;
-}
 
 function RegrasVigencia({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
   const dias = diasDaVigencia(value.data_inicio, value.data_fim);
@@ -135,7 +110,7 @@ function VigenciasPage() {
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const [form, setForm] = useState<VigenciaForm>(vazio);
-  const [modoPeriodoNovo, setModoPeriodoNovo] = useState<PeriodoNovoModo>("DATAS");
+  const [modoPeriodoNovo, setModoPeriodoNovo] = useState<PeriodoVigenciaModo>("DATAS");
   const [quantidadeDias, setQuantidadeDias] = useState("");
   const [inicioPeriodoDias, setInicioPeriodoDias] = useState<string | null>(null);
   const [novoAberto, setNovoAberto] = useState(false);
@@ -155,7 +130,7 @@ function VigenciasPage() {
     }
   }, [vigencias, form.data_inicio, form.data_fim, modoPeriodoNovo]);
 
-  function selecionarModoPeriodoNovo(modo: PeriodoNovoModo) {
+  function selecionarModoPeriodoNovo(modo: PeriodoVigenciaModo) {
     if (modo === modoPeriodoNovo) return;
     setModoPeriodoNovo(modo);
     if (modo === "DIAS") {
