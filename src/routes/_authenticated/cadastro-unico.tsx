@@ -97,7 +97,7 @@ function CadastroUnicoPage() {
 
     if (modo === "DIAS") {
       setQuantidadeDiasVigencia("");
-      setInicioPeriodoDiasVigencia(new Date().toISOString());
+      setInicioPeriodoDiasVigencia(paraIsoDataHoraBrasil(sugerirInicioVigencia(vigencias)));
       setVigenciaDraft((atual) => ({ ...atual, data_inicio: "", data_fim: "" }));
       return;
     }
