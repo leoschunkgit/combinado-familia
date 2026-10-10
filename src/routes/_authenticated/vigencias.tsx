@@ -109,7 +109,7 @@ function VigenciasPage() {
     setModoPeriodoNovo(modo);
     if (modo === "DIAS") {
       setQuantidadeDias("");
-      setInicioPeriodoDias(new Date().toISOString());
+      setInicioPeriodoDias(paraIso(sugerirInicioVigencia(vigencias)));
       setForm((atual) => ({ ...atual, data_inicio: "", data_fim: "" }));
       return;
     }
