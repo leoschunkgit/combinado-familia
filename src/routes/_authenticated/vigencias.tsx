@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -16,7 +16,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
-import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, type Vigencia } from "@/lib/db";
+import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type Vigencia } from "@/lib/db";
 import { reais } from "@/lib/mesada";
 import { validarAlteracaoLimiteNaoFez } from "@/lib/penalidade";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -74,10 +74,12 @@ function RegrasVigencia({ value, onChange, prefix }: { value: VigenciaForm; onCh
 }
 
 function VigenciasPage() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
+  const { data: tarefas = [] } = useTarefas();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const [form, setForm] = useState<VigenciaForm>(vazio);
@@ -90,6 +92,7 @@ function VigenciasPage() {
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [confirmarFinalizacao, setConfirmarFinalizacao] = useState<number | null>(null);
   const [confirmarCloneAberto, setConfirmarCloneAberto] = useState(false);
+  const [vigenciaParaAtribuir, setVigenciaParaAtribuir] = useState<number | null>(null);
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
@@ -140,15 +143,23 @@ function VigenciasPage() {
       toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
       return;
     }
-    const { error } = await supabase.from("t_vigencia").insert({ ...p.data, ...dadosRegra(p.data), penalidade: null, data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) });
-    if (error) { toast.error(msgErro(error)); return; }
+    const { data: criada, error } = await supabase
+      .from("t_vigencia")
+      .insert({ ...p.data, ...dadosRegra(p.data), penalidade: null, data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) })
+      .select("id")
+      .single();
+    if (error || !criada) { toast.error(msgErro(error)); return; }
     toast.success("Vigência cadastrada");
     setForm(vazio);
     setModoPeriodoNovo("DATAS");
     setQuantidadeDias("");
     setInicioPeriodoDias(null);
     setNovoAberto(false);
-    qc.invalidateQueries({ queryKey: ["vigencias"] });
+    await qc.invalidateQueries({ queryKey: ["vigencias"] });
+
+    if (filhos.length > 0 && tarefas.length > 0) {
+      setVigenciaParaAtribuir(criada.id);
+    }
   }
 
   async function finalizar(id: number) {
@@ -346,6 +357,31 @@ function VigenciasPage() {
       onOpenChange={setConfirmarCloneAberto}
       onConfirm={() => void runAction(confirmarClone)}
     />
+
+    <Dialog open={vigenciaParaAtribuir !== null} onOpenChange={(open) => !open && setVigenciaParaAtribuir(null)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Fazer atribuições agora?</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          A vigência foi cadastrada e você já possui filhos e tarefas cadastrados. Deseja fazer as atribuições desta vigência agora?
+        </p>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setVigenciaParaAtribuir(null)}>
+            Agora não
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              if (vigenciaParaAtribuir === null) return;
+              const id = vigenciaParaAtribuir;
+              setVigenciaParaAtribuir(null);
+              navigate({ to: "/atribuicoes", search: { adicionar: "1", vigencia: String(id) } });
+            }}
+          >
+            Fazer atribuição
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <Dialog open={confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}><DialogContent><DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader><p>Tem certeza que deseja finalizar esta vigência?</p><p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button><Button onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir esta vigência?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent className="max-h-[92vh] overflow-y-auto p-4 sm:max-w-lg sm:p-5"><DialogHeader className="space-y-0.5"><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
