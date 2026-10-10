@@ -22,7 +22,7 @@ import { validarAlteracaoLimiteNaoFez } from "@/lib/penalidade";
 import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
-import { calcularPeriodoPorDias, diasDaVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
+import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -50,35 +50,6 @@ const schema = z.object({
 type VigenciaForm = { data_inicio: string; data_fim: string; valor_debito: string; qtd_ocorrencia: string };
 const vazio: VigenciaForm = { data_inicio: "", data_fim: "", valor_debito: "", qtd_ocorrencia: "0" };
 
-function sugerirPeriodoVigencia(vigencias: Array<{ data_fim: string }>, base: VigenciaForm = vazio): VigenciaForm {
-  if (vigencias.length === 0) {
-    const inicio = new Date();
-    const fim = new Date(inicio);
-    fim.setMonth(fim.getMonth() + 1);
-    return {
-      ...base,
-      data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
-      data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
-    };
-  }
-
-  const maiorFim = vigencias.reduce((maior, vigencia) => {
-    const fim = new Date(vigencia.data_fim).getTime();
-    return fim > maior ? fim : maior;
-  }, Number.NEGATIVE_INFINITY);
-
-  const inicio = new Date(maiorFim);
-  inicio.setDate(inicio.getDate() + 1);
-
-  const fim = new Date(inicio);
-  fim.setMonth(fim.getMonth() + 1);
-
-  return {
-    ...base,
-    data_inicio: paraCampoDataHoraBrasil(inicio.toISOString()),
-    data_fim: paraCampoDataHoraBrasil(fim.toISOString()),
-  };
-}
 const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
 const diaCampo = (valor: string) => valor.slice(0, 10);
 
@@ -126,7 +97,7 @@ function VigenciasPage() {
 
   useEffect(() => {
     if (modoPeriodoNovo === "DATAS" && !form.data_inicio && !form.data_fim) {
-      setForm((atual) => sugerirPeriodoVigencia(vigencias, atual));
+      setForm((atual) => ({ ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" }));
     }
   }, [vigencias, form.data_inicio, form.data_fim, modoPeriodoNovo]);
 
@@ -141,7 +112,7 @@ function VigenciasPage() {
     }
     setQuantidadeDias("");
     setInicioPeriodoDias(null);
-    setForm((atual) => sugerirPeriodoVigencia(vigencias, { ...atual, data_inicio: "", data_fim: "" }));
+    setForm((atual) => ({ ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" }));
   }
 
   function conflitaComVigenciaExistente(inicioCampo: string, fimCampo: string, ignorarId?: number) {
