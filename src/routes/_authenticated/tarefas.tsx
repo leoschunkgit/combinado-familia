@@ -134,8 +134,10 @@ function TarefasPage() {
           <CardHeader className="pb-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle>Tarefas cadastradas</CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">{tarefas.length} tarefa{tarefas.length === 1 ? "" : "s"}</p>
+                <CardTitle className="flex items-center gap-2">
+                  <span>Tarefas cadastradas</span>
+                  <span className="text-sm font-medium text-muted-foreground">{tarefas.length}</span>
+                </CardTitle>
               </div>
               {tarefas.length > 0 && (
                 <div className="relative w-full sm:w-64">
