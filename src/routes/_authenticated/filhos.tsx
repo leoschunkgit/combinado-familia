@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Mail, Pencil, Phone, Plus, Trash2, Users, WalletCards } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -130,8 +130,31 @@ function FilhosPage() {
     />
     <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
         return <div key={f.id} className="min-w-0 max-w-full rounded-2xl border bg-card p-4">
-          <div className="flex min-w-0 items-center gap-3"><div className="min-w-0 flex-1"><p className="truncate font-semibold">{f.nome}</p><p className="truncate text-sm text-muted-foreground">{[f.email, f.celular && maskCelular(f.celular)].filter(Boolean).join(" · ") || "Sem contato"}</p><p className="truncate text-sm text-muted-foreground">{[f.idade !== null && `${f.idade} anos`, f.tem_mesada_opcional === true && f.valor_mesada !== null ? `Mesada: ${dinheiro(f.valor_mesada)}` : null].filter(Boolean).join(" · ")}</p></div>
-            <Button className="shrink-0" variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button><Button className="shrink-0" variant="ghost" size="icon" onClick={() => setConfirmarExclusao(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <p className="min-w-0 flex-1 truncate text-base font-semibold">{f.nome}</p>
+            <div className="flex shrink-0 items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div className="col-span-2 min-w-0 rounded-lg border bg-muted/20 px-3 py-2 sm:col-span-1">
+              <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Mail className="h-3.5 w-3.5" />Email</div>
+              <p className="truncate font-medium text-foreground" title={f.email ?? undefined}>{f.email || "Não informado"}</p>
+            </div>
+            <div className="rounded-lg border bg-muted/20 px-3 py-2">
+              <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Phone className="h-3.5 w-3.5" />Celular</div>
+              <p className="whitespace-nowrap font-medium text-foreground">{f.celular ? maskCelular(f.celular) : "Não informado"}</p>
+            </div>
+            <div className="rounded-lg border bg-muted/20 px-3 py-2">
+              <p className="mb-0.5 text-xs font-medium text-muted-foreground">Idade</p>
+              <p className="font-medium text-foreground">{f.idade !== null ? `${f.idade} anos` : "Não informada"}</p>
+            </div>
+            <div className="col-span-2 rounded-lg border bg-muted/20 px-3 py-2 sm:col-span-1">
+              <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><WalletCards className="h-3.5 w-3.5" />Mesada</div>
+              <p className="font-medium text-foreground">{f.tem_mesada_opcional === true && f.valor_mesada !== null ? dinheiro(f.valor_mesada) : "Não"}</p>
+            </div>
           </div>
         </div>;
       })}</div>
