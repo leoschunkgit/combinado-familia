@@ -450,7 +450,7 @@ export type Database = {
           p_data_fim: string
           p_data_inicio: string
           p_modelo_id: number
-          p_penalidade: string | null
+          p_penalidade: string
           p_qtd_ocorrencia: number
           p_valor_debito: number
         }
@@ -460,6 +460,10 @@ export type Database = {
         }[]
       }
       excluir_vigencia_com_regra: {
+        Args: { p_id_vigencia: number }
+        Returns: boolean
+      }
+      existe_filho_sem_mesada_no_limite: {
         Args: { p_id_vigencia: number }
         Returns: boolean
       }
@@ -482,24 +486,28 @@ export type Database = {
         Args: { p_id: number }
         Returns: undefined
       }
-      registrar_nao_fez_com_penalidade: {
-        Args: {
-          p_created_at: string
-          p_id_filho_tarefa: number
-          p_id_ocorrencia?: number | null
-          p_penalidade?: string | null
-        }
-        Returns: {
-          novo_total: number
-          penalidade: string | null
-          penalizado: boolean
-        }[]
+      recalcular_penalidade_vigencia: {
+        Args: { p_id_vigencia: number }
+        Returns: undefined
       }
       regenerar_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: {
           ativo: boolean
           token: string
+        }[]
+      }
+      registrar_nao_fez_com_penalidade: {
+        Args: {
+          p_created_at: string
+          p_id_filho_tarefa: number
+          p_id_ocorrencia?: number
+          p_penalidade?: string
+        }
+        Returns: {
+          novo_total: number
+          penalidade: string
+          penalizado: boolean
         }[]
       }
     }
