@@ -3,16 +3,24 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
-import { Monitor, Moon, Save, Sun, Trash2, UserCog } from "lucide-react";
+import { Fingerprint, Monitor, Moon, Save, Sun, Trash2, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { msgErro } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getThemePreference, saveThemePreference, type ThemePreference } from "@/lib/theme";
+import {
+  ativarBiometriaNesteAparelho,
+  biometriaAtivaNesteAparelho,
+  biometriaDisponivelNesteAparelho,
+  biometriaEhNativa,
+  desativarBiometriaNesteAparelho,
+} from "@/lib/biometric-auth";
 
 function Admin() {
   const router = useRouter();
@@ -26,9 +34,36 @@ function Admin() {
   const [textoConfirmacao, setTextoConfirmacao] = useState("");
   const [excluindo, setExcluindo] = useState(false);
   const [tema, setTema] = useState<ThemePreference>("light");
+  const [biometriaDisponivel, setBiometriaDisponivel] = useState(false);
+  const [biometriaAtiva, setBiometriaAtiva] = useState(false);
+  const [biometriaLoading, setBiometriaLoading] = useState(false);
 
   useEffect(() => {
     setTema(getThemePreference());
+  }, []);
+
+  useEffect(() => {
+    if (!biometriaEhNativa()) return;
+
+    let ativo = true;
+    async function carregarBiometria() {
+      try {
+        const [disponivel, habilitada] = await Promise.all([
+          biometriaDisponivelNesteAparelho(),
+          biometriaAtivaNesteAparelho(),
+        ]);
+        if (!ativo) return;
+        setBiometriaDisponivel(disponivel);
+        setBiometriaAtiva(habilitada);
+      } catch {
+        if (!ativo) return;
+        setBiometriaDisponivel(false);
+        setBiometriaAtiva(false);
+      }
+    }
+
+    void carregarBiometria();
+    return () => { ativo = false; };
   }, []);
 
   useEffect(() => {
@@ -65,6 +100,32 @@ function Admin() {
     else toast.success("Nome atualizado com sucesso.");
   }
 
+  async function alterarBiometria(habilitar: boolean) {
+    setBiometriaLoading(true);
+    try {
+      if (habilitar) {
+        await ativarBiometriaNesteAparelho();
+        setBiometriaAtiva(true);
+        setBiometriaDisponivel(true);
+        toast.success("Biometria ativada neste aparelho.");
+      } else {
+        await desativarBiometriaNesteAparelho();
+        setBiometriaAtiva(false);
+        toast.success("Biometria desativada neste aparelho.");
+      }
+    } catch (error) {
+      const mensagem =
+        error instanceof Error && error.message
+          ? error.message
+          : habilitar
+            ? "Não foi possível ativar a biometria."
+            : "Não foi possível desativar a biometria.";
+      toast.error(mensagem);
+    } finally {
+      setBiometriaLoading(false);
+    }
+  }
+
   async function excluirConta() {
     if (textoConfirmacao.trim().toUpperCase() !== "EXCLUIR") {
       toast.error('Digite "EXCLUIR" para confirmar.');
@@ -80,6 +141,11 @@ function Admin() {
       return;
     }
 
+    try {
+      await desativarBiometriaNesteAparelho();
+    } catch {
+      // A exclusão da conta não deve ser bloqueada por uma falha local da biometria.
+    }
     await supabase.auth.signOut();
     setConfirmarExclusao(false);
     toast.success("Conta e dados excluídos.");
@@ -101,6 +167,36 @@ function Admin() {
             <Button type="submit" disabled={loading}><Save /> Salvar nome</Button>
           </form>
         </section>
+
+        {biometriaEhNativa() && (
+          <section className="rounded-xl border bg-card p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Fingerprint className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className={uiTypography.secondaryTitle}>Segurança</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Use a biometria cadastrada no celular para liberar o acesso ao Combinado Família.
+                </p>
+              </div>
+              <Switch
+                checked={biometriaAtiva}
+                disabled={biometriaLoading || (!biometriaDisponivel && !biometriaAtiva)}
+                onCheckedChange={(checked) => void alterarBiometria(checked)}
+                aria-label="Entrar com biometria neste aparelho"
+              />
+            </div>
+            <div className="mt-4 rounded-lg bg-muted/40 px-3 py-2.5 text-sm">
+              <p className="font-medium">Entrar com biometria neste aparelho</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {biometriaDisponivel || biometriaAtiva
+                  ? "Sua senha não é armazenada. A validação é feita pelo próprio celular."
+                  : "Nenhuma biometria disponível. Cadastre uma digital ou biometria nas configurações do celular."}
+              </p>
+            </div>
+          </section>
+        )}
 
         <section className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className={uiTypography.secondaryTitle}>Aparência</h2>
