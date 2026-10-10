@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -149,6 +149,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   >({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
   const [tarefasAbertas, setTarefasAbertas] = useState<Record<number, boolean>>({});
+  const aberturaInicialAplicada = useRef(false);
 
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
 
@@ -215,6 +216,53 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         .filter((grupo) => grupo.tarefas.length > 0),
     }))
     .filter((grupo) => grupo.filhos.length > 0);
+
+  useEffect(() => {
+    if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
+
+    const grupoInicial =
+      grupos.find(({ vigencia }) => vigenciaEmAndamento(vigencia)) ?? grupos[0];
+    if (!grupoInicial) return;
+
+    const filhoInicial = grupoInicial.filhos[0];
+    const tarefaInicial = filhoInicial?.tarefas[0];
+
+    setVigenciasAbertas(
+      Object.fromEntries(
+        grupos.map(({ vigencia }) => [
+          vigencia.id,
+          vigencia.id === grupoInicial.vigencia.id,
+        ]),
+      ),
+    );
+
+    setFilhosAbertos(
+      Object.fromEntries(
+        grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
+          gruposFilhos.map(({ filho }) => [
+            `${vigencia.id}-${filho.id}`,
+            vigencia.id === grupoInicial.vigencia.id &&
+              filho.id === filhoInicial?.filho.id,
+          ]),
+        ),
+      ),
+    );
+
+    setTarefasAbertas(
+      Object.fromEntries(
+        grupos.flatMap(({ filhos: gruposFilhos }) =>
+          gruposFilhos.flatMap(({ tarefas: tarefasDoFilho }) =>
+            tarefasDoFilho.map((tarefa) => [
+              tarefa.id,
+              tarefa.id === tarefaInicial?.id,
+            ]),
+          ),
+        ),
+      ),
+    );
+
+    aberturaInicialAplicada.current = true;
+  }, [isLoading, grupos]);
 
   function definirTudo(aberto: boolean) {
     setVigenciasAbertas(
@@ -703,8 +751,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
       <div className="space-y-8">
         {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
-          const vigenciaAberta =
-            vigenciasAbertas[vigencia.id] ?? vigenciaEmAndamento(vigencia);
+          const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
           return (
             <section
               key={vigencia.id}
