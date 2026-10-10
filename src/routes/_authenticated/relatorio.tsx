@@ -139,6 +139,12 @@ function RelatorioPage() {
     <ResponsiveFilters
       desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
       onApply={() => setFiltro(f)}
+      hasActiveFilters={Object.values(filtro).some((value) => value !== "all")}
+      onClear={() => {
+        const limpos = { vig: "all", filho: "all", tarefa: "all" };
+        setF(limpos);
+        setFiltro(limpos);
+      }}
       renderFilters={() => (
         <>
           <Pick label="Vigência" value={f.vig} onChange={(v) => setF({ ...f, vig: v })} allLabel="Todas" options={vigenciasOrdenadas.map((v) => ({value:String(v.id),label:fmtVigencia(v),status:situacaoVigencia(v)}))} />
