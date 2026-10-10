@@ -26,20 +26,9 @@ import {
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { useActionLoading } from "@/components/ActionLoading";
+import { diasDaVigencia, sugerirInicioVigencia } from "@/lib/vigencia-periodo";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
-
-function diasDaVigencia(inicioCampo: string, fimCampo: string) {
-  const dataUtc = (valor: string) => {
-    const partes = valor.slice(0, 10).split("-").map(Number);
-    if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return null;
-    return Date.UTC(partes[0], partes[1] - 1, partes[2]);
-  };
-  const inicio = dataUtc(inicioCampo);
-  const fim = dataUtc(fimCampo);
-  if (inicio === null || fim === null || fim < inicio) return null;
-  return Math.floor((fim - inicio) / 86400000) + 1;
-}
 
 export function OnboardingInicial() {
   const navigate = useNavigate();
@@ -59,10 +48,8 @@ export function OnboardingInicial() {
 
   const [nomeTarefa, setNomeTarefa] = useState("");
 
-  const agora = new Date();
-  const fimPadrao = new Date(agora.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const [inicioVigencia, setInicioVigencia] = useState(() => paraCampoDataHoraBrasil(agora.toISOString()));
-  const [fimVigencia, setFimVigencia] = useState(() => paraCampoDataHoraBrasil(fimPadrao.toISOString()));
+  const [inicioVigencia, setInicioVigencia] = useState(() => sugerirInicioVigencia([]));
+  const [fimVigencia, setFimVigencia] = useState("");
   const [quantidade, setQuantidade] = useState("0");
   const [desconto, setDesconto] = useState("");
 
