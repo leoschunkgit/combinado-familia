@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarRange, CheckCircle2, Link2, ListPlus, ListTodo, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { PageHeader } from "@/components/PageHeader";
@@ -51,6 +52,7 @@ const vigenciaInicial = (): VigenciaDraft => ({
 });
 
 function CadastroUnicoPage() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const { data: filhos = [] } = useFilhos();
@@ -73,6 +75,12 @@ function CadastroUnicoPage() {
   const [vigenciaCriadaId, setVigenciaCriadaId] = useState<number | null>(null);
   const [etapaNovo, setEtapaNovo] = useState<1 | 2 | 3 | 4>(1);
   const [tarefasPorFilho, setTarefasPorFilho] = useState<Record<number, number[]>>({});
+  const [resumoConclusao, setResumoConclusao] = useState<{
+    filhos: number;
+    tarefas: number;
+    vigencias: number;
+    atribuicoes: number;
+  } | null>(null);
 
   const totalCombinacoes = filhosSelecionados.reduce((total, idFilho) => total + (tarefasPorFilho[idFilho]?.length ?? 0), 0);
   const periodoDiasCalculado = calcularPeriodoPorDias(quantidadeDiasVigencia, inicioPeriodoDiasVigencia);
@@ -294,6 +302,13 @@ function CadastroUnicoPage() {
 
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
 
+    setResumoConclusao({
+      filhos: filhosSelecionados.length,
+      tarefas: tarefasSelecionadas.length,
+      vigencias: 1,
+      atribuicoes: resultado.quantidade,
+    });
+
     setNomeFilho("");
     setTemMesada(false);
     setValorMesada("");
@@ -310,7 +325,6 @@ function CadastroUnicoPage() {
     setTarefasPorFilho({});
     setEtapaNovo(1);
 
-    toast.success("Cadastro Fluxo finalizado com sucesso");
   }
 
 
@@ -654,6 +668,40 @@ function CadastroUnicoPage() {
           )}
         </div>
 
+      <Dialog open={resumoConclusao !== null} onOpenChange={(open) => !open && setResumoConclusao(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mb-1 flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <CheckCircle2 className="h-5 w-5" />
+              </span>
+              <DialogTitle>Cadastro Fluxo concluído</DialogTitle>
+            </div>
+          </DialogHeader>
+
+          <p className="text-sm text-muted-foreground">
+            Filhos, tarefas, vigência e atribuições foram cadastrados com sucesso.
+          </p>
+
+          {resumoConclusao && (
+            <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/20 p-3 text-sm">
+              <div><span className="font-semibold">{resumoConclusao.filhos}</span> filho(s)</div>
+              <div><span className="font-semibold">{resumoConclusao.tarefas}</span> tarefa(s)</div>
+              <div><span className="font-semibold">{resumoConclusao.vigencias}</span> vigência</div>
+              <div><span className="font-semibold">{resumoConclusao.atribuicoes}</span> atribuição(ões)</div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button type="button" variant="outline" onClick={() => setResumoConclusao(null)}>
+              Fazer outro Cadastro Fluxo
+            </Button>
+            <Button type="button" onClick={() => navigate({ to: "/ocorrencias" })}>
+              Ir para Fez / Não fez
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
