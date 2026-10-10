@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -98,18 +98,20 @@ function VigenciasPage() {
 
   const periodoDiasCalculado = calcularPeriodoPorDias(quantidadeDias, inicioPeriodoDias);
 
-  useEffect(() => {
-    if (modoPeriodoNovo === "DATAS" && !form.data_inicio && !form.data_fim) {
-      setForm((atual) => ({ ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" }));
-    }
-  }, [vigencias, form.data_inicio, form.data_fim, modoPeriodoNovo]);
+  function abrirNovaVigencia() {
+    setForm({ ...vazio, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" });
+    setModoPeriodoNovo("DATAS");
+    setQuantidadeDias("");
+    setInicioPeriodoDias(null);
+    setNovoAberto(true);
+  }
 
   function selecionarModoPeriodoNovo(modo: PeriodoVigenciaModo) {
     if (modo === modoPeriodoNovo) return;
     setModoPeriodoNovo(modo);
     if (modo === "DIAS") {
       setQuantidadeDias("");
-      setInicioPeriodoDias(new Date().toISOString());
+      setInicioPeriodoDias(sugerirInicioVigencia(vigencias));
       setForm((atual) => ({ ...atual, data_inicio: "", data_fim: "" }));
       return;
     }
@@ -258,7 +260,7 @@ function VigenciasPage() {
               <span className="hidden sm:inline">Clonar vigência</span>
             </Button>
           )}
-          <Button size="sm" className="px-2 sm:px-3" onClick={() => setNovoAberto(true)}>
+          <Button size="sm" className="px-2 sm:px-3" onClick={abrirNovaVigencia}>
             <Plus className="h-4 w-4" />
             <span>Adicionar</span>
           </Button>
