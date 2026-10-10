@@ -1,13 +1,24 @@
 import { uiTypography } from "@/lib/ui-typography";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, ClipboardCheck, History, Link2, ListTodo, Users } from "lucide-react";
+import { ArrowRight, BellRing, CheckCircle2, ClipboardCheck, History, Link2, ListTodo, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFilhoTarefas, useOcorrencias, useVigencias } from "@/lib/db";
+import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   component: Inicio,
 });
 
 function Inicio() {
+  const { data: vigencias = [] } = useVigencias();
+  const { data: atribuicoes = [] } = useFilhoTarefas();
+  const { data: ocorrencias = [] } = useOcorrencias();
+  const hoje = useDataBrasilAtual();
+  const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
+  const pendenciasHoje = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, agoraBrasil);
+  const pendenciasPassadas = pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, agoraBrasil);
+  const totalPendencias = pendenciasHoje.length + pendenciasPassadas.length;
+
   const etapas = [
     { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
     { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
@@ -18,6 +29,29 @@ function Inicio() {
 
   return (
     <div className="space-y-8">
+      {totalPendencias > 0 && (
+        <section className="rounded-2xl border border-amber-300 bg-amber-50/70 p-4 shadow-sm dark:border-amber-700/70 dark:bg-amber-950/15 md:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                <BellRing className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Você tem pendências para resolver</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {totalPendencias} {totalPendencias === 1 ? "registro precisa" : "registros precisam"} de “Fez” ou “Não fez”.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="w-full shrink-0 sm:w-auto">
+              <Link to="/ocorrencias">
+                Ir para Fez / Não fez <ArrowRight />
+              </Link>
+            </Button>
+          </div>
+        </section>
+      )}
+
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="grid items-center gap-8 p-6 md:grid-cols-[1.15fr_.85fr] md:p-10">
           <div>
