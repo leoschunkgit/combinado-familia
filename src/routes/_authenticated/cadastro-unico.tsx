@@ -566,10 +566,10 @@ function CadastroUnicoPage() {
                   </div>
                 )}
                 <div className="space-y-3">
+                  {diasPeriodoAtual !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasPeriodoAtual} {diasPeriodoAtual === 1 ? "dia" : "dias"}.</p>}
                   <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-                      {diasPeriodoAtual !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasPeriodoAtual} {diasPeriodoAtual === 1 ? "dia" : "dias"}.</p>}
                       <Label>Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência</Label>
                       <Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} />
                       <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
