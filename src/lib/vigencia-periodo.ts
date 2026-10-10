@@ -2,6 +2,26 @@ import { paraCampoDataHoraBrasil } from "@/lib/db";
 
 export type PeriodoVigenciaModo = "DATAS" | "DIAS";
 
+
+export function sugerirInicioVigencia(vigencias: Array<{ data_fim: string }>) {
+  if (vigencias.length === 0) {
+    return paraCampoDataHoraBrasil(new Date().toISOString());
+  }
+
+  const maiorFim = vigencias.reduce((maior, vigencia) => {
+    const fim = new Date(vigencia.data_fim).getTime();
+    return fim > maior ? fim : maior;
+  }, Number.NEGATIVE_INFINITY);
+
+  if (!Number.isFinite(maiorFim)) {
+    return paraCampoDataHoraBrasil(new Date().toISOString());
+  }
+
+  const inicio = new Date(maiorFim);
+  inicio.setDate(inicio.getDate() + 1);
+  return paraCampoDataHoraBrasil(inicio.toISOString());
+}
+
 const dataHoraBrasil = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
   day: "2-digit",
