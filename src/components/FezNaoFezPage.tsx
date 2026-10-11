@@ -31,6 +31,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
+import { BrDateField } from "@/components/BrDateField";
 import {
   Select,
   SelectContent,
@@ -133,7 +134,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
-  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all" });
+  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all", data: "" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
@@ -177,23 +178,26 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     const datas = [...new Set([...datasGeradas, ...datasComRegistro])].sort(
       (a, b) => b.localeCompare(a),
     );
+    const datasFiltradas = filtro.data
+      ? datas.filter((data) => data === filtro.data)
+      : datas;
 
     if (modo === "pendentes") {
-      return datas.filter((data) => !registroNaData(tarefa, data));
+      return datasFiltradas.filter((data) => !registroNaData(tarefa, data));
     }
 
     if (filtro.resultado === "FEZ") {
-      return datas.filter((data) => registroNaData(tarefa, data)?.tipo === "FEZ");
+      return datasFiltradas.filter((data) => registroNaData(tarefa, data)?.tipo === "FEZ");
     }
 
     if (filtro.resultado === "NAO_FEZ") {
-      return datas.filter((data) => {
+      return datasFiltradas.filter((data) => {
         const registro = registroNaData(tarefa, data);
         return Boolean(registro && registro.tipo !== "FEZ");
       });
     }
 
-    return datas;
+    return datasFiltradas;
   };
 
   const tarefasVisiveis = (vigencia: Vigencia, idFilho: number) =>
@@ -205,7 +209,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         return false;
       }
       const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
-      if (filtro.resultado !== "all") return temDatasVisiveis;
+      if (filtro.resultado !== "all" || filtro.data) return temDatasVisiveis;
       return modo === "todos" || temDatasVisiveis;
     });
 
@@ -686,7 +690,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     }
   }
 
-  const filtrosAtivos = Object.values(filtro).some((value) => value !== "all");
+  const filtrosAtivos = filtro.vig !== "all" || filtro.filho !== "all" || filtro.tarefa !== "all" || filtro.resultado !== "all" || Boolean(filtro.data);
   const vazio =
     modo === "pendentes"
       ? "Tudo em dia. Não há datas pendentes para os filtros selecionados."
@@ -707,11 +711,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       />
 
       <ResponsiveFilters
-        desktopClassName={modo === "todos" ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
+        desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
         onApply={() => setFiltro(f)}
         hasActiveFilters={filtrosAtivos}
         onClear={() => {
-          const limpos = { vig: "all", filho: "all", tarefa: "all", resultado: "all" };
+          const limpos = { vig: "all", filho: "all", tarefa: "all", resultado: "all", data: "" };
           setF(limpos);
           setFiltro(limpos);
         }}
@@ -760,6 +764,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 ]}
               />
             )}
+            <div className="space-y-1.5">
+              <Label htmlFor="filtro-fez-nao-fez-data">Data</Label>
+              <BrDateField
+                id="filtro-fez-nao-fez-data"
+                value={f.data}
+                onChange={(data) => setF({ ...f, data })}
+                max={hoje}
+              />
+            </div>
           </>
         )}
       />
