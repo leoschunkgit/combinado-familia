@@ -262,19 +262,27 @@ label:has([role="switch"]:not([aria-disabled="true"])) {
 /* Fez / Não fez: no mobile e no app nativo, a penalidade fica junto da data.
    No desktop web, permanece como ação destacada com hint. */
 .penalty-inline-mobile {
-  display: inline-flex;
+  display: inline-flex !important;
 }
 
 .penalty-action-desktop {
-  display: none;
+  display: none !important;
 }
 
 @media (min-width: 640px) {
   html:not(.native-app) .penalty-inline-mobile {
-    display: none;
+    display: none !important;
   }
 
   html:not(.native-app) .penalty-action-desktop {
-    display: inline-flex;
+    display: inline-flex !important;
   }
+}
+
+html.native-app .penalty-inline-mobile {
+  display: inline-flex !important;
+}
+
+html.native-app .penalty-action-desktop {
+  display: none !important;
 }
