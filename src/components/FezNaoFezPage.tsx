@@ -1170,6 +1170,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 <span className="font-semibold tabular-nums">
                                                   {formatarData(data)}
                                                 </span>
+                                                {registro &&
+                                                  registro.tipo !== "FEZ" &&
+                                                  !comDesconto &&
+                                                  penalizadas.has(registro.id) && (
+                                                    <span
+                                                      className="inline-flex shrink-0 text-destructive"
+                                                      role="img"
+                                                      aria-label="Limite de penalidade atingido"
+                                                    >
+                                                      <AlertTriangle className="h-4 w-4" />
+                                                    </span>
+                                                  )}
                                               </div>
 
                                               <div className="min-w-0">
@@ -1239,7 +1251,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                     </span>
 
                                                     <span className="marked-secondary-slot">
-                                                      {registro.tipo === "FEZ" ? (
+                                                      {registro.tipo === "FEZ" && (
                                                         <Hint content="Ver bonificação">
                                                           <Button
                                                             variant="outline"
@@ -1258,18 +1270,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                             <Info className="h-4 w-4" />
                                                           </Button>
                                                         </Hint>
-                                                      ) : !comDesconto &&
-                                                        penalizadas.has(registro.id) ? (
-                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                          <span
-                                                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive"
-                                                            role="img"
-                                                            aria-label="Limite de penalidade atingido"
-                                                          >
-                                                            <AlertTriangle className="h-4 w-4" />
-                                                          </span>
-                                                        </Hint>
-                                                      ) : null}
+                                                      )}
                                                     </span>
                                                   </div>
                                                 ) : null}
