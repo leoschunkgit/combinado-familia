@@ -95,7 +95,7 @@ function PainelPublico() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="mx-auto grid w-full max-w-2xl grid-cols-3 gap-2">
             <Card><CardContent className="p-3 text-center"><ClipboardList className="mx-auto h-5 w-5 text-muted-foreground" /><p className="mt-1 text-xl font-bold">{tarefasAtual.length}</p><p className="text-[11px] text-muted-foreground">Tarefas</p></CardContent></Card>
             <Card><CardContent className="p-3 text-center"><ThumbsUp className="mx-auto h-6 w-6 text-green-600" /><p className="mt-1 text-xl font-bold">{qtdFez}</p><p className="text-[11px] text-muted-foreground">Fez</p></CardContent></Card>
             <Card><CardContent className="p-3 text-center"><ThumbsDown className="mx-auto h-6 w-6 text-red-500" /><p className="mt-1 text-xl font-bold">{qtdNaoFez}</p><p className="text-[11px] text-muted-foreground">Não fez</p></CardContent></Card>
