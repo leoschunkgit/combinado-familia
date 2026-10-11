@@ -839,47 +839,28 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 </div>
               </div>
 
-              <fieldset className="flex flex-col gap-3 border-y py-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <legend className="mb-2 text-xs font-semibold text-muted-foreground">
-                    Visualizar por
-                  </legend>
-                  <div className="flex flex-wrap items-center gap-5">
-                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
-                      <input
-                        type="radio"
-                        name="visualizacao-fez-nao-fez"
-                        value="vigencia"
-                        checked={visualizacao === "vigencia"}
-                        onChange={() => setVisualizacao("vigencia")}
-                        className="h-4 w-4 accent-primary"
-                      />
-                      Vigência
-                    </label>
-                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
-                      <input
-                        type="radio"
-                        name="visualizacao-fez-nao-fez"
-                        value="data"
-                        checked={visualizacao === "data"}
-                        onChange={() => {
-                          setVisualizacao("data");
-                          setDataVisualizacao(hoje);
-                          setF((atual) => ({ ...atual, data: "" }));
-                          setFiltro((atual) => ({ ...atual, data: "" }));
-                        }}
-                        className="h-4 w-4 accent-primary"
-                      />
-                      Data
-                    </label>
-                  </div>
-                </div>
+              <div className="flex flex-col gap-3 border-y py-3 sm:flex-row sm:items-end sm:justify-between">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
+                  <Checkbox
+                    checked={visualizacao === "data"}
+                    onCheckedChange={(checked) => {
+                      if (checked === true) {
+                        setVisualizacao("data");
+                        setDataVisualizacao(hoje);
+                        setF((atual) => ({ ...atual, data: "" }));
+                        setFiltro((atual) => ({ ...atual, data: "" }));
+                      } else {
+                        setVisualizacao("vigencia");
+                      }
+                    }}
+                    aria-label="Visualizar por data"
+                  />
+                  Visualizar por data
+                </label>
 
                 {visualizacao === "data" && (
                   <div className="w-full space-y-1.5 sm:w-56">
-                    <Label htmlFor={`visualizacao-fez-nao-fez-data-${vigencia.id}`}>
-                      Data
-                    </Label>
+                    <Label htmlFor={`visualizacao-fez-nao-fez-data-${vigencia.id}`}>Data</Label>
                     <BrDateField
                       id={`visualizacao-fez-nao-fez-data-${vigencia.id}`}
                       value={dataVisualizacao}
@@ -889,7 +870,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     />
                   </div>
                 )}
-              </fieldset>
+              </div>
 
               <div className="space-y-4">
                   {gruposFilhos.map(({ filho, tarefas: tarefasDoFilho }) => {
