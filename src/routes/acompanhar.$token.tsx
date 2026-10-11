@@ -97,24 +97,24 @@ function PainelPublico() {
 
           <div className="grid w-full grid-cols-3 gap-2">
             <Card className="h-full">
-              <CardContent className="grid min-h-[88px] grid-rows-[24px_24px_16px] place-items-center content-center p-3 text-center">
-                <span className="flex h-6 w-6 items-center justify-center"><ClipboardList className="h-5 w-5 text-muted-foreground" /></span>
-                <p className="flex h-6 items-center text-xl font-bold leading-none">{tarefasAtual.length}</p>
-                <p className="flex h-4 items-center text-[11px] leading-none text-muted-foreground">Tarefas</p>
+              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 text-center">
+                <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                <p className="text-xl font-bold leading-none">{tarefasAtual.length}</p>
+                <p className="text-[11px] leading-none text-muted-foreground">Tarefas</p>
               </CardContent>
             </Card>
             <Card className="h-full">
-              <CardContent className="grid min-h-[88px] grid-rows-[24px_24px_16px] place-items-center content-center p-3 text-center">
-                <span className="flex h-6 w-6 items-center justify-center"><ThumbsUp className="h-5 w-5 text-green-600" /></span>
-                <p className="flex h-6 items-center text-xl font-bold leading-none">{qtdFez}</p>
-                <p className="flex h-4 items-center text-[11px] leading-none text-muted-foreground">Fez</p>
+              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 text-center">
+                <ThumbsUp className="h-5 w-5 text-green-600" />
+                <p className="text-xl font-bold leading-none">{qtdFez}</p>
+                <p className="text-[11px] leading-none text-muted-foreground">Fez</p>
               </CardContent>
             </Card>
             <Card className="h-full">
-              <CardContent className="grid min-h-[88px] grid-rows-[24px_24px_16px] place-items-center content-center p-3 text-center">
-                <span className="flex h-6 w-6 items-center justify-center"><ThumbsDown className="h-5 w-5 text-red-500" /></span>
-                <p className="flex h-6 items-center text-xl font-bold leading-none">{qtdNaoFez}</p>
-                <p className="flex h-4 items-center text-[11px] leading-none text-muted-foreground">Não fez</p>
+              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 text-center">
+                <ThumbsDown className="h-5 w-5 text-red-500" />
+                <p className="text-xl font-bold leading-none">{qtdNaoFez}</p>
+                <p className="text-[11px] leading-none text-muted-foreground">Não fez</p>
               </CardContent>
             </Card>
           </div>
