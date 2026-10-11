@@ -261,56 +261,22 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     return datasFiltradas;
   };
 
-  const quantidadePendenciasDaTarefa = (
-    tarefa: FilhoTarefa,
-    vigencia: Vigencia,
-  ) =>
-    datasDaVigenciaAteHoje(vigencia, agoraBrasil).filter(
-      (data) => !registroNaData(tarefa, data),
-    ).length;
-
-  const quantidadePendenciasDoFilho = (
-    vigencia: Vigencia,
-    idFilho: number,
-  ) =>
-    atribuicoes
-      .filter(
-        (tarefa) =>
-          tarefa.id_vigencia === vigencia.id && tarefa.id_filho === idFilho,
-      )
-      .reduce(
-        (total, tarefa) =>
-          total + quantidadePendenciasDaTarefa(tarefa, vigencia),
-        0,
-      );
-
   const tarefasVisiveis = (vigencia: Vigencia, idFilho: number) =>
-    atribuicoes
-      .filter((tarefa) => {
-        if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
-          return false;
-        }
-        if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
-          return false;
-        }
-        const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
-        if (
-          filtro.resultado !== "all" ||
-          filtro.data ||
-          visualizacao === "data"
-        ) return temDatasVisiveis;
-        return modo === "todos" || temDatasVisiveis;
-      })
-      .sort((a, b) => {
-        const pendenciasA = quantidadePendenciasDaTarefa(a, vigencia);
-        const pendenciasB = quantidadePendenciasDaTarefa(b, vigencia);
-
-        if (pendenciasA !== pendenciasB) {
-          return pendenciasB - pendenciasA;
-        }
-
-        return a.id - b.id;
-      });
+    atribuicoes.filter((tarefa) => {
+      if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
+        return false;
+      }
+      if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
+        return false;
+      }
+      const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
+      if (
+        filtro.resultado !== "all" ||
+        filtro.data ||
+        visualizacao === "data"
+      ) return temDatasVisiveis;
+      return modo === "todos" || temDatasVisiveis;
+    });
 
   const grupos = vigenciasEmAndamento
     .filter(
@@ -327,16 +293,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         .map((filho) => ({
           filho,
           tarefas: tarefasVisiveis(vigencia, filho.id),
-          pendencias: quantidadePendenciasDoFilho(vigencia, filho.id),
         }))
-        .filter((grupo) => grupo.tarefas.length > 0)
-        .sort((a, b) => {
-          if (a.pendencias !== b.pendencias) {
-            return b.pendencias - a.pendencias;
-          }
-
-          return a.filho.id - b.filho.id;
-        }),
+        .filter((grupo) => grupo.tarefas.length > 0),
     }))
     .filter((grupo) => grupo.filhos.length > 0);
 
