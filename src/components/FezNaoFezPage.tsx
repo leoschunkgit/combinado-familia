@@ -33,6 +33,7 @@ import { CollapseChevron } from "@/components/CollapseChevron";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
 import { BrDateField } from "@/components/BrDateField";
+import { Hint } from "@/components/Hint";
 import {
   Select,
   SelectContent,
@@ -1153,12 +1154,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                               <div className="min-w-0">
                                                 {registro ? (
                                                   <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2.5 text-sm sm:justify-start">
-                                                    <span
-                                                      title={
+                                                    <Hint
+                                                      content={
                                                         registro.tipo === "FEZ"
                                                           ? "Fez"
                                                           : "Não fez"
                                                       }
+                                                    >
+                                                      <span
                                                       className={
                                                         registro.tipo === "FEZ"
                                                           ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-green-50 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
@@ -1175,15 +1178,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                           ? "Fez"
                                                           : "Não fez"}
                                                       </span>
-                                                    </span>
+                                                      </span>
+                                                    </Hint>
 
                                                     {registro.tipo === "FEZ" && (
+                                                      <Hint content="Ver bonificação">
                                                       <Button
                                                         variant="outline"
                                                         size="icon"
                                                         className="h-8 w-8 shrink-0 rounded-md"
                                                         disabled={busy}
-                                                        title="Ver bonificação"
                                                         aria-label="Ver bonificação"
                                                         onClick={() =>
                                                           editarBonificacao(
@@ -1195,19 +1199,22 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       >
                                                         <Info className="h-4 w-4" />
                                                       </Button>
+                                                      </Hint>
                                                     )}
 
                                                     {!bloqueada && (
+                                                      <Hint
+                                                        content={
+                                                          registro.tipo === "FEZ"
+                                                            ? "Alterar para Não fez"
+                                                            : "Alterar para Fez"
+                                                        }
+                                                      >
                                                       <Button
                                                         variant="outline"
                                                         size="icon"
                                                         className="h-8 w-8 shrink-0 rounded-md"
                                                         disabled={busy}
-                                                        title={
-                                                          registro.tipo === "FEZ"
-                                                            ? "Alterar para Não fez"
-                                                            : "Alterar para Fez"
-                                                        }
                                                         aria-label={
                                                           registro.tipo === "FEZ"
                                                             ? "Alterar marcação para Não fez"
@@ -1224,6 +1231,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       >
                                                         <Pencil className="h-4 w-4" />
                                                       </Button>
+                                                      </Hint>
                                                     )}
 
                                                     {registro.tipo !== "FEZ" &&
@@ -1231,15 +1239,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       penalizadas.has(
                                                         registro.id,
                                                       ) && (
-                                                        <span
-                                                          className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-destructive"
-                                                          title="Esta marcação atingiu o limite de penalidade"
-                                                        >
-                                                          <AlertTriangle className="h-3.5 w-3.5" />
-                                                          <span className="hidden sm:inline">
-                                                            Limite atingido
+                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
+                                                          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-destructive">
+                                                            <AlertTriangle className="h-3.5 w-3.5" />
+                                                            <span className="hidden sm:inline">
+                                                              Limite atingido
+                                                            </span>
                                                           </span>
-                                                        </span>
+                                                        </Hint>
                                                       )}
                                                   </div>
                                                 ) : null}
