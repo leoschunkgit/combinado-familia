@@ -939,7 +939,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                   : "pendências"}
                               </span>
                             )}
-                            {!comDesconto && (
+                            {comDesconto ? (
+                              <span className="font-semibold text-muted-foreground">
+                                Com mesada
+                              </span>
+                            ) : (
                               <span className="font-semibold tabular-nums">
                                 Não fez: {totalNaoFez} de{" "}
                                 {vigencia.qtd_ocorrencia}
