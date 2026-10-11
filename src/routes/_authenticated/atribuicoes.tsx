@@ -44,6 +44,9 @@ function AtribuicoesPage() {
   const [filtrosAplicados, setFiltrosAplicados] = useState({ vig: "all", filho: "all", tarefa: "all" });
 
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
+  const vigenciaAtiva = vigenciasOrdenadas.find(
+    (item) => situacaoVigencia(item) === "andamento",
+  );
 
   async function excluir(id: number) {
     const alvo = existentes.find((item) => item.id === id);
@@ -209,7 +212,9 @@ function AtribuicoesPage() {
         open={novoAberto}
         onOpenChange={setNovoAberto}
         mode="NORMAL"
-        vigenciaInicialId={vigencia ? Number(vigencia) : null}
+        vigenciaInicialId={
+          vigencia ? Number(vigencia) : (vigenciaAtiva?.id ?? null)
+        }
       />
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
