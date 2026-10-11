@@ -839,7 +839,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 border-y py-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-3 border-t py-3 sm:flex-row sm:items-end sm:justify-between">
                 <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
                   <Checkbox
                     checked={visualizacao === "data"}
