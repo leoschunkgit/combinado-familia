@@ -1129,8 +1129,22 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                   : "flex items-center justify-between gap-2 px-3 py-3 sm:grid sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:px-4"
                                               }
                                             >
-                                              <div className="flex items-center gap-2">
-                                                <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                              <div
+                                                className={
+                                                  registro?.tipo === "FEZ"
+                                                    ? "flex items-center gap-2 text-green-700 dark:text-green-300"
+                                                    : registro
+                                                      ? "flex items-center gap-2 text-red-700 dark:text-red-300"
+                                                      : "flex items-center gap-2"
+                                                }
+                                              >
+                                                <CalendarDays
+                                                  className={
+                                                    registro
+                                                      ? "h-4 w-4 shrink-0"
+                                                      : "h-4 w-4 shrink-0 text-muted-foreground"
+                                                  }
+                                                />
                                                 <span className="font-semibold tabular-nums">
                                                   {formatarData(data)}
                                                 </span>
