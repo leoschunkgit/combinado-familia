@@ -95,6 +95,30 @@ function TarefasPage() {
     }
   }
 
+  async function salvarConformePreenchimento(e: FormEvent) {
+    e.preventDefault();
+
+    const temNome = nome.trim().length > 0;
+    const temLote = lote.trim().length > 0;
+
+    if (temNome && temLote) {
+      toast.error("Preencha apenas uma forma de cadastro por vez");
+      return;
+    }
+
+    if (temNome) {
+      await salvar(e);
+      return;
+    }
+
+    if (temLote) {
+      await salvarLote(e);
+      return;
+    }
+
+    toast.error("Informe uma tarefa ou várias tarefas separadas por #");
+  }
+
   async function excluir(id: number) {
     const { error } = await supabase.from("t_tarefa").delete().eq("id", id);
     if (error) {
@@ -171,28 +195,28 @@ function TarefasPage() {
       <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader><DialogTitle>Adicionar tarefa</DialogTitle></DialogHeader>
-          <div className="space-y-5">
-            <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-              <div className="space-y-2"><Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-              <Button type="submit" className="w-full">Cadastrar</Button>
-            </form>
-            <div className="border-t pt-5">
-              <form onSubmit={(e) => { void runAction(() => salvarLote(e)); }} className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="tarefas-lote">Cadastrar várias tarefas</Label>
-                  <Textarea
-                    id="tarefas-lote"
-                    value={lote}
-                    onChange={(e) => setLote(e.target.value)}
-                    placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
-                    className="min-h-28 resize-y"
-                  />
-                  <p className="text-xs text-muted-foreground">Separe cada tarefa com #. Os espaços antes e depois serão removidos automaticamente.</p>
-                </div>
-                <Button type="submit" variant="secondary" className="w-full">Cadastrar tarefas</Button>
-              </form>
+          <form onSubmit={(e) => { void runAction(() => salvarConformePreenchimento(e)); }} className="space-y-5">
+            <div className="space-y-2">
+              <Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label>
+              <Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} />
             </div>
-          </div>
+
+            <div className="border-t pt-5">
+              <div className="space-y-2">
+                <Label htmlFor="tarefas-lote">Cadastrar várias tarefas</Label>
+                <Textarea
+                  id="tarefas-lote"
+                  value={lote}
+                  onChange={(e) => setLote(e.target.value)}
+                  placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
+                  className="min-h-28 resize-y"
+                />
+                <p className="text-xs text-muted-foreground">Separe cada tarefa com #. Os espaços antes e depois serão removidos automaticamente.</p>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full">Cadastrar</Button>
+          </form>
         </DialogContent>
       </Dialog>
 
