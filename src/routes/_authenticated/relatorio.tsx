@@ -33,7 +33,7 @@ function bonus(o: Ocorrencia) {
   if (o.tipo !== "FEZ") return "";
   if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao;
   if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor != null) return reais(o.bonificacao_valor);
-  return "";
+  return "Nenhuma";
 }
 
 function RelatorioPage() {
