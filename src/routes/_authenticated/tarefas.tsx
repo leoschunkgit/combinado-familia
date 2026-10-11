@@ -15,6 +15,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { msgErro, useFilhos, useTarefas, useVigencias, type Tarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
+import { Hint } from "@/components/Hint";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [
@@ -181,7 +182,9 @@ function TarefasPage() {
                 {tarefasFiltradas.map((t) => (
                   <div key={t.id} className="flex min-h-12 items-center gap-2 rounded-xl border bg-card px-3 py-2">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
-                    <p className="min-w-0 flex-1 truncate text-sm font-medium" title={t.nome}>{t.nome}</p>
+                    <Hint content={t.nome}>
+                      <p className="min-w-0 flex-1 truncate text-sm font-medium">{t.nome}</p>
+                    </Hint>
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}><Pencil className="h-3.5 w-3.5" /></Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                   </div>
