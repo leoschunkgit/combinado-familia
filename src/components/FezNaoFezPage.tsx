@@ -1149,7 +1149,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 <span className="font-semibold tabular-nums">
                                                   {formatarData(data)}
                                                 </span>
-                                                {registro?.tipo !== "FEZ" &&
+                                                {registro &&
+                                                  registro.tipo !== "FEZ" &&
                                                   !comDesconto &&
                                                   penalizadas.has(
                                                     registro.id,
