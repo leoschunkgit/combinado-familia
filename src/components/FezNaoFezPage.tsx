@@ -734,49 +734,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
 
-      <div className="mb-4 flex flex-col gap-3 rounded-xl border bg-card p-3 sm:flex-row sm:items-end sm:justify-between sm:p-4">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={visualizacao === "vigencia" ? "default" : "outline"}
-            onClick={() => setVisualizacao("vigencia")}
-          >
-            <CalendarRange className="h-4 w-4" />
-            Por vigência
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={visualizacao === "data" ? "default" : "outline"}
-            onClick={() => {
-              setVisualizacao("data");
-              setDataVisualizacao(hoje);
-              setF((atual) => ({ ...atual, data: "" }));
-              setFiltro((atual) => ({ ...atual, data: "" }));
-            }}
-          >
-            <CalendarDays className="h-4 w-4" />
-            Por data
-          </Button>
-        </div>
-
-        {visualizacao === "data" && (
-          <div className="w-full space-y-1.5 sm:w-56">
-            <Label htmlFor="visualizacao-fez-nao-fez-data">Data</Label>
-            <BrDateField
-              id="visualizacao-fez-nao-fez-data"
-              value={dataVisualizacao}
-              onChange={setDataVisualizacao}
-              {...(inicioMaisAntigoEmAndamento
-                ? { min: inicioMaisAntigoEmAndamento }
-                : {})}
-              max={hoje}
-            />
-          </div>
-        )}
-      </div>
-
       <ResponsiveFilters
         desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
         onApply={() => setFiltro(f)}
@@ -863,15 +820,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         </EmptyState>
       )}
 
-      {visualizacao === "data" && grupos.length > 0 && (
-        <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-          <CalendarDays className="h-4 w-4" />
-          <span>
-            Exibindo as tarefas de <strong className="text-foreground">{formatarData(dataVisualizacao)}</strong>
-          </span>
-        </div>
-      )}
-
       <div className="space-y-8">
         {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
           return (
@@ -890,6 +838,58 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   </div>
                 </div>
               </div>
+
+              <fieldset className="flex flex-col gap-3 border-y py-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <legend className="mb-2 text-xs font-semibold text-muted-foreground">
+                    Visualizar por
+                  </legend>
+                  <div className="flex flex-wrap items-center gap-5">
+                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
+                      <input
+                        type="radio"
+                        name="visualizacao-fez-nao-fez"
+                        value="vigencia"
+                        checked={visualizacao === "vigencia"}
+                        onChange={() => setVisualizacao("vigencia")}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      Vigência
+                    </label>
+                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
+                      <input
+                        type="radio"
+                        name="visualizacao-fez-nao-fez"
+                        value="data"
+                        checked={visualizacao === "data"}
+                        onChange={() => {
+                          setVisualizacao("data");
+                          setDataVisualizacao(hoje);
+                          setF((atual) => ({ ...atual, data: "" }));
+                          setFiltro((atual) => ({ ...atual, data: "" }));
+                        }}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      Data
+                    </label>
+                  </div>
+                </div>
+
+                {visualizacao === "data" && (
+                  <div className="w-full space-y-1.5 sm:w-56">
+                    <Label htmlFor={`visualizacao-fez-nao-fez-data-${vigencia.id}`}>
+                      Data
+                    </Label>
+                    <BrDateField
+                      id={`visualizacao-fez-nao-fez-data-${vigencia.id}`}
+                      value={dataVisualizacao}
+                      onChange={setDataVisualizacao}
+                      min={dataBrasil(vigencia.data_inicio)}
+                      max={hoje}
+                    />
+                  </div>
+                )}
+              </fieldset>
 
               <div className="space-y-4">
                   {gruposFilhos.map(({ filho, tarefas: tarefasDoFilho }) => {
