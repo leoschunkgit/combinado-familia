@@ -875,11 +875,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       <div className="space-y-8">
         {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
           return (
-            <section
-              key={vigencia.id}
-              className="overflow-hidden rounded-2xl border bg-card shadow-sm"
-            >
-              <div className="flex w-full min-w-0 items-start gap-3 border-b bg-primary/5 px-4 py-4 text-left sm:px-5">
+            <section key={vigencia.id} className="space-y-3">
+              <div className="flex min-w-0 items-start gap-2">
                 <CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary" />
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -894,7 +891,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 </div>
               </div>
 
-              <div className="space-y-4 p-3 sm:p-4">
+              <div className="space-y-4">
                   {gruposFilhos.map(({ filho, tarefas: tarefasDoFilho }) => {
                     const chave = `${vigencia.id}-${filho.id}`;
                     const filhoAberto = filhosAbertos[chave] === true;
