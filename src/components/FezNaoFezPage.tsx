@@ -1492,6 +1492,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   <CurrencyInput
                     id="bonus-valor"
                     value={fez.valor}
+                    valueMode="decimal"
                     onValueChange={(valor) => setFez({ ...fez, valor })}
                   />
                 </div>
@@ -1605,6 +1606,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   <CurrencyInput
                     id="troca-bonus-valor"
                     value={troca.fez.valor}
+                    valueMode="decimal"
                     onValueChange={(valor) =>
                       setTroca({
                         ...troca,
