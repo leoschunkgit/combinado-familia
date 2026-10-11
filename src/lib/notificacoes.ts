@@ -43,11 +43,32 @@ function proximoDiaBrasil(data: string) {
   return dataBrasil(d);
 }
 
-export function datasDaVigenciaAteHoje(vigencia: Pick<Vigencia, "data_inicio" | "data_fim">, agora = new Date()) {
-  const hoje = dataBrasil(agora);
+type VigenciaPeriodo = Pick<Vigencia, "data_inicio" | "data_fim">;
+
+export function limitesDaVigenciaAteHoje(
+  vigencia: VigenciaPeriodo,
+  hoje = dataBrasil(),
+) {
   const inicio = dataBrasil(vigencia.data_inicio);
-  const fim = dataBrasil(vigencia.data_fim);
-  const limite = fim < hoje ? fim : hoje;
+  const fimVigencia = dataBrasil(vigencia.data_fim);
+  const fim = fimVigencia < hoje ? fimVigencia : hoje;
+
+  return { inicio, fim };
+}
+
+export function dataPertenceAVigenciaAteHoje(
+  vigencia: VigenciaPeriodo,
+  data: string,
+  hoje = dataBrasil(),
+) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return false;
+  const { inicio, fim } = limitesDaVigenciaAteHoje(vigencia, hoje);
+  return data >= inicio && data <= fim;
+}
+
+export function datasDaVigenciaAteHoje(vigencia: VigenciaPeriodo, agora = new Date()) {
+  const hoje = dataBrasil(agora);
+  const { inicio, fim: limite } = limitesDaVigenciaAteHoje(vigencia, hoje);
 
   if (inicio > limite) return [];
 
