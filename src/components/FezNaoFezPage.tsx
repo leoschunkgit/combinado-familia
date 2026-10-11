@@ -1149,6 +1149,19 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 <span className="font-semibold tabular-nums">
                                                   {formatarData(data)}
                                                 </span>
+                                                {registro?.tipo !== "FEZ" &&
+                                                  !comDesconto &&
+                                                  penalizadas.has(
+                                                    registro.id,
+                                                  ) && (
+                                                    <span
+                                                      className="penalty-inline-mobile shrink-0 text-destructive"
+                                                      role="img"
+                                                      aria-label="Limite de penalidade atingido"
+                                                    >
+                                                      <AlertTriangle className="h-4 w-4" />
+                                                    </span>
+                                                  )}
                                               </div>
 
                                               <div className="min-w-0">
@@ -1159,14 +1172,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       penalizadas.has(
                                                         registro.id,
                                                       ) && (
-                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
-                                                            <AlertTriangle className="h-4 w-4" />
-                                                            <span className="sr-only">
-                                                              Limite atingido
+                                                        <span className="penalty-action-desktop">
+                                                          <Hint content="Esta marcação atingiu o limite de penalidade">
+                                                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
+                                                              <AlertTriangle className="h-4 w-4" />
+                                                              <span className="sr-only">
+                                                                Limite atingido
+                                                              </span>
                                                             </span>
-                                                          </span>
-                                                        </Hint>
+                                                          </Hint>
+                                                        </span>
                                                       )}
                                                     <Hint
                                                       content={
