@@ -133,12 +133,29 @@ function formatarData(data: string) {
 }
 
 function normalizarValorBonificacao(valor: string) {
-  const limpo = valor
-    .replace(/[^\d,.]/g, "")
-    .replace(/\./g, ",");
+  const semPrefixo = valor.replace(/^\s*R\$\s*/i, "");
+  const semMilhar = semPrefixo.replace(/\./g, "");
+  const limpo = semMilhar.replace(/[^\d,]/g, "");
   const [inteiro = "", ...decimais] = limpo.split(",");
   const decimal = decimais.join("").slice(0, 2);
   return limpo.includes(",") ? `${inteiro},${decimal}` : inteiro;
+}
+
+function formatarValorBonificacaoInput(valor: string) {
+  if (!valor) return "";
+  const [inteiroCru = "", decimal] = valor.split(",");
+  const inteiroNormalizado = inteiroCru.replace(/^0+(?=\d)/, "") || "0";
+  const inteiroFormatado = Number(inteiroNormalizado).toLocaleString("pt-BR");
+  return decimal !== undefined
+    ? `R$ ${inteiroFormatado},${decimal}`
+    : `R$ ${inteiroFormatado}`;
+}
+
+function completarValorBonificacao(valor: string) {
+  if (!valor) return "";
+  const numero = valorBonificacaoNumero(valor);
+  if (numero === null) return valor;
+  return numero.toFixed(2).replace(".", ",");
 }
 
 function valorBonificacaoNumero(valor: string) {
@@ -1502,12 +1519,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     type="text"
                     inputMode="decimal"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
-                    placeholder="Ex.: 25,00"
-                    value={fez.valor}
+                    placeholder="R$ 0,00"
+                    value={formatarValorBonificacaoInput(fez.valor)}
                     onChange={(event) =>
                       setFez({
                         ...fez,
                         valor: normalizarValorBonificacao(event.target.value),
+                      })
+                    }
+                    onBlur={() =>
+                      setFez({
+                        ...fez,
+                        valor: completarValorBonificacao(fez.valor),
                       })
                     }
                   />
@@ -1624,14 +1647,23 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     type="text"
                     inputMode="decimal"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
-                    placeholder="Ex.: 25,00"
-                    value={troca.fez.valor}
+                    placeholder="R$ 0,00"
+                    value={formatarValorBonificacaoInput(troca.fez.valor)}
                     onChange={(event) =>
                       setTroca({
                         ...troca,
                         fez: {
                           ...troca.fez!,
                           valor: normalizarValorBonificacao(event.target.value),
+                        },
+                      })
+                    }
+                    onBlur={() =>
+                      setTroca({
+                        ...troca,
+                        fez: {
+                          ...troca.fez!,
+                          valor: completarValorBonificacao(troca.fez!.valor),
                         },
                       })
                     }
