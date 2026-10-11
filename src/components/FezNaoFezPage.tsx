@@ -1160,58 +1160,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 <span className="font-semibold tabular-nums">
                                                   {formatarData(data)}
                                                 </span>
-                                                {registro &&
-                                                  registro.tipo !== "FEZ" &&
-                                                  !comDesconto &&
-                                                  penalizadas.has(
-                                                    registro.id,
-                                                  ) && (
-                                                    <span
-                                                      className="penalty-inline-mobile shrink-0 text-destructive"
-                                                      role="img"
-                                                      aria-label="Limite de penalidade atingido"
-                                                    >
-                                                      <AlertTriangle className="h-4 w-4" />
-                                                    </span>
-                                                  )}
                                               </div>
 
                                               <div className="min-w-0">
                                                 {registro ? (
                                                   <div className="marked-actions min-w-0 text-sm">
-                                                    <span className="marked-edit-slot">
-                                                      {!bloqueada && (
-                                                      <Hint
-                                                        content={
-                                                          registro.tipo === "FEZ"
-                                                            ? "Alterar para Não fez"
-                                                            : "Alterar para Fez"
-                                                        }
-                                                      >
-                                                      <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-8 w-8 shrink-0 rounded-md"
-                                                        disabled={busy}
-                                                        aria-label={
-                                                          registro.tipo === "FEZ"
-                                                            ? "Alterar marcação para Não fez"
-                                                            : "Alterar marcação para Fez"
-                                                        }
-                                                        onClick={() =>
-                                                          abrirTrocaMarcacao(
-                                                            tarefa,
-                                                            totalNaoFez,
-                                                            data,
-                                                            registro,
-                                                          )
-                                                        }
-                                                      >
-                                                        <Pencil className="h-4 w-4" />
-                                                      </Button>
-                                                        </Hint>
-                                                      )}
-                                                    </span>
                                                     <span className="marked-secondary-slot">
                                                       {registro.tipo === "FEZ" ? (
                                                         <Hint content="Ver bonificação">
@@ -1233,18 +1186,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                         </Hint>
                                                       ) : !comDesconto &&
                                                         penalizadas.has(registro.id) ? (
-                                                        <span className="penalty-action-desktop">
-                                                          <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
-                                                              <AlertTriangle className="h-4 w-4" />
-                                                              <span className="sr-only">
-                                                                Limite atingido
-                                                              </span>
-                                                            </span>
-                                                          </Hint>
-                                                        </span>
+                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
+                                                          <span
+                                                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive"
+                                                            role="img"
+                                                            aria-label="Limite de penalidade atingido"
+                                                          >
+                                                            <AlertTriangle className="h-4 w-4" />
+                                                          </span>
+                                                        </Hint>
                                                       ) : null}
                                                     </span>
+
                                                     <span className="marked-status-slot">
                                                       <Hint
                                                         content={
@@ -1253,27 +1206,60 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                             : "Não fez"
                                                         }
                                                       >
-                                                      <span
-                                                      className={
-                                                        registro.tipo === "FEZ"
-                                                          ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-green-50 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
-                                                          : "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
-                                                      }
-                                                    >
-                                                      {registro.tipo === "FEZ" ? (
-                                                        <ThumbsUp className="h-4 w-4" />
-                                                      ) : (
-                                                        <ThumbsDown className="h-4 w-4" />
-                                                      )}
-                                                      <span className="sr-only">
-                                                        {registro.tipo === "FEZ"
-                                                          ? "Fez"
-                                                          : "Não fez"}
-                                                      </span>
-                                                      </span>
+                                                        <span
+                                                          className={
+                                                            registro.tipo === "FEZ"
+                                                              ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-green-50 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
+                                                              : "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                                                          }
+                                                        >
+                                                          {registro.tipo === "FEZ" ? (
+                                                            <ThumbsUp className="h-4 w-4" />
+                                                          ) : (
+                                                            <ThumbsDown className="h-4 w-4" />
+                                                          )}
+                                                          <span className="sr-only">
+                                                            {registro.tipo === "FEZ"
+                                                              ? "Fez"
+                                                              : "Não fez"}
+                                                          </span>
+                                                        </span>
                                                       </Hint>
                                                     </span>
 
+                                                    <span className="marked-edit-slot">
+                                                      {!bloqueada && (
+                                                        <Hint
+                                                          content={
+                                                            registro.tipo === "FEZ"
+                                                              ? "Alterar para Não fez"
+                                                              : "Alterar para Fez"
+                                                          }
+                                                        >
+                                                          <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-8 w-8 shrink-0 rounded-md"
+                                                            disabled={busy}
+                                                            aria-label={
+                                                              registro.tipo === "FEZ"
+                                                                ? "Alterar marcação para Não fez"
+                                                                : "Alterar marcação para Fez"
+                                                            }
+                                                            onClick={() =>
+                                                              abrirTrocaMarcacao(
+                                                                tarefa,
+                                                                totalNaoFez,
+                                                                data,
+                                                                registro,
+                                                              )
+                                                            }
+                                                          >
+                                                            <Pencil className="h-4 w-4" />
+                                                          </Button>
+                                                        </Hint>
+                                                      )}
+                                                    </span>
                                                   </div>
                                                 ) : null}
                                               </div>
