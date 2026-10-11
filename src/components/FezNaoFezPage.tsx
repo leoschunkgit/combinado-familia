@@ -991,8 +991,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               </div>
                             ) : penalizado ? (
                               <div className="mb-4">
-                                <Badge variant="destructive">
-                                  <AlertTriangle className="mr-1 h-3 w-3" />
+                                <Badge variant="destructive" className="px-3 py-1 text-[13px] font-bold">
+                                  <AlertTriangle className="mr-1 h-3.5 w-3.5" />
                                   Penalidade: {vigencia.penalidade}
                                 </Badge>
                               </div>
@@ -1174,7 +1174,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       ) && (
                                                         <span className="penalty-action-desktop">
                                                           <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-2 border-destructive/50 bg-destructive/5 text-destructive">
+                                                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
                                                               <AlertTriangle className="h-4 w-4" />
                                                               <span className="sr-only">
                                                                 Limite atingido
