@@ -17,6 +17,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { maskCelular, msgErro, useFilhos, useTarefas, useVigencias, type Filho } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
+import { Hint } from "@/components/Hint";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -141,7 +142,9 @@ function FilhosPage() {
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
             <div className="col-span-2 min-w-0 rounded-lg border bg-muted/20 px-3 py-2 sm:col-span-1">
               <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Mail className="h-3.5 w-3.5" />Email</div>
-              <p className="truncate font-medium text-foreground" title={f.email ?? undefined}>{f.email || "Não informado"}</p>
+              <Hint content={f.email ?? undefined}>
+                <p className="truncate font-medium text-foreground">{f.email || "Não informado"}</p>
+              </Hint>
             </div>
             <div className="rounded-lg border bg-muted/20 px-3 py-2">
               <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Phone className="h-3.5 w-3.5" />Celular</div>
