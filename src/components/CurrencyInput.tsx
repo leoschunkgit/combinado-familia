@@ -13,12 +13,22 @@ function valorCruPorCentavos(digitos: string) {
   return `${inteiro},${decimal}`;
 }
 
-function formatarReal(valor: string) {
+function formatarRealPorCentavos(valor: string) {
   const digitos = somenteDigitos(valor);
   if (!digitos) return "";
   const centavos = Number(digitos);
   const inteiro = Math.floor(centavos / 100);
   const decimal = String(centavos % 100).padStart(2, "0");
+  return `R$ ${inteiro.toLocaleString("pt-BR")},${decimal}`;
+}
+
+function formatarRealDecimal(valor: string) {
+  if (!valor.trim()) return "";
+  const numero = Number(valor.replace(",", "."));
+  if (!Number.isFinite(numero)) return "";
+  const centavos = Math.round(numero * 100);
+  const inteiro = Math.floor(centavos / 100);
+  const decimal = String(Math.abs(centavos % 100)).padStart(2, "0");
   return `R$ ${inteiro.toLocaleString("pt-BR")},${decimal}`;
 }
 
@@ -28,6 +38,7 @@ type CurrencyInputProps = Omit<
 > & {
   value: string;
   onValueChange: (value: string) => void;
+  valueMode?: "centavos" | "decimal";
 };
 
 export function CurrencyInput({
@@ -35,6 +46,7 @@ export function CurrencyInput({
   onValueChange,
   className,
   placeholder = "R$ 0,00",
+  valueMode = "centavos",
   ...props
 }: CurrencyInputProps) {
   return (
@@ -44,7 +56,11 @@ export function CurrencyInput({
       inputMode="numeric"
       className={cn("tabular-nums", className)}
       placeholder={placeholder}
-      value={formatarReal(value)}
+      value={
+        valueMode === "decimal"
+          ? formatarRealDecimal(value)
+          : formatarRealPorCentavos(value)
+      }
       onChange={(event) => {
         const digitos = somenteDigitos(event.target.value);
         onValueChange(valorCruPorCentavos(digitos));
