@@ -28,6 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
@@ -130,32 +131,6 @@ type FezNaoFezPageProps = {
 
 function formatarData(data: string) {
   return data.split("-").reverse().join("/");
-}
-
-function normalizarValorBonificacao(valor: string) {
-  const semPrefixo = valor.replace(/^\s*R\$\s*/i, "");
-  const semMilhar = semPrefixo.replace(/\./g, "");
-  const limpo = semMilhar.replace(/[^\d,]/g, "");
-  const [inteiro = "", ...decimais] = limpo.split(",");
-  const decimal = decimais.join("").slice(0, 2);
-  return limpo.includes(",") ? `${inteiro},${decimal}` : inteiro;
-}
-
-function formatarValorBonificacaoInput(valor: string) {
-  if (!valor) return "";
-  const [inteiroCru = "", decimal] = valor.split(",");
-  const inteiroNormalizado = inteiroCru.replace(/^0+(?=\d)/, "") || "0";
-  const inteiroFormatado = Number(inteiroNormalizado).toLocaleString("pt-BR");
-  return decimal !== undefined
-    ? `R$ ${inteiroFormatado},${decimal}`
-    : `R$ ${inteiroFormatado}`;
-}
-
-function completarValorBonificacao(valor: string) {
-  if (!valor) return "";
-  const numero = valorBonificacaoNumero(valor);
-  if (numero === null) return valor;
-  return numero.toFixed(2).replace(".", ",");
 }
 
 function valorBonificacaoNumero(valor: string) {
@@ -1514,25 +1489,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   <Label htmlFor="bonus-valor">
                     Valor da bonificação (R$)
                   </Label>
-                  <input
+                  <CurrencyInput
                     id="bonus-valor"
-                    type="text"
-                    inputMode="decimal"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
-                    placeholder="R$ 0,00"
-                    value={formatarValorBonificacaoInput(fez.valor)}
-                    onChange={(event) =>
-                      setFez({
-                        ...fez,
-                        valor: normalizarValorBonificacao(event.target.value),
-                      })
-                    }
-                    onBlur={() =>
-                      setFez({
-                        ...fez,
-                        valor: completarValorBonificacao(fez.valor),
-                      })
-                    }
+                    value={fez.valor}
+                    onValueChange={(valor) => setFez({ ...fez, valor })}
                   />
                 </div>
               )}
@@ -1642,29 +1602,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   <Label htmlFor="troca-bonus-valor">
                     Valor da bonificação (R$)
                   </Label>
-                  <input
+                  <CurrencyInput
                     id="troca-bonus-valor"
-                    type="text"
-                    inputMode="decimal"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
-                    placeholder="R$ 0,00"
-                    value={formatarValorBonificacaoInput(troca.fez.valor)}
-                    onChange={(event) =>
+                    value={troca.fez.valor}
+                    onValueChange={(valor) =>
                       setTroca({
                         ...troca,
-                        fez: {
-                          ...troca.fez!,
-                          valor: normalizarValorBonificacao(event.target.value),
-                        },
-                      })
-                    }
-                    onBlur={() =>
-                      setTroca({
-                        ...troca,
-                        fez: {
-                          ...troca.fez!,
-                          valor: completarValorBonificacao(troca.fez!.valor),
-                        },
+                        fez: { ...troca.fez!, valor },
                       })
                     }
                   />
