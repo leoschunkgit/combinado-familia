@@ -144,9 +144,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     useState<ExcluirSelecionadasDraft | null>(null);
   const [penalidadePendente, setPenalidadePendente] =
     useState<PenalidadeDraft | null>(null);
-  const [vigenciasAbertas, setVigenciasAbertas] = useState<
-    Record<number, boolean>
-  >({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
   const [tarefasAbertas, setTarefasAbertas] = useState<Record<number, boolean>>({});
   const [agora, setAgora] = useState(() => Date.now());
@@ -245,19 +242,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   useEffect(() => {
     if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
 
-    const grupoInicial =
-      grupos.find(({ vigencia }) => vigenciaEmAndamento(vigencia)) ?? grupos[0];
-    if (!grupoInicial) return;
-
-    setVigenciasAbertas(
-      Object.fromEntries(
-        grupos.map(({ vigencia }) => [
-          vigencia.id,
-          vigencia.id === grupoInicial.vigencia.id,
-        ]),
-      ),
-    );
-
     setFilhosAbertos(
       Object.fromEntries(
         grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
@@ -283,9 +267,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   }, [isLoading, grupos]);
 
   function definirTudo(aberto: boolean) {
-    setVigenciasAbertas(
-      Object.fromEntries(grupos.map(({ vigencia }) => [vigencia.id, aberto])),
-    );
     setFilhosAbertos(
       Object.fromEntries(
         grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
@@ -801,26 +782,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
       <div className="space-y-8">
         {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
-          const vigenciaAberta = vigenciasAbertas[vigencia.id] === true;
           return (
             <section
               key={vigencia.id}
               className="overflow-hidden rounded-2xl border bg-card shadow-sm"
             >
-              <button
-                type="button"
-                className="flex w-full min-w-0 cursor-pointer items-start gap-3 border-b bg-primary/5 px-4 py-4 text-left sm:px-5"
-                onClick={() =>
-                  setVigenciasAbertas((atual) => ({
-                    ...atual,
-                    [vigencia.id]: !vigenciaAberta,
-                  }))
-                }
-              >
-                <CollapseChevron
-                  open={vigenciaAberta}
-                  className="mt-0.5 text-primary"
-                />
+              <div className="flex w-full min-w-0 items-start gap-3 border-b bg-primary/5 px-4 py-4 text-left sm:px-5">
                 <CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary" />
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -833,10 +800,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     <VigenciaStatus vigencia={vigencia} />
                   </div>
                 </div>
-              </button>
+              </div>
 
-              {vigenciaAberta && (
-                <div className="space-y-4 p-3 sm:p-4">
+              <div className="space-y-4 p-3 sm:p-4">
                   {gruposFilhos.map(({ filho, tarefas: tarefasDoFilho }) => {
                     const chave = `${vigencia.id}-${filho.id}`;
                     const filhoAberto = filhosAbertos[chave] === true;
@@ -1268,8 +1234,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                       </article>
                     );
                   })}
-                </div>
-              )}
+              </div>
             </section>
           );
         })}
