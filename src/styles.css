@@ -263,6 +263,9 @@ label:has([role="switch"]:not([aria-disabled="true"])) {
    Ordem: status | lápis | informação (quando houver). */
 .marked-actions {
   display: flex;
+  width: 7.25rem;
+  flex: 0 0 7.25rem;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
   gap: 0.625rem;
