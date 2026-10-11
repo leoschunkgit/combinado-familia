@@ -15,6 +15,7 @@ import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { AppPushNotifications } from "@/components/AppPushNotifications";
+import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import {
   biometriaAtivaNesteAparelho,
@@ -279,23 +280,25 @@ function AuthenticatedLayout() {
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
           <div className="mb-5 hidden items-center justify-end gap-2 md:flex">
             <span className="max-w-64 truncate text-sm font-semibold text-foreground">{nomePai}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={() => void runAction(sair)}
-              aria-label="Sair"
-              title="Sair"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <Hint content="Sair">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => void runAction(sair)}
+                aria-label="Sair"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </Hint>
           </div>
-          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><button type="button" className={modalCloseInlineButtonClass} onClick={() => void runAction(encerrar)} disabled={salvando} aria-label="Pular guia" title="Pular guia"><ModalCloseIcon /></button></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? void runAction(encerrar) : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button></div></section>}
+          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Hint content="Pular guia"><button type="button" className={modalCloseInlineButtonClass} onClick={() => void runAction(encerrar)} disabled={salvando} aria-label="Pular guia"><ModalCloseIcon /></button></Hint></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? void runAction(encerrar) : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button></div></section>}
           <Outlet />
         </div></main>
 
         {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/ocorrencias" && (
+          <Hint content="Fez / Não fez">
           <Button
             type="button"
             size="icon"
@@ -308,23 +311,24 @@ function AuthenticatedLayout() {
             }}
             className="fixed z-30 h-12 w-12 rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 md:hidden"
             aria-label="Ir para Fez / Não fez"
-            title="Fez / Não fez"
           >
             <Bell className="animate-notification-bell h-5 w-5" />
             <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-red-600 ring-2 ring-white" aria-hidden="true" />
           </Button>
+          </Hint>
         )}
 
         {mostrarAtalhoLinkFilho && (
+          <Hint content="Gerar Link / Filho">
           <Link
             to="/link-filhos"
             style={{ right: "calc(1rem + env(safe-area-inset-right))", bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
             className="fixed z-30 inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95 md:hidden"
             aria-label="Ir para Gerar Link / Filho"
-            title="Link/Filho"
           >
             <Link2 className="h-5 w-5" />
           </Link>
+          </Hint>
         )}
 
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
