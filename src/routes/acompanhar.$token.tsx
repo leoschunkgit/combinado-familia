@@ -97,21 +97,21 @@ function PainelPublico() {
 
           <div className="grid w-full grid-cols-3 gap-2">
             <Card className="h-full">
-              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 text-center">
+              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 pt-3 text-center sm:p-3 sm:pt-3">
                 <ClipboardList className="h-5 w-5 text-muted-foreground" />
                 <p className="text-xl font-bold leading-none">{tarefasAtual.length}</p>
                 <p className="text-[11px] leading-none text-muted-foreground">Tarefas</p>
               </CardContent>
             </Card>
             <Card className="h-full">
-              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 text-center">
+              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 pt-3 text-center sm:p-3 sm:pt-3">
                 <ThumbsUp className="h-5 w-5 text-green-600" />
                 <p className="text-xl font-bold leading-none">{qtdFez}</p>
                 <p className="text-[11px] leading-none text-muted-foreground">Fez</p>
               </CardContent>
             </Card>
             <Card className="h-full">
-              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 text-center">
+              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 pt-3 text-center sm:p-3 sm:pt-3">
                 <ThumbsDown className="h-5 w-5 text-red-500" />
                 <p className="text-xl font-bold leading-none">{qtdNaoFez}</p>
                 <p className="text-[11px] leading-none text-muted-foreground">Não fez</p>
