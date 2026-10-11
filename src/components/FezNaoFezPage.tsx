@@ -1242,8 +1242,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       )}
                                                     </span>
 
-                                                    <span className="marked-secondary-slot">
-                                                      {registro.tipo === "FEZ" && (
+                                                    {registro.tipo === "FEZ" && (
+                                                      <span className="marked-secondary-slot">
                                                         <Hint content="Ver bonificação">
                                                           <Button
                                                             variant="outline"
@@ -1262,8 +1262,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                             <Info className="h-4 w-4" />
                                                           </Button>
                                                         </Hint>
-                                                      )}
-                                                    </span>
+                                                      </span>
+                                                    )}
                                                   </div>
                                                 ) : null}
                                               </div>
