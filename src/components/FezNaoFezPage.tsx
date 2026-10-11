@@ -213,7 +213,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       dataBrasil(o.created_at),
     );
     const datas = [...new Set([...datasGeradas, ...datasComRegistro])].sort(
-      (a, b) => b.localeCompare(a),
+      (a, b) => a.localeCompare(b),
     );
     const dataSelecionada =
       visualizacao === "data" ? dataVisualizacao : filtro.data;
