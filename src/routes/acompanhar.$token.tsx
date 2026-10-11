@@ -96,26 +96,26 @@ function PainelPublico() {
           </Card>
 
           <div className="grid w-full grid-cols-3 gap-2">
-            <Card className="h-full">
-              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 pt-3 text-center sm:p-3 sm:pt-3">
+            <Card className="flex min-h-[88px] items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
                 <ClipboardList className="h-5 w-5 text-muted-foreground" />
                 <p className="text-xl font-bold leading-none">{tarefasAtual.length}</p>
                 <p className="text-[11px] leading-none text-muted-foreground">Tarefas</p>
-              </CardContent>
+              </div>
             </Card>
-            <Card className="h-full">
-              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 pt-3 text-center sm:p-3 sm:pt-3">
+            <Card className="flex min-h-[88px] items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
                 <ThumbsUp className="h-5 w-5 text-green-600" />
                 <p className="text-xl font-bold leading-none">{qtdFez}</p>
                 <p className="text-[11px] leading-none text-muted-foreground">Fez</p>
-              </CardContent>
+              </div>
             </Card>
-            <Card className="h-full">
-              <CardContent className="flex min-h-[88px] flex-col items-center justify-center gap-1 p-3 pt-3 text-center sm:p-3 sm:pt-3">
+            <Card className="flex min-h-[88px] items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
                 <ThumbsDown className="h-5 w-5 text-red-500" />
                 <p className="text-xl font-bold leading-none">{qtdNaoFez}</p>
                 <p className="text-[11px] leading-none text-muted-foreground">Não fez</p>
-              </CardContent>
+              </div>
             </Card>
           </div>
 
