@@ -269,6 +269,21 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       (data) => !registroNaData(tarefa, data),
     ).length;
 
+  const quantidadePendenciasDoFilho = (
+    vigencia: Vigencia,
+    idFilho: number,
+  ) =>
+    atribuicoes
+      .filter(
+        (tarefa) =>
+          tarefa.id_vigencia === vigencia.id && tarefa.id_filho === idFilho,
+      )
+      .reduce(
+        (total, tarefa) =>
+          total + quantidadePendenciasDaTarefa(tarefa, vigencia),
+        0,
+      );
+
   const tarefasVisiveis = (vigencia: Vigencia, idFilho: number) =>
     atribuicoes
       .filter((tarefa) => {
@@ -312,8 +327,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         .map((filho) => ({
           filho,
           tarefas: tarefasVisiveis(vigencia, filho.id),
+          pendencias: quantidadePendenciasDoFilho(vigencia, filho.id),
         }))
-        .filter((grupo) => grupo.tarefas.length > 0),
+        .filter((grupo) => grupo.tarefas.length > 0)
+        .sort((a, b) => {
+          if (a.pendencias !== b.pendencias) {
+            return b.pendencias - a.pendencias;
+          }
+
+          return a.filho.id - b.filho.id;
+        }),
     }))
     .filter((grupo) => grupo.filhos.length > 0);
 
