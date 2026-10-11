@@ -259,6 +259,41 @@ label:has([role="switch"]:not([aria-disabled="true"])) {
 }
 
 
+/* Fez / Não fez: mantém as colunas dos ícones alinhadas entre as linhas.
+   Mobile/app: status | informação | lápis.
+   Desktop web: penalidade | status | informação | lápis. */
+.marked-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 2rem);
+  align-items: center;
+  justify-content: end;
+  gap: 0.625rem;
+}
+
+.penalty-action-slot {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  html:not(.native-app) .marked-actions {
+    grid-template-columns: repeat(4, 2rem);
+    justify-content: start;
+  }
+
+  html:not(.native-app) .penalty-action-slot {
+    display: block;
+  }
+}
+
+html.native-app .marked-actions {
+  grid-template-columns: repeat(3, 2rem);
+  justify-content: end;
+}
+
+html.native-app .penalty-action-slot {
+  display: none;
+}
+
 /* Fez / Não fez: no mobile e no app nativo, a penalidade fica junto da data.
    No desktop web, permanece como ação destacada com hint. */
 .penalty-inline-mobile {
