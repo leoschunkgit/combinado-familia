@@ -77,14 +77,38 @@ export function AtribuicaoDialog({
   const [saving, setSaving] = useState(false);
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
+  const vigenciaAtiva = useMemo(
+    () => vigenciasOrdenadas.find((v) => situacaoVigencia(v) === "andamento") ?? null,
+    [vigenciasOrdenadas],
+  );
+
   useEffect(() => {
     if (!open) return;
     setItens([]);
-    setVig(vigenciaInicialId ? String(vigenciaInicialId) : "");
+    setVig(
+      vigenciaInicialId
+        ? String(vigenciaInicialId)
+        : mode === "NORMAL" && vigenciaAtiva
+          ? String(vigenciaAtiva.id)
+          : "",
+    );
     setFilho(filhoInicial ? String(filhoInicial.id) : "");
     setFilhosSelecionados([]);
     setTarefasSelecionadas(mode === "POS_CADASTRO_TAREFA" ? tarefasIniciais.map((t) => t.id) : []);
-  }, [open, mode, vigenciaInicialId, filhoInicial?.id, tarefasIniciais.map((t) => t.id).join(",")]);
+  }, [open, mode, vigenciaInicialId, vigenciaAtiva?.id, filhoInicial?.id, tarefasIniciais.map((t) => t.id).join(",")]);
+
+  useEffect(() => {
+    if (
+      !open ||
+      mode !== "NORMAL" ||
+      vigenciaInicialId ||
+      vig ||
+      !vigenciaAtiva
+    ) {
+      return;
+    }
+    setVig(String(vigenciaAtiva.id));
+  }, [open, mode, vigenciaInicialId, vig, vigenciaAtiva?.id]);
 
   const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
   const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada");
