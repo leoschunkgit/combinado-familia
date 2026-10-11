@@ -75,7 +75,9 @@ import { uiTypography } from "@/lib/ui-typography";
 import { PenalidadeDialog } from "@/components/PenalidadeDialog";
 import {
   dataBrasil,
+  dataPertenceAVigenciaAteHoje,
   datasDaVigenciaAteHoje,
+  limitesDaVigenciaAteHoje,
   useDataBrasilAtual,
 } from "@/lib/notificacoes";
 
@@ -168,16 +170,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     f.vig === "all"
       ? null
       : vigenciasEmAndamento.find((vigencia) => vigencia.id === Number(f.vig)) ?? null;
-  const dataMinimaFiltro =
-    vigenciaFiltroRascunho
-      ? dataBrasil(vigenciaFiltroRascunho.data_inicio)
-      : inicioMaisAntigoEmAndamento;
-  const dataMaximaFiltro = vigenciaFiltroRascunho
-    ? [
-        hoje,
-        dataBrasil(vigenciaFiltroRascunho.data_fim),
-      ].sort()[0]
-    : hoje;
+  const limitesFiltro = vigenciaFiltroRascunho
+    ? limitesDaVigenciaAteHoje(vigenciaFiltroRascunho, hoje)
+    : null;
+  const dataMinimaFiltro = limitesFiltro?.inicio ?? inicioMaisAntigoEmAndamento;
+  const dataMaximaFiltro = limitesFiltro?.fim ?? hoje;
 
   useEffect(() => {
     if (dataVisualizacao > hoje) {
@@ -329,15 +326,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
   function dataValida(tarefa: FilhoTarefa, data: string) {
     const vigencia = tarefa.t_vigencia;
-    if (!vigencia) return false;
-    const fim = dataBrasil(
-      new Date(Math.min(new Date(vigencia.data_fim).getTime(), Date.now())),
-    );
-    return (
-      /^\d{4}-\d{2}-\d{2}$/.test(data) &&
-      data >= dataBrasil(vigencia.data_inicio) &&
-      data <= fim &&
-      data <= hoje
+    return Boolean(
+      vigencia && dataPertenceAVigenciaAteHoje(vigencia, data, hoje),
     );
   }
 
@@ -767,12 +757,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   vig === "all"
                     ? null
                     : vigenciasEmAndamento.find((item) => item.id === Number(vig)) ?? null;
-                const min = selecionada
-                  ? dataBrasil(selecionada.data_inicio)
-                  : inicioMaisAntigoEmAndamento;
-                const max = selecionada
-                  ? [hoje, dataBrasil(selecionada.data_fim)].sort()[0]
-                  : hoje;
+                const limites = selecionada
+                  ? limitesDaVigenciaAteHoje(selecionada, hoje)
+                  : null;
+                const min = limites?.inicio ?? inicioMaisAntigoEmAndamento;
+                const max = limites?.fim ?? hoje;
                 const data =
                   f.data && ((min && f.data < min) || f.data > max) ? "" : f.data;
                 setF({ ...f, vig, data });
@@ -894,8 +883,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                       id={`visualizacao-fez-nao-fez-data-${vigencia.id}`}
                       value={dataVisualizacao}
                       onChange={setDataVisualizacao}
-                      min={dataBrasil(vigencia.data_inicio)}
-                      max={hoje}
+                      min={limitesDaVigenciaAteHoje(vigencia, hoje).inicio}
+                      max={limitesDaVigenciaAteHoje(vigencia, hoje).fim}
                     />
                   </div>
                 )}
