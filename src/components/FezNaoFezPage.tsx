@@ -1154,6 +1154,20 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                               <div className="min-w-0">
                                                 {registro ? (
                                                   <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2.5 text-sm sm:justify-start">
+                                                    {registro.tipo !== "FEZ" &&
+                                                      !comDesconto &&
+                                                      penalizadas.has(
+                                                        registro.id,
+                                                      ) && (
+                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
+                                                          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
+                                                            <AlertTriangle className="h-4 w-4" />
+                                                            <span className="sr-only">
+                                                              Limite atingido
+                                                            </span>
+                                                          </span>
+                                                        </Hint>
+                                                      )}
                                                     <Hint
                                                       content={
                                                         registro.tipo === "FEZ"
@@ -1234,20 +1248,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       </Hint>
                                                     )}
 
-                                                    {registro.tipo !== "FEZ" &&
-                                                      !comDesconto &&
-                                                      penalizadas.has(
-                                                        registro.id,
-                                                      ) && (
-                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-destructive">
-                                                            <AlertTriangle className="h-3.5 w-3.5" />
-                                                            <span className="hidden sm:inline">
-                                                              Limite atingido
-                                                            </span>
-                                                          </span>
-                                                        </Hint>
-                                                      )}
                                                   </div>
                                                 ) : null}
                                               </div>
