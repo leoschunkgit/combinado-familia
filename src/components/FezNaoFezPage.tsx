@@ -1179,6 +1179,39 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                               <div className="min-w-0">
                                                 {registro ? (
                                                   <div className="marked-actions min-w-0 text-sm">
+                                                    <span className="marked-edit-slot">
+                                                      {!bloqueada && (
+                                                      <Hint
+                                                        content={
+                                                          registro.tipo === "FEZ"
+                                                            ? "Alterar para Não fez"
+                                                            : "Alterar para Fez"
+                                                        }
+                                                      >
+                                                      <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-8 w-8 shrink-0 rounded-md"
+                                                        disabled={busy}
+                                                        aria-label={
+                                                          registro.tipo === "FEZ"
+                                                            ? "Alterar marcação para Não fez"
+                                                            : "Alterar marcação para Fez"
+                                                        }
+                                                        onClick={() =>
+                                                          abrirTrocaMarcacao(
+                                                            tarefa,
+                                                            totalNaoFez,
+                                                            data,
+                                                            registro,
+                                                          )
+                                                        }
+                                                      >
+                                                        <Pencil className="h-4 w-4" />
+                                                      </Button>
+                                                        </Hint>
+                                                      )}
+                                                    </span>
                                                     <span className="penalty-action-slot">
                                                       {registro.tipo !== "FEZ" &&
                                                         !comDesconto &&
@@ -1248,39 +1281,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       )}
                                                     </span>
 
-                                                    <span className="marked-edit-slot">
-                                                      {!bloqueada && (
-                                                      <Hint
-                                                        content={
-                                                          registro.tipo === "FEZ"
-                                                            ? "Alterar para Não fez"
-                                                            : "Alterar para Fez"
-                                                        }
-                                                      >
-                                                      <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-8 w-8 shrink-0 rounded-md"
-                                                        disabled={busy}
-                                                        aria-label={
-                                                          registro.tipo === "FEZ"
-                                                            ? "Alterar marcação para Não fez"
-                                                            : "Alterar marcação para Fez"
-                                                        }
-                                                        onClick={() =>
-                                                          abrirTrocaMarcacao(
-                                                            tarefa,
-                                                            totalNaoFez,
-                                                            data,
-                                                            registro,
-                                                          )
-                                                        }
-                                                      >
-                                                        <Pencil className="h-4 w-4" />
-                                                      </Button>
-                                                        </Hint>
-                                                      )}
-                                                    </span>
+
 
                                                   </div>
                                                 ) : null}
