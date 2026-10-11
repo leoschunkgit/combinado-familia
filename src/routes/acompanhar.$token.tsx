@@ -96,9 +96,27 @@ function PainelPublico() {
           </Card>
 
           <div className="grid w-full grid-cols-3 gap-2">
-            <Card><CardContent className="flex min-h-[84px] flex-col items-center justify-center p-3 text-center"><ClipboardList className="h-5 w-5 shrink-0 text-muted-foreground" /><p className="mt-1.5 text-xl font-bold leading-none">{tarefasAtual.length}</p><p className="mt-1 text-[11px] leading-none text-muted-foreground">Tarefas</p></CardContent></Card>
-            <Card><CardContent className="flex min-h-[84px] flex-col items-center justify-center p-3 text-center"><ThumbsUp className="h-5 w-5 shrink-0 text-green-600" /><p className="mt-1.5 text-xl font-bold leading-none">{qtdFez}</p><p className="mt-1 text-[11px] leading-none text-muted-foreground">Fez</p></CardContent></Card>
-            <Card><CardContent className="flex min-h-[84px] flex-col items-center justify-center p-3 text-center"><ThumbsDown className="h-5 w-5 shrink-0 text-red-500" /><p className="mt-1.5 text-xl font-bold leading-none">{qtdNaoFez}</p><p className="mt-1 text-[11px] leading-none text-muted-foreground">Não fez</p></CardContent></Card>
+            <Card className="h-full">
+              <CardContent className="grid min-h-[88px] grid-rows-[24px_24px_16px] place-items-center content-center p-3 text-center">
+                <span className="flex h-6 w-6 items-center justify-center"><ClipboardList className="h-5 w-5 text-muted-foreground" /></span>
+                <p className="flex h-6 items-center text-xl font-bold leading-none">{tarefasAtual.length}</p>
+                <p className="flex h-4 items-center text-[11px] leading-none text-muted-foreground">Tarefas</p>
+              </CardContent>
+            </Card>
+            <Card className="h-full">
+              <CardContent className="grid min-h-[88px] grid-rows-[24px_24px_16px] place-items-center content-center p-3 text-center">
+                <span className="flex h-6 w-6 items-center justify-center"><ThumbsUp className="h-5 w-5 text-green-600" /></span>
+                <p className="flex h-6 items-center text-xl font-bold leading-none">{qtdFez}</p>
+                <p className="flex h-4 items-center text-[11px] leading-none text-muted-foreground">Fez</p>
+              </CardContent>
+            </Card>
+            <Card className="h-full">
+              <CardContent className="grid min-h-[88px] grid-rows-[24px_24px_16px] place-items-center content-center p-3 text-center">
+                <span className="flex h-6 w-6 items-center justify-center"><ThumbsDown className="h-5 w-5 text-red-500" /></span>
+                <p className="flex h-6 items-center text-xl font-bold leading-none">{qtdNaoFez}</p>
+                <p className="flex h-4 items-center text-[11px] leading-none text-muted-foreground">Não fez</p>
+              </CardContent>
+            </Card>
           </div>
 
           <Card>
