@@ -259,23 +259,11 @@ label:has([role="switch"]:not([aria-disabled="true"])) {
 }
 
 
-/* Fez / Não fez: mantém as colunas dos ícones alinhadas entre as linhas.
-   Mobile/app: status | informação | lápis.
-   Desktop web: penalidade | status | informação | lápis. */
+/* Fez / Não fez: ações sempre partem da esquerda.
+   Ordem: status | lápis | informação (quando houver). */
 .marked-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 2rem);
+  display: flex;
   align-items: center;
-  justify-content: end;
+  justify-content: flex-start;
   gap: 0.625rem;
-}
-
-@media (min-width: 640px) {
-  html:not(.native-app) .marked-actions {
-    justify-content: start;
-  }
-}
-
-html.native-app .marked-actions {
-  justify-content: end;
 }
