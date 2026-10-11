@@ -1212,23 +1212,38 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                         </Hint>
                                                       )}
                                                     </span>
-                                                    <span className="penalty-action-slot">
-                                                      {registro.tipo !== "FEZ" &&
-                                                        !comDesconto &&
-                                                        penalizadas.has(
-                                                          registro.id,
-                                                        ) && (
-                                                          <span className="penalty-action-desktop">
-                                                            <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
-                                                                <AlertTriangle className="h-4 w-4" />
-                                                                <span className="sr-only">
-                                                                  Limite atingido
-                                                                </span>
+                                                    <span className="marked-secondary-slot">
+                                                      {registro.tipo === "FEZ" ? (
+                                                        <Hint content="Ver bonificação">
+                                                          <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-8 w-8 shrink-0 rounded-md"
+                                                            disabled={busy}
+                                                            aria-label="Ver bonificação"
+                                                            onClick={() =>
+                                                              setBonificacaoInfo({
+                                                                tarefa,
+                                                                ocorrencia: registro,
+                                                              })
+                                                            }
+                                                          >
+                                                            <Info className="h-4 w-4" />
+                                                          </Button>
+                                                        </Hint>
+                                                      ) : !comDesconto &&
+                                                        penalizadas.has(registro.id) ? (
+                                                        <span className="penalty-action-desktop">
+                                                          <Hint content="Esta marcação atingiu o limite de penalidade">
+                                                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
+                                                              <AlertTriangle className="h-4 w-4" />
+                                                              <span className="sr-only">
+                                                                Limite atingido
                                                               </span>
-                                                            </Hint>
-                                                          </span>
-                                                        )}
+                                                            </span>
+                                                          </Hint>
+                                                        </span>
+                                                      ) : null}
                                                     </span>
                                                     <span className="marked-status-slot">
                                                       <Hint
@@ -1258,30 +1273,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       </span>
                                                       </Hint>
                                                     </span>
-
-                                                    <span className="marked-info-slot">
-                                                      {registro.tipo === "FEZ" && (
-                                                      <Hint content="Ver bonificação">
-                                                      <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-8 w-8 shrink-0 rounded-md"
-                                                        disabled={busy}
-                                                        aria-label="Ver bonificação"
-                                                        onClick={() =>
-                                                          setBonificacaoInfo({
-                                                            tarefa,
-                                                            ocorrencia: registro,
-                                                          })
-                                                        }
-                                                      >
-                                                        <Info className="h-4 w-4" />
-                                                      </Button>
-                                                        </Hint>
-                                                      )}
-                                                    </span>
-
-
 
                                                   </div>
                                                 ) : null}
