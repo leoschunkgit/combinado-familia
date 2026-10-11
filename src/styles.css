@@ -270,28 +270,14 @@ label:has([role="switch"]:not([aria-disabled="true"])) {
   gap: 0.625rem;
 }
 
-.penalty-action-slot {
-  display: none;
-}
-
 @media (min-width: 640px) {
   html:not(.native-app) .marked-actions {
-    grid-template-columns: repeat(4, 2rem);
     justify-content: start;
-  }
-
-  html:not(.native-app) .penalty-action-slot {
-    display: block;
   }
 }
 
 html.native-app .marked-actions {
-  grid-template-columns: repeat(3, 2rem);
   justify-content: end;
-}
-
-html.native-app .penalty-action-slot {
-  display: none;
 }
 
 /* Fez / Não fez: no mobile e no app nativo, a penalidade fica junto da data.
