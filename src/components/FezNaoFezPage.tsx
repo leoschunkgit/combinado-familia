@@ -106,6 +106,11 @@ type Troca = {
   fez?: FezDraft;
 };
 
+type BonificacaoInfo = {
+  tarefa: FilhoTarefa;
+  ocorrencia: Ocorrencia;
+};
+
 type ExcluirSelecionadasDraft = {
   tarefa: FilhoTarefa;
   ids: number[];
@@ -145,6 +150,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
+  const [bonificacaoInfo, setBonificacaoInfo] = useState<BonificacaoInfo | null>(null);
   const [troca, setTroca] = useState<Troca | null>(null);
   const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set());
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
@@ -528,35 +534,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     });
   }
 
-  function editarBonificacao(
-    tarefa: FilhoTarefa,
-    total: number,
-    ocorrencia: Ocorrencia,
-  ) {
-    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
-      toast.error("Ações só podem ser feitas em uma vigência em andamento");
-      return;
-    }
-    setFez({
-      modo: "EDITAR",
-      ocorrenciaId: ocorrencia.id,
-      tarefa,
-      total,
-      data: dataBrasil(ocorrencia.created_at),
-      bonusTipo:
-        ocorrencia.bonificacao_tipo === "TEXTO"
-          ? "TEXTO"
-          : ocorrencia.bonificacao_tipo === "VALOR"
-            ? "VALOR"
-            : "NENHUMA",
-      descricao: ocorrencia.bonificacao_descricao ?? "",
-      valor:
-        ocorrencia.bonificacao_valor == null
-          ? ""
-          : String(ocorrencia.bonificacao_valor).replace(".", ","),
-    });
-  }
-
   async function salvarFez(draft: FezDraft, existente?: Ocorrencia) {
     const tarefa = draft.tarefa;
     const vigencia = tarefa.t_vigencia;
@@ -664,7 +641,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         return;
       }
       toast.error(
-        "Já existe um “Fez” para esta tarefa nesta data. Use o lápis para editar a bonificação.",
+        "Já existe um “Fez” para esta tarefa nesta data.",
       );
       return;
     }
@@ -1244,11 +1221,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                         disabled={busy}
                                                         aria-label="Ver bonificação"
                                                         onClick={() =>
-                                                          editarBonificacao(
+                                                          setBonificacaoInfo({
                                                             tarefa,
-                                                            totalNaoFez,
-                                                            registro,
-                                                          )
+                                                            ocorrencia: registro,
+                                                          })
                                                         }
                                                       >
                                                         <Info className="h-4 w-4" />
@@ -1393,6 +1369,60 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         onCancel={() => setPenalidadePendente(null)}
         onConfirm={() => void runAction(confirmarPenalidade)}
       />
+
+      <Dialog
+        open={Boolean(bonificacaoInfo)}
+        onOpenChange={(open) => !open && setBonificacaoInfo(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bonificação do “Fez”</DialogTitle>
+            <DialogDescription>
+              {bonificacaoInfo?.tarefa.t_tarefa?.nome}
+              {bonificacaoInfo
+                ? ` · ${formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {bonificacaoInfo && (
+            <div className="rounded-lg border bg-muted/20 p-4">
+              {bonificacaoInfo.ocorrencia.bonificacao_tipo === "TEXTO" ? (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Bonificação escrita
+                  </p>
+                  <p className="text-sm font-medium">
+                    {bonificacaoInfo.ocorrencia.bonificacao_descricao}
+                  </p>
+                </div>
+              ) : bonificacaoInfo.ocorrencia.bonificacao_tipo === "VALOR" ? (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Valor da bonificação
+                  </p>
+                  <p className="text-base font-semibold">
+                    {reais(Number(bonificacaoInfo.ocorrencia.bonificacao_valor ?? 0))}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma bonificação definida.
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBonificacaoInfo(null)}
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(fez)}
