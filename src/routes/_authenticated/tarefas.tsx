@@ -198,7 +198,14 @@ function TarefasPage() {
           <form onSubmit={(e) => { void runAction(() => salvarConformePreenchimento(e)); }} className="space-y-5">
             <div className="space-y-2">
               <Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label>
-              <Input placeholder="Ex.: Arrumar a cama" value={nome} onChange={(e) => setNome(e.target.value)} />
+              <Input
+                placeholder="Ex.: Arrumar a cama"
+                value={nome}
+                onChange={(e) => {
+                  setNome(e.target.value);
+                  if (e.target.value) setLote("");
+                }}
+              />
             </div>
 
             <div className="border-t pt-5">
@@ -207,7 +214,10 @@ function TarefasPage() {
                 <Textarea
                   id="tarefas-lote"
                   value={lote}
-                  onChange={(e) => setLote(e.target.value)}
+                  onChange={(e) => {
+                    setLote(e.target.value);
+                    if (e.target.value) setNome("");
+                  }}
                   placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
                   className="min-h-28 resize-y"
                 />
