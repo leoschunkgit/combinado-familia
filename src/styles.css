@@ -279,31 +279,3 @@ label:has([role="switch"]:not([aria-disabled="true"])) {
 html.native-app .marked-actions {
   justify-content: end;
 }
-
-/* Fez / Não fez: no mobile e no app nativo, a penalidade fica junto da data.
-   No desktop web, permanece como ação destacada com hint. */
-.penalty-inline-mobile {
-  display: inline-flex !important;
-}
-
-.penalty-action-desktop {
-  display: none !important;
-}
-
-@media (min-width: 640px) {
-  html:not(.native-app) .penalty-inline-mobile {
-    display: none !important;
-  }
-
-  html:not(.native-app) .penalty-action-desktop {
-    display: inline-flex !important;
-  }
-}
-
-html.native-app .penalty-inline-mobile {
-  display: inline-flex !important;
-}
-
-html.native-app .penalty-action-desktop {
-  display: none !important;
-}
