@@ -164,6 +164,20 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const inicioMaisAntigoEmAndamento = vigenciasEmAndamento
     .map((vigencia) => dataBrasil(vigencia.data_inicio))
     .sort()[0];
+  const vigenciaFiltroRascunho =
+    f.vig === "all"
+      ? null
+      : vigenciasEmAndamento.find((vigencia) => vigencia.id === Number(f.vig)) ?? null;
+  const dataMinimaFiltro =
+    vigenciaFiltroRascunho
+      ? dataBrasil(vigenciaFiltroRascunho.data_inicio)
+      : inicioMaisAntigoEmAndamento;
+  const dataMaximaFiltro = vigenciaFiltroRascunho
+    ? [
+        hoje,
+        dataBrasil(vigenciaFiltroRascunho.data_fim),
+      ].sort()[0]
+    : hoje;
 
   useEffect(() => {
     if (dataVisualizacao > hoje) {
@@ -748,7 +762,21 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             <Pick
               label="Vigência"
               value={f.vig}
-              onChange={(vig) => setF({ ...f, vig })}
+              onChange={(vig) => {
+                const selecionada =
+                  vig === "all"
+                    ? null
+                    : vigenciasEmAndamento.find((item) => item.id === Number(vig)) ?? null;
+                const min = selecionada
+                  ? dataBrasil(selecionada.data_inicio)
+                  : inicioMaisAntigoEmAndamento;
+                const max = selecionada
+                  ? [hoje, dataBrasil(selecionada.data_fim)].sort()[0]
+                  : hoje;
+                const data =
+                  f.data && ((min && f.data < min) || f.data > max) ? "" : f.data;
+                setF({ ...f, vig, data });
+              }}
               allLabel="Todas"
               options={vigenciasEmAndamento.map((vigencia) => ({
                 value: String(vigencia.id),
@@ -795,7 +823,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   id="filtro-fez-nao-fez-data"
                   value={f.data}
                   onChange={(data) => setF({ ...f, data })}
-                  max={hoje}
+                  {...(dataMinimaFiltro ? { min: dataMinimaFiltro } : {})}
+                  max={dataMaximaFiltro}
                 />
               </div>
             )}
