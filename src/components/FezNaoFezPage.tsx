@@ -1167,30 +1167,33 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                                               <div className="min-w-0">
                                                 {registro ? (
-                                                  <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2.5 text-sm sm:justify-start">
-                                                    {registro.tipo !== "FEZ" &&
-                                                      !comDesconto &&
-                                                      penalizadas.has(
-                                                        registro.id,
-                                                      ) && (
-                                                        <span className="penalty-action-desktop">
-                                                          <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
-                                                              <AlertTriangle className="h-4 w-4" />
-                                                              <span className="sr-only">
-                                                                Limite atingido
+                                                  <div className="marked-actions min-w-0 text-sm">
+                                                    <span className="penalty-action-slot">
+                                                      {registro.tipo !== "FEZ" &&
+                                                        !comDesconto &&
+                                                        penalizadas.has(
+                                                          registro.id,
+                                                        ) && (
+                                                          <span className="penalty-action-desktop">
+                                                            <Hint content="Esta marcação atingiu o limite de penalidade">
+                                                              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive">
+                                                                <AlertTriangle className="h-4 w-4" />
+                                                                <span className="sr-only">
+                                                                  Limite atingido
+                                                                </span>
                                                               </span>
-                                                            </span>
-                                                          </Hint>
-                                                        </span>
-                                                      )}
-                                                    <Hint
-                                                      content={
-                                                        registro.tipo === "FEZ"
-                                                          ? "Fez"
-                                                          : "Não fez"
-                                                      }
-                                                    >
+                                                            </Hint>
+                                                          </span>
+                                                        )}
+                                                    </span>
+                                                    <span className="marked-status-slot">
+                                                      <Hint
+                                                        content={
+                                                          registro.tipo === "FEZ"
+                                                            ? "Fez"
+                                                            : "Não fez"
+                                                        }
+                                                      >
                                                       <span
                                                       className={
                                                         registro.tipo === "FEZ"
@@ -1209,9 +1212,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                           : "Não fez"}
                                                       </span>
                                                       </span>
-                                                    </Hint>
+                                                      </Hint>
+                                                    </span>
 
-                                                    {registro.tipo === "FEZ" && (
+                                                    <span className="marked-info-slot">
+                                                      {registro.tipo === "FEZ" && (
                                                       <Hint content="Ver bonificação">
                                                       <Button
                                                         variant="outline"
@@ -1229,10 +1234,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       >
                                                         <Info className="h-4 w-4" />
                                                       </Button>
-                                                      </Hint>
-                                                    )}
+                                                        </Hint>
+                                                      )}
+                                                    </span>
 
-                                                    {!bloqueada && (
+                                                    <span className="marked-edit-slot">
+                                                      {!bloqueada && (
                                                       <Hint
                                                         content={
                                                           registro.tipo === "FEZ"
@@ -1261,8 +1268,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       >
                                                         <Pencil className="h-4 w-4" />
                                                       </Button>
-                                                      </Hint>
-                                                    )}
+                                                        </Hint>
+                                                      )}
+                                                    </span>
 
                                                   </div>
                                                 ) : null}
