@@ -149,9 +149,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   >({});
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
   const [tarefasAbertas, setTarefasAbertas] = useState<Record<number, boolean>>({});
+  const [agora, setAgora] = useState(() => Date.now());
   const aberturaInicialAplicada = useRef(false);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setAgora(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
+  const vigenciasEmAndamento = vigenciasOrdenadas.filter(
+    (vigencia) => situacaoVigencia(vigencia, agora) === "andamento",
+  );
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -213,7 +222,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       return modo === "todos" || temDatasVisiveis;
     });
 
-  const grupos = vigenciasOrdenadas
+  const grupos = vigenciasEmAndamento
     .filter(
       (vigencia) =>
         filtro.vig === "all" || vigencia.id === Number(filtro.vig),
@@ -692,11 +701,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
   const filtrosAtivos = filtro.vig !== "all" || filtro.filho !== "all" || filtro.tarefa !== "all" || filtro.resultado !== "all" || Boolean(filtro.data);
   const vazio =
-    modo === "pendentes"
-      ? "Tudo em dia. Não há datas pendentes para os filtros selecionados."
-      : filtrosAtivos
-        ? "Nenhum resultado encontrado para os filtros selecionados."
-        : 'Nenhuma tarefa encontrada. Crie atribuições na aba "Atribuições".';
+    vigenciasEmAndamento.length === 0
+      ? "Não há vigência em andamento no momento."
+      : modo === "pendentes"
+        ? "Tudo em dia. Não há datas pendentes para os filtros selecionados."
+        : filtrosAtivos
+          ? "Nenhum resultado encontrado para os filtros selecionados."
+          : 'Nenhuma tarefa encontrada. Crie atribuições na aba "Atribuições".';
 
   return (
     <>
@@ -726,7 +737,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               value={f.vig}
               onChange={(vig) => setF({ ...f, vig })}
               allLabel="Todas"
-              options={vigenciasOrdenadas.map((vigencia) => ({
+              options={vigenciasEmAndamento.map((vigencia) => ({
                 value: String(vigencia.id),
                 label: fmtVigencia(vigencia),
                 status: situacaoVigencia(vigencia),
