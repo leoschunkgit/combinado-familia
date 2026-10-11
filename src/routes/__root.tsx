@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppDeepLinkListener } from "@/components/AppDeepLinkListener";
 import { AppResumeRefresh } from "@/components/AppResumeRefresh";
 import { AndroidBackButton } from "@/components/AndroidBackButton";
@@ -167,13 +168,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ActionLoadingProvider>
-        <AppDeepLinkListener />
-        <AppResumeRefresh />
-        <AndroidBackButton />
-        <Outlet />
-        <Toaster richColors position="top-center" />
-      </ActionLoadingProvider>
+      <TooltipProvider delayDuration={300} skipDelayDuration={100}>
+        <ActionLoadingProvider>
+          <AppDeepLinkListener />
+          <AppResumeRefresh />
+          <AndroidBackButton />
+          <Outlet />
+          <Toaster richColors position="top-center" />
+        </ActionLoadingProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
