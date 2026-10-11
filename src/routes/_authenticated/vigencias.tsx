@@ -15,6 +15,7 @@ import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { BlockedAction } from "@/components/BlockedAction";
+import { Hint } from "@/components/Hint";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type Vigencia } from "@/lib/db";
 import { reais } from "@/lib/mesada";
@@ -284,7 +285,7 @@ function VigenciasPage() {
             <div className="flex items-start justify-between gap-3">
               <VigenciaStatus vigencia={v} />
               <div className="flex shrink-0 items-center gap-1">
-                {emAndamento && <Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} title="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button>}
+                {emAndamento && <Hint content="Finalizar vigência"><Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} aria-label="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button></Hint>}
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
                 <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência"><Trash2 className="h-4 w-4" /></Button>
               </div>
