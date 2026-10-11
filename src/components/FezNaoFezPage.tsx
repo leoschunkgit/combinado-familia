@@ -80,6 +80,7 @@ import {
 } from "@/lib/notificacoes";
 
 type ModoPagina = "todos" | "pendentes";
+type Visualizacao = "vigencia" | "data";
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 
 type FezDraft = {
@@ -134,6 +135,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
+  const [visualizacao, setVisualizacao] = useState<Visualizacao>("vigencia");
+  const [dataVisualizacao, setDataVisualizacao] = useState(hoje);
   const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all", data: "" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
@@ -158,6 +161,22 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const vigenciasEmAndamento = vigenciasOrdenadas.filter(
     (vigencia) => situacaoVigencia(vigencia, agora) === "andamento",
   );
+  const inicioMaisAntigoEmAndamento = vigenciasEmAndamento
+    .map((vigencia) => dataBrasil(vigencia.data_inicio))
+    .sort()[0];
+
+  useEffect(() => {
+    if (dataVisualizacao > hoje) {
+      setDataVisualizacao(hoje);
+      return;
+    }
+    if (
+      inicioMaisAntigoEmAndamento &&
+      dataVisualizacao < inicioMaisAntigoEmAndamento
+    ) {
+      setDataVisualizacao(hoje);
+    }
+  }, [dataVisualizacao, hoje, inicioMaisAntigoEmAndamento]);
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -184,8 +203,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     const datas = [...new Set([...datasGeradas, ...datasComRegistro])].sort(
       (a, b) => b.localeCompare(a),
     );
-    const datasFiltradas = filtro.data
-      ? datas.filter((data) => data === filtro.data)
+    const dataSelecionada =
+      visualizacao === "data" ? dataVisualizacao : filtro.data;
+    const datasFiltradas = dataSelecionada
+      ? datas.filter((data) => data === dataSelecionada)
       : datas;
 
     if (modo === "pendentes") {
@@ -215,7 +236,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         return false;
       }
       const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
-      if (filtro.resultado !== "all" || filtro.data) return temDatasVisiveis;
+      if (
+        filtro.resultado !== "all" ||
+        filtro.data ||
+        visualizacao === "data"
+      ) return temDatasVisiveis;
       return modo === "todos" || temDatasVisiveis;
     });
 
@@ -680,7 +705,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     }
   }
 
-  const filtrosAtivos = filtro.vig !== "all" || filtro.filho !== "all" || filtro.tarefa !== "all" || filtro.resultado !== "all" || Boolean(filtro.data);
+  const filtrosAtivos =
+    filtro.vig !== "all" ||
+    filtro.filho !== "all" ||
+    filtro.tarefa !== "all" ||
+    filtro.resultado !== "all" ||
+    (visualizacao === "vigencia" && Boolean(filtro.data));
   const vazio =
     vigenciasEmAndamento.length === 0
       ? "Não há vigência em andamento no momento."
@@ -697,10 +727,55 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         description={
           modo === "pendentes"
             ? "Marque rapidamente os dias que ainda estão sem Fez ou Não fez."
-            : "Acompanhe e marque cada dia das tarefas, sem precisar escolher a data."
+            : visualizacao === "data"
+              ? "Veja e marque as tarefas dos filhos na data selecionada."
+              : "Acompanhe e marque cada dia das tarefas, sem precisar escolher a data."
         }
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
+
+      <div className="mb-4 flex flex-col gap-3 rounded-xl border bg-card p-3 sm:flex-row sm:items-end sm:justify-between sm:p-4">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={visualizacao === "vigencia" ? "default" : "outline"}
+            onClick={() => setVisualizacao("vigencia")}
+          >
+            <CalendarRange className="h-4 w-4" />
+            Por vigência
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={visualizacao === "data" ? "default" : "outline"}
+            onClick={() => {
+              setVisualizacao("data");
+              setDataVisualizacao(hoje);
+              setF((atual) => ({ ...atual, data: "" }));
+              setFiltro((atual) => ({ ...atual, data: "" }));
+            }}
+          >
+            <CalendarDays className="h-4 w-4" />
+            Por data
+          </Button>
+        </div>
+
+        {visualizacao === "data" && (
+          <div className="w-full space-y-1.5 sm:w-56">
+            <Label htmlFor="visualizacao-fez-nao-fez-data">Data</Label>
+            <BrDateField
+              id="visualizacao-fez-nao-fez-data"
+              value={dataVisualizacao}
+              onChange={setDataVisualizacao}
+              {...(inicioMaisAntigoEmAndamento
+                ? { min: inicioMaisAntigoEmAndamento }
+                : {})}
+              max={hoje}
+            />
+          </div>
+        )}
+      </div>
 
       <ResponsiveFilters
         desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
@@ -756,15 +831,17 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 ]}
               />
             )}
-            <div className="space-y-1.5">
-              <Label htmlFor="filtro-fez-nao-fez-data">Data</Label>
-              <BrDateField
-                id="filtro-fez-nao-fez-data"
-                value={f.data}
-                onChange={(data) => setF({ ...f, data })}
-                max={hoje}
-              />
-            </div>
+            {visualizacao === "vigencia" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="filtro-fez-nao-fez-data">Data</Label>
+                <BrDateField
+                  id="filtro-fez-nao-fez-data"
+                  value={f.data}
+                  onChange={(data) => setF({ ...f, data })}
+                  max={hoje}
+                />
+              </div>
+            )}
           </>
         )}
       />
@@ -778,7 +855,22 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         </Button>
       </div>
 
-      {!isLoading && grupos.length === 0 && <EmptyState>{vazio}</EmptyState>}
+      {!isLoading && grupos.length === 0 && (
+        <EmptyState>
+          {visualizacao === "data" && vigenciasEmAndamento.length > 0
+            ? `Nenhuma tarefa para ${formatarData(dataVisualizacao)} com os filtros selecionados.`
+            : vazio}
+        </EmptyState>
+      )}
+
+      {visualizacao === "data" && grupos.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <CalendarDays className="h-4 w-4" />
+          <span>
+            Exibindo as tarefas de <strong className="text-foreground">{formatarData(dataVisualizacao)}</strong>
+          </span>
+        </div>
+      )}
 
       <div className="space-y-8">
         {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
