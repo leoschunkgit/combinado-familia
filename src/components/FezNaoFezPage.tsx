@@ -8,6 +8,7 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   ClipboardCheck,
+  Info,
   Pencil,
   ThumbsDown,
   ThumbsUp,
@@ -1124,7 +1125,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                               key={data}
                                               className={
                                                 registro
-                                                  ? "grid gap-3 px-3 py-3 sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:items-center sm:px-4"
+                                                  ? "grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-3 py-3 sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:px-4"
                                                   : "flex items-center justify-between gap-2 px-3 py-3 sm:grid sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:px-4"
                                               }
                                             >
@@ -1137,24 +1138,50 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                                               <div className="min-w-0">
                                                 {registro ? (
-                                                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
+                                                  <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1.5 text-sm sm:justify-start">
                                                     <span
+                                                      title={
+                                                        registro.tipo === "FEZ"
+                                                          ? "Fez"
+                                                          : "Não fez"
+                                                      }
                                                       className={
                                                         registro.tipo === "FEZ"
-                                                          ? "inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-50 px-2.5 py-1 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
-                                                          : "inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1 font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                                                          ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-green-50 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
+                                                          : "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
                                                       }
                                                     >
-                                                      {registro.tipo ===
-                                                      "FEZ" ? (
+                                                      {registro.tipo === "FEZ" ? (
                                                         <ThumbsUp className="h-4 w-4" />
                                                       ) : (
                                                         <ThumbsDown className="h-4 w-4" />
                                                       )}
-                                                      {registro.tipo === "FEZ"
-                                                        ? "Fez"
-                                                        : "Não fez"}
+                                                      <span className="sr-only">
+                                                        {registro.tipo === "FEZ"
+                                                          ? "Fez"
+                                                          : "Não fez"}
+                                                      </span>
                                                     </span>
+
+                                                    {registro.tipo === "FEZ" && (
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 shrink-0"
+                                                        disabled={busy}
+                                                        title="Ver bonificação"
+                                                        aria-label="Ver bonificação"
+                                                        onClick={() =>
+                                                          editarBonificacao(
+                                                            tarefa,
+                                                            totalNaoFez,
+                                                            registro,
+                                                          )
+                                                        }
+                                                      >
+                                                        <Info className="h-4 w-4" />
+                                                      </Button>
+                                                    )}
 
                                                     {!bloqueada && (
                                                       <Button
@@ -1185,62 +1212,19 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                       </Button>
                                                     )}
 
-                                                    {registro.tipo === "FEZ" &&
-                                                      registro.bonificacao_tipo ===
-                                                        "TEXTO" && (
-                                                        <span className="min-w-0 break-words text-muted-foreground">
-                                                          {registro.bonificacao_descricao}
-                                                        </span>
-                                                      )}
-                                                    {registro.tipo === "FEZ" &&
-                                                      registro.bonificacao_tipo ===
-                                                        "VALOR" && (
-                                                        <span className="text-muted-foreground">
-                                                          Bonificação:{" "}
-                                                          {reais(
-                                                            registro.bonificacao_valor ??
-                                                              0,
-                                                          )}
-                                                        </span>
-                                                      )}
-                                                    {registro.tipo === "FEZ" &&
-                                                      registro.bonificacao_tipo ===
-                                                        null && (
-                                                        <span className="text-muted-foreground">
-                                                          Sem bonificação
-                                                        </span>
-                                                      )}
-                                                    {registro.tipo === "FEZ" &&
-                                                      !bloqueada && (
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          className="h-7 w-7 shrink-0"
-                                                          disabled={busy}
-                                                          title="Editar bonificação"
-                                                          aria-label="Editar bonificação"
-                                                          onClick={() =>
-                                                            editarBonificacao(
-                                                              tarefa,
-                                                              totalNaoFez,
-                                                              registro,
-                                                            )
-                                                          }
-                                                        >
-                                                          <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                      )}
                                                     {registro.tipo !== "FEZ" &&
                                                       !comDesconto &&
                                                       penalizadas.has(
                                                         registro.id,
                                                       ) && (
                                                         <span
-                                                          className="inline-flex items-center gap-1 text-xs font-semibold text-destructive"
+                                                          className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-destructive"
                                                           title="Esta marcação atingiu o limite de penalidade"
                                                         >
                                                           <AlertTriangle className="h-3.5 w-3.5" />
-                                                          Limite atingido
+                                                          <span className="hidden sm:inline">
+                                                            Limite atingido
+                                                          </span>
                                                         </span>
                                                       )}
                                                   </div>
