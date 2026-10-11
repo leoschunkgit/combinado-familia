@@ -1152,7 +1152,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                                               <div className="min-w-0">
                                                 {registro ? (
-                                                  <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1.5 text-sm sm:justify-start">
+                                                  <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2.5 text-sm sm:justify-start">
                                                     <span
                                                       title={
                                                         registro.tipo === "FEZ"
@@ -1179,9 +1179,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                                                     {registro.tipo === "FEZ" && (
                                                       <Button
-                                                        variant="ghost"
+                                                        variant="outline"
                                                         size="icon"
-                                                        className="h-7 w-7 shrink-0"
+                                                        className="h-8 w-8 shrink-0 rounded-md"
                                                         disabled={busy}
                                                         title="Ver bonificação"
                                                         aria-label="Ver bonificação"
@@ -1199,9 +1199,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                                                     {!bloqueada && (
                                                       <Button
-                                                        variant="ghost"
+                                                        variant="outline"
                                                         size="icon"
-                                                        className="h-7 w-7 shrink-0"
+                                                        className="h-8 w-8 shrink-0 rounded-md"
                                                         disabled={busy}
                                                         title={
                                                           registro.tipo === "FEZ"
