@@ -28,7 +28,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
@@ -130,6 +129,22 @@ type FezNaoFezPageProps = {
 
 function formatarData(data: string) {
   return data.split("-").reverse().join("/");
+}
+
+function normalizarValorBonificacao(valor: string) {
+  const limpo = valor
+    .replace(/[^\d,.]/g, "")
+    .replace(/\./g, ",");
+  const [inteiro = "", ...decimais] = limpo.split(",");
+  const decimal = decimais.join("").slice(0, 2);
+  return limpo.includes(",") ? `${inteiro},${decimal}` : inteiro;
+}
+
+function valorBonificacaoNumero(valor: string) {
+  if (!valor.trim()) return null;
+  const numero = Number(valor.replace(",", "."));
+  if (!Number.isFinite(numero)) return null;
+  return Math.round(numero * 100) / 100;
 }
 
 export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
@@ -554,13 +569,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
     const valor =
       draft.bonusTipo === "VALOR"
-        ? Number(draft.valor.replace(",", "."))
+        ? valorBonificacaoNumero(draft.valor)
         : null;
     if (
       draft.bonusTipo === "VALOR" &&
-      (valor === null || !Number.isFinite(valor) || valor < 0)
+      (valor === null || valor <= 0)
     ) {
-      toast.error("Informe um valor de bonificação válido");
+      toast.error("Informe um valor de bonificação maior que zero");
       return;
     }
 
@@ -1483,10 +1498,19 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   <Label htmlFor="bonus-valor">
                     Valor da bonificação (R$)
                   </Label>
-                  <CurrencyInput
+                  <input
                     id="bonus-valor"
+                    type="text"
+                    inputMode="decimal"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
+                    placeholder="Ex.: 25,00"
                     value={fez.valor}
-                    onValueChange={(valor) => setFez({ ...fez, valor })}
+                    onChange={(event) =>
+                      setFez({
+                        ...fez,
+                        valor: normalizarValorBonificacao(event.target.value),
+                      })
+                    }
                   />
                 </div>
               )}
@@ -1596,13 +1620,20 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   <Label htmlFor="troca-bonus-valor">
                     Valor da bonificação (R$)
                   </Label>
-                  <CurrencyInput
+                  <input
                     id="troca-bonus-valor"
+                    type="text"
+                    inputMode="decimal"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
+                    placeholder="Ex.: 25,00"
                     value={troca.fez.valor}
-                    onValueChange={(valor) =>
+                    onChange={(event) =>
                       setTroca({
                         ...troca,
-                        fez: { ...troca.fez!, valor },
+                        fez: {
+                          ...troca.fez!,
+                          valor: normalizarValorBonificacao(event.target.value),
+                        },
                       })
                     }
                   />
