@@ -107,6 +107,7 @@ type Troca = {
 
 type BonificacaoInfo = {
   tarefa: FilhoTarefa;
+  total: number;
   ocorrencia: Ocorrencia;
 };
 
@@ -488,6 +489,34 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       descricao: "",
       valor: "",
       ...(existente ? { ocorrenciaId: existente.id } : {}),
+    });
+  }
+
+  function abrirEdicaoBonificacao(info: BonificacaoInfo) {
+    const { tarefa, total, ocorrencia } = info;
+    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
+      toast.error("Ações só podem ser feitas em uma vigência em andamento");
+      return;
+    }
+
+    setBonificacaoInfo(null);
+    setFez({
+      modo: "EDITAR",
+      ocorrenciaId: ocorrencia.id,
+      tarefa,
+      total,
+      data: dataBrasil(ocorrencia.created_at),
+      bonusTipo:
+        ocorrencia.bonificacao_tipo === "TEXTO"
+          ? "TEXTO"
+          : ocorrencia.bonificacao_tipo === "VALOR"
+            ? "VALOR"
+            : "NENHUMA",
+      descricao: ocorrencia.bonificacao_descricao ?? "",
+      valor:
+        ocorrencia.bonificacao_valor == null
+          ? ""
+          : String(ocorrencia.bonificacao_valor).replace(".", ","),
     });
   }
 
@@ -1146,39 +1175,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                               <div className="min-w-0">
                                                 {registro ? (
                                                   <div className="marked-actions min-w-0 text-sm">
-                                                    <span className="marked-secondary-slot">
-                                                      {registro.tipo === "FEZ" ? (
-                                                        <Hint content="Ver bonificação">
-                                                          <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            className="h-8 w-8 shrink-0 rounded-md"
-                                                            disabled={busy}
-                                                            aria-label="Ver bonificação"
-                                                            onClick={() =>
-                                                              setBonificacaoInfo({
-                                                                tarefa,
-                                                                ocorrencia: registro,
-                                                              })
-                                                            }
-                                                          >
-                                                            <Info className="h-4 w-4" />
-                                                          </Button>
-                                                        </Hint>
-                                                      ) : !comDesconto &&
-                                                        penalizadas.has(registro.id) ? (
-                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
-                                                          <span
-                                                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive"
-                                                            role="img"
-                                                            aria-label="Limite de penalidade atingido"
-                                                          >
-                                                            <AlertTriangle className="h-4 w-4" />
-                                                          </span>
-                                                        </Hint>
-                                                      ) : null}
-                                                    </span>
-
                                                     <span className="marked-status-slot">
                                                       <Hint
                                                         content={
@@ -1240,6 +1236,40 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                           </Button>
                                                         </Hint>
                                                       )}
+                                                    </span>
+
+                                                    <span className="marked-secondary-slot">
+                                                      {registro.tipo === "FEZ" ? (
+                                                        <Hint content="Ver bonificação">
+                                                          <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="h-8 w-8 shrink-0 rounded-md"
+                                                            disabled={busy}
+                                                            aria-label="Ver bonificação"
+                                                            onClick={() =>
+                                                              setBonificacaoInfo({
+                                                                tarefa,
+                                                                total: totalNaoFez,
+                                                                ocorrencia: registro,
+                                                              })
+                                                            }
+                                                          >
+                                                            <Info className="h-4 w-4" />
+                                                          </Button>
+                                                        </Hint>
+                                                      ) : !comDesconto &&
+                                                        penalizadas.has(registro.id) ? (
+                                                        <Hint content="Esta marcação atingiu o limite de penalidade">
+                                                          <span
+                                                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-destructive/40 bg-destructive/5 text-destructive"
+                                                            role="img"
+                                                            aria-label="Limite de penalidade atingido"
+                                                          >
+                                                            <AlertTriangle className="h-4 w-4" />
+                                                          </span>
+                                                        </Hint>
+                                                      ) : null}
                                                     </span>
                                                   </div>
                                                 ) : null}
@@ -1394,6 +1424,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             >
               Fechar
             </Button>
+            {bonificacaoInfo && (
+              <Button
+                disabled={busy}
+                onClick={() => abrirEdicaoBonificacao(bonificacaoInfo)}
+              >
+                <Pencil className="h-4 w-4" />
+                Editar bonificação
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
