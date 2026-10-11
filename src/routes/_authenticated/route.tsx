@@ -182,10 +182,10 @@ function AuthenticatedLayout() {
         to="/cadastro-unico"
         onClick={() => mobile && setMenuMobileAberto(false)}
         className={mobile
-          ? "flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"
-          : "flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1.5 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"}
+          ? "flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-950/55"
+          : "flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35 px-1.5 py-1.5 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-950/55"}
       >
-        <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"}>
+        <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/55 dark:text-amber-300" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/55 dark:text-amber-300"}>
           <ListPlus className={mobile ? "h-5 w-5" : "h-4 w-4"} />
         </span>
         <span className="min-w-0">
@@ -204,10 +204,10 @@ function AuthenticatedLayout() {
           setConfirmarCloneMenuAberto(true);
         }}
         className={mobile
-          ? "flex w-full items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2.5 text-left text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"
-          : "flex w-full items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-1.5 text-left text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100"}
+          ? "flex w-full items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35 px-2.5 py-2.5 text-left text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-950/55"
+          : "flex w-full items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35 px-1.5 py-1.5 text-left text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-950/55"}
       >
-        <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700"}>
+        <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/55 dark:text-amber-300" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/55 dark:text-amber-300"}>
           <Copy className={mobile ? "h-5 w-5" : "h-4 w-4"} />
         </span>
         <span className="min-w-0">
