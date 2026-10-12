@@ -14,9 +14,10 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { PageHeader } from "@/components/PageHeader";
 import { useActionLoading } from "@/components/ActionLoading";
-import { msgErro, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { fmtVigencia, msgErro, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
+import { situacaoVigencia } from "@/components/VigenciaStatus";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
@@ -51,6 +52,22 @@ const vigenciaInicial = (): VigenciaDraft => ({
   valor_debito: "",
 });
 
+function vigenciaEstaEmAndamentoAgora(
+  vigencia: { data_inicio: string; data_fim: string },
+  agora = Date.now(),
+) {
+  const inicio = new Date(vigencia.data_inicio).getTime();
+  const fim = new Date(vigencia.data_fim).getTime();
+
+  return (
+    Number.isFinite(inicio) &&
+    Number.isFinite(fim) &&
+    inicio <= agora &&
+    agora <= fim &&
+    situacaoVigencia(vigencia, agora) === "andamento"
+  );
+}
+
 function CadastroUnicoPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -72,13 +89,14 @@ function CadastroUnicoPage() {
   const [modoPeriodoVigencia, setModoPeriodoVigencia] = useState<PeriodoVigenciaModo>("DATAS");
   const [quantidadeDiasVigencia, setQuantidadeDiasVigencia] = useState("");
   const [inicioPeriodoDiasVigencia, setInicioPeriodoDiasVigencia] = useState<string | null>(null);
-  const [vigenciaCriadaId, setVigenciaCriadaId] = useState<number | null>(null);
+  const [vigenciaFluxoId, setVigenciaFluxoId] = useState<number | null>(null);
+  const [origemVigenciaFluxo, setOrigemVigenciaFluxo] = useState<"CRIADA" | "EXISTENTE" | null>(null);
   const [etapaNovo, setEtapaNovo] = useState<1 | 2 | 3 | 4>(1);
   const [tarefasPorFilho, setTarefasPorFilho] = useState<Record<number, number[]>>({});
   const [resumoConclusao, setResumoConclusao] = useState<{
     filhos: number;
     tarefas: number;
-    vigencias: number;
+    vigencia: "CRIADA" | "EXISTENTE";
     atribuicoes: number;
   } | null>(null);
 
@@ -87,6 +105,9 @@ function CadastroUnicoPage() {
   const inicioPeriodoAtual = modoPeriodoVigencia === "DIAS" ? (periodoDiasCalculado?.data_inicio ?? "") : vigenciaDraft.data_inicio;
   const fimPeriodoAtual = modoPeriodoVigencia === "DIAS" ? (periodoDiasCalculado?.data_fim ?? "") : vigenciaDraft.data_fim;
   const diasPeriodoAtual = diasDaVigencia(inicioPeriodoAtual, fimPeriodoAtual);
+  const agoraFluxo = Date.now();
+  const vigenciaEmAndamentoDisponivel =
+    vigencias.find((vigencia) => vigenciaEstaEmAndamentoAgora(vigencia, agoraFluxo)) ?? null;
 
   const alternar = (lista: number[], setLista: (v: number[]) => void, id: number) =>
     setLista(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]);
@@ -197,6 +218,26 @@ function CadastroUnicoPage() {
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
     }
 
+    if (vigenciaFluxoId && origemVigenciaFluxo) {
+      const vigenciaJaDefinida = vigencias.find((vigencia) => vigencia.id === vigenciaFluxoId);
+      const aindaPodeSerUsada =
+        vigenciaJaDefinida &&
+        (origemVigenciaFluxo === "EXISTENTE"
+          ? vigenciaEstaEmAndamentoAgora(vigenciaJaDefinida)
+          : situacaoVigencia(vigenciaJaDefinida) !== "finalizada");
+
+      if (aindaPodeSerUsada) {
+        setTarefasPorFilho(
+          Object.fromEntries(filhosSelecionados.map((idFilho) => [idFilho, [...tarefasSelecionadas]])),
+        );
+        setEtapaNovo(4);
+        return;
+      }
+
+      setVigenciaFluxoId(null);
+      setOrigemVigenciaFluxo(null);
+    }
+
     setVigenciaDraft((atual) => ({ ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" }));
     setEtapaNovo(3);
   }
@@ -259,23 +300,59 @@ function CadastroUnicoPage() {
     };
     const { data, error } = await supabase.from("t_vigencia").insert(payload).select("id").single();
     if (error || !data) { toast.error(msgErro(error)); return; }
-    setVigenciaCriadaId(data.id);
+    setVigenciaFluxoId(data.id);
+    setOrigemVigenciaFluxo("CRIADA");
     setTarefasPorFilho(Object.fromEntries(filhosSelecionados.map((idFilho) => [idFilho, [...tarefasSelecionadas]])));
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
     setEtapaNovo(4);
-    toast.success("Vigência criada para este lote");
+    toast.success("Vigência criada para este fluxo");
+  }
+
+  function usarVigenciaEmAndamento() {
+    const agora = Date.now();
+    const vigenciaAtual =
+      vigencias.find((vigencia) => vigenciaEstaEmAndamentoAgora(vigencia, agora)) ?? null;
+
+    if (!vigenciaAtual) {
+      toast.error("A vigência em andamento não está mais disponível. Revise a etapa de vigência.");
+      return;
+    }
+
+    setVigenciaFluxoId(vigenciaAtual.id);
+    setOrigemVigenciaFluxo("EXISTENTE");
+    setTarefasPorFilho(
+      Object.fromEntries(filhosSelecionados.map((idFilho) => [idFilho, [...tarefasSelecionadas]])),
+    );
+    setEtapaNovo(4);
+    toast.success("Vigência em andamento selecionada para este fluxo");
   }
 
   async function criarAssociacoes() {
-    if (!vigenciaCriadaId) { toast.error("Crie a vigência antes das atribuições"); return; }
+    if (!vigenciaFluxoId || !origemVigenciaFluxo) {
+      toast.error("Defina a vigência antes das atribuições");
+      return;
+    }
     if (!filhosSelecionados.length || !tarefasSelecionadas.length) { toast.error("Selecione ao menos um filho e uma tarefa"); return; }
 
-    const vigencia = vigencias.find((v) => v.id === vigenciaCriadaId);
+    const vigencia = vigencias.find((v) => v.id === vigenciaFluxoId);
     if (!vigencia) { toast.error("Aguarde a atualização da vigência e tente novamente"); return; }
+
+    if (origemVigenciaFluxo === "EXISTENTE" && !vigenciaEstaEmAndamentoAgora(vigencia)) {
+      setVigenciaFluxoId(null);
+      setOrigemVigenciaFluxo(null);
+      setEtapaNovo(3);
+      toast.error("A vigência selecionada não está mais em andamento. Escolha novamente a vigência do fluxo.");
+      return;
+    }
+
+    if (origemVigenciaFluxo === "CRIADA" && situacaoVigencia(vigencia) === "finalizada") {
+      toast.error("A vigência criada para este fluxo já foi finalizada.");
+      return;
+    }
 
     const candidatos = filhosSelecionados.flatMap((id_filho) =>
       (tarefasPorFilho[id_filho] ?? []).map((id_tarefa) => ({
-        id_vigencia: vigenciaCriadaId,
+        id_vigencia: vigenciaFluxoId,
         id_filho,
         id_tarefa,
       }))
@@ -290,7 +367,7 @@ function CadastroUnicoPage() {
       candidatos,
       existentes: atribuicoes,
       vigencias,
-      politica: "ATUAL_OU_FUTURA",
+      politica: origemVigenciaFluxo === "EXISTENTE" ? "SOMENTE_ATUAL" : "ATUAL_OU_FUTURA",
     });
 
     if (!resultado.ok) {
@@ -307,7 +384,7 @@ function CadastroUnicoPage() {
     setResumoConclusao({
       filhos: filhosSelecionados.length,
       tarefas: tarefasSelecionadas.length,
-      vigencias: 1,
+      vigencia: origemVigenciaFluxo,
       atribuicoes: resultado.quantidade,
     });
 
@@ -323,7 +400,8 @@ function CadastroUnicoPage() {
     setModoPeriodoVigencia("DATAS");
     setQuantidadeDiasVigencia("");
     setInicioPeriodoDiasVigencia(null);
-    setVigenciaCriadaId(null);
+    setVigenciaFluxoId(null);
+    setOrigemVigenciaFluxo(null);
     setTarefasPorFilho({});
     setEtapaNovo(1);
 
@@ -490,7 +568,14 @@ function CadastroUnicoPage() {
             <Card className="overflow-hidden">
               <CardContent className="flex items-start gap-2.5 !px-3 !py-2">
                 <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /></span>
-                <div className="min-w-0 flex-1"><p className="text-sm font-semibold">3. Vigência</p><p className="truncate text-xs text-muted-foreground">Vigência criada para este fluxo</p></div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">3. Vigência</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {origemVigenciaFluxo === "EXISTENTE"
+                      ? "Vigência em andamento selecionada para este fluxo"
+                      : "Vigência criada para este fluxo"}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -499,6 +584,39 @@ function CadastroUnicoPage() {
             <Card className="overflow-hidden border-primary/20">
               <CardHeader className="border-b bg-primary/5 px-4 py-2.5"><CardTitle className="flex items-center gap-3 text-base"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">3</span><span className="flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Vigência</span></CardTitle></CardHeader>
               <CardContent className="space-y-3 !p-3.5">
+                {vigenciaEmAndamentoDisponivel && (
+                  <div className="rounded-xl border border-green-300 bg-green-50/60 p-3 dark:border-green-800 dark:bg-green-950/20">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+                          Vigência em andamento disponível
+                        </p>
+                        <p className="mt-1 text-sm font-medium">
+                          {fmtVigencia(vigenciaEmAndamentoDisponivel)}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Você pode usar esta vigência neste Cadastro Fluxo sem alterar datas, limite, penalidade ou desconto.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        className="w-full shrink-0 sm:w-auto"
+                        onClick={usarVigenciaEmAndamento}
+                      >
+                        Usar vigência em andamento
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {vigenciaEmAndamentoDisponivel && (
+                  <div className="flex items-center gap-3 py-1">
+                    <span className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-medium text-muted-foreground">ou crie uma nova vigência</span>
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Como deseja definir o período?</Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -663,7 +781,7 @@ function CadastroUnicoPage() {
 
                 <div className="flex flex-col gap-2 border-t pt-2.5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-muted-foreground">{totalCombinacoes} atribuição(ões) selecionada(s)</p>
-                  <Button className="w-full sm:w-auto" onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaCriadaId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
+                  <Button className="w-full sm:w-auto" onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaFluxoId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
                 </div>
               </CardContent>
             </Card>
@@ -682,14 +800,16 @@ function CadastroUnicoPage() {
           </DialogHeader>
 
           <p className="text-sm text-muted-foreground">
-            Filhos, tarefas, vigência e atribuições foram cadastrados com sucesso.
+            {resumoConclusao?.vigencia === "EXISTENTE"
+              ? "Filhos, tarefas e atribuições foram cadastrados com sucesso. A vigência em andamento existente foi utilizada sem alterações."
+              : "Filhos, tarefas, vigência e atribuições foram cadastrados com sucesso."}
           </p>
 
           {resumoConclusao && (
             <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/20 p-3 text-sm">
               <div><span className="font-semibold">{resumoConclusao.filhos}</span> filho(s)</div>
               <div><span className="font-semibold">{resumoConclusao.tarefas}</span> tarefa(s)</div>
-              <div><span className="font-semibold">{resumoConclusao.vigencias}</span> vigência</div>
+              <div><span className="font-semibold">{resumoConclusao.vigencia === "EXISTENTE" ? "Existente" : "Criada"}</span> vigência</div>
               <div><span className="font-semibold">{resumoConclusao.atribuicoes}</span> atribuição(ões)</div>
             </div>
           )}
