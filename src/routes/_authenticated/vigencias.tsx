@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, CheckCircle2, Copy, Info, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarRange, CircleStop, Copy, Info, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -303,7 +303,7 @@ function VigenciasPage() {
                     <Info className="h-4 w-4" />
                   </Button>
                 </Hint>
-                {emAndamento && <Hint content="Finalizar vigência"><Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} aria-label="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button></Hint>}
+                {emAndamento && <Hint content="Finalizar vigência"><Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} aria-label="Finalizar vigência"><CircleStop className="h-4 w-4" /></Button></Hint>}
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
                 <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência"><Trash2 className="h-4 w-4" /></Button>
               </div>
