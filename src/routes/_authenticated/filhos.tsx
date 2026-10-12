@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, msgErro, useFilhos, useTarefas, useVigencias, type Filho } from "@/lib/db";
+import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type Filho } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
@@ -68,6 +68,7 @@ function FilhosPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: vigencias = [] } = useVigencias();
+  const { data: atribuicoes = [] } = useFilhoTarefas();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [novoAberto, setNovoAberto] = useState(false);
@@ -75,6 +76,7 @@ function FilhosPage() {
   const [editando, setEditando] = useState<Filho | null>(null);
   const [edicao, setEdicao] = useState<FilhoForm>(vazio);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
+  const [confirmarExclusaoTodos, setConfirmarExclusaoTodos] = useState(false);
   const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string } | null>(null);
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
@@ -108,6 +110,42 @@ function FilhosPage() {
     await qc.invalidateQueries();
   }
 
+  async function excluirTodos() {
+    if (filhos.length === 0) return;
+
+    const idsFilhos = filhos.map((filho) => filho.id);
+    const { count, error: atribuicoesErro } = await supabase
+      .from("t_filho_tarefa")
+      .select("id", { count: "exact", head: true })
+      .in("id_filho", idsFilhos);
+
+    if (atribuicoesErro) {
+      toast.error(msgErro(atribuicoesErro));
+      return;
+    }
+
+    if ((count ?? 0) > 0) {
+      setConfirmarExclusaoTodos(false);
+      await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+      toast.error("Não é possível excluir todos: existe pelo menos um filho com atribuição.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("t_filho")
+      .delete()
+      .in("id", idsFilhos);
+
+    if (error) {
+      toast.error(msgErro(error));
+      return;
+    }
+
+    setConfirmarExclusaoTodos(false);
+    await qc.invalidateQueries();
+    toast.success("Todos os filhos foram excluídos");
+  }
+
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
     setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), tem_mesada: filho.tem_mesada_opcional === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
@@ -122,12 +160,28 @@ function FilhosPage() {
     toast.success("Filho atualizado"); setEditando(null); qc.invalidateQueries({ queryKey: ["filhos"] }); qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
+  const podeExcluirTodos = filhos.length > 0 && atribuicoes.length === 0;
+
   return <>
     <PageHeader
       title="Filhos"
       description="Cadastre seus filhos"
       icon={<Users className="h-6 w-6" />}
-      action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+      action={
+        <div className="flex items-center gap-2">
+          {podeExcluirTodos && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmarExclusaoTodos(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Excluir todos
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>
+        </div>
+      }
     />
     <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
         return <div key={f.id} className="min-w-0 max-w-full rounded-2xl border bg-card p-4">
@@ -195,6 +249,23 @@ function FilhosPage() {
       filhoInicial={filhoPosCadastro}
     />
 
+    <Dialog open={confirmarExclusaoTodos} onOpenChange={setConfirmarExclusaoTodos}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Excluir todos os filhos?</DialogTitle></DialogHeader>
+        <div className="space-y-2">
+          <p>Tem certeza que deseja excluir todos os filhos cadastrados?</p>
+          <p className="text-sm text-muted-foreground">
+            Esta opção só está disponível quando nenhum filho possui atribuição. A exclusão não poderá ser desfeita.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setConfirmarExclusaoTodos(false)}>Cancelar</Button>
+          <Button variant="destructive" onClick={() => void runAction(excluirTodos)}>
+            <Trash2 className="h-4 w-4" /> Excluir todos
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2"><p>Tem certeza que deseja excluir <strong>{filhos.find((f) => f.id === confirmarExclusao)?.nome}</strong>?</p><p className="text-sm text-muted-foreground">As atribuições, registros de Fez/Não fez e o link público deste filho também serão excluídos.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader><form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4"><div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome *</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-email">Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div><CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" /><DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" disabled={saving}>Salvar alterações</Button></DialogFooter></form></DialogContent></Dialog>
   </>;
