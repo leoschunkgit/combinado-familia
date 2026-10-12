@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { useActionLoading } from "@/components/ActionLoading";
 import { diasDaVigencia, sugerirInicioVigencia } from "@/lib/vigencia-periodo";
+import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 
@@ -41,6 +42,8 @@ export function OnboardingInicial() {
   const { data: usuarioPai, isLoading: carregandoUsuarioPai } = useUsuarioPai();
 
   const [salvando, setSalvando] = useState(false);
+  const [confirmarPularAberto, setConfirmarPularAberto] = useState(false);
+  const [onboardingEncerradoLocalmente, setOnboardingEncerradoLocalmente] = useState(false);
 
   const [nomeFilho, setNomeFilho] = useState("");
   const [temMesada, setTemMesada] = useState(false);
@@ -71,7 +74,7 @@ export function OnboardingInicial() {
     -1;
   const etapa = filhoEmCorrecaoId !== null ? 0 : tarefaEmCorrecaoId !== null ? 1 : vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
 
-  const aberto = !carregando && usuarioPai?.onboarding_concluido !== true && etapa >= 0;
+  const aberto = !onboardingEncerradoLocalmente && !carregando && usuarioPai?.onboarding_concluido !== true && etapa >= 0;
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
   const tarefaAtual = tarefaSelecionada || (tarefas[0] ? String(tarefas[0].id) : "");
   const vigenciaAtual = vigenciaSelecionada || (vigenciasAtivas[0] ? String(vigenciasAtivas[0].id) : "");
@@ -248,6 +251,29 @@ export function OnboardingInicial() {
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
+  async function pularOnboarding() {
+    if (!usuarioPai?.id) {
+      toast.error("Não foi possível identificar sua conta para encerrar o aprendizado.");
+      return;
+    }
+
+    setSalvando(true);
+    const { error } = await supabase
+      .from("t_usuario_pai")
+      .update({ onboarding_concluido: true })
+      .eq("id", usuarioPai.id);
+    setSalvando(false);
+
+    if (error) {
+      toast.error(msgErro(error));
+      return;
+    }
+
+    setConfirmarPularAberto(false);
+    setOnboardingEncerradoLocalmente(true);
+    await qc.invalidateQueries({ queryKey: ["usuario_pai"] });
+  }
+
   async function cadastrarAssociacao() {
     if (!filhoAtual || !tarefaAtual || !vigenciaAtual) {
       toast.error("Selecione o filho, a tarefa e a vigência");
@@ -272,6 +298,7 @@ export function OnboardingInicial() {
       return;
     }
 
+    setOnboardingEncerradoLocalmente(true);
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
       qc.invalidateQueries({ queryKey: ["usuario_pai"] }),
@@ -281,6 +308,7 @@ export function OnboardingInicial() {
   }
 
   return (
+    <>
     <Dialog open={aberto}>
       <DialogContent
         className="max-h-[92vh] max-w-lg overflow-y-auto rounded-xl [&>button]:hidden"
@@ -288,6 +316,17 @@ export function OnboardingInicial() {
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
+        <div className="absolute right-4 top-4 z-10">
+          <button
+            type="button"
+            className={modalCloseInlineButtonClass}
+            onClick={() => setConfirmarPularAberto(true)}
+            disabled={salvando}
+            aria-label="Fechar aprendizado inicial"
+          >
+            <ModalCloseIcon />
+          </button>
+        </div>
         <DialogHeader>
           <div className="mb-2 inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
             Primeiros passos · aprendizado do sistema
@@ -433,5 +472,44 @@ export function OnboardingInicial() {
         )}
       </DialogContent>
     </Dialog>
+
+    <Dialog
+      open={confirmarPularAberto}
+      onOpenChange={(open) => {
+        if (!salvando) setConfirmarPularAberto(open);
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Pular aprendizado inicial?</DialogTitle>
+          <DialogDescription>
+            Essa etapa é importante para você aprender a usar o Combinado Família. Tem certeza de que não deseja fazer o aprendizado agora?
+          </DialogDescription>
+        </DialogHeader>
+
+        <p className="text-sm text-muted-foreground">
+          O que você já cadastrou será mantido. Ao pular, o aprendizado será marcado como concluído e não aparecerá novamente automaticamente.
+        </p>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={salvando}
+            onClick={() => void runAction(pularOnboarding)}
+          >
+            {salvando ? "Salvando..." : "Pular aprendizado"}
+          </Button>
+          <Button
+            type="button"
+            disabled={salvando}
+            onClick={() => setConfirmarPularAberto(false)}
+          >
+            Continuar aprendizado
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
