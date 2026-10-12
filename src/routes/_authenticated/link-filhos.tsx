@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Link2, MoreVertical, PowerOff, RefreshCw, Share2, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, ExternalLink, Link2, PowerOff, RefreshCw, Share2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -111,12 +111,12 @@ function LinkFilhosPage() {
                   <Button size="sm" variant="outline" className="w-full justify-center sm:w-auto" onClick={() => void copiarLink(acesso.token)}><Copy className="h-3.5 w-3.5" />Copiar</Button>
                   <Button size="sm" variant="outline" className="w-full justify-center sm:w-auto" onClick={() => void compartilharLink(f, acesso.token)}><Share2 className="h-3.5 w-3.5" />Compartilhar</Button>
                   <Button size="sm" variant="outline" className="w-full justify-center sm:w-auto" onClick={() => void openExternalUrl(urlAcesso(acesso.token))}><ExternalLink className="h-3.5 w-3.5" />Abrir</Button>
-                  <Button size="sm" variant="ghost" className="w-full justify-center text-muted-foreground sm:w-auto" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="h-3.5 w-3.5" />Mais opções</Button>
+                  <Button size="sm" variant="ghost" className="w-full justify-center text-muted-foreground sm:w-auto" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}>{maisOpcoes === f.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}Mais opções</Button>
                 </div>
               </>}
               {!ativo && (
                 <div className="mt-3">
-                  <Button size="sm" variant="ghost" className="px-2 text-muted-foreground" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}><MoreVertical className="h-3.5 w-3.5" />Mais opções</Button>
+                  <Button size="sm" variant="ghost" className="px-2 text-muted-foreground" onClick={() => setMaisOpcoes(maisOpcoes === f.id ? null : f.id)}>{maisOpcoes === f.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}Mais opções</Button>
                 </div>
               )}
               {maisOpcoes === f.id && (
