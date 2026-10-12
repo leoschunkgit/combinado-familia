@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ChevronsUpDown, Plus, X } from "lucide-react";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/Hint";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -359,9 +360,11 @@ export function AtribuicaoDialog({
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setItens((atuais) => atuais.filter((_, j) => j !== i))} aria-label="Remover">
-                                <X className="h-4 w-4" />
-                              </Button>
+                              <Hint content="Remover">
+                                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setItens((atuais) => atuais.filter((_, j) => j !== i))} aria-label="Remover">
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </Hint>
                             </TableCell>
                           </TableRow>
                         ))}
