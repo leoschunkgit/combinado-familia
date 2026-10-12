@@ -203,7 +203,7 @@ function VigenciasPage() {
   function abrirEdicao(v: Vigencia) {
     if (new Date(v.data_fim).getTime() < Date.now()) { toast.error("Vigências finalizadas não podem ser editadas"); return; }
     setEditando(v);
-    setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: "", valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","), qtd_ocorrencia: String(v.qtd_ocorrencia) });
+    setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim), valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","), qtd_ocorrencia: String(v.qtd_ocorrencia) });
   }
 
   async function salvarEdicao(e: FormEvent) {
