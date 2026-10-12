@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, CheckCircle2, Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarRange, CheckCircle2, Copy, Info, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +94,7 @@ function VigenciasPage() {
   const [confirmarFinalizacao, setConfirmarFinalizacao] = useState<number | null>(null);
   const [confirmarCloneAberto, setConfirmarCloneAberto] = useState(false);
   const [vigenciaParaAtribuir, setVigenciaParaAtribuir] = useState<number | null>(null);
+  const [vigenciaInfoId, setVigenciaInfoId] = useState<number | null>(null);
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
@@ -246,6 +247,18 @@ function VigenciasPage() {
   const vinculadasNaEdicao = atribuicoes.filter((a) => a.id_vigencia === editando?.id);
   const idsNaEdicao = new Set(vinculadasNaEdicao.map((a) => a.id));
   const foraDoPeriodo = editando ? ocorrencias.filter((o) => idsNaEdicao.has(o.id_filho_tarefa) && (diaBrasil(o.created_at) < diaCampo(edicao.data_inicio) || diaBrasil(o.created_at) > diaCampo(edicao.data_fim))) : [];
+  const vigenciaInfo = vigencias.find((vigencia) => vigencia.id === vigenciaInfoId) ?? null;
+  const filhosVinculadosInfo = vigenciaInfoId === null
+    ? []
+    : filhos
+        .filter((filho) =>
+          atribuicoes.some(
+            (atribuicao) =>
+              atribuicao.id_vigencia === vigenciaInfoId &&
+              atribuicao.id_filho === filho.id,
+          ),
+        )
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
   return <>
     <PageHeader
@@ -285,6 +298,11 @@ function VigenciasPage() {
             <div className="flex items-start justify-between gap-3">
               <VigenciaStatus vigencia={v} />
               <div className="flex shrink-0 items-center gap-1">
+                <Hint content="Ver filhos vinculados">
+                  <Button variant="ghost" size="icon" onClick={() => setVigenciaInfoId(v.id)} aria-label="Ver filhos vinculados à vigência">
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </Hint>
                 {emAndamento && <Hint content="Finalizar vigência"><Button variant="ghost" size="icon" onClick={() => setConfirmarFinalizacao(v.id)} aria-label="Finalizar vigência"><CheckCircle2 className="h-4 w-4" /></Button></Hint>}
                 <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="ghost" size="icon" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
                 <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência"><Trash2 className="h-4 w-4" /></Button>
@@ -303,6 +321,36 @@ function VigenciasPage() {
           </div>;
         })}
     </div>
+
+    <Dialog open={vigenciaInfoId !== null} onOpenChange={(open) => !open && setVigenciaInfoId(null)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Filhos vinculados à vigência</DialogTitle>
+          {vigenciaInfo && (
+            <p className="text-sm text-muted-foreground">{fmtVigencia(vigenciaInfo)}</p>
+          )}
+        </DialogHeader>
+
+        {filhosVinculadosInfo.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              {filhosVinculadosInfo.length} {filhosVinculadosInfo.length === 1 ? "filho vinculado" : "filhos vinculados"}
+            </p>
+            <div className="divide-y rounded-lg border bg-background">
+              {filhosVinculadosInfo.map((filho) => (
+                <div key={filho.id} className="px-3 py-2.5 text-sm font-medium">
+                  {filho.nome}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed px-3 py-4 text-center text-sm text-muted-foreground">
+            Nenhum filho vinculado a esta vigência.
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
 
     <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
