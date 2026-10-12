@@ -213,10 +213,12 @@ function CadastroUnicoPage() {
       if (error || !data) { toast.error(msgErro(error)); return; }
 
       idsNovos = data.map((item) => item.id);
-      setTarefasSelecionadas((atuais) => [...new Set([...atuais, ...idsNovos])]);
       setTarefasNovasPendentes([]);
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
     }
+
+    const tarefasSelecionadasFinais = [...new Set([...tarefasSelecionadas, ...idsNovos])];
+    setTarefasSelecionadas(tarefasSelecionadasFinais);
 
     if (vigenciaFluxoId && origemVigenciaFluxo) {
       const vigenciaJaDefinida = vigencias.find((vigencia) => vigencia.id === vigenciaFluxoId);
@@ -228,7 +230,7 @@ function CadastroUnicoPage() {
 
       if (aindaPodeSerUsada) {
         setTarefasPorFilho(
-          Object.fromEntries(filhosSelecionados.map((idFilho) => [idFilho, [...tarefasSelecionadas]])),
+          Object.fromEntries(filhosSelecionados.map((idFilho) => [idFilho, [...tarefasSelecionadasFinais]])),
         );
         setEtapaNovo(4);
         return;
