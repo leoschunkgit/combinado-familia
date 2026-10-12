@@ -178,7 +178,7 @@ export function OnboardingInicial() {
 
     setVigenciaEmCorrecaoId(vigencia.id);
     setInicioVigencia(paraCampoDataHoraBrasil(vigencia.data_inicio));
-    setFimVigencia("");
+    setFimVigencia(paraCampoDataHoraBrasil(vigencia.data_fim));
     setQuantidade(String(vigencia.qtd_ocorrencia));
     setDesconto(vigencia.valor_debito === null ? "" : vigencia.valor_debito.toFixed(2).replace(".", ","));
   }
