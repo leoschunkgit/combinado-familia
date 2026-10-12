@@ -36,6 +36,10 @@ function bonus(o: Ocorrencia) {
   return "Nenhuma";
 }
 
+function compararOcorrenciasPorData(a: Ocorrencia, b: Ocorrencia) {
+  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+}
+
 function RelatorioPage() {
   const { data: vigencias = [], isLoading: loadingVigencias } = useVigencias();
   const { data: filhos = [], isLoading: loadingFilhos } = useFilhos();
@@ -112,7 +116,7 @@ function RelatorioPage() {
               nome: tarefa.t_tarefa?.nome || "Tarefa",
               registros: ocorrencias
                 .filter((o) => Number(o.id_filho_tarefa) === Number(tarefa.id))
-                .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                .sort(compararOcorrenciasPorData)
                 .map((registro) => ({
                   data: fmtData(registro.created_at),
                   resultado: registro.tipo === "FEZ" ? "Fez" as const : "Não fez" as const,
@@ -168,7 +172,7 @@ function RelatorioPage() {
         const totalNaoFez=registros.filter(naoFez).length,comDesconto=usaDesconto(filho,vigencia),chave=`${vigencia.id}-${filho.id}`,aberto=filhosAbertos[chave]===true;
         return <div key={filho.id} className="rounded-xl border"><button type="button" className="flex w-full cursor-pointer items-center gap-2 p-4 text-left" onClick={()=>setFilhosAbertos(a=>({...a,[chave]:!aberto}))}><CollapseChevron open={aberto} /><h3 className={`min-w-0 truncate ${uiTypography.secondaryTitleStrong}`}>{filho.nome}</h3></button>
         {aberto && <div className="border-t p-4 pt-3">{comDesconto?<p className="text-sm font-medium tabular-nums">Mesada: {reais(filho.valor_mesada??0)} · {resumoMesada(filho,vigencia,totalNaoFez)}</p>:<p className="text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade||"Não cadastrada"}</p>}<div className="mt-4 space-y-3">{tarefas.map(tarefa=>{
-          const rs=ocorrencias.filter(o=>Number(o.id_filho_tarefa)===Number(tarefa.id)).sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
+          const rs=ocorrencias.filter(o=>Number(o.id_filho_tarefa)===Number(tarefa.id)).sort(compararOcorrenciasPorData);
           return <div key={tarefa.id} className="border-t pt-3"><div><span className="font-semibold">{tarefa.t_tarefa?.nome}</span></div>{rs.length?<div className="mt-2 space-y-1.5">{rs.map(o=><div key={o.id} className="flex flex-wrap items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs tabular-nums">{o.tipo==="FEZ"?<ThumbsUp className="h-4 w-4 text-green-600"/>:<ThumbsDown className="h-4 w-4 text-destructive"/>}<span className="font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"}</span><span>· {fmtData(o.created_at)}</span>{bonus(o)&&<span>· Bonificação: {bonus(o)}</span>}{o.tipo!=="FEZ"&&!comDesconto&&penalizadas.has(o.id)&&<span className="font-semibold text-destructive">· Limite atingido</span>}</div>)}</div>:<p className="mt-2 text-xs text-muted-foreground">Nenhum resultado registrado.</p>}</div>;
         })}</div></div>}</div>;
       })}</CardContent>}</Card></section>;
