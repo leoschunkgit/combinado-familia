@@ -53,7 +53,7 @@ export function OnboardingInicial() {
 
   const [inicioVigencia, setInicioVigencia] = useState(() => sugerirInicioVigencia([]));
   const [fimVigencia, setFimVigencia] = useState("");
-  const [quantidade, setQuantidade] = useState("0");
+  const [quantidade, setQuantidade] = useState("");
   const [desconto, setDesconto] = useState("");
 
   const [filhoSelecionado, setFilhoSelecionado] = useState("");

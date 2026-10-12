@@ -48,7 +48,7 @@ type VigenciaDraft = {
 const vigenciaInicial = (): VigenciaDraft => ({
   data_inicio: sugerirInicioVigencia([]),
   data_fim: "",
-  qtd_ocorrencia: "0",
+  qtd_ocorrencia: "",
   valor_debito: "",
 });
 
