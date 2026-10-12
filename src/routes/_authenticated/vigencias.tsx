@@ -304,8 +304,24 @@ function VigenciasPage() {
                   </Button>
                 </Hint>
                 {emAndamento && <Hint content="Finalizar vigência"><Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarFinalizacao(v.id)} aria-label="Finalizar vigência"><CircleStop className="h-4 w-4" /></Button></Hint>}
-                <BlockedAction reason={finalizada ? "Vigências finalizadas não podem ser editadas." : undefined}><Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" disabled={finalizada} onClick={() => abrirEdicao(v)}><Pencil className="h-4 w-4" /></Button></BlockedAction>
-                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência"><Trash2 className="h-4 w-4" /></Button>
+                {finalizada ? (
+                  <BlockedAction reason="Vigências finalizadas não podem ser editadas.">
+                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" disabled aria-label="Editar vigência">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </BlockedAction>
+                ) : (
+                  <Hint content="Editar vigência">
+                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => abrirEdicao(v)} aria-label="Editar vigência">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </Hint>
+                )}
+                <Hint content="Excluir vigência">
+                  <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </Hint>
               </div>
             </div>
             <p className="mt-1 whitespace-nowrap text-[13px] font-semibold tracking-tight sm:text-base">{fmtVigencia(v)}</p>
