@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Link2, MoreVertical, Share2, Users } from "lucide-react";
+import { Copy, ExternalLink, Link2, MoreVertical, PowerOff, RefreshCw, Share2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -122,14 +122,38 @@ function LinkFilhosPage() {
               {maisOpcoes === f.id && (
                 <div className="mt-2 rounded-lg border bg-background p-2.5">
                   {ativo ? (
-                    <div className="grid gap-2 sm:flex sm:flex-wrap">
-                      <Button size="sm" variant="ghost" className="justify-start sm:justify-center" onClick={() => setConfirmarDesativar(f)}>Desativar acesso</Button>
-                      <Button size="sm" variant="ghost" className="justify-start sm:justify-center" onClick={() => setConfirmarNovoLink(f)}>Gerar novo link</Button>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full justify-start text-destructive hover:text-destructive"
+                        onClick={() => setConfirmarDesativar(f)}
+                      >
+                        <PowerOff className="h-3.5 w-3.5" />
+                        Desativar acesso
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => setConfirmarNovoLink(f)}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Gerar novo link
+                      </Button>
                     </div>
                   ) : (
-                    <div className="space-y-1.5">
-                      <Button size="sm" variant="ghost" className="justify-start px-2" onClick={() => void runAction(() => gerarLink(f))}>Gerar novo link</Button>
-                      <p className="px-2 text-xs leading-relaxed text-muted-foreground">Será criado um novo endereço de acesso.</p>
+                    <div className="space-y-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => void runAction(() => gerarLink(f))}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Gerar novo link
+                      </Button>
+                      <p className="px-1 text-xs leading-relaxed text-muted-foreground">Será criado um novo endereço de acesso.</p>
                     </div>
                   )}
                 </div>
