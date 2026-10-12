@@ -329,34 +329,6 @@ function CadastroUnicoPage() {
     toast.success("Vigência em andamento selecionada para este fluxo");
   }
 
-  function concluirCadastroFluxo(quantidadeAtribuicoes: number) {
-    if (!origemVigenciaFluxo) return;
-
-    setResumoConclusao({
-      filhos: filhosSelecionados.length,
-      tarefas: tarefasSelecionadas.length,
-      vigencia: origemVigenciaFluxo,
-      atribuicoes: quantidadeAtribuicoes,
-    });
-
-    setNomeFilho("");
-    setTemMesada(false);
-    setValorMesada("");
-    setFilhosSelecionados([]);
-    setFilhosNovosPendentes([]);
-    setNomeTarefa("");
-    setTarefasSelecionadas([]);
-    setTarefasNovasPendentes([]);
-    setVigenciaDraft(vigenciaInicial());
-    setModoPeriodoVigencia("DATAS");
-    setQuantidadeDiasVigencia("");
-    setInicioPeriodoDiasVigencia(null);
-    setVigenciaFluxoId(null);
-    setOrigemVigenciaFluxo(null);
-    setTarefasPorFilho({});
-    setEtapaNovo(1);
-  }
-
   async function criarAssociacoes() {
     if (!vigenciaFluxoId || !origemVigenciaFluxo) {
       toast.error("Defina a vigência antes das atribuições");
@@ -401,13 +373,7 @@ function CadastroUnicoPage() {
     });
 
     if (!resultado.ok) {
-      const mensagem =
-        "erroBanco" in resultado
-          ? msgErro(resultado.erroBanco)
-          : resultado.mensagem === "As atribuições selecionadas já existem"
-            ? "Esta atribuição já existe nesta vigência. Altere a seleção ou volte para a etapa anterior."
-            : resultado.mensagem;
-      toast.error(mensagem);
+      toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
       return;
     }
 
@@ -416,7 +382,30 @@ function CadastroUnicoPage() {
     }
 
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    concluirCadastroFluxo(resultado.quantidade);
+
+    setResumoConclusao({
+      filhos: filhosSelecionados.length,
+      tarefas: tarefasSelecionadas.length,
+      vigencia: origemVigenciaFluxo,
+      atribuicoes: resultado.quantidade,
+    });
+
+    setNomeFilho("");
+    setTemMesada(false);
+    setValorMesada("");
+    setFilhosSelecionados([]);
+    setFilhosNovosPendentes([]);
+    setNomeTarefa("");
+    setTarefasSelecionadas([]);
+    setTarefasNovasPendentes([]);
+    setVigenciaDraft(vigenciaInicial());
+    setModoPeriodoVigencia("DATAS");
+    setQuantidadeDiasVigencia("");
+    setInicioPeriodoDiasVigencia(null);
+    setVigenciaFluxoId(null);
+    setOrigemVigenciaFluxo(null);
+    setTarefasPorFilho({});
+    setEtapaNovo(1);
 
   }
 
@@ -808,12 +797,9 @@ function CadastroUnicoPage() {
                   })}
                 </div>
 
-                <div className="flex flex-col-reverse gap-2 border-t pt-2.5 sm:flex-row sm:items-center sm:justify-between">
-                  <Button className="self-start" variant="ghost" size="sm" onClick={() => setEtapaNovo(3)}>Anterior</Button>
-                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-                    <p className="text-xs text-muted-foreground">{totalCombinacoes} atribuição(ões) selecionada(s)</p>
-                    <Button className="w-full sm:w-auto" onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaFluxoId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
-                  </div>
+                <div className="flex flex-col gap-2 border-t pt-2.5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs text-muted-foreground">{totalCombinacoes} atribuição(ões) selecionada(s)</p>
+                  <Button className="w-full sm:w-auto" onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaFluxoId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
                 </div>
               </CardContent>
             </Card>
