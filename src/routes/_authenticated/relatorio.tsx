@@ -139,7 +139,12 @@ function RelatorioPage() {
   }
 
   return <>
-    <PageHeader title="Histórico" description="Consulte o histórico completo por vigência, filho e tarefa e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
+    <PageHeader
+      title="Histórico"
+      description="Consulte o histórico completo por vigência, filho e tarefa e extraia um PDF organizado."
+      icon={<FileText className="h-6 w-6" />}
+      action={<Button size="sm" onClick={() => void gerarPdf()} disabled={carregando || !relatorio.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>}
+    />
     <ResponsiveFilters
       desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
       onApply={() => setFiltro(f)}
@@ -160,7 +165,6 @@ function RelatorioPage() {
     <div className="mb-6 flex flex-wrap justify-end gap-2">
       <Button variant="outline" size="sm" onClick={() => definirTudo(true)} disabled={carregando || !relatorio.length}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
       <Button variant="outline" size="sm" onClick={() => definirTudo(false)} disabled={carregando || !relatorio.length}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
-      <Button onClick={() => void gerarPdf()} disabled={carregando || !relatorio.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>
     </div>
     {!carregando && !relatorio.length && <EmptyState>Nenhuma informação encontrada para os filtros selecionados.</EmptyState>}
     <div className="space-y-4">{relatorio.map(({ vigencia, filhos: gruposFilhos }) => {
