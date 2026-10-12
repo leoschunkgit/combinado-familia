@@ -125,7 +125,7 @@ function FilhosPage() {
   return <>
     <PageHeader
       title="Filhos"
-      description="Cadastre os filhos vinculados à sua conta."
+      description="Cadastre seus filhos"
       icon={<Users className="h-6 w-6" />}
       action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
     />
