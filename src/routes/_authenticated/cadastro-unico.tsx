@@ -393,37 +393,26 @@ function CadastroUnicoPage() {
       return;
     }
 
-    const candidatosNovos = candidatos.filter(
-      (candidato) =>
-        !atribuicoes.some(
-          (existente) =>
-            Number(existente.id_vigencia) === Number(candidato.id_vigencia) &&
-            Number(existente.id_filho) === Number(candidato.id_filho) &&
-            Number(existente.id_tarefa) === Number(candidato.id_tarefa),
-        ),
-    );
-    const repetidasExistentes = candidatos.length - candidatosNovos.length;
-
-    if (candidatosNovos.length === 0) {
-      toast.info("As atribuições selecionadas já existem. O Cadastro Fluxo foi concluído sem duplicar dados.");
-      concluirCadastroFluxo(0);
-      return;
-    }
-
     const resultado = await cadastrarAtribuicoes({
-      candidatos: candidatosNovos,
+      candidatos,
       existentes: atribuicoes,
       vigencias,
       politica: origemVigenciaFluxo === "EXISTENTE" ? "SOMENTE_ATUAL" : "ATUAL_OU_FUTURA",
     });
 
     if (!resultado.ok) {
-      toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+      const mensagem =
+        "erroBanco" in resultado
+          ? msgErro(resultado.erroBanco)
+          : resultado.mensagem === "As atribuições selecionadas já existem"
+            ? "Esta atribuição já existe nesta vigência. Altere a seleção ou volte para a etapa anterior."
+            : resultado.mensagem;
+      toast.error(mensagem);
       return;
     }
 
-    if (repetidasExistentes + resultado.repetidas > 0) {
-      toast.info("As atribuições que já existiam foram mantidas sem duplicação");
+    if (resultado.repetidas > 0) {
+      toast.info("As atribuições repetidas não foram cadastradas");
     }
 
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
@@ -819,9 +808,12 @@ function CadastroUnicoPage() {
                   })}
                 </div>
 
-                <div className="flex flex-col gap-2 border-t pt-2.5 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs text-muted-foreground">{totalCombinacoes} atribuição(ões) selecionada(s)</p>
-                  <Button className="w-full sm:w-auto" onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaFluxoId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
+                <div className="flex flex-col-reverse gap-2 border-t pt-2.5 sm:flex-row sm:items-center sm:justify-between">
+                  <Button className="self-start" variant="ghost" size="sm" onClick={() => setEtapaNovo(3)}>Anterior</Button>
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+                    <p className="text-xs text-muted-foreground">{totalCombinacoes} atribuição(ões) selecionada(s)</p>
+                    <Button className="w-full sm:w-auto" onClick={() => void runAction(criarAssociacoes)} disabled={!vigenciaFluxoId || totalCombinacoes === 0}><Link2 className="h-4 w-4" /> Finalizar Cadastro Fluxo</Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
