@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
+import { Hint } from "@/components/Hint";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
@@ -190,9 +191,11 @@ function AtribuicoesPage() {
                                   <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-0.5">
-                                  <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
+                                  <Hint content="Excluir atribuição">
+                                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </Hint>
                                 </div>
                               </div>
                             ))}
