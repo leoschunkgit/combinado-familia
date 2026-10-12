@@ -15,7 +15,12 @@ export type RelatorioPdfTarefa = {
 
 export type RelatorioPdfFilho = {
   nome: string;
-  resumo: string;
+  resumo?: string | undefined;
+  mesada?: {
+    valor: string;
+    descontos: string;
+    saldo: string;
+  } | undefined;
   tarefas: RelatorioPdfTarefa[];
 };
 
@@ -170,7 +175,25 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
       doc.setTextColor(35, 45, 40);
       doc.text(filho.nome, MARGIN + 6, y + 7);
       y += 15;
-      escrever(filho.resumo, MARGIN + 6, CONTENT_WIDTH - 12, 8.5);
+
+      if (filho.mesada) {
+        const resumoGap = 3;
+        const resumoWidth = (CONTENT_WIDTH - 12 - resumoGap * 2) / 3;
+        const resumoX = MARGIN + 6;
+        const yResumo = y;
+
+        caixa("Mesada", filho.mesada.valor, resumoX, resumoWidth, "neutro");
+        const yMesada = y;
+        y = yResumo;
+        caixa("Descontos", `-${filho.mesada.descontos}`, resumoX + resumoWidth + resumoGap, resumoWidth, "ambar");
+        const yDescontos = y;
+        y = yResumo;
+        caixa("Saldo atual", filho.mesada.saldo, resumoX + (resumoWidth + resumoGap) * 2, resumoWidth, "verde");
+        const ySaldo = y;
+        y = Math.max(yMesada, yDescontos, ySaldo) + 1;
+      } else if (filho.resumo) {
+        escrever(filho.resumo, MARGIN + 6, CONTENT_WIDTH - 12, 8.5);
+      }
 
       for (const tarefa of filho.tarefas) {
         garantirEspaco(16);
