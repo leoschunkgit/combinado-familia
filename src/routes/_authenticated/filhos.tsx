@@ -188,8 +188,8 @@ function FilhosPage() {
           <div className="flex min-w-0 items-start justify-between gap-3">
             <p className="min-w-0 flex-1 truncate text-base font-semibold">{f.nome}</p>
             <div className="flex shrink-0 items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" onClick={() => setConfirmarExclusao(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}><Pencil className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(f.id)} aria-label={`Excluir ${f.nome}`}><Trash2 className="h-4 w-4" /></Button>
             </div>
           </div>
 

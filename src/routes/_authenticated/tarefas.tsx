@@ -238,8 +238,8 @@ function TarefasPage() {
                     <Hint content={t.nome}>
                       <p className="min-w-0 flex-1 truncate text-sm font-medium">{t.nome}</p>
                     </Hint>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}><Pencil className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                   </div>
                 ))}
               </div>

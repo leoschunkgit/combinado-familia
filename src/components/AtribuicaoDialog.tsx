@@ -359,7 +359,7 @@ export function AtribuicaoDialog({
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button variant="ghost" size="icon" onClick={() => setItens((atuais) => atuais.filter((_, j) => j !== i))} aria-label="Remover">
+                              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setItens((atuais) => atuais.filter((_, j) => j !== i))} aria-label="Remover">
                                 <X className="h-4 w-4" />
                               </Button>
                             </TableCell>
