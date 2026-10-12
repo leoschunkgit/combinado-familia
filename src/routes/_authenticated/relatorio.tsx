@@ -139,7 +139,7 @@ function RelatorioPage() {
   }
 
   return <>
-    <PageHeader title="Relatório / Histórico" description="Consulte o histórico completo por vigência, filho e tarefa e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
+    <PageHeader title="Histórico" description="Consulte o histórico completo por vigência, filho e tarefa e extraia um PDF organizado." icon={<FileText className="h-6 w-6" />} />
     <ResponsiveFilters
       desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
       onApply={() => setFiltro(f)}
