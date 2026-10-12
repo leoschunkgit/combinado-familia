@@ -106,9 +106,12 @@ function Index() {
 
   async function entrar(e: FormEvent) {
     e.preventDefault(); setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: login.email.trim(), password: login.senha });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: login.email.trim().toLowerCase(),
+      password: login.senha,
+    });
     setLoading(false);
-    if (error) { toast.error("Email ou senha incorretos, ou email ainda não confirmado."); return; }
+    if (error) { toast.error(msgErro(error)); return; }
     liberarBiometriaNestaExecucao();
     navigate({ to: "/inicio" });
   }
@@ -134,7 +137,7 @@ function Index() {
 
   async function recuperarSenha(e: FormEvent) {
     e.preventDefault();
-    const email = emailRecuperacao.trim();
+    const email = emailRecuperacao.trim().toLowerCase();
     if (!email || !z.string().email().safeParse(email).success) { toast.error("Informe um email válido."); return; }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectUrl("/redefinir-senha") });
@@ -150,7 +153,14 @@ function Index() {
     const parsed = cadastroSchema.safeParse(cad);
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos"); return; }
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.senha, options: { emailRedirectTo: getAuthRedirectUrl("/"), data: { nome: parsed.data.nome } } });
+    const { data, error } = await supabase.auth.signUp({
+      email: parsed.data.email.toLowerCase(),
+      password: parsed.data.senha,
+      options: {
+        emailRedirectTo: getAuthRedirectUrl("/"),
+        data: { nome: parsed.data.nome },
+      },
+    });
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
     // Com confirmações de email habilitadas, o Supabase pode devolver um usuário

@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Check, Eye, EyeOff, Home, X } from "lucide-react";
+import { Check, Eye, EyeOff, Home, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { msgErro } from "@/lib/db";
 
 const REGRAS_SENHA = [
   { id: "tam", label: "Pelo menos 6 caracteres", ok: (s: string) => s.length >= 6 },
@@ -36,18 +37,28 @@ function RedefinirSenha() {
   const [confirmacao, setConfirmacao] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessaoPronta, setSessaoPronta] = useState(false);
+  const [verificandoSessao, setVerificandoSessao] = useState(true);
 
   useEffect(() => {
     let ativo = true;
 
     const verificarSessao = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (ativo) setSessaoPronta(!!data.session);
+      const { data, error } = await supabase.auth.getSession();
+      if (!ativo) return;
+      setSessaoPronta(!error && !!data.session);
+      setVerificandoSessao(false);
     };
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!ativo) return;
-      if (event === "PASSWORD_RECOVERY" || session) setSessaoPronta(true);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        setSessaoPronta(!!session);
+        setVerificandoSessao(false);
+      }
+      if (event === "SIGNED_OUT") {
+        setSessaoPronta(false);
+        setVerificandoSessao(false);
+      }
     });
 
     void verificarSessao();
@@ -70,7 +81,7 @@ function RedefinirSenha() {
     setLoading(false);
 
     if (error) {
-      toast.error("Não foi possível redefinir a senha. Solicite um novo link de recuperação.");
+      toast.error(msgErro(error));
       return;
     }
 
@@ -89,10 +100,19 @@ function RedefinirSenha() {
 
         <h1 className="text-2xl font-bold">Redefinir senha</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {sessaoPronta ? "Escolha uma nova senha para sua conta." : "O link de recuperação é inválido, expirou ou já foi utilizado."}
+          {verificandoSessao
+            ? "Validando seu link de recuperação..."
+            : sessaoPronta
+              ? "Escolha uma nova senha para sua conta."
+              : "O link de recuperação é inválido, expirou ou já foi utilizado."}
         </p>
 
-        {sessaoPronta ? (
+        {verificandoSessao ? (
+          <div className="mt-6 flex items-center justify-center gap-2 rounded-lg border bg-muted/20 px-4 py-5 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Validando link...
+          </div>
+        ) : sessaoPronta ? (
           <form onSubmit={salvar} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nova-senha">Nova senha</Label>
