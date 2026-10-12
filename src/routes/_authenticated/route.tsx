@@ -67,7 +67,7 @@ const NAV_ITENS: NavItem[] = [
   { to: "/vigencias", label: "Vigências", icon: CalendarRange },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
   { to: "/link-filhos", label: "Gerar Link / Filho", icon: Link2 },
-  { to: "/relatorio", label: "Relatório / Histórico", icon: FileText },
+  { to: "/relatorio", label: "Histórico", icon: FileText },
 ];
 
 const ETAPAS = [
