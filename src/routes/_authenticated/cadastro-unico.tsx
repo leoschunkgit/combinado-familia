@@ -329,6 +329,34 @@ function CadastroUnicoPage() {
     toast.success("Vigência em andamento selecionada para este fluxo");
   }
 
+  function concluirCadastroFluxo(quantidadeAtribuicoes: number) {
+    if (!origemVigenciaFluxo) return;
+
+    setResumoConclusao({
+      filhos: filhosSelecionados.length,
+      tarefas: tarefasSelecionadas.length,
+      vigencia: origemVigenciaFluxo,
+      atribuicoes: quantidadeAtribuicoes,
+    });
+
+    setNomeFilho("");
+    setTemMesada(false);
+    setValorMesada("");
+    setFilhosSelecionados([]);
+    setFilhosNovosPendentes([]);
+    setNomeTarefa("");
+    setTarefasSelecionadas([]);
+    setTarefasNovasPendentes([]);
+    setVigenciaDraft(vigenciaInicial());
+    setModoPeriodoVigencia("DATAS");
+    setQuantidadeDiasVigencia("");
+    setInicioPeriodoDiasVigencia(null);
+    setVigenciaFluxoId(null);
+    setOrigemVigenciaFluxo(null);
+    setTarefasPorFilho({});
+    setEtapaNovo(1);
+  }
+
   async function criarAssociacoes() {
     if (!vigenciaFluxoId || !origemVigenciaFluxo) {
       toast.error("Defina a vigência antes das atribuições");
@@ -365,8 +393,25 @@ function CadastroUnicoPage() {
       return;
     }
 
+    const candidatosNovos = candidatos.filter(
+      (candidato) =>
+        !atribuicoes.some(
+          (existente) =>
+            Number(existente.id_vigencia) === Number(candidato.id_vigencia) &&
+            Number(existente.id_filho) === Number(candidato.id_filho) &&
+            Number(existente.id_tarefa) === Number(candidato.id_tarefa),
+        ),
+    );
+    const repetidasExistentes = candidatos.length - candidatosNovos.length;
+
+    if (candidatosNovos.length === 0) {
+      toast.info("As atribuições selecionadas já existem. O Cadastro Fluxo foi concluído sem duplicar dados.");
+      concluirCadastroFluxo(0);
+      return;
+    }
+
     const resultado = await cadastrarAtribuicoes({
-      candidatos,
+      candidatos: candidatosNovos,
       existentes: atribuicoes,
       vigencias,
       politica: origemVigenciaFluxo === "EXISTENTE" ? "SOMENTE_ATUAL" : "ATUAL_OU_FUTURA",
@@ -377,35 +422,12 @@ function CadastroUnicoPage() {
       return;
     }
 
-    if (resultado.repetidas > 0) {
-      toast.info("As atribuições repetidas não foram cadastradas");
+    if (repetidasExistentes + resultado.repetidas > 0) {
+      toast.info("As atribuições que já existiam foram mantidas sem duplicação");
     }
 
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-
-    setResumoConclusao({
-      filhos: filhosSelecionados.length,
-      tarefas: tarefasSelecionadas.length,
-      vigencia: origemVigenciaFluxo,
-      atribuicoes: resultado.quantidade,
-    });
-
-    setNomeFilho("");
-    setTemMesada(false);
-    setValorMesada("");
-    setFilhosSelecionados([]);
-    setFilhosNovosPendentes([]);
-    setNomeTarefa("");
-    setTarefasSelecionadas([]);
-    setTarefasNovasPendentes([]);
-    setVigenciaDraft(vigenciaInicial());
-    setModoPeriodoVigencia("DATAS");
-    setQuantidadeDiasVigencia("");
-    setInicioPeriodoDiasVigencia(null);
-    setVigenciaFluxoId(null);
-    setOrigemVigenciaFluxo(null);
-    setTarefasPorFilho({});
-    setEtapaNovo(1);
+    concluirCadastroFluxo(resultado.quantidade);
 
   }
 
