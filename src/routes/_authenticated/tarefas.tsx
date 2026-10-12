@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { msgErro, useFilhos, useTarefas, useVigencias, type Tarefa } from "@/lib/db";
+import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type Tarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
@@ -35,6 +35,7 @@ function TarefasPage() {
   const { data: tarefas = [] } = useTarefas();
   const { data: filhos = [] } = useFilhos();
   const { data: vigencias = [] } = useVigencias();
+  const { data: atribuicoes = [] } = useFilhoTarefas();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
   const [nome, setNome] = useState("");
   const [lote, setLote] = useState("");
@@ -43,6 +44,7 @@ function TarefasPage() {
   const [editando, setEditando] = useState<Tarefa | null>(null);
   const [nomeEdicao, setNomeEdicao] = useState("");
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
+  const [confirmarExclusaoTodas, setConfirmarExclusaoTodas] = useState(false);
   const [tarefasPosCadastro, setTarefasPosCadastro] = useState<Array<{ id: number; nome: string }>>([]);
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
@@ -129,6 +131,42 @@ function TarefasPage() {
     qc.invalidateQueries();
   }
 
+  async function excluirTodas() {
+    if (tarefas.length === 0) return;
+
+    const idsTarefas = tarefas.map((tarefa) => tarefa.id);
+    const { count, error: atribuicoesErro } = await supabase
+      .from("t_filho_tarefa")
+      .select("id", { count: "exact", head: true })
+      .in("id_tarefa", idsTarefas);
+
+    if (atribuicoesErro) {
+      toast.error(msgErro(atribuicoesErro));
+      return;
+    }
+
+    if ((count ?? 0) > 0) {
+      setConfirmarExclusaoTodas(false);
+      await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+      toast.error("Não é possível excluir todas: existe pelo menos uma tarefa com atribuição.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("t_tarefa")
+      .delete()
+      .in("id", idsTarefas);
+
+    if (error) {
+      toast.error(msgErro(error));
+      return;
+    }
+
+    setConfirmarExclusaoTodas(false);
+    await qc.invalidateQueries();
+    toast.success("Todas as tarefas foram excluídas");
+  }
+
   async function salvarEdicao(e: FormEvent) {
     e.preventDefault();
     if (!editando) return;
@@ -145,6 +183,7 @@ function TarefasPage() {
   const tarefasFiltradas = tarefas.filter((t) =>
     t.nome.toLocaleLowerCase().includes(busca.trim().toLocaleLowerCase())
   );
+  const podeExcluirTodas = tarefas.length > 0 && atribuicoes.length === 0;
 
   return (
     <>
@@ -152,7 +191,21 @@ function TarefasPage() {
         title="Tarefas"
         description="Crie as tarefas que poderão ser atribuídas aos filhos."
         icon={<ListTodo className="h-6 w-6" />}
-        action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+        action={
+          <div className="flex items-center gap-2">
+            {podeExcluirTodas && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setConfirmarExclusaoTodas(true)}
+              >
+                <Trash2 className="h-4 w-4" /> Excluir todas
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>
+          </div>
+        }
       />
       <div>
         <Card>
@@ -257,6 +310,24 @@ function TarefasPage() {
         vigenciaInicialId={vigenciaAtual?.id ?? null}
         tarefasIniciais={tarefasPosCadastro}
       />
+
+      <Dialog open={confirmarExclusaoTodas} onOpenChange={setConfirmarExclusaoTodas}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Excluir todas as tarefas?</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            <p>Tem certeza que deseja excluir todas as tarefas cadastradas?</p>
+            <p className="text-sm text-muted-foreground">
+              Esta opção só está disponível quando nenhuma tarefa possui atribuição. A exclusão não poderá ser desfeita.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmarExclusaoTodas(false)}>Cancelar</Button>
+            <Button type="button" variant="destructive" onClick={() => void runAction(excluirTodas)}>
+              <Trash2 className="h-4 w-4" /> Excluir todas
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
