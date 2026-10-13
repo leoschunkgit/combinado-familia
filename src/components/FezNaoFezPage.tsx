@@ -1330,72 +1330,74 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                         )}
 
                                         {registro && (
-                                          <div
-                                            className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ease-out ${
-                                              acoesAbertas.has(
-                                                `${tarefa.id}:${dataSelecionada}`,
-                                              )
-                                                ? "max-w-40 translate-x-0 opacity-100"
-                                                : "pointer-events-none max-w-0 translate-x-2 opacity-0"
-                                            }`}
-                                            aria-hidden={
-                                              !acoesAbertas.has(
-                                                `${tarefa.id}:${dataSelecionada}`,
-                                              )
-                                            }
-                                          >
-                                            {!bloqueada && (
-                                              <Hint
-                                                content={
-                                                  registro.tipo === "FEZ"
-                                                    ? "Alterar para Não fez"
-                                                    : "Alterar para Fez"
-                                                }
-                                              >
-                                                <Button
-                                                  variant="outline"
-                                                  size="icon"
-                                                  className="h-8 w-8 shrink-0 rounded-md"
-                                                  disabled={busy}
-                                                  aria-label={
+                                          <>
+                                            <div
+                                              className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ease-out ${
+                                                acoesAbertas.has(
+                                                  `${tarefa.id}:${dataSelecionada}`,
+                                                )
+                                                  ? "max-w-32 translate-x-0 opacity-100"
+                                                  : "pointer-events-none max-w-0 translate-x-2 opacity-0"
+                                              }`}
+                                              aria-hidden={
+                                                !acoesAbertas.has(
+                                                  `${tarefa.id}:${dataSelecionada}`,
+                                                )
+                                              }
+                                            >
+                                              {!bloqueada && (
+                                                <Hint
+                                                  content={
                                                     registro.tipo === "FEZ"
-                                                      ? "Alterar marcação para Não fez"
-                                                      : "Alterar marcação para Fez"
-                                                  }
-                                                  onClick={() =>
-                                                    abrirTrocaMarcacao(
-                                                      tarefa,
-                                                      totalNaoFez,
-                                                      dataSelecionada,
-                                                      registro,
-                                                    )
+                                                      ? "Alterar para Não fez"
+                                                      : "Alterar para Fez"
                                                   }
                                                 >
-                                                  <Pencil className="h-4 w-4" />
-                                                </Button>
-                                              </Hint>
-                                            )}
+                                                  <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-8 w-8 shrink-0 rounded-md"
+                                                    disabled={busy}
+                                                    aria-label={
+                                                      registro.tipo === "FEZ"
+                                                        ? "Alterar marcação para Não fez"
+                                                        : "Alterar marcação para Fez"
+                                                    }
+                                                    onClick={() =>
+                                                      abrirTrocaMarcacao(
+                                                        tarefa,
+                                                        totalNaoFez,
+                                                        dataSelecionada,
+                                                        registro,
+                                                      )
+                                                    }
+                                                  >
+                                                    <Pencil className="h-4 w-4" />
+                                                  </Button>
+                                                </Hint>
+                                              )}
 
-                                            {registro.tipo === "FEZ" && (
-                                              <Hint content="Ver bonificação">
-                                                <Button
-                                                  variant="outline"
-                                                  size="icon"
-                                                  className="h-8 w-8 shrink-0 rounded-md"
-                                                  disabled={busy}
-                                                  aria-label="Ver bonificação"
-                                                  onClick={() =>
-                                                    setBonificacaoInfo({
-                                                      tarefa,
-                                                      total: totalNaoFez,
-                                                      ocorrencia: registro,
-                                                    })
-                                                  }
-                                                >
-                                                  <Info className="h-4 w-4" />
-                                                </Button>
-                                              </Hint>
-                                            )}
+                                              {registro.tipo === "FEZ" && (
+                                                <Hint content="Ver bonificação">
+                                                  <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-8 w-8 shrink-0 rounded-md"
+                                                    disabled={busy}
+                                                    aria-label="Ver bonificação"
+                                                    onClick={() =>
+                                                      setBonificacaoInfo({
+                                                        tarefa,
+                                                        total: totalNaoFez,
+                                                        ocorrencia: registro,
+                                                      })
+                                                    }
+                                                  >
+                                                    <Info className="h-4 w-4" />
+                                                  </Button>
+                                                </Hint>
+                                              )}
+                                            </div>
 
                                             {!bloqueada && (
                                               <Checkbox
@@ -1414,7 +1416,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 aria-label={`Selecionar ${registro.tipo === "FEZ" ? "Fez" : "Não fez"} de ${formatarData(dataSelecionada)}`}
                                               />
                                             )}
-                                          </div>
+                                          </>
                                         )}
                                       </div>
                                     </div>
