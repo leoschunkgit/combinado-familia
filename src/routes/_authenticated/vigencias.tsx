@@ -297,7 +297,7 @@ function VigenciasPage() {
           return <div key={v.id} className="rounded-2xl border bg-card p-4">
             <div className="flex items-start justify-between gap-3">
               <VigenciaStatus vigencia={v} />
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                 <Hint content="Ver filhos vinculados">
                   <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setVigenciaInfoId(v.id)} aria-label="Ver filhos vinculados à vigência">
                     <Info className="h-4 w-4" />
