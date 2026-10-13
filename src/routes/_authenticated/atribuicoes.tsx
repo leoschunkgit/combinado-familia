@@ -193,7 +193,7 @@ function AtribuicoesPage() {
 
               <div
                 ref={vigenciasScrollRef}
-                className="flex min-w-0 flex-1 snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="flex min-w-0 flex-1 snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 role="tablist"
                 aria-label="Selecionar vigência"
               >
@@ -206,10 +206,10 @@ function AtribuicoesPage() {
                       role="tab"
                       aria-selected={selecionada}
                       onClick={() => setVigenciaSelecionadaId(item.id)}
-                      className="min-w-[150px] shrink-0 snap-start bg-transparent px-1 py-2 text-left transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[166px]"
+                      className={`min-w-[126px] shrink-0 snap-start rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[138px] ${selecionada ? "bg-primary/10" : "bg-transparent hover:bg-transparent"}`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`text-sm font-semibold tabular-nums ${selecionada ? "text-primary" : "text-foreground"}`}>
+                        <span className={`text-xs tabular-nums ${selecionada ? "font-bold text-primary" : "font-medium text-muted-foreground"}`}>
                           {periodoCurto(item)}
                         </span>
                         {selecionada && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
