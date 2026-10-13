@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Link2, Plus, Trash2 } from "lucide-react";
@@ -47,7 +47,7 @@ function AtribuicoesPage() {
   const [filtrosRascunho, setFiltrosRascunho] = useState({ filho: "all", tarefa: "all" });
   const [filtrosAplicados, setFiltrosAplicados] = useState({ filho: "all", tarefa: "all" });
 
-  const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
+  const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
   const vigenciaAtiva = vigenciasOrdenadas.find(
     (item) => situacaoVigencia(item) === "andamento",
   );
@@ -250,9 +250,7 @@ function AtribuicoesPage() {
         open={novoAberto}
         onOpenChange={setNovoAberto}
         mode="NORMAL"
-        vigenciaInicialId={
-          vigencia ? Number(vigencia) : (vigenciaAtiva?.id ?? null)
-        }
+        vigenciaInicialId={vigenciaSelecionadaId ?? vigenciaAtiva?.id ?? null}
       />
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
