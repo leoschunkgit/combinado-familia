@@ -75,12 +75,27 @@ const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 );
 SheetHeader.displayName = "SheetHeader";
 
-const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
-    {...props}
-  />
-);
+const SheetFooter = ({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const temDuasOuMaisAcoes = React.Children.toArray(children).length >= 2;
+
+  return (
+    <div
+      className={cn(
+        temDuasOuMaisAcoes
+          ? "flex flex-row items-center justify-end gap-2"
+          : "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 SheetFooter.displayName = "SheetFooter";
 
 const SheetTitle = React.forwardRef<
