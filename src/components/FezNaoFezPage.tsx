@@ -277,6 +277,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         dataBrasil(o.created_at) === data,
     );
 
+  const diaTemPendencia = (vigenciaId: number, data: string) => {
+    if (data >= hoje) return false;
+
+    const atribuicoesDaVigencia = atribuicoes.filter(
+      (tarefa) => tarefa.id_vigencia === vigenciaId,
+    );
+
+    return atribuicoesDaVigencia.some(
+      (tarefa) => !registroNaData(tarefa, data),
+    );
+  };
+
   const datasDaTarefa = (tarefa: FilhoTarefa, vigencia: Vigencia) => {
     if (modo === "pendentes" && !vigenciaEmAndamento(vigencia)) return [];
 
@@ -953,6 +965,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     {datasDoPeriodoDaVigencia(vigencia).map((data) => {
                       const selecionada = diasSelecionados[vigencia.id] === data;
                       const futura = data > hoje;
+                      const passada = data < hoje;
+                      const comPendencia = passada && diaTemPendencia(vigencia.id, data);
                       return (
                         <button
                           key={data}
@@ -969,11 +983,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             }))
                           }
                           className={`shrink-0 snap-start rounded-lg border px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                            selecionada
-                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                              : futura
-                                ? "cursor-not-allowed border-border bg-transparent text-muted-foreground/40"
-                                : "border-border bg-background text-foreground hover:border-primary/50"
+                            futura
+                              ? "cursor-not-allowed border-border bg-transparent text-muted-foreground/40"
+                              : selecionada && comPendencia
+                                ? "border-red-600 bg-red-600 text-white shadow-sm dark:border-red-500 dark:bg-red-600"
+                                : selecionada
+                                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                  : comPendencia
+                                    ? "border-red-300 bg-red-50 text-red-700 hover:border-red-400 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
+                                    : "border-border bg-background text-foreground hover:border-primary/50"
                           }`}
                         >
                           {formatarDataCurta(data)}
