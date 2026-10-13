@@ -6,7 +6,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/Hint";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -373,9 +373,23 @@ export function AtribuicaoDialog({
                   </div>
                 )}
 
-                <Button onClick={() => void runAction(() => salvarItens(itens, "ATUAL_OU_FUTURA"))} disabled={saving || itens.length === 0}>
-                  Cadastrar {itens.length > 0 && `(${itens.length})`}
-                </Button>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    disabled={saving}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => void runAction(() => salvarItens(itens, "ATUAL_OU_FUTURA"))}
+                    disabled={saving || itens.length === 0}
+                  >
+                    Cadastrar {itens.length > 0 && `(${itens.length})`}
+                  </Button>
+                </DialogFooter>
               </>
             ) : (
               <>
@@ -474,7 +488,7 @@ export function AtribuicaoDialog({
                   Este atalho usa somente a vigência em andamento. Para preparar atribuições de uma vigência futura, use a página Atribuições.
                 </p>
 
-                <div className="flex justify-end gap-2">
+                <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
                   <Button
                     type="button"
@@ -483,7 +497,7 @@ export function AtribuicaoDialog({
                   >
                     Cadastrar atribuição
                   </Button>
-                </div>
+                </DialogFooter>
               </>
             )}
           </CardContent>
