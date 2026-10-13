@@ -412,7 +412,7 @@ function CadastroUnicoPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Cadastro Fluxo" description="Cadastre todo fluxo na mesma tela" icon={<ListPlus className="h-6 w-6" />} />
+      <PageHeader title="Cadastro Fluxo" description="Cadastre tudo em sequência" icon={<ListPlus className="h-6 w-6" />} />
 
       <div className="space-y-2">
           {etapaNovo > 1 && (
