@@ -5,6 +5,8 @@ import {
   AlertTriangle,
   CalendarDays,
   CalendarRange,
+  ChevronLeft,
+  ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
   ClipboardCheck,
@@ -32,7 +34,6 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
-import { BrDateField } from "@/components/BrDateField";
 import { Hint } from "@/components/Hint";
 import {
   Select,
@@ -84,7 +85,6 @@ import {
 } from "@/lib/notificacoes";
 
 type ModoPagina = "todos" | "pendentes";
-type Visualizacao = "vigencia" | "data";
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 
 type FezDraft = {
@@ -152,9 +152,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
-  const [visualizacao, setVisualizacao] = useState<Visualizacao>("vigencia");
-  const [dataVisualizacao, setDataVisualizacao] = useState(hoje);
-  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all", data: "" });
+  const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string | null>>({});
+  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
@@ -179,31 +179,57 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const vigenciasEmAndamento = vigenciasOrdenadas.filter(
     (vigencia) => situacaoVigencia(vigencia, agora) === "andamento",
   );
-  const inicioMaisAntigoEmAndamento = vigenciasEmAndamento
-    .map((vigencia) => dataBrasil(vigencia.data_inicio))
-    .sort()[0];
-  const vigenciaFiltroRascunho =
-    f.vig === "all"
-      ? null
-      : vigenciasEmAndamento.find((vigencia) => vigencia.id === Number(f.vig)) ?? null;
-  const limitesFiltro = vigenciaFiltroRascunho
-    ? limitesDaVigenciaAteHoje(vigenciaFiltroRascunho, hoje)
-    : null;
-  const dataMinimaFiltro = limitesFiltro?.inicio ?? inicioMaisAntigoEmAndamento;
-  const dataMaximaFiltro = limitesFiltro?.fim ?? hoje;
-
   useEffect(() => {
-    if (dataVisualizacao > hoje) {
-      setDataVisualizacao(hoje);
-      return;
+    setDiasSelecionados((atual) => {
+      const proximo = { ...atual };
+      const idsAtivos = new Set(vigenciasEmAndamento.map((vigencia) => vigencia.id));
+      let mudou = false;
+
+      for (const id of Object.keys(proximo)) {
+        if (!idsAtivos.has(Number(id))) {
+          delete proximo[Number(id)];
+          mudou = true;
+        }
+      }
+
+      for (const vigencia of vigenciasEmAndamento) {
+        if (!(vigencia.id in proximo)) {
+          proximo[vigencia.id] = hoje;
+          mudou = true;
+        }
+      }
+
+      return mudou ? proximo : atual;
+    });
+  }, [hoje, vigenciasEmAndamento]);
+
+  function datasDoPeriodoDaVigencia(vigencia: Vigencia) {
+    const inicio = dataBrasil(vigencia.data_inicio);
+    const fim = dataBrasil(vigencia.data_fim);
+    const datas: string[] = [];
+    let cursor = new Date(`${inicio}T12:00:00-03:00`);
+    const limite = new Date(`${fim}T12:00:00-03:00`);
+
+    while (cursor.getTime() <= limite.getTime()) {
+      const ano = cursor.getFullYear();
+      const mes = String(cursor.getMonth() + 1).padStart(2, "0");
+      const dia = String(cursor.getDate()).padStart(2, "0");
+      datas.push(`${ano}-${mes}-${dia}`);
+      cursor.setDate(cursor.getDate() + 1);
     }
-    if (
-      inicioMaisAntigoEmAndamento &&
-      dataVisualizacao < inicioMaisAntigoEmAndamento
-    ) {
-      setDataVisualizacao(hoje);
-    }
-  }, [dataVisualizacao, hoje, inicioMaisAntigoEmAndamento]);
+
+    return datas;
+  }
+
+  function rolarDias(vigenciaId: number, direcao: "esquerda" | "direita") {
+    const area = diasScrollRefs.current[vigenciaId];
+    if (!area) return;
+    const distancia = Math.max(area.clientWidth * 0.75, 220);
+    area.scrollBy({
+      left: direcao === "direita" ? distancia : -distancia,
+      behavior: "smooth",
+    });
+  }
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -230,8 +256,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     const datas = [...new Set([...datasGeradas, ...datasComRegistro])].sort(
       (a, b) => a.localeCompare(b),
     );
-    const dataSelecionada =
-      visualizacao === "data" ? dataVisualizacao : filtro.data;
+    const dataSelecionada = diasSelecionados[vigencia.id] ?? null;
     const datasFiltradas = dataSelecionada
       ? datas.filter((data) => data === dataSelecionada)
       : datas;
@@ -265,8 +290,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
       if (
         filtro.resultado !== "all" ||
-        filtro.data ||
-        visualizacao === "data"
+        diasSelecionados[vigencia.id]
       ) return temDatasVisiveis;
       return modo === "todos" || temDatasVisiveis;
     });
@@ -728,8 +752,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     filtro.vig !== "all" ||
     filtro.filho !== "all" ||
     filtro.tarefa !== "all" ||
-    filtro.resultado !== "all" ||
-    (visualizacao === "vigencia" && Boolean(filtro.data));
+    filtro.resultado !== "all";
   const vazio =
     vigenciasEmAndamento.length === 0
       ? "Não há vigência em andamento no momento."
@@ -746,9 +769,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         description={
           modo === "pendentes"
             ? "Marque rapidamente os dias que ainda estão sem Fez ou Não fez."
-            : visualizacao === "data"
-              ? "Veja e marque as tarefas dos filhos na data selecionada."
-              : "Acompanhe e marque cada dia das tarefas, sem precisar escolher a data."
+            : "Veja e marque as tarefas dos filhos na data selecionada."
         }
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
@@ -758,7 +779,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         onApply={() => setFiltro(f)}
         hasActiveFilters={filtrosAtivos}
         onClear={() => {
-          const limpos = { vig: "all", filho: "all", tarefa: "all", resultado: "all", data: "" };
+          const limpos = { vig: "all", filho: "all", tarefa: "all", resultado: "all" };
           setF(limpos);
           setFiltro(limpos);
         }}
@@ -767,20 +788,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             <Pick
               label="Vigência"
               value={f.vig}
-              onChange={(vig) => {
-                const selecionada =
-                  vig === "all"
-                    ? null
-                    : vigenciasEmAndamento.find((item) => item.id === Number(vig)) ?? null;
-                const limites = selecionada
-                  ? limitesDaVigenciaAteHoje(selecionada, hoje)
-                  : null;
-                const min = limites?.inicio ?? inicioMaisAntigoEmAndamento;
-                const max = limites?.fim ?? hoje;
-                const data =
-                  f.data && ((min && f.data < min) || f.data > max) ? "" : f.data;
-                setF({ ...f, vig, data });
-              }}
+              onChange={(vig) => setF({ ...f, vig })}
               allLabel="Todas"
               options={vigenciasEmAndamento.map((vigencia) => ({
                 value: String(vigencia.id),
@@ -820,18 +828,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 ]}
               />
             )}
-            {visualizacao === "vigencia" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="filtro-fez-nao-fez-data">Data</Label>
-                <BrDateField
-                  id="filtro-fez-nao-fez-data"
-                  value={f.data}
-                  onChange={(data) => setF({ ...f, data })}
-                  {...(dataMinimaFiltro ? { min: dataMinimaFiltro } : {})}
-                  max={dataMaximaFiltro}
-                />
-              </div>
-            )}
           </>
         )}
       />
@@ -846,11 +842,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       </div>
 
       {!isLoading && grupos.length === 0 && (
-        <EmptyState>
-          {visualizacao === "data" && vigenciasEmAndamento.length > 0
-            ? `Nenhuma tarefa para ${formatarData(dataVisualizacao)} com os filtros selecionados.`
-            : vazio}
-        </EmptyState>
+        <EmptyState>{vazio}</EmptyState>
       )}
 
       <div className="space-y-8">
@@ -872,37 +864,74 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 border-t pt-3 pb-1 sm:flex-row sm:items-end sm:justify-between">
-                <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
-                  <Checkbox
-                    checked={visualizacao === "data"}
-                    onCheckedChange={(checked) => {
-                      if (checked === true) {
-                        setVisualizacao("data");
-                        setDataVisualizacao(hoje);
-                        setF((atual) => ({ ...atual, data: "" }));
-                        setFiltro((atual) => ({ ...atual, data: "" }));
-                      } else {
-                        setVisualizacao("vigencia");
-                      }
-                    }}
-                    aria-label="Visualizar por data"
-                  />
-                  Visualizar por data
-                </label>
-
-                {visualizacao === "data" && (
-                  <div className="w-full space-y-1.5 sm:w-56">
-                    <Label htmlFor={`visualizacao-fez-nao-fez-data-${vigencia.id}`}>Data</Label>
-                    <BrDateField
-                      id={`visualizacao-fez-nao-fez-data-${vigencia.id}`}
-                      value={dataVisualizacao}
-                      onChange={setDataVisualizacao}
-                      min={limitesDaVigenciaAteHoje(vigencia, hoje).inicio}
-                      max={limitesDaVigenciaAteHoje(vigencia, hoje).fim}
-                    />
+              <div className="border-t pt-3 pb-1">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dias da vigência</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Selecione uma data. Toque novamente na selecionada para mostrar todos os dias.
+                    </p>
                   </div>
-                )}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => rolarDias(vigencia.id, "esquerda")}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label="Ver dias anteriores"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+
+                  <div
+                    ref={(elemento) => {
+                      diasScrollRefs.current[vigencia.id] = elemento;
+                    }}
+                    className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    role="tablist"
+                    aria-label={`Selecionar dia da vigência ${fmtVigencia(vigencia)}`}
+                  >
+                    {datasDoPeriodoDaVigencia(vigencia).map((data) => {
+                      const selecionada = diasSelecionados[vigencia.id] === data;
+                      const futura = data > hoje;
+                      return (
+                        <button
+                          key={data}
+                          type="button"
+                          role="tab"
+                          aria-selected={selecionada}
+                          disabled={futura}
+                          onClick={() =>
+                            !futura &&
+                            setDiasSelecionados((atual) => ({
+                              ...atual,
+                              [vigencia.id]: selecionada ? null : data,
+                            }))
+                          }
+                          className={`shrink-0 snap-start rounded-lg border px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                            selecionada
+                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                              : futura
+                                ? "cursor-not-allowed border-border bg-transparent text-muted-foreground/40"
+                                : "border-border bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {formatarData(data).slice(0, 8)}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => rolarDias(vigencia.id, "direita")}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label="Ver próximos dias"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4">
