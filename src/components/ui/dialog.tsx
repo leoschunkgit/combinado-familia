@@ -59,12 +59,27 @@ const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 );
 DialogHeader.displayName = "DialogHeader";
 
-const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end", className)}
-    {...props}
-  />
-);
+const DialogFooter = ({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const temDuasOuMaisAcoes = React.Children.toArray(children).length >= 2;
+
+  return (
+    <div
+      className={cn(
+        temDuasOuMaisAcoes
+          ? "flex flex-row items-center justify-end gap-2 pt-1"
+          : "flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 DialogFooter.displayName = "DialogFooter";
 
 const DialogTitle = React.forwardRef<
