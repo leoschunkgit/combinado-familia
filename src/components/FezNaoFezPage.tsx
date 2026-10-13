@@ -418,6 +418,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         .filter((grupo) => grupo.tarefas.length > 0),
     }))
     .filter((grupo) => grupo.filhos.length > 0);
+  const assinaturaGruposFilhos = grupos
+    .map(
+      ({ vigencia, filhos: gruposFilhos }) =>
+        `${vigencia.id}:${gruposFilhos.map(({ filho }) => filho.id).join(",")}`,
+    )
+    .join("|");
 
   useEffect(() => {
     setFilhosSelecionados((atual) => {
@@ -444,11 +450,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
       return mudou ? proximo : atual;
     });
-  }, [grupos]);
+  }, [assinaturaGruposFilhos]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      for (const { vigencia } of grupos) {
+      for (const vigencia of vigenciasEmAndamento) {
         const filhoSelecionado = filhosSelecionados[vigencia.id];
         const area = filhosScrollRefs.current[vigencia.id];
         if (!filhoSelecionado || !area) continue;
@@ -468,7 +474,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [filhosSelecionados, grupos]);
+  }, [filhosSelecionados, vigenciasEmAndamento]);
 
   useEffect(() => {
     if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
