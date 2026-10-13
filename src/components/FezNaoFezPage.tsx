@@ -1069,7 +1069,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                       >
                         <button
                           type="button"
-                          className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3 bg-muted/35 px-4 py-3 text-left sm:flex sm:items-center sm:justify-between"
+                          className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 bg-muted/35 px-4 py-3 text-left"
                           onClick={() =>
                             setFilhosAbertos((atual) => ({
                               ...atual,
@@ -1077,20 +1077,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             }))
                           }
                         >
-                          <div className="flex min-w-0 items-center gap-3">
-                            <CollapseChevron open={filhoAberto} />
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                Filho
-                              </p>
-                              <h3
-                                className={`truncate ${uiTypography.secondaryTitleStrong}`}
-                              >
-                                {filho.nome}
-                              </h3>
-                            </div>
+                          <CollapseChevron open={filhoAberto} className="mt-0.5" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Filho
+                            </p>
+                            <h3
+                              className={`mt-0.5 truncate ${uiTypography.secondaryTitleStrong}`}
+                            >
+                              {filho.nome}
+                            </h3>
                           </div>
-                          <div className="flex shrink-0 flex-col items-end gap-0.5 text-sm">
+                          <div className="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-sm">
                             {modo === "pendentes" && (
                               <span className="font-semibold text-primary tabular-nums">
                                 {totalPendencias}{" "}
@@ -1113,7 +1111,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                         </button>
 
                         {filhoAberto && (
-                          <div className="border-t p-3 sm:p-4">
+                          <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
                             {comDesconto ? (
                               <div className="mb-4 grid grid-cols-3 overflow-hidden rounded-lg border bg-muted/20 text-sm tabular-nums">
                                 <div className="px-3 py-2.5">
@@ -1138,8 +1136,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               </div>
                             ) : null}
 
-                            <div className="overflow-hidden rounded-xl border bg-card">
-                              <div className="flex flex-col gap-2 border-b bg-muted/15 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+                            <div className="bg-white dark:bg-background">
+                              <div className="flex flex-col gap-2 border-b border-border/60 bg-transparent px-1 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex min-w-0 items-baseline gap-2">
                                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                     Tarefa(s)
@@ -1206,13 +1204,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 )}
                               </div>
 
-                              <div className="divide-y">
+                              <div className="divide-y divide-border/60">
                                 {tarefasDoFilho.map((tarefa) => {
                                   const registro = registroNaData(tarefa, dataSelecionada);
                                   return (
                                     <div
                                       key={tarefa.id}
-                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 sm:px-4"
+                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-1 py-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
                                         <p className="break-words text-sm font-medium leading-tight">
