@@ -1433,7 +1433,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                           )}
                                       </div>
 
-                                      <div className="flex shrink-0 items-center justify-end gap-2">
+                                      <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-2">
                                         {!registro && !bloqueada && (
                                           <>
                                             <Button
@@ -1474,7 +1474,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                         {registro && (
                                           <>
                                             <div
-                                              className={`flex w-[72px] shrink-0 items-center justify-end gap-2 overflow-hidden transition-all duration-300 ease-out ${
+                                              className={`flex w-[76px] shrink-0 items-center justify-end gap-3 overflow-hidden transition-all duration-300 ease-out sm:w-[72px] sm:gap-2 ${
                                                 acoesAbertas.has(
                                                   `${tarefa.id}:${dataSelecionada}`,
                                                 )
