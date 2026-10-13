@@ -1196,7 +1196,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                       >
                         <button
                           type="button"
-                          className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 bg-white px-4 py-3 text-left dark:bg-background"
+                          className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 bg-white px-4 py-3 text-left dark:bg-background"
                           onClick={() =>
                             setFilhosAbertos((atual) => ({
                               ...atual,
@@ -1204,7 +1204,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             }))
                           }
                         >
-                          <CollapseChevron open={filhoAberto} className="mt-0.5" />
+                          <CollapseChevron open={filhoAberto} />
                           <div className="min-w-0">
                             <h3
                               className={`truncate tabular-nums ${uiTypography.secondaryTitleStrong}`}
@@ -1212,7 +1212,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               {formatarData(dataSelecionada)}
                             </h3>
                           </div>
-                          <div className="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-sm">
+                          <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-sm">
                             {modo === "pendentes" && (
                               <span className="font-semibold text-primary tabular-nums">
                                 {totalPendencias}{" "}
