@@ -263,7 +263,7 @@ function VigenciasPage() {
   return <>
     <PageHeader
       title="Vigências"
-      description="Defina o período, o limite de “Não fez” e o desconto da mesada."
+      description="Defina os períodos"
       icon={<CalendarRange className="h-6 w-6" />}
       action={
         <div className="flex items-center gap-1.5 sm:gap-2">
