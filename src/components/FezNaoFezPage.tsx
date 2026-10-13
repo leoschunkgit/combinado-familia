@@ -862,9 +862,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               <div className="flex min-w-0 items-start gap-2">
                 <CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary" />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Vigência
-                  </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className={uiTypography.secondaryTitleStrongLargeDesktop}>
                       {fmtVigencia(vigencia)}
