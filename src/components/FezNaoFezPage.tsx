@@ -893,8 +893,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       setConfirmarExcluirSelecionadas(null);
       toast.success(
         ids.length === 1
-          ? "Marcação excluída"
-          : "Marcações selecionadas excluídas",
+          ? "Marcação desfeita"
+          : "Marcações selecionadas desfeitas",
       );
     } catch (error) {
       toast.error(
@@ -1299,12 +1299,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                         }
                                       >
                                         <Trash2 className="h-4 w-4" />
-                                        Excluir ({selecionadasDoFilho.length})
+                                        Desfazer marcação ({selecionadasDoFilho.length})
                                       </Button>
                                     )}
 
                                     <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
-                                      <span>Excluir tudo</span>
+                                      <span>Desfazer marcação</span>
                                       <Checkbox
                                         className={checkboxExclusaoClass}
                                         checked={
@@ -1878,11 +1878,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Excluir marcações selecionadas?</DialogTitle>
+            <DialogTitle>Desfazer marcações selecionadas?</DialogTitle>
             <DialogDescription>
               {confirmarExcluirSelecionadas?.tarefa.t_tarefa?.nome} ·{" "}
               {confirmarExcluirSelecionadas?.ids.length ?? 0} marcação(ões)
-              serão excluídas. Os dias que ficarem sem Fez ou Não fez voltarão
+              serão desfeitas. Os dias que ficarem sem Fez ou Não fez voltarão
               para as pendências.
             </DialogDescription>
           </DialogHeader>
