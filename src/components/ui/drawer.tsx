@@ -66,7 +66,7 @@ const DrawerFooter = ({
     <div
       className={cn(
         temDuasOuMaisAcoes
-          ? "mt-auto flex flex-row items-center justify-end gap-2 p-4 sm:flex-col sm:items-stretch sm:justify-start"
+          ? "mt-auto flex flex-row items-center justify-end gap-2 p-4"
           : "mt-auto flex flex-col gap-2 p-4",
         className,
       )}
