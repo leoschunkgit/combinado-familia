@@ -1068,19 +1068,21 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               [vigencia.id]: data,
                             }))
                           }
-                          className={`shrink-0 snap-start rounded-lg border px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                          className={`relative shrink-0 snap-start rounded-lg border px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                             futura
                               ? "cursor-not-allowed border-border bg-transparent text-muted-foreground/40"
-                              : selecionada && comPendencia
-                                ? "border-red-600 bg-red-600 text-white shadow-sm dark:border-red-500 dark:bg-red-600"
-                                : selecionada
-                                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                                  : comPendencia
-                                    ? "border-red-300 bg-red-50 text-red-700 hover:border-red-400 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
-                                    : "border-border bg-background text-foreground hover:border-primary/50"
+                              : selecionada
+                                ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
+                                : "border-border bg-background text-foreground hover:border-primary/50"
                           }`}
                         >
                           {formatarDataCurta(data)}
+                          {comPendencia && (
+                            <span
+                              aria-hidden="true"
+                              className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-red-500"
+                            />
+                          )}
                         </button>
                       );
                     })}
