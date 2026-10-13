@@ -1352,9 +1352,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                         <p
                                           className={`break-words text-sm font-medium leading-tight ${
                                             registro
-                                              ? registro.tipo === "FEZ"
-                                                ? "text-green-700 dark:text-green-300"
-                                                : "text-red-700 dark:text-red-300"
+                                              ? `w-36 shrink-0 sm:w-56 lg:w-72 ${
+                                                  registro.tipo === "FEZ"
+                                                    ? "text-green-700 dark:text-green-300"
+                                                    : "text-red-700 dark:text-red-300"
+                                                }`
                                               : ""
                                           }`}
                                         >
@@ -1469,12 +1471,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                         {registro && (
                                           <>
                                             <div
-                                              className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ease-out ${
+                                              className={`flex w-[72px] shrink-0 items-center justify-end gap-2 overflow-hidden transition-all duration-300 ease-out ${
                                                 acoesAbertas.has(
                                                   `${tarefa.id}:${dataSelecionada}`,
                                                 )
-                                                  ? "max-w-32 translate-x-0 opacity-100"
-                                                  : "pointer-events-none max-w-0 translate-x-2 opacity-0"
+                                                  ? "translate-x-0 opacity-100"
+                                                  : "pointer-events-none translate-x-2 opacity-0"
                                               }`}
                                               aria-hidden={
                                                 !acoesAbertas.has(
