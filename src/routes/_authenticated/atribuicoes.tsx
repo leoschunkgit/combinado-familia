@@ -186,7 +186,7 @@ function AtribuicoesPage() {
                         <div className="border-t bg-muted/10 p-2.5 sm:p-3">
                           <div className="space-y-2">
                             {atribuicoesFilho.map((e) => (
-                              <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
+                              <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-white px-3 py-2.5 dark:bg-card sm:px-4 sm:py-3">
                                 <div className="min-w-0">
                                   <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
                                 </div>
