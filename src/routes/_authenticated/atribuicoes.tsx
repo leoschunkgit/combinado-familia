@@ -147,12 +147,12 @@ function AtribuicoesPage() {
       ) : filtradas.length === 0 ? (
         <EmptyState>Nenhuma atribuição encontrada para estes filtros.</EmptyState>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6 md:space-y-7">
           {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
             const totalVigencia = gruposFilhos.reduce((soma, grupo) => soma + grupo.atribuicoes.length, 0);
             return (
-              <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card">
-                <div className="flex w-full items-center justify-between gap-3 border-b bg-primary/5 px-4 py-3 text-left sm:px-5">
+              <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                <div className="flex w-full items-center justify-between gap-4 border-b bg-primary/5 px-5 py-4 text-left sm:px-6 sm:py-5">
                   <div className="flex min-w-0 items-start gap-3">
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-wide text-primary">Vigência</p>
@@ -167,12 +167,12 @@ function AtribuicoesPage() {
                   </span>
                 </div>
 
-                <div className="divide-y">
+                <div className="space-y-3 p-3 sm:p-4">
                   {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
                     const chave = `${vigencia.id}|${filhoItem.id}`;
                     return (
-                      <div key={chave}>
-                        <div className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5">
+                      <div key={chave} className="overflow-hidden rounded-xl border bg-background">
+                        <div className="flex w-full items-center justify-between gap-4 bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
                           <div className="flex min-w-0 items-center gap-3">
                             <div className="min-w-0">
                               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
@@ -183,10 +183,10 @@ function AtribuicoesPage() {
                             {atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}
                           </span>
                         </div>
-                        <div className="border-t bg-muted/10 px-2 py-1.5 sm:px-3">
-                          <div className="divide-y rounded-md border bg-background">
+                        <div className="border-t bg-muted/10 p-2.5 sm:p-3">
+                          <div className="space-y-2">
                             {atribuicoesFilho.map((e) => (
-                              <div key={e.id} className="grid min-h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-1.5 sm:px-3">
+                              <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-background px-3 py-2.5 sm:px-4 sm:py-3">
                                 <div className="min-w-0">
                                   <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
                                 </div>
