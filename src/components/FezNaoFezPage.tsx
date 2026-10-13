@@ -14,6 +14,7 @@ import {
   ThumbsDown,
   ThumbsUp,
   Trash2,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -1392,15 +1393,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 });
                                               }}
                                             >
-                                              <ChevronRight
-                                                className={`h-4 w-4 transition-transform ${
-                                                  acoesAbertas.has(
-                                                    `${tarefa.id}:${dataSelecionada}`,
-                                                  )
-                                                    ? "rotate-90"
-                                                    : ""
-                                                }`}
-                                              />
+                                              {acoesAbertas.has(
+                                                `${tarefa.id}:${dataSelecionada}`,
+                                              ) ? (
+                                                <X className="h-4 w-4" />
+                                              ) : (
+                                                <ChevronRight className="h-4 w-4" />
+                                              )}
                                             </button>
                                           </>
                                         )}
