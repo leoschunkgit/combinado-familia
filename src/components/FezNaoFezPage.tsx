@@ -1328,7 +1328,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="text-destructive hover:text-destructive"
+                                        className="text-muted-foreground hover:text-foreground"
                                         disabled={busy}
                                         onClick={() =>
                                           setConfirmarExcluirSelecionadas({
