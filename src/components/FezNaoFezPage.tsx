@@ -129,7 +129,7 @@ type FezNaoFezPageProps = {
 };
 
 const checkboxExclusaoClass =
-  "h-5 w-5 rounded-md border-2 border-primary/50 bg-background shadow-sm transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary";
+  "h-5 w-5 rounded-md border-2 border-destructive/50 bg-background shadow-sm transition-colors focus-visible:ring-destructive/30 data-[state=checked]:border-destructive data-[state=checked]:bg-destructive data-[state=checked]:text-destructive-foreground";
 
 function formatarData(data: string) {
   return data.split("-").reverse().join("/");
