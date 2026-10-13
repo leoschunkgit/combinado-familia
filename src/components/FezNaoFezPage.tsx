@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   AlertTriangle,
-  CalendarDays,
   CalendarRange,
   ChevronLeft,
   ChevronRight,
@@ -975,6 +974,20 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     const penalizado =
                       !comDesconto &&
                       totalNaoFez >= vigencia.qtd_ocorrencia;
+                    const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
+                    const bloqueada = !vigenciaEmAndamento(vigencia);
+                    const registrosDoDia = tarefasDoFilho
+                      .map((tarefa) => ({
+                        tarefa,
+                        registro: registroNaData(tarefa, dataSelecionada),
+                      }))
+                      .filter(
+                        (item): item is { tarefa: FilhoTarefa; registro: Ocorrencia } =>
+                          Boolean(item.registro),
+                      );
+                    const selecionadasDoFilho = registrosDoDia.filter(({ registro }) =>
+                      selecionadas.has(registro.id),
+                    );
 
                     return (
                       <article
@@ -1052,336 +1065,236 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               </div>
                             ) : null}
 
-                            <div className="space-y-4">
-                              {tarefasDoFilho.map((tarefa) => {
-                                const datas = datasDaTarefa(tarefa, vigencia);
-                                const datasVisiveis = new Set(datas);
-                                const registros = ocorrenciasDaTarefa(tarefa).filter((registro) =>
-                                  datasVisiveis.has(dataBrasil(registro.created_at)),
-                                );
-                                const bloqueada = !vigenciaEmAndamento(vigencia);
-                                const tarefaAberta =
-                                  tarefasAbertas[tarefa.id] === true;
-                                const selecionadasDaTarefa = registros.filter(
-                                  (registro) => selecionadas.has(registro.id),
-                                );
+                            <div className="overflow-hidden rounded-xl border bg-card">
+                              <div className="flex flex-col gap-2 border-b bg-muted/15 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+                                <div className="flex min-w-0 items-baseline gap-2">
+                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Tarefa(s)
+                                  </p>
+                                  <span className="text-muted-foreground">·</span>
+                                  <p className="text-sm font-semibold tabular-nums">
+                                    {formatarData(dataSelecionada)}
+                                  </p>
+                                </div>
 
-                                return (
-                                  <section
-                                    key={tarefa.id}
-                                    className="overflow-hidden rounded-xl border bg-card"
-                                  >
-                                    <div className="flex flex-col gap-2 border-b bg-transparent px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-                                      <button
-                                        type="button"
-                                        className="flex min-w-0 items-center gap-2 text-left"
+                                {!bloqueada && registrosDoDia.length > 0 && (
+                                  <div className="flex w-full items-center gap-2 sm:w-auto">
+                                    {selecionadasDoFilho.length > 0 && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-destructive hover:text-destructive"
+                                        disabled={busy}
                                         onClick={() =>
-                                          setTarefasAbertas((atual) => ({
-                                            ...atual,
-                                            [tarefa.id]: !tarefaAberta,
-                                          }))
+                                          setConfirmarExcluirSelecionadas({
+                                            tarefa: selecionadasDoFilho[0].tarefa,
+                                            ids: selecionadasDoFilho.map(({ registro }) => registro.id),
+                                          })
                                         }
-                                        aria-expanded={tarefaAberta}
                                       >
-                                        <CollapseChevron
-                                          open={tarefaAberta}
-                                          className="shrink-0"
-                                        />
-                                        <div className="min-w-0">
-                                          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Tarefa
-                                          </p>
-                                          <p className="break-words font-semibold">
-                                            {tarefa.t_tarefa?.nome}
-                                          </p>
-                                        </div>
-                                      </button>
+                                        <Trash2 className="h-4 w-4" />
+                                        Excluir ({selecionadasDoFilho.length})
+                                      </Button>
+                                    )}
 
-                                      {tarefaAberta && !bloqueada && registros.length > 0 && (
-                                        <div className="flex w-full items-center gap-2 sm:w-auto">
-                                          {selecionadasDaTarefa.length > 0 && (
+                                    <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
+                                      <span>Selecionar tudo</span>
+                                      <Checkbox
+                                        checked={
+                                          registrosDoDia.every(({ registro }) =>
+                                            selecionadas.has(registro.id),
+                                          )
+                                            ? true
+                                            : registrosDoDia.some(({ registro }) =>
+                                                  selecionadas.has(registro.id),
+                                                )
+                                              ? "indeterminate"
+                                              : false
+                                        }
+                                        onCheckedChange={(checked) =>
+                                          setSelecionadas((atual) => {
+                                            const proximo = new Set(atual);
+                                            if (checked === true) {
+                                              registrosDoDia.forEach(({ registro }) =>
+                                                proximo.add(registro.id),
+                                              );
+                                            } else {
+                                              registrosDoDia.forEach(({ registro }) =>
+                                                proximo.delete(registro.id),
+                                              );
+                                            }
+                                            return proximo;
+                                          })
+                                        }
+                                        aria-label={`Selecionar todas as marcações de ${formatarData(dataSelecionada)}`}
+                                      />
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="divide-y">
+                                {tarefasDoFilho.map((tarefa) => {
+                                  const registro = registroNaData(tarefa, dataSelecionada);
+                                  return (
+                                    <div
+                                      key={tarefa.id}
+                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 sm:px-4"
+                                    >
+                                      <div className="flex min-w-0 items-center gap-2">
+                                        <p className="break-words text-sm font-medium leading-tight">
+                                          {tarefa.t_tarefa?.nome}
+                                        </p>
+                                        {registro &&
+                                          registro.tipo !== "FEZ" &&
+                                          !comDesconto &&
+                                          penalizadas.has(registro.id) && (
+                                            <span
+                                              className="inline-flex shrink-0 text-destructive"
+                                              role="img"
+                                              aria-label="Limite de penalidade atingido"
+                                            >
+                                              <AlertTriangle className="h-4 w-4" />
+                                            </span>
+                                          )}
+                                      </div>
+
+                                      <div className="flex shrink-0 items-center justify-end gap-2">
+                                        {!registro && !bloqueada && (
+                                          <>
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className="text-destructive hover:text-destructive"
+                                              className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoFezClass}`}
                                               disabled={busy}
                                               onClick={() =>
-                                                setConfirmarExcluirSelecionadas({
+                                                abrirFez(
                                                   tarefa,
-                                                  ids: selecionadasDaTarefa.map(
-                                                    (registro) => registro.id,
-                                                  ),
-                                                })
-                                              }
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                              Excluir (
-                                              {selecionadasDaTarefa.length})
-                                            </Button>
-                                          )}
-
-                                          <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
-                                            <span>Selecionar tudo</span>
-                                            <Checkbox
-                                              checked={
-                                                registros.every((registro) =>
-                                                  selecionadas.has(registro.id),
+                                                  totalNaoFez,
+                                                  dataSelecionada,
                                                 )
-                                                  ? true
-                                                  : registros.some((registro) =>
-                                                        selecionadas.has(
-                                                          registro.id,
-                                                        ),
-                                                      )
-                                                    ? "indeterminate"
-                                                    : false
-                                              }
-                                              onCheckedChange={(checked) =>
-                                                setSelecionadas((atual) => {
-                                                  const proximo = new Set(atual);
-                                                  if (checked === true) {
-                                                    registros.forEach(
-                                                      (registro) =>
-                                                        proximo.add(registro.id),
-                                                    );
-                                                  } else {
-                                                    registros.forEach(
-                                                      (registro) =>
-                                                        proximo.delete(
-                                                          registro.id,
-                                                        ),
-                                                    );
-                                                  }
-                                                  return proximo;
-                                                })
-                                              }
-                                              aria-label={`Selecionar todas as marcações de ${tarefa.t_tarefa?.nome ?? "tarefa"}`}
-                                            />
-                                          </label>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    {tarefaAberta && (datas.length === 0 ? (
-                                      <p className="px-4 py-4 text-sm text-muted-foreground">
-                                        {modo === "pendentes"
-                                          ? "Nenhuma pendência nesta tarefa."
-                                          : "Ainda não há datas para exibir nesta vigência."}
-                                      </p>
-                                    ) : (
-                                      <div className="divide-y">
-                                        {datas.map((data) => {
-                                          const registro = registroNaData(
-                                            tarefa,
-                                            data,
-                                          );
-                                          return (
-                                            <div
-                                              key={data}
-                                              className={
-                                                registro
-                                                  ? "grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-3 py-3 sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:px-4"
-                                                  : "flex items-center justify-between gap-2 px-3 py-3 sm:grid sm:grid-cols-[8.75rem_minmax(0,1fr)_auto] sm:px-4"
                                               }
                                             >
-                                              <div
+                                              <ThumbsUp className="h-4 w-4 text-green-600" />
+                                              Fez
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
+                                              disabled={busy}
+                                              onClick={() =>
+                                                solicitarNaoFez(
+                                                  tarefa,
+                                                  totalNaoFez,
+                                                  dataSelecionada,
+                                                )
+                                              }
+                                            >
+                                              <ThumbsDown className="h-4 w-4 text-red-600" />
+                                              Não fez
+                                            </Button>
+                                          </>
+                                        )}
+
+                                        {registro && (
+                                          <>
+                                            <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
+                                              <span
                                                 className={
-                                                  registro?.tipo === "FEZ"
-                                                    ? "flex items-center gap-2 text-green-700 dark:text-green-300"
-                                                    : registro
-                                                      ? "flex items-center gap-2 text-red-700 dark:text-red-300"
-                                                      : "flex items-center gap-2"
+                                                  registro.tipo === "FEZ"
+                                                    ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-green-50 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
+                                                    : "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
                                                 }
                                               >
-                                                <CalendarDays
-                                                  className={
-                                                    registro
-                                                      ? "h-4 w-4 shrink-0"
-                                                      : "h-4 w-4 shrink-0 text-muted-foreground"
-                                                  }
-                                                />
-                                                <span className="font-semibold tabular-nums">
-                                                  {formatarData(data)}
+                                                {registro.tipo === "FEZ" ? (
+                                                  <ThumbsUp className="h-4 w-4" />
+                                                ) : (
+                                                  <ThumbsDown className="h-4 w-4" />
+                                                )}
+                                                <span className="sr-only">
+                                                  {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
                                                 </span>
-                                                {registro &&
-                                                  registro.tipo !== "FEZ" &&
-                                                  !comDesconto &&
-                                                  penalizadas.has(registro.id) && (
-                                                    <span
-                                                      className="inline-flex shrink-0 text-destructive"
-                                                      role="img"
-                                                      aria-label="Limite de penalidade atingido"
-                                                    >
-                                                      <AlertTriangle className="h-4 w-4" />
-                                                    </span>
-                                                  )}
-                                              </div>
+                                              </span>
+                                            </Hint>
 
-                                              <div className="min-w-0">
-                                                {registro ? (
-                                                  <div className="marked-actions min-w-0 text-sm">
-                                                    <span className="marked-status-slot">
-                                                      <Hint
-                                                        content={
-                                                          registro.tipo === "FEZ"
-                                                            ? "Fez"
-                                                            : "Não fez"
-                                                        }
-                                                      >
-                                                        <span
-                                                          className={
-                                                            registro.tipo === "FEZ"
-                                                              ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-green-50 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
-                                                              : "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
-                                                          }
-                                                        >
-                                                          {registro.tipo === "FEZ" ? (
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                          ) : (
-                                                            <ThumbsDown className="h-4 w-4" />
-                                                          )}
-                                                          <span className="sr-only">
-                                                            {registro.tipo === "FEZ"
-                                                              ? "Fez"
-                                                              : "Não fez"}
-                                                          </span>
-                                                        </span>
-                                                      </Hint>
-                                                    </span>
+                                            {!bloqueada && (
+                                              <Hint
+                                                content={
+                                                  registro.tipo === "FEZ"
+                                                    ? "Alterar para Não fez"
+                                                    : "Alterar para Fez"
+                                                }
+                                              >
+                                                <Button
+                                                  variant="outline"
+                                                  size="icon"
+                                                  className="h-8 w-8 shrink-0 rounded-md"
+                                                  disabled={busy}
+                                                  aria-label={
+                                                    registro.tipo === "FEZ"
+                                                      ? "Alterar marcação para Não fez"
+                                                      : "Alterar marcação para Fez"
+                                                  }
+                                                  onClick={() =>
+                                                    abrirTrocaMarcacao(
+                                                      tarefa,
+                                                      totalNaoFez,
+                                                      dataSelecionada,
+                                                      registro,
+                                                    )
+                                                  }
+                                                >
+                                                  <Pencil className="h-4 w-4" />
+                                                </Button>
+                                              </Hint>
+                                            )}
 
-                                                    <span className="marked-edit-slot">
-                                                      {!bloqueada && (
-                                                        <Hint
-                                                          content={
-                                                            registro.tipo === "FEZ"
-                                                              ? "Alterar para Não fez"
-                                                              : "Alterar para Fez"
-                                                          }
-                                                        >
-                                                          <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            className="h-8 w-8 shrink-0 rounded-md"
-                                                            disabled={busy}
-                                                            aria-label={
-                                                              registro.tipo === "FEZ"
-                                                                ? "Alterar marcação para Não fez"
-                                                                : "Alterar marcação para Fez"
-                                                            }
-                                                            onClick={() =>
-                                                              abrirTrocaMarcacao(
-                                                                tarefa,
-                                                                totalNaoFez,
-                                                                data,
-                                                                registro,
-                                                              )
-                                                            }
-                                                          >
-                                                            <Pencil className="h-4 w-4" />
-                                                          </Button>
-                                                        </Hint>
-                                                      )}
-                                                    </span>
+                                            {registro.tipo === "FEZ" && (
+                                              <Hint content="Ver bonificação">
+                                                <Button
+                                                  variant="outline"
+                                                  size="icon"
+                                                  className="h-8 w-8 shrink-0 rounded-md"
+                                                  disabled={busy}
+                                                  aria-label="Ver bonificação"
+                                                  onClick={() =>
+                                                    setBonificacaoInfo({
+                                                      tarefa,
+                                                      total: totalNaoFez,
+                                                      ocorrencia: registro,
+                                                    })
+                                                  }
+                                                >
+                                                  <Info className="h-4 w-4" />
+                                                </Button>
+                                              </Hint>
+                                            )}
 
-                                                    {registro.tipo === "FEZ" && (
-                                                      <span className="marked-secondary-slot">
-                                                        <Hint content="Ver bonificação">
-                                                          <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            className="h-8 w-8 shrink-0 rounded-md"
-                                                            disabled={busy}
-                                                            aria-label="Ver bonificação"
-                                                            onClick={() =>
-                                                              setBonificacaoInfo({
-                                                                tarefa,
-                                                                total: totalNaoFez,
-                                                                ocorrencia: registro,
-                                                              })
-                                                            }
-                                                          >
-                                                            <Info className="h-4 w-4" />
-                                                          </Button>
-                                                        </Hint>
-                                                      </span>
-                                                    )}
-                                                  </div>
-                                                ) : null}
-                                              </div>
-
-                                              <div className={registro ? "flex flex-wrap items-center justify-end gap-2" : "flex shrink-0 flex-nowrap items-center justify-end gap-2"}>
-                                                {!registro && !bloqueada && (
-                                                  <>
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoFezClass}`}
-                                                      disabled={busy}
-                                                      onClick={() =>
-                                                        abrirFez(
-                                                          tarefa,
-                                                          totalNaoFez,
-                                                          data,
-                                                        )
-                                                      }
-                                                    >
-                                                      <ThumbsUp className="h-4 w-4 text-green-600" />
-                                                      Fez
-                                                    </Button>
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
-                                                      disabled={busy}
-                                                      onClick={() =>
-                                                        solicitarNaoFez(
-                                                          tarefa,
-                                                          totalNaoFez,
-                                                          data,
-                                                        )
-                                                      }
-                                                    >
-                                                      <ThumbsDown className="h-4 w-4 text-red-600" />
-                                                      Não fez
-                                                    </Button>
-                                                  </>
-                                                )}
-
-                                                {registro && !bloqueada && (
-                                                  <Checkbox
-                                                    checked={selecionadas.has(
-                                                      registro.id,
-                                                    )}
-                                                    onCheckedChange={(checked) =>
-                                                      setSelecionadas(
-                                                        (atual) => {
-                                                          const proximo =
-                                                            new Set(atual);
-                                                          if (checked === true) {
-                                                            proximo.add(
-                                                              registro.id,
-                                                            );
-                                                          } else {
-                                                            proximo.delete(
-                                                              registro.id,
-                                                            );
-                                                          }
-                                                          return proximo;
-                                                        },
-                                                      )
+                                            {!bloqueada && (
+                                              <Checkbox
+                                                checked={selecionadas.has(registro.id)}
+                                                onCheckedChange={(checked) =>
+                                                  setSelecionadas((atual) => {
+                                                    const proximo = new Set(atual);
+                                                    if (checked === true) {
+                                                      proximo.add(registro.id);
+                                                    } else {
+                                                      proximo.delete(registro.id);
                                                     }
-                                                    aria-label={`Selecionar ${registro.tipo === "FEZ" ? "Fez" : "Não fez"} de ${formatarData(data)}`}
-                                                  />
-                                                )}
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
+                                                    return proximo;
+                                                  })
+                                                }
+                                                aria-label={`Selecionar ${registro.tipo === "FEZ" ? "Fez" : "Não fez"} de ${formatarData(dataSelecionada)}`}
+                                              />
+                                            )}
+                                          </>
+                                        )}
                                       </div>
-                                    ))}
-                                  </section>
-                                );
-                              })}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         )}
