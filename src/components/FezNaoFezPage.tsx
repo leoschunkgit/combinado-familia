@@ -1209,9 +1209,37 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                       className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-1 py-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
-                                        <p className="break-words text-sm font-medium leading-tight">
+                                        <p
+                                          className={`break-words text-sm font-medium leading-tight ${
+                                            registro
+                                              ? registro.tipo === "FEZ"
+                                                ? "text-green-700 dark:text-green-300"
+                                                : "text-red-700 dark:text-red-300"
+                                              : ""
+                                          }`}
+                                        >
                                           {tarefa.t_tarefa?.nome}
                                         </p>
+                                        {registro && (
+                                          <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
+                                            <span
+                                              className={
+                                                registro.tipo === "FEZ"
+                                                  ? "inline-flex shrink-0 items-center justify-center text-green-600 dark:text-green-400"
+                                                  : "inline-flex shrink-0 items-center justify-center text-red-600 dark:text-red-400"
+                                              }
+                                            >
+                                              {registro.tipo === "FEZ" ? (
+                                                <ThumbsUp className="h-3.5 w-3.5" />
+                                              ) : (
+                                                <ThumbsDown className="h-3.5 w-3.5" />
+                                              )}
+                                              <span className="sr-only">
+                                                {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
+                                              </span>
+                                            </span>
+                                          </Hint>
+                                        )}
                                         {registro &&
                                           registro.tipo !== "FEZ" &&
                                           !comDesconto &&
@@ -1266,25 +1294,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                                         {registro && (
                                           <>
-                                            <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
-                                              <span
-                                                className={
-                                                  registro.tipo === "FEZ"
-                                                    ? "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-green-200 bg-green-50 font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300"
-                                                    : "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-200 bg-red-50 font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300"
-                                                }
-                                              >
-                                                {registro.tipo === "FEZ" ? (
-                                                  <ThumbsUp className="h-4 w-4" />
-                                                ) : (
-                                                  <ThumbsDown className="h-4 w-4" />
-                                                )}
-                                                <span className="sr-only">
-                                                  {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
-                                                </span>
-                                              </span>
-                                            </Hint>
-
                                             {!bloqueada && (
                                               <Hint
                                                 content={
