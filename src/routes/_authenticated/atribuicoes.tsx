@@ -104,6 +104,45 @@ function AtribuicoesPage() {
     setFiltrosAplicados({ ...filtrosRascunho });
   }
 
+  const atribuicoesDaVigenciaSelecionada = vigenciaSelecionadaId === null
+    ? []
+    : existentes.filter((item) => item.id_vigencia === vigenciaSelecionadaId);
+
+  const idsFilhosDisponiveis = new Set(
+    atribuicoesDaVigenciaSelecionada.map((item) => item.id_filho),
+  );
+  const idsTarefasDisponiveis = new Set(
+    atribuicoesDaVigenciaSelecionada.map((item) => item.id_tarefa),
+  );
+
+  const filhosDisponiveis = filhos.filter((filho) =>
+    idsFilhosDisponiveis.has(filho.id),
+  );
+  const tarefasDisponiveis = tarefas.filter((tarefa) =>
+    idsTarefasDisponiveis.has(tarefa.id),
+  );
+
+  function selecionarVigencia(id: number) {
+    const atribuicoesAlvo = existentes.filter((item) => item.id_vigencia === id);
+    const filhosAlvo = new Set(atribuicoesAlvo.map((item) => item.id_filho));
+    const tarefasAlvo = new Set(atribuicoesAlvo.map((item) => item.id_tarefa));
+
+    const ajustar = (atual: { filho: string; tarefa: string }) => ({
+      filho:
+        atual.filho === "all" || filhosAlvo.has(Number(atual.filho))
+          ? atual.filho
+          : "all",
+      tarefa:
+        atual.tarefa === "all" || tarefasAlvo.has(Number(atual.tarefa))
+          ? atual.tarefa
+          : "all",
+    });
+
+    setVigenciaSelecionadaId(id);
+    setFiltrosRascunho(ajustar);
+    setFiltrosAplicados(ajustar);
+  }
+
   const atribuicoesVigenciaSelecionada = vigenciaSelecionadaId === null
     ? []
     : filtradas.filter((item) => item.id_vigencia === vigenciaSelecionadaId);
@@ -162,8 +201,8 @@ function AtribuicoesPage() {
           }}
           renderFilters={() => (
             <>
-              <Pick label="Filho" value={filtrosRascunho.filho} onChange={(filho) => setFiltrosRascunho((atual) => ({ ...atual, filho }))} allLabel="Todos" options={filhos.map((filho) => ({ value: String(filho.id), label: filho.nome }))} />
-              <Pick label="Tarefa" value={filtrosRascunho.tarefa} onChange={(tarefa) => setFiltrosRascunho((atual) => ({ ...atual, tarefa }))} allLabel="Todas" options={tarefas.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
+              <Pick label="Filho" value={filtrosRascunho.filho} onChange={(filho) => setFiltrosRascunho((atual) => ({ ...atual, filho }))} allLabel="Todos" options={filhosDisponiveis.map((filho) => ({ value: String(filho.id), label: filho.nome }))} />
+              <Pick label="Tarefa" value={filtrosRascunho.tarefa} onChange={(tarefa) => setFiltrosRascunho((atual) => ({ ...atual, tarefa }))} allLabel="Todas" options={tarefasDisponiveis.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
             </>
           )}
         />
@@ -205,7 +244,7 @@ function AtribuicoesPage() {
                       type="button"
                       role="tab"
                       aria-selected={selecionada}
-                      onClick={() => setVigenciaSelecionadaId(item.id)}
+                      onClick={() => selecionarVigencia(item.id)}
                       className={`min-w-[126px] shrink-0 snap-start rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[138px] ${selecionada ? "bg-primary/10" : "bg-transparent hover:bg-transparent"}`}
                     >
                       <div className="flex items-center gap-2">
