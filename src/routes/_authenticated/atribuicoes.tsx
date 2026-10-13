@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Link2, Plus, Trash2 } from "lucide-react";
@@ -11,7 +11,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Hint } from "@/components/Hint";
 import { Pick } from "@/components/Pick";
-import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 
@@ -41,13 +41,28 @@ function AtribuicoesPage() {
   const { data: existentes = [] } = useFilhoTarefas();
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
-  const [filtrosRascunho, setFiltrosRascunho] = useState({ vig: "all", filho: "all", tarefa: "all" });
-  const [filtrosAplicados, setFiltrosAplicados] = useState({ vig: "all", filho: "all", tarefa: "all" });
+  const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
+    vigencia ? Number(vigencia) : null,
+  );
+  const [filtrosRascunho, setFiltrosRascunho] = useState({ filho: "all", tarefa: "all" });
+  const [filtrosAplicados, setFiltrosAplicados] = useState({ filho: "all", tarefa: "all" });
 
   const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
   const vigenciaAtiva = vigenciasOrdenadas.find(
     (item) => situacaoVigencia(item) === "andamento",
   );
+
+  useEffect(() => {
+    if (vigenciasOrdenadas.length === 0) {
+      if (vigenciaSelecionadaId !== null) setVigenciaSelecionadaId(null);
+      return;
+    }
+
+    const selecionadaAindaExiste = vigenciasOrdenadas.some((item) => item.id === vigenciaSelecionadaId);
+    if (selecionadaAindaExiste) return;
+
+    setVigenciaSelecionadaId(vigenciaAtiva?.id ?? vigenciasOrdenadas[0]?.id ?? null);
+  }, [vigenciaAtiva?.id, vigenciaSelecionadaId, vigenciasOrdenadas]);
 
   async function excluir(id: number) {
     const alvo = existentes.find((item) => item.id === id);
@@ -80,7 +95,6 @@ function AtribuicoesPage() {
 
   const faltando = vigencias.length === 0 || filhos.length === 0 || tarefas.length === 0;
   const filtradas = existentes.filter((item) =>
-    (filtrosAplicados.vig === "all" || item.id_vigencia === Number(filtrosAplicados.vig)) &&
     (filtrosAplicados.filho === "all" || item.id_filho === Number(filtrosAplicados.filho)) &&
     (filtrosAplicados.tarefa === "all" || item.id_tarefa === Number(filtrosAplicados.tarefa))
   );
@@ -89,23 +103,26 @@ function AtribuicoesPage() {
     setFiltrosAplicados({ ...filtrosRascunho });
   }
 
-  const grupos = vigenciasOrdenadas
-    .map((vigencia) => ({
-      vigencia,
-      filhos: filhos
-        .map((filhoItem) => ({
-          filho: filhoItem,
-          atribuicoes: filtradas.filter((item) => item.id_vigencia === vigencia.id && item.id_filho === filhoItem.id),
-        }))
-        .filter((grupo) => grupo.atribuicoes.length > 0),
-    }))
-    .filter((grupo) => grupo.filhos.length > 0);
+  const atribuicoesVigenciaSelecionada = vigenciaSelecionadaId === null
+    ? []
+    : filtradas.filter((item) => item.id_vigencia === vigenciaSelecionadaId);
 
-  const statusVigencia = (v: (typeof vigencias)[number]) => ({
-    value: String(v.id),
-    label: fmtVigencia(v),
-    status: situacaoVigencia(v),
+  const gruposFilhos = filhos
+    .map((filhoItem) => ({
+      filho: filhoItem,
+      atribuicoes: atribuicoesVigenciaSelecionada.filter((item) => item.id_filho === filhoItem.id),
+    }))
+    .filter((grupo) => grupo.atribuicoes.length > 0);
+
+  const formatadorDataCurta = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    timeZone: "America/Sao_Paulo",
   });
+
+  const periodoCurto = (item: (typeof vigencias)[number]) =>
+    `${formatadorDataCurta.format(new Date(item.data_inicio))} – ${formatadorDataCurta.format(new Date(item.data_fim))}`;
 
   return (
     <>
@@ -124,17 +141,16 @@ function AtribuicoesPage() {
 
       {existentes.length > 0 && (
         <ResponsiveFilters
-          desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
+          desktopClassName="md:grid-cols-[1fr_1fr_auto]"
           onApply={aplicarFiltros}
           hasActiveFilters={Object.values(filtrosAplicados).some((value) => value !== "all")}
           onClear={() => {
-            const limpos = { vig: "all", filho: "all", tarefa: "all" };
+            const limpos = { filho: "all", tarefa: "all" };
             setFiltrosRascunho(limpos);
             setFiltrosAplicados(limpos);
           }}
           renderFilters={() => (
             <>
-              <Pick label="Vigência" value={filtrosRascunho.vig} onChange={(vig) => setFiltrosRascunho((atual) => ({ ...atual, vig }))} allLabel="Todas" options={vigenciasOrdenadas.map(statusVigencia)} />
               <Pick label="Filho" value={filtrosRascunho.filho} onChange={(filho) => setFiltrosRascunho((atual) => ({ ...atual, filho }))} allLabel="Todos" options={filhos.map((filho) => ({ value: String(filho.id), label: filho.nome }))} />
               <Pick label="Tarefa" value={filtrosRascunho.tarefa} onChange={(tarefa) => setFiltrosRascunho((atual) => ({ ...atual, tarefa }))} allLabel="Todas" options={tarefas.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
             </>
@@ -144,71 +160,90 @@ function AtribuicoesPage() {
 
       {existentes.length === 0 ? (
         <EmptyState>Nenhuma atribuição ainda.</EmptyState>
-      ) : filtradas.length === 0 ? (
-        <EmptyState>Nenhuma atribuição encontrada para estes filtros.</EmptyState>
+      ) : vigenciasOrdenadas.length === 0 ? (
+        <EmptyState>Nenhuma vigência cadastrada.</EmptyState>
       ) : (
-        <div className="space-y-6 md:space-y-7">
-          {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
-            const totalVigencia = gruposFilhos.reduce((soma, grupo) => soma + grupo.atribuicoes.length, 0);
-            return (
-              <section key={vigencia.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-                <div className="flex w-full items-center justify-between gap-4 border-b bg-primary/5 px-5 py-4 text-left sm:px-6 sm:py-5">
-                  <div className="flex min-w-0 items-start gap-3">
+        <>
+          <section className="mb-5 rounded-2xl border bg-card p-3 shadow-sm sm:p-4">
+            <div className="mb-2.5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigências</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Deslize para os lados e escolha o período.</p>
+            </div>
+
+            <div
+              className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto overscroll-x-contain px-0.5 pb-2 pt-0.5 scroll-smooth [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
+              role="tablist"
+              aria-label="Selecionar vigência"
+            >
+              {vigenciasOrdenadas.map((item) => {
+                const selecionada = item.id === vigenciaSelecionadaId;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selecionada}
+                    onClick={() => setVigenciaSelecionadaId(item.id)}
+                    className={`min-w-[156px] shrink-0 snap-start rounded-xl border px-3.5 py-2.5 text-left transition-colors sm:min-w-[172px] ${
+                      selecionada
+                        ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                        : "bg-background hover:border-primary/40 hover:bg-accent/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-semibold tabular-nums ${selecionada ? "text-primary" : "text-foreground"}`}>
+                        {periodoCurto(item)}
+                      </span>
+                      {selecionada && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
+                    </div>
+                    <div className="mt-1.5">
+                      <VigenciaStatus vigencia={item} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {gruposFilhos.length === 0 ? (
+            <EmptyState>Nenhuma atribuição encontrada para esta vigência e filtros.</EmptyState>
+          ) : (
+            <div className="space-y-4 md:space-y-5">
+              {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => (
+                <section key={filhoItem.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                  <div className="flex w-full items-center justify-between gap-4 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">Vigência</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <p className="break-words font-semibold">{fmtVigencia(vigencia)}</p>
-                        <VigenciaStatus vigencia={vigencia} />
-                      </div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
+                      <p className="truncate font-bold">{filhoItem.nome}</p>
+                    </div>
+                    <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                      {atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}
+                    </span>
+                  </div>
+
+                  <div className="bg-muted/10 p-2.5 sm:p-3">
+                    <div className="space-y-2">
+                      {atribuicoesFilho.map((e) => (
+                        <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-white px-3 py-2.5 dark:bg-card sm:px-4 sm:py-3">
+                          <div className="min-w-0">
+                            <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-0.5">
+                            <Hint content="Excluir atribuição">
+                              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </Hint>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground ring-1 ring-border">
-                    {totalVigencia} {totalVigencia === 1 ? "tarefa" : "tarefas"}
-                  </span>
-                </div>
-
-                <div className="space-y-3 p-3 sm:p-4">
-                  {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
-                    const chave = `${vigencia.id}|${filhoItem.id}`;
-                    return (
-                      <div key={chave} className="overflow-hidden rounded-xl border bg-background">
-                        <div className="flex w-full items-center justify-between gap-4 bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
-                              <p className="truncate font-bold">{filhoItem.nome}</p>
-                            </div>
-                          </div>
-                          <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                            {atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}
-                          </span>
-                        </div>
-                        <div className="border-t bg-muted/10 p-2.5 sm:p-3">
-                          <div className="space-y-2">
-                            {atribuicoesFilho.map((e) => (
-                              <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-white px-3 py-2.5 dark:bg-card sm:px-4 sm:py-3">
-                                <div className="min-w-0">
-                                  <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-0.5">
-                                  <Hint content="Excluir atribuição">
-                                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </Hint>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <AtribuicaoDialog
