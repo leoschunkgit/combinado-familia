@@ -65,6 +65,27 @@ function AtribuicoesPage() {
     setVigenciaSelecionadaId(vigenciaAtiva?.id ?? vigenciasOrdenadas[0]?.id ?? null);
   }, [vigenciaAtiva?.id, vigenciaSelecionadaId, vigenciasOrdenadas]);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const area = vigenciasScrollRef.current;
+      if (!area || vigenciaSelecionadaId === null) return;
+
+      const alvo = area.querySelector<HTMLElement>(
+        `[data-vigencia="${vigenciaSelecionadaId}"]`,
+      );
+      if (!alvo) return;
+
+      const destino =
+        alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
+      area.scrollTo({
+        left: Math.max(0, destino),
+        behavior: "smooth",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [vigenciaSelecionadaId, vigenciasOrdenadas]);
+
   async function excluir(id: number) {
     const alvo = existentes.find((item) => item.id === id);
     if (!alvo) return;
@@ -236,6 +257,7 @@ function AtribuicoesPage() {
                   return (
                     <button
                       key={item.id}
+                      data-vigencia={item.id}
                       type="button"
                       role="tab"
                       aria-selected={selecionada}
