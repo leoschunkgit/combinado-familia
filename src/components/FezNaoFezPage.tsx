@@ -306,24 +306,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     );
   };
 
-  const filhoTemPendencia = (
-    vigenciaId: number,
-    filhoId: number,
-    data: string,
-  ) => {
-    if (data > hoje) return false;
-
-    const atribuicoesDoFilho = atribuicoes.filter(
-      (tarefa) =>
-        tarefa.id_vigencia === vigenciaId &&
-        tarefa.id_filho === filhoId,
-    );
-
-    return atribuicoesDoFilho.some(
-      (tarefa) => !registroNaData(tarefa, data),
-    );
-  };
-
   const datasDaTarefa = (tarefa: FilhoTarefa, vigencia: Vigencia) => {
     if (modo === "pendentes" && !vigenciaEmAndamento(vigencia)) return [];
 
@@ -1144,13 +1126,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     >
                       {gruposFilhos.map(({ filho }) => {
                         const selecionado = filho.id === filhoSelecionadoId;
-                        const dataSelecionada =
-                          diasSelecionados[vigencia.id] ?? hoje;
-                        const comPendencia = filhoTemPendencia(
-                          vigencia.id,
-                          filho.id,
-                          dataSelecionada,
-                        );
                         return (
                           <button
                             key={filho.id}
@@ -1164,19 +1139,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 [vigencia.id]: filho.id,
                               }))
                             }
-                            className={`relative shrink-0 snap-start rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                            className={`shrink-0 snap-start rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
                                 ? "border-muted-foreground/40 bg-muted/60 text-foreground shadow-sm"
                                 : "border-border bg-background text-foreground hover:border-primary/50"
                             }`}
                           >
                             {filho.nome}
-                            {comPendencia && (
-                              <span
-                                aria-hidden="true"
-                                className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-red-500"
-                              />
-                            )}
                           </button>
                         );
                       })}
