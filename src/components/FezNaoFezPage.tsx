@@ -156,7 +156,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
+  const [filhosSelecionados, setFilhosSelecionados] = useState<Record<number, number>>({});
   const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
@@ -233,6 +235,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
   function rolarDias(vigenciaId: number, direcao: "esquerda" | "direita") {
     const area = diasScrollRefs.current[vigenciaId];
+    if (!area) return;
+    const distancia = Math.max(area.clientWidth * 0.75, 220);
+    area.scrollBy({
+      left: direcao === "direita" ? distancia : -distancia,
+      behavior: "smooth",
+    });
+  }
+
+  function rolarFilhos(vigenciaId: number, direcao: "esquerda" | "direita") {
+    const area = filhosScrollRefs.current[vigenciaId];
     if (!area) return;
     const distancia = Math.max(area.clientWidth * 0.75, 220);
     area.scrollBy({
@@ -406,6 +418,57 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         .filter((grupo) => grupo.tarefas.length > 0),
     }))
     .filter((grupo) => grupo.filhos.length > 0);
+
+  useEffect(() => {
+    setFilhosSelecionados((atual) => {
+      const proximo = { ...atual };
+      const vigenciasComFilhos = new Set(grupos.map(({ vigencia }) => vigencia.id));
+      let mudou = false;
+
+      for (const id of Object.keys(proximo)) {
+        if (!vigenciasComFilhos.has(Number(id))) {
+          delete proximo[Number(id)];
+          mudou = true;
+        }
+      }
+
+      for (const { vigencia, filhos: gruposFilhos } of grupos) {
+        const idsFilhos = new Set(gruposFilhos.map(({ filho }) => filho.id));
+        const selecionado = proximo[vigencia.id];
+
+        if (!selecionado || !idsFilhos.has(selecionado)) {
+          proximo[vigencia.id] = gruposFilhos[0].filho.id;
+          mudou = true;
+        }
+      }
+
+      return mudou ? proximo : atual;
+    });
+  }, [grupos]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      for (const { vigencia } of grupos) {
+        const filhoSelecionado = filhosSelecionados[vigencia.id];
+        const area = filhosScrollRefs.current[vigencia.id];
+        if (!filhoSelecionado || !area) continue;
+
+        const alvo = area.querySelector<HTMLElement>(
+          `[data-filho="${filhoSelecionado}"]`,
+        );
+        if (!alvo) continue;
+
+        const destino =
+          alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
+        area.scrollTo({
+          left: Math.max(0, destino),
+          behavior: "smooth",
+        });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [filhosSelecionados, grupos]);
 
   useEffect(() => {
     if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
@@ -926,6 +989,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         {vigenciasParaExibir.map((vigencia) => {
           const gruposFilhos =
             grupos.find((grupo) => grupo.vigencia.id === vigencia.id)?.filhos ?? [];
+          const filhoSelecionadoId =
+            filhosSelecionados[vigencia.id] ?? gruposFilhos[0]?.filho.id;
+          const grupoFilhoSelecionado =
+            gruposFilhos.find(({ filho }) => filho.id === filhoSelecionadoId) ??
+            gruposFilhos[0];
           return (
             <section key={vigencia.id} className="space-y-3">
               <div className="flex min-w-0 items-start gap-2">
@@ -1016,7 +1084,63 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 </EmptyState>
               ) : (
                 <div className="space-y-4">
-                  {gruposFilhos.map(({ filho, tarefas: tarefasDoFilho }) => {
+                  <div className="flex items-center gap-1 border-t pt-3 pb-1">
+                    <button
+                      type="button"
+                      onClick={() => rolarFilhos(vigencia.id, "esquerda")}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      aria-label="Ver filhos anteriores"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+
+                    <div
+                      ref={(elemento) => {
+                        filhosScrollRefs.current[vigencia.id] = elemento;
+                      }}
+                      className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      role="tablist"
+                      aria-label={`Selecionar filho da vigência ${fmtVigencia(vigencia)}`}
+                    >
+                      {gruposFilhos.map(({ filho }) => {
+                        const selecionado = filho.id === filhoSelecionadoId;
+                        return (
+                          <button
+                            key={filho.id}
+                            data-filho={filho.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={selecionado}
+                            onClick={() =>
+                              setFilhosSelecionados((atual) => ({
+                                ...atual,
+                                [vigencia.id]: filho.id,
+                              }))
+                            }
+                            className={`shrink-0 snap-start rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                              selecionado
+                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                : "border-border bg-background text-foreground hover:border-primary/50"
+                            }`}
+                          >
+                            {filho.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => rolarFilhos(vigencia.id, "direita")}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      aria-label="Ver próximos filhos"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {grupoFilhoSelecionado &&
+                    [grupoFilhoSelecionado].map(({ filho, tarefas: tarefasDoFilho }) => {
                     const chave = `${vigencia.id}-${filho.id}`;
                     const filhoAberto = filhosAbertos[chave] === true;
                     const totalNaoFez = ocorrencias.filter(
