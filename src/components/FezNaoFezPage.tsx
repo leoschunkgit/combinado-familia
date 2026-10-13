@@ -80,7 +80,6 @@ import {
   dataBrasil,
   dataPertenceAVigenciaAteHoje,
   datasDaVigenciaAteHoje,
-  limitesDaVigenciaAteHoje,
   useDataBrasilAtual,
 } from "@/lib/notificacoes";
 
@@ -131,6 +130,11 @@ type FezNaoFezPageProps = {
 
 function formatarData(data: string) {
   return data.split("-").reverse().join("/");
+}
+
+function formatarDataCurta(data: string) {
+  const [ano, mes, dia] = data.split("-");
+  return `${dia}/${mes}/${ano.slice(-2)}`;
 }
 
 function valorBonificacaoNumero(valor: string) {
@@ -230,6 +234,20 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       behavior: "smooth",
     });
   }
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      for (const vigencia of vigenciasEmAndamento) {
+        const dataSelecionada = diasSelecionados[vigencia.id];
+        const area = diasScrollRefs.current[vigencia.id];
+        if (!dataSelecionada || !area) continue;
+        const alvo = area.querySelector<HTMLElement>(`[data-dia="${dataSelecionada}"]`);
+        alvo?.scrollIntoView({ block: "nearest", inline: "center" });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [diasSelecionados, vigenciasEmAndamento]);
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -775,7 +793,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       />
 
       <ResponsiveFilters
-        desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
+        desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
         onApply={() => setFiltro(f)}
         hasActiveFilters={filtrosAtivos}
         onClear={() => {
@@ -898,6 +916,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                       return (
                         <button
                           key={data}
+                          data-dia={data}
                           type="button"
                           role="tab"
                           aria-selected={selecionada}
@@ -917,7 +936,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 : "border-border bg-background text-foreground hover:border-primary/50"
                           }`}
                         >
-                          {formatarData(data).slice(0, 8)}
+                          {formatarDataCurta(data)}
                         </button>
                       );
                     })}
