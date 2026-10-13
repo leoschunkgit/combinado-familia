@@ -1276,34 +1276,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             ) : null}
 
                             <div className="bg-white dark:bg-background">
-                              <div className="flex flex-col gap-2 border-b border-border/60 bg-transparent px-1 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex min-w-0 items-baseline gap-2">
-                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Tarefa(s)
-                                  </p>
-                                </div>
+                              <div className="border-b border-border/60 bg-transparent px-1 py-2.5">
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="flex min-w-0 items-baseline gap-2">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                      Tarefa(s)
+                                    </p>
+                                  </div>
 
-                                {!bloqueada && registrosDoDia.length > 0 && (
-                                  <div className="flex w-full items-center gap-2 sm:w-auto">
-                                    {selecionadasDoFilho.length > 0 && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-destructive hover:text-destructive"
-                                        disabled={busy}
-                                        onClick={() =>
-                                          setConfirmarExcluirSelecionadas({
-                                            tarefa: selecionadasDoFilho[0].tarefa,
-                                            ids: selecionadasDoFilho.map(({ registro }) => registro.id),
-                                          })
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                        Desfazer marcação ({selecionadasDoFilho.length})
-                                      </Button>
-                                    )}
-
-                                    <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
+                                  {!bloqueada && registrosDoDia.length > 0 && (
+                                    <label className="inline-flex shrink-0 cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
                                       <span>Desfazer marcação</span>
                                       <Checkbox
                                         className={checkboxExclusaoClass}
@@ -1333,11 +1315,32 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                             return proximo;
                                           })
                                         }
-                                        aria-label={`Selecionar todas as marcações para exclusão de ${formatarData(dataSelecionada)}`}
+                                        aria-label={`Selecionar todas as marcações para desfazer de ${formatarData(dataSelecionada)}`}
                                       />
                                     </label>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
+
+                                {!bloqueada &&
+                                  selecionadasDoFilho.length > 0 && (
+                                    <div className="mt-2 flex justify-end">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-destructive hover:text-destructive"
+                                        disabled={busy}
+                                        onClick={() =>
+                                          setConfirmarExcluirSelecionadas({
+                                            tarefa: selecionadasDoFilho[0].tarefa,
+                                            ids: selecionadasDoFilho.map(({ registro }) => registro.id),
+                                          })
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                        Desfazer marcação ({selecionadasDoFilho.length})
+                                      </Button>
+                                    </div>
+                                  )}
                               </div>
 
                               <div className="divide-y divide-border/60">
