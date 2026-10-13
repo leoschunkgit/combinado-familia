@@ -324,6 +324,69 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       return modo === "todos" || temDatasVisiveis;
     });
 
+  const vigenciasRascunho = f.vig === "all"
+    ? vigenciasEmAndamento
+    : vigenciasEmAndamento.filter((vigencia) => vigencia.id === Number(f.vig));
+  const idsVigenciasRascunho = new Set(vigenciasRascunho.map((vigencia) => vigencia.id));
+  const atribuicoesRascunho = atribuicoes.filter((item) =>
+    idsVigenciasRascunho.has(item.id_vigencia),
+  );
+  const idsFilhosRascunho = new Set(atribuicoesRascunho.map((item) => item.id_filho));
+  const filhosDisponiveisFiltro = filhos.filter((filho) =>
+    idsFilhosRascunho.has(filho.id),
+  );
+  const atribuicoesRascunhoDoFilho = f.filho === "all"
+    ? atribuicoesRascunho
+    : atribuicoesRascunho.filter((item) => item.id_filho === Number(f.filho));
+  const idsTarefasRascunho = new Set(
+    atribuicoesRascunhoDoFilho.map((item) => item.id_tarefa),
+  );
+  const tarefasDisponiveisFiltro = tarefas.filter((tarefa) =>
+    idsTarefasRascunho.has(tarefa.id),
+  );
+
+  function alterarVigenciaFiltro(vig: string) {
+    const vigenciasAlvo = vig === "all"
+      ? vigenciasEmAndamento
+      : vigenciasEmAndamento.filter((item) => item.id === Number(vig));
+    const idsVigenciasAlvo = new Set(vigenciasAlvo.map((item) => item.id));
+    const atribuicoesAlvo = atribuicoes.filter((item) =>
+      idsVigenciasAlvo.has(item.id_vigencia),
+    );
+    const idsFilhosAlvo = new Set(atribuicoesAlvo.map((item) => item.id_filho));
+    const filho =
+      f.filho === "all" || idsFilhosAlvo.has(Number(f.filho))
+        ? f.filho
+        : "all";
+    const atribuicoesDoFilho = filho === "all"
+      ? atribuicoesAlvo
+      : atribuicoesAlvo.filter((item) => item.id_filho === Number(filho));
+    const idsTarefasAlvo = new Set(
+      atribuicoesDoFilho.map((item) => item.id_tarefa),
+    );
+    const tarefa =
+      f.tarefa === "all" || idsTarefasAlvo.has(Number(f.tarefa))
+        ? f.tarefa
+        : "all";
+
+    setF({ ...f, vig, filho, tarefa });
+  }
+
+  function alterarFilhoFiltro(filho: string) {
+    const atribuicoesDoFilho = filho === "all"
+      ? atribuicoesRascunho
+      : atribuicoesRascunho.filter((item) => item.id_filho === Number(filho));
+    const idsTarefasAlvo = new Set(
+      atribuicoesDoFilho.map((item) => item.id_tarefa),
+    );
+    const tarefa =
+      f.tarefa === "all" || idsTarefasAlvo.has(Number(f.tarefa))
+        ? f.tarefa
+        : "all";
+
+    setF({ ...f, filho, tarefa });
+  }
+
   const grupos = vigenciasEmAndamento
     .filter(
       (vigencia) =>
@@ -798,7 +861,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             <Pick
               label="Vigência"
               value={f.vig}
-              onChange={(vig) => setF({ ...f, vig })}
+              onChange={alterarVigenciaFiltro}
               allLabel="Todas"
               options={vigenciasEmAndamento.map((vigencia) => ({
                 value: String(vigencia.id),
@@ -809,9 +872,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             <Pick
               label="Filho"
               value={f.filho}
-              onChange={(filho) => setF({ ...f, filho })}
+              onChange={alterarFilhoFiltro}
               allLabel="Todos"
-              options={filhos.map((filho) => ({
+              options={filhosDisponiveisFiltro.map((filho) => ({
                 value: String(filho.id),
                 label: filho.nome,
               }))}
@@ -821,7 +884,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               value={f.tarefa}
               onChange={(tarefa) => setF({ ...f, tarefa })}
               allLabel="Todas"
-              options={tarefas.map((tarefa) => ({
+              options={tarefasDisponiveisFiltro.map((tarefa) => ({
                 value: String(tarefa.id),
                 label: tarefa.nome,
               }))}
