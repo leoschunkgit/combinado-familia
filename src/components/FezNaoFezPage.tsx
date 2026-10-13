@@ -387,18 +387,37 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     setF({ ...f, filho, tarefa });
   }
 
-  const grupos = vigenciasEmAndamento
+  const filhosEstruturais = filhos.filter(
+    (filho) =>
+      filtro.filho === "all" || filho.id === Number(filtro.filho),
+  );
+
+  const tarefasEstruturais = (vigencia: Vigencia, idFilho: number) =>
+    atribuicoes.filter((tarefa) => {
+      if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
+        return false;
+      }
+      return (
+        filtro.tarefa === "all" ||
+        tarefa.id_tarefa === Number(filtro.tarefa)
+      );
+    });
+
+  const vigenciasParaExibir = vigenciasEmAndamento
     .filter(
       (vigencia) =>
         filtro.vig === "all" || vigencia.id === Number(filtro.vig),
     )
+    .filter((vigencia) =>
+      filhosEstruturais.some(
+        (filho) => tarefasEstruturais(vigencia, filho.id).length > 0,
+      ),
+    );
+
+  const grupos = vigenciasParaExibir
     .map((vigencia) => ({
       vigencia,
-      filhos: filhos
-        .filter(
-          (filho) =>
-            filtro.filho === "all" || filho.id === Number(filtro.filho),
-        )
+      filhos: filhosEstruturais
         .map((filho) => ({
           filho,
           tarefas: tarefasVisiveis(vigencia, filho.id),
@@ -914,12 +933,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         </Button>
       </div>
 
-      {!isLoading && grupos.length === 0 && (
+      {!isLoading && vigenciasParaExibir.length === 0 && (
         <EmptyState>{vazio}</EmptyState>
       )}
 
       <div className="space-y-8">
-        {grupos.map(({ vigencia, filhos: gruposFilhos }) => {
+        {vigenciasParaExibir.map((vigencia) => {
+          const gruposFilhos =
+            grupos.find((grupo) => grupo.vigencia.id === vigencia.id)?.filhos ?? [];
           return (
             <section key={vigencia.id} className="space-y-3">
               <div className="flex min-w-0 items-start gap-2">
@@ -996,7 +1017,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              {gruposFilhos.length === 0 ? (
+                <EmptyState>
+                  {modo === "pendentes"
+                    ? "Tudo em dia para esta data e filtros."
+                    : "Nenhum resultado encontrado para esta data e filtros."}
+                </EmptyState>
+              ) : (
+                <div className="space-y-4">
                   {gruposFilhos.map(({ filho, tarefas: tarefasDoFilho }) => {
                     const chave = `${vigencia.id}-${filho.id}`;
                     const filhoAberto = filhosAbertos[chave] === true;
@@ -1352,7 +1380,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                       </article>
                     );
                   })}
-              </div>
+                </div>
+              )}
             </section>
           );
         })}
