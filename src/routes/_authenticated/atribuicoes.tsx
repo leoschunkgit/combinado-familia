@@ -215,11 +215,6 @@ function AtribuicoesPage() {
       ) : (
         <>
           <section className="mb-5">
-            <div className="mb-2.5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigências</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Deslize para os lados e escolha o período.</p>
-            </div>
-
             <div className="flex items-center gap-1">
               <button
                 type="button"
