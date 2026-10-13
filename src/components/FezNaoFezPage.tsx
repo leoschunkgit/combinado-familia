@@ -837,11 +837,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     <>
       <PageHeader
         title="Fez / Não fez"
-        description={
-          modo === "pendentes"
-            ? "Marque rapidamente os dias que ainda estão sem Fez ou Não fez."
-            : "Veja e marque as tarefas dos filhos na data selecionada."
-        }
+        description="Marque as tarefas do dia"
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
 
