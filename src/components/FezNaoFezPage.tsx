@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -179,9 +179,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     return () => window.clearInterval(timer);
   }, []);
 
-  const vigenciasOrdenadas = [...vigencias].sort(compararVigencias);
-  const vigenciasEmAndamento = vigenciasOrdenadas.filter(
-    (vigencia) => situacaoVigencia(vigencia, agora) === "andamento",
+  const vigenciasOrdenadas = useMemo(
+    () => [...vigencias].sort(compararVigencias),
+    [vigencias],
+  );
+  const vigenciasEmAndamento = useMemo(
+    () =>
+      vigenciasOrdenadas.filter(
+        (vigencia) => situacaoVigencia(vigencia, agora) === "andamento",
+      ),
+    [agora, vigenciasOrdenadas],
   );
   useEffect(() => {
     setDiasSelecionados((atual) => {
@@ -241,8 +248,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         const dataSelecionada = diasSelecionados[vigencia.id];
         const area = diasScrollRefs.current[vigencia.id];
         if (!dataSelecionada || !area) continue;
+
         const alvo = area.querySelector<HTMLElement>(`[data-dia="${dataSelecionada}"]`);
-        alvo?.scrollIntoView({ block: "nearest", inline: "center" });
+        if (!alvo) continue;
+
+        const destino =
+          alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
+        area.scrollTo({
+          left: Math.max(0, destino),
+          behavior: "smooth",
+        });
       }
     });
 
