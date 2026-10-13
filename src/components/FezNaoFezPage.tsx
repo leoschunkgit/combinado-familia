@@ -872,15 +872,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               </div>
 
               <div className="border-t pt-3 pb-1">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dias da vigência</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Selecione o dia para exibir as tarefas.
-                    </p>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
