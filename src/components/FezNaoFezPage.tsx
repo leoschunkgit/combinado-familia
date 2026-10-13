@@ -1113,7 +1113,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                         {filhoAberto && (
                           <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
                             {comDesconto ? (
-                              <div className="mb-4 grid grid-cols-3 overflow-hidden rounded-lg border bg-muted/20 text-sm tabular-nums">
+                              <div className="mb-4 grid grid-cols-3 overflow-hidden rounded-lg border bg-white text-sm tabular-nums dark:bg-background">
                                 <div className="px-3 py-2.5">
                                   <p className="text-[11px] font-medium text-muted-foreground">Mesada</p>
                                   <p className="mt-0.5 font-semibold">{reais(filho.valor_mesada ?? 0)}</p>
