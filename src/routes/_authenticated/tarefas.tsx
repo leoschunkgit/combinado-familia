@@ -289,7 +289,16 @@ function TarefasPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full">Cadastrar</Button>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setNovoAberto(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">Cadastrar</Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
