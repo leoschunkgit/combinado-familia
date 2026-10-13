@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Link2, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Link2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AtribuicaoDialog } from "@/components/AtribuicaoDialog";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
+  const vigenciasScrollRef = useRef<HTMLDivElement>(null);
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
@@ -124,6 +125,16 @@ function AtribuicoesPage() {
   const periodoCurto = (item: (typeof vigencias)[number]) =>
     `${formatadorDataCurta.format(new Date(item.data_inicio))} – ${formatadorDataCurta.format(new Date(item.data_fim))}`;
 
+  function rolarVigencias(direcao: "esquerda" | "direita") {
+    const area = vigenciasScrollRef.current;
+    if (!area) return;
+    const distancia = Math.max(area.clientWidth * 0.75, 220);
+    area.scrollBy({
+      left: direcao === "direita" ? distancia : -distancia,
+      behavior: "smooth",
+    });
+  }
+
   return (
     <>
       <PageHeader
@@ -164,44 +175,61 @@ function AtribuicoesPage() {
         <EmptyState>Nenhuma vigência cadastrada.</EmptyState>
       ) : (
         <>
-          <section className="mb-5 rounded-2xl border bg-card p-3 shadow-sm sm:p-4">
+          <section className="mb-5">
             <div className="mb-2.5">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vigências</p>
               <p className="mt-0.5 text-xs text-muted-foreground">Deslize para os lados e escolha o período.</p>
             </div>
 
-            <div
-              className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto overscroll-x-contain px-0.5 pb-2 pt-0.5 scroll-smooth [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
-              role="tablist"
-              aria-label="Selecionar vigência"
-            >
-              {vigenciasOrdenadas.map((item) => {
-                const selecionada = item.id === vigenciaSelecionadaId;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={selecionada}
-                    onClick={() => setVigenciaSelecionadaId(item.id)}
-                    className={`min-w-[156px] shrink-0 snap-start rounded-xl border px-3.5 py-2.5 text-left transition-colors sm:min-w-[172px] ${
-                      selecionada
-                        ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
-                        : "bg-background hover:border-primary/40 hover:bg-accent/20"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm font-semibold tabular-nums ${selecionada ? "text-primary" : "text-foreground"}`}>
-                        {periodoCurto(item)}
-                      </span>
-                      {selecionada && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
-                    </div>
-                    <div className="mt-1.5">
-                      <VigenciaStatus vigencia={item} />
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => rolarVigencias("esquerda")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                aria-label="Ver vigências anteriores"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <div
+                ref={vigenciasScrollRef}
+                className="flex min-w-0 flex-1 snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                role="tablist"
+                aria-label="Selecionar vigência"
+              >
+                {vigenciasOrdenadas.map((item) => {
+                  const selecionada = item.id === vigenciaSelecionadaId;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selecionada}
+                      onClick={() => setVigenciaSelecionadaId(item.id)}
+                      className="min-w-[150px] shrink-0 snap-start bg-transparent px-1 py-2 text-left transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[166px]"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-semibold tabular-nums ${selecionada ? "text-primary" : "text-foreground"}`}>
+                          {periodoCurto(item)}
+                        </span>
+                        {selecionada && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
+                      </div>
+                      <div className="mt-1.5">
+                        <VigenciaStatus vigencia={item} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => rolarVigencias("direita")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                aria-label="Ver próximas vigências"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
           </section>
 
