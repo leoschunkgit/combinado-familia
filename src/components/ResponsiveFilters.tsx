@@ -42,7 +42,7 @@ export function ResponsiveFilters({
 
   return (
     <>
-      <div className={cn("mb-4 flex gap-2 md:hidden", mobileActions ? "justify-between" : "justify-end")}>
+      <div className="mb-4 flex justify-end gap-2 md:hidden">
         {mobileActions}
         {!mobileActions && hasActiveFilters && onClear && (
           <Button
