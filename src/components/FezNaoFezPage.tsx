@@ -129,7 +129,7 @@ type FezNaoFezPageProps = {
 };
 
 const checkboxExclusaoClass =
-  "h-5 w-5 rounded-[4px] border-2 border-destructive/50 bg-background shadow-sm transition-colors focus-visible:ring-destructive/30 data-[state=checked]:border-destructive data-[state=checked]:bg-destructive data-[state=checked]:text-destructive-foreground";
+  "h-5 w-5 rounded-[4px] border-2 border-muted-foreground/40 bg-background shadow-sm transition-colors hover:border-muted-foreground/70 focus-visible:ring-muted-foreground/30 data-[state=checked]:border-muted-foreground data-[state=checked]:bg-muted-foreground data-[state=checked]:text-background";
 
 function formatarData(data: string) {
   return data.split("-").reverse().join("/");
