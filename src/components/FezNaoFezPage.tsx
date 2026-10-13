@@ -127,6 +127,9 @@ type FezNaoFezPageProps = {
   modo: ModoPagina;
 };
 
+const checkboxExclusaoClass =
+  "h-5 w-5 rounded-md border-2 border-primary/50 bg-background shadow-sm transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary";
+
 function formatarData(data: string) {
   return data.split("-").reverse().join("/");
 }
@@ -1291,7 +1294,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                     <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
                                       <span>Excluir tudo</span>
                                       <Checkbox
-                                        className="h-5 w-5 rounded-md border-2 border-primary/40 shadow-sm transition-colors data-[state=checked]:border-primary"
+                                        className={checkboxExclusaoClass}
                                         checked={
                                           registrosDoDia.every(({ registro }) =>
                                             selecionadas.has(registro.id),
@@ -1525,6 +1528,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
                                             {!bloqueada && (
                                               <Checkbox
+                                                className={checkboxExclusaoClass}
                                                 checked={selecionadas.has(registro.id)}
                                                 onCheckedChange={(checked) =>
                                                   setSelecionadas((atual) => {
