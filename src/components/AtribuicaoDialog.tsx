@@ -5,7 +5,7 @@ import { ChevronsUpDown, Plus, X } from "lucide-react";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/Hint";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
@@ -263,12 +263,10 @@ export function AtribuicaoDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !saving && onOpenChange(next)}>
-      <DialogContent className="max-h-[92vh] overflow-x-hidden overflow-y-auto sm:max-w-3xl">
+      <DialogContent className="max-h-[92vh] overflow-x-hidden overflow-y-auto bg-background sm:max-w-3xl">
         <DialogHeader><DialogTitle>{titulo}</DialogTitle></DialogHeader>
 
-        <Card className="border-0 shadow-none">
-          {mode === "NORMAL" && <CardHeader><CardTitle>Nova atribuição</CardTitle></CardHeader>}
-          <CardContent className="space-y-6">
+        <div className="space-y-6">
             {mode === "NORMAL" ? (
               <>
                 <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-end">
@@ -500,8 +498,7 @@ export function AtribuicaoDialog({
                 </DialogFooter>
               </>
             )}
-          </CardContent>
-        </Card>
+        </div>
       </DialogContent>
     </Dialog>
   );
