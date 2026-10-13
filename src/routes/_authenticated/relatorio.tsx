@@ -151,6 +151,28 @@ function RelatorioPage() {
     />
     <ResponsiveFilters
       desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
+      mobileActions={
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-w-0 px-2 text-xs"
+            onClick={() => definirTudo(true)}
+            disabled={carregando || !relatorio.length}
+          >
+            <ChevronsDownUp className="h-4 w-4" /> Expandir
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-w-0 px-2 text-xs"
+            onClick={() => definirTudo(false)}
+            disabled={carregando || !relatorio.length}
+          >
+            <ChevronsUpDown className="h-4 w-4" /> Recolher
+          </Button>
+        </>
+      }
       onApply={() => setFiltro(f)}
       hasActiveFilters={Object.values(filtro).some((value) => value !== "all")}
       onClear={() => {
@@ -166,7 +188,7 @@ function RelatorioPage() {
         </>
       )}
     />
-    <div className="mb-6 flex flex-wrap justify-end gap-2">
+    <div className="mb-6 hidden flex-wrap justify-end gap-2 md:flex">
       <Button variant="outline" size="sm" onClick={() => definirTudo(true)} disabled={carregando || !relatorio.length}><ChevronsDownUp className="h-4 w-4" /> Expandir tudo</Button>
       <Button variant="outline" size="sm" onClick={() => definirTudo(false)} disabled={carregando || !relatorio.length}><ChevronsUpDown className="h-4 w-4" /> Recolher tudo</Button>
     </div>
