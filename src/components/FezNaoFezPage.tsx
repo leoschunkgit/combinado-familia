@@ -164,6 +164,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const [bonificacaoInfo, setBonificacaoInfo] = useState<BonificacaoInfo | null>(null);
   const [troca, setTroca] = useState<Troca | null>(null);
   const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set());
+  const [acoesAbertas, setAcoesAbertas] = useState<Set<string>>(new Set());
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
     useState<ExcluirSelecionadasDraft | null>(null);
   const [penalidadePendente, setPenalidadePendente] =
@@ -1221,24 +1222,60 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                           {tarefa.t_tarefa?.nome}
                                         </p>
                                         {registro && (
-                                          <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
-                                            <span
-                                              className={
-                                                registro.tipo === "FEZ"
-                                                  ? "inline-flex shrink-0 items-center justify-center text-green-600 dark:text-green-400"
-                                                  : "inline-flex shrink-0 items-center justify-center text-red-600 dark:text-red-400"
-                                              }
-                                            >
-                                              {registro.tipo === "FEZ" ? (
-                                                <ThumbsUp className="h-3.5 w-3.5" />
-                                              ) : (
-                                                <ThumbsDown className="h-3.5 w-3.5" />
-                                              )}
-                                              <span className="sr-only">
-                                                {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
+                                          <>
+                                            <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
+                                              <span
+                                                className={
+                                                  registro.tipo === "FEZ"
+                                                    ? "inline-flex shrink-0 items-center justify-center text-green-600 dark:text-green-400"
+                                                    : "inline-flex shrink-0 items-center justify-center text-red-600 dark:text-red-400"
+                                                }
+                                              >
+                                                {registro.tipo === "FEZ" ? (
+                                                  <ThumbsUp className="h-3.5 w-3.5" />
+                                                ) : (
+                                                  <ThumbsDown className="h-3.5 w-3.5" />
+                                                )}
+                                                <span className="sr-only">
+                                                  {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
+                                                </span>
                                               </span>
-                                            </span>
-                                          </Hint>
+                                            </Hint>
+                                            <button
+                                              type="button"
+                                              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                              aria-label={
+                                                acoesAbertas.has(`${tarefa.id}:${dataSelecionada}`)
+                                                  ? "Ocultar ações da tarefa"
+                                                  : "Mostrar ações da tarefa"
+                                              }
+                                              aria-expanded={acoesAbertas.has(
+                                                `${tarefa.id}:${dataSelecionada}`,
+                                              )}
+                                              onClick={() => {
+                                                const chave = `${tarefa.id}:${dataSelecionada}`;
+                                                setAcoesAbertas((atual) => {
+                                                  const proximo = new Set(atual);
+                                                  if (proximo.has(chave)) {
+                                                    proximo.delete(chave);
+                                                  } else {
+                                                    proximo.add(chave);
+                                                  }
+                                                  return proximo;
+                                                });
+                                              }}
+                                            >
+                                              <ChevronRight
+                                                className={`h-4 w-4 transition-transform ${
+                                                  acoesAbertas.has(
+                                                    `${tarefa.id}:${dataSelecionada}`,
+                                                  )
+                                                    ? "rotate-90"
+                                                    : ""
+                                                }`}
+                                              />
+                                            </button>
+                                          </>
                                         )}
                                         {registro &&
                                           registro.tipo !== "FEZ" &&
@@ -1292,7 +1329,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                           </>
                                         )}
 
-                                        {registro && (
+                                        {registro &&
+                                          acoesAbertas.has(
+                                            `${tarefa.id}:${dataSelecionada}`,
+                                          ) && (
                                           <>
                                             {!bloqueada && (
                                               <Hint
