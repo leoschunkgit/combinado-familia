@@ -157,7 +157,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
-  const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string | null>>({});
+  const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
   const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
@@ -170,7 +170,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const [penalidadePendente, setPenalidadePendente] =
     useState<PenalidadeDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
-  const [tarefasAbertas, setTarefasAbertas] = useState<Record<number, boolean>>({});
   const [agora, setAgora] = useState(() => Date.now());
   const aberturaInicialAplicada = useRef(false);
 
@@ -289,10 +288,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     const datas = [...new Set([...datasGeradas, ...datasComRegistro])].sort(
       (a, b) => a.localeCompare(b),
     );
-    const dataSelecionada = diasSelecionados[vigencia.id] ?? null;
-    const datasFiltradas = dataSelecionada
-      ? datas.filter((data) => data === dataSelecionada)
-      : datas;
+    const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
+    const datasFiltradas = datas.filter((data) => data === dataSelecionada);
 
     if (modo === "pendentes") {
       return datasFiltradas.filter((data) => !registroNaData(tarefa, data));
@@ -362,16 +359,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       ),
     );
 
-    setTarefasAbertas(
-      Object.fromEntries(
-        grupos.flatMap(({ filhos: gruposFilhos }) =>
-          gruposFilhos.flatMap(({ tarefas: tarefasDoFilho }) =>
-            tarefasDoFilho.map((tarefa) => [tarefa.id, true]),
-          ),
-        ),
-      ),
-    );
-
     aberturaInicialAplicada.current = true;
   }, [isLoading, grupos]);
 
@@ -383,15 +370,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             `${vigencia.id}-${filho.id}`,
             aberto,
           ]),
-        ),
-      ),
-    );
-    setTarefasAbertas(
-      Object.fromEntries(
-        grupos.flatMap(({ filhos: gruposFilhos }) =>
-          gruposFilhos.flatMap(({ tarefas: tarefasDoFilho }) =>
-            tarefasDoFilho.map((tarefa) => [tarefa.id, aberto]),
-          ),
         ),
       ),
     );
@@ -902,7 +880,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dias da vigência</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Selecione uma data. Toque novamente na selecionada para mostrar todos os dias.
+                      Selecione o dia para exibir as tarefas.
                     </p>
                   </div>
                 </div>
@@ -940,7 +918,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             !futura &&
                             setDiasSelecionados((atual) => ({
                               ...atual,
-                              [vigencia.id]: selecionada ? null : data,
+                              [vigencia.id]: data,
                             }))
                           }
                           className={`shrink-0 snap-start rounded-lg border px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
