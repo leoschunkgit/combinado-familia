@@ -1296,8 +1296,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                     )}
 
                                     <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
-                                      <span>Selecionar tudo</span>
+                                      <span>Excluir tudo</span>
                                       <Checkbox
+                                        className="h-5 w-5 rounded-md border-2 border-primary/40 shadow-sm transition-colors data-[state=checked]:border-primary"
                                         checked={
                                           registrosDoDia.every(({ registro }) =>
                                             selecionadas.has(registro.id),
@@ -1324,7 +1325,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                             return proximo;
                                           })
                                         }
-                                        aria-label={`Selecionar todas as marcações de ${formatarData(dataSelecionada)}`}
+                                        aria-label={`Selecionar todas as marcações para exclusão de ${formatarData(dataSelecionada)}`}
                                       />
                                     </label>
                                   </div>
