@@ -1353,12 +1353,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
                                         <p
-                                          className={`min-w-0 flex-1 break-words text-sm font-medium leading-tight ${
+                                          className={`min-w-0 break-words text-sm font-medium leading-tight ${
                                             registro
-                                              ? registro.tipo === "FEZ"
-                                                ? "text-green-700 dark:text-green-300"
-                                                : "text-red-700 dark:text-red-300"
-                                              : ""
+                                              ? `w-36 shrink-0 sm:w-48 md:w-56 lg:w-64 ${
+                                                  registro.tipo === "FEZ"
+                                                    ? "text-green-700 dark:text-green-300"
+                                                    : "text-red-700 dark:text-red-300"
+                                                }`
+                                              : "flex-1"
                                           }`}
                                         >
                                           {tarefa.t_tarefa?.nome}
