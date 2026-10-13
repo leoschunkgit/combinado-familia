@@ -1071,7 +1071,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             futura
                               ? "cursor-not-allowed border-border bg-transparent text-muted-foreground/40"
                               : selecionada
-                                ? "border-muted-foreground/40 bg-muted/60 text-foreground shadow-sm"
+                                ? "border-muted-foreground/70 bg-muted text-foreground shadow-sm ring-1 ring-muted-foreground/20"
                                 : "border-border bg-background text-foreground hover:border-primary/50"
                           }`}
                         >
@@ -1141,7 +1141,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             }
                             className={`shrink-0 snap-start rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
-                                ? "border-muted-foreground/40 bg-muted/60 text-foreground shadow-sm"
+                                ? "border-muted-foreground/70 bg-muted text-foreground shadow-sm ring-1 ring-muted-foreground/20"
                                 : "border-border bg-background text-foreground hover:border-primary/50"
                             }`}
                           >
