@@ -1329,11 +1329,21 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                           </>
                                         )}
 
-                                        {registro &&
-                                          acoesAbertas.has(
-                                            `${tarefa.id}:${dataSelecionada}`,
-                                          ) && (
-                                          <>
+                                        {registro && (
+                                          <div
+                                            className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ease-out ${
+                                              acoesAbertas.has(
+                                                `${tarefa.id}:${dataSelecionada}`,
+                                              )
+                                                ? "max-w-40 translate-x-0 opacity-100"
+                                                : "pointer-events-none max-w-0 translate-x-2 opacity-0"
+                                            }`}
+                                            aria-hidden={
+                                              !acoesAbertas.has(
+                                                `${tarefa.id}:${dataSelecionada}`,
+                                              )
+                                            }
+                                          >
                                             {!bloqueada && (
                                               <Hint
                                                 content={
@@ -1404,7 +1414,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 aria-label={`Selecionar ${registro.tipo === "FEZ" ? "Fez" : "Não fez"} de ${formatarData(dataSelecionada)}`}
                                               />
                                             )}
-                                          </>
+                                          </div>
                                         )}
                                       </div>
                                     </div>
