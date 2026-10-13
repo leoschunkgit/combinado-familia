@@ -189,7 +189,7 @@ function TarefasPage() {
     <>
       <PageHeader
         title="Tarefas"
-        description="Crie as tarefas que poderão ser atribuídas aos filhos."
+        description="Cadastre e organize tarefas"
         icon={<ListTodo className="h-6 w-6" />}
         action={
           <div className="flex items-center gap-2">
