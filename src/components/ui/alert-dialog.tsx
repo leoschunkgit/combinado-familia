@@ -59,7 +59,7 @@ const AlertDialogFooter = ({
     <div
       className={cn(
         temDuasOuMaisAcoes
-          ? "flex flex-row items-center justify-end gap-2"
+          ? "flex flex-row items-center justify-end gap-2 sm:gap-0 sm:space-x-2"
           : "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
         className,
       )}
