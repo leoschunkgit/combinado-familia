@@ -145,7 +145,7 @@ function RelatorioPage() {
   return <>
     <PageHeader
       title="Histórico"
-      description="Consulte o histórico completo por vigência, filho e tarefa e extraia um PDF organizado."
+      description="Consulte as marcações"
       icon={<FileText className="h-6 w-6" />}
       action={<Button size="sm" onClick={() => void gerarPdf()} disabled={carregando || !relatorio.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>}
     />
