@@ -240,13 +240,12 @@ function AtribuicoesPage() {
                       role="tab"
                       aria-selected={selecionada}
                       onClick={() => selecionarVigencia(item.id)}
-                      className={`min-w-[126px] shrink-0 snap-start rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[138px] ${selecionada ? "bg-primary/10" : "bg-transparent hover:bg-transparent"}`}
+                      className={`min-w-[126px] shrink-0 snap-start rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[138px] ${selecionada ? "border-muted-foreground/80 bg-muted text-foreground shadow ring-1 ring-muted-foreground/30" : "border-border bg-background text-foreground hover:border-primary/50"}`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs tabular-nums ${selecionada ? "font-bold text-primary" : "font-medium text-muted-foreground"}`}>
+                        <span className={`text-xs tabular-nums ${selecionada ? "font-bold text-foreground" : "font-medium text-foreground"}`}>
                           {periodoCurto(item)}
                         </span>
-                        {selecionada && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
                       </div>
                       <div className="mt-1.5">
                         <VigenciaStatus vigencia={item} />
