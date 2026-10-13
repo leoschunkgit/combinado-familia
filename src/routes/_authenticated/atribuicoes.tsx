@@ -214,7 +214,7 @@ function AtribuicoesPage() {
         <EmptyState>Nenhuma vigência cadastrada.</EmptyState>
       ) : (
         <>
-          <section className="mb-5">
+          <section className="mb-5 border-t pt-3 pb-1">
             <div className="flex items-center gap-1">
               <button
                 type="button"
