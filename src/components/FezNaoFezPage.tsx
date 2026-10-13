@@ -157,7 +157,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
-  const [f, setF] = useState({ vig: "all", filho: "all", tarefa: "all", resultado: "all" });
+  const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
   const [fez, setFez] = useState<FezDraft | null>(null);
@@ -324,10 +324,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       return modo === "todos" || temDatasVisiveis;
     });
 
-  const vigenciasRascunho = f.vig === "all"
-    ? vigenciasEmAndamento
-    : vigenciasEmAndamento.filter((vigencia) => vigencia.id === Number(f.vig));
-  const idsVigenciasRascunho = new Set(vigenciasRascunho.map((vigencia) => vigencia.id));
+  const idsVigenciasRascunho = new Set(
+    vigenciasEmAndamento.map((vigencia) => vigencia.id),
+  );
   const atribuicoesRascunho = atribuicoes.filter((item) =>
     idsVigenciasRascunho.has(item.id_vigencia),
   );
@@ -344,33 +343,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const tarefasDisponiveisFiltro = tarefas.filter((tarefa) =>
     idsTarefasRascunho.has(tarefa.id),
   );
-
-  function alterarVigenciaFiltro(vig: string) {
-    const vigenciasAlvo = vig === "all"
-      ? vigenciasEmAndamento
-      : vigenciasEmAndamento.filter((item) => item.id === Number(vig));
-    const idsVigenciasAlvo = new Set(vigenciasAlvo.map((item) => item.id));
-    const atribuicoesAlvo = atribuicoes.filter((item) =>
-      idsVigenciasAlvo.has(item.id_vigencia),
-    );
-    const idsFilhosAlvo = new Set(atribuicoesAlvo.map((item) => item.id_filho));
-    const filho =
-      f.filho === "all" || idsFilhosAlvo.has(Number(f.filho))
-        ? f.filho
-        : "all";
-    const atribuicoesDoFilho = filho === "all"
-      ? atribuicoesAlvo
-      : atribuicoesAlvo.filter((item) => item.id_filho === Number(filho));
-    const idsTarefasAlvo = new Set(
-      atribuicoesDoFilho.map((item) => item.id_tarefa),
-    );
-    const tarefa =
-      f.tarefa === "all" || idsTarefasAlvo.has(Number(f.tarefa))
-        ? f.tarefa
-        : "all";
-
-    setF({ ...f, vig, filho, tarefa });
-  }
 
   function alterarFilhoFiltro(filho: string) {
     const atribuicoesDoFilho = filho === "all"
@@ -404,10 +376,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     });
 
   const vigenciasParaExibir = vigenciasEmAndamento
-    .filter(
-      (vigencia) =>
-        filtro.vig === "all" || vigencia.id === Number(filtro.vig),
-    )
     .filter((vigencia) =>
       filhosEstruturais.some(
         (filho) => tarefasEstruturais(vigencia, filho.id).length > 0,
@@ -841,7 +809,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   }
 
   const filtrosAtivos =
-    filtro.vig !== "all" ||
     filtro.filho !== "all" ||
     filtro.tarefa !== "all" ||
     filtro.resultado !== "all";
@@ -867,27 +834,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       />
 
       <ResponsiveFilters
-        desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"}
+        desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"}
         onApply={() => setFiltro(f)}
         hasActiveFilters={filtrosAtivos}
         onClear={() => {
-          const limpos = { vig: "all", filho: "all", tarefa: "all", resultado: "all" };
+          const limpos = { filho: "all", tarefa: "all", resultado: "all" };
           setF(limpos);
           setFiltro(limpos);
         }}
         renderFilters={() => (
           <>
-            <Pick
-              label="Vigência"
-              value={f.vig}
-              onChange={alterarVigenciaFiltro}
-              allLabel="Todas"
-              options={vigenciasEmAndamento.map((vigencia) => ({
-                value: String(vigencia.id),
-                label: fmtVigencia(vigencia),
-                status: situacaoVigencia(vigencia),
-              }))}
-            />
             <Pick
               label="Filho"
               value={f.filho}
