@@ -1069,10 +1069,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                           }
                           className={`relative shrink-0 snap-start rounded-lg border px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                             futura
-                              ? "cursor-not-allowed border-border bg-transparent text-muted-foreground/40"
+                              ? "cursor-not-allowed border-transparent bg-transparent text-muted-foreground/40"
                               : selecionada
-                                ? "border-muted-foreground/80 bg-muted text-foreground shadow ring-1 ring-muted-foreground/30"
-                                : "border-border bg-background text-foreground hover:border-primary/50"
+                                ? "border-muted-foreground/80 bg-transparent text-foreground"
+                                : "border-transparent bg-transparent text-foreground hover:bg-transparent"
                           }`}
                         >
                           {formatarDataCurta(data)}
@@ -1141,8 +1141,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             }
                             className={`shrink-0 snap-start rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
-                                ? "border-muted-foreground/80 bg-muted text-foreground shadow ring-1 ring-muted-foreground/30"
-                                : "border-border bg-background text-foreground hover:border-primary/50"
+                                ? "border-muted-foreground/80 bg-transparent text-foreground"
+                                : "border-transparent bg-transparent text-foreground hover:bg-transparent"
                             }`}
                           >
                             {filho.nome}
