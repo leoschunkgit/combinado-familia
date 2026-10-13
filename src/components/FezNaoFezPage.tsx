@@ -337,21 +337,32 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     return datasFiltradas;
   };
 
-  const tarefasVisiveis = (vigencia: Vigencia, idFilho: number) =>
-    atribuicoes.filter((tarefa) => {
-      if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
-        return false;
-      }
-      if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
-        return false;
-      }
-      const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
-      if (
-        filtro.resultado !== "all" ||
-        diasSelecionados[vigencia.id]
-      ) return temDatasVisiveis;
-      return modo === "todos" || temDatasVisiveis;
-    });
+  const tarefasVisiveis = (vigencia: Vigencia, idFilho: number) => {
+    const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
+
+    return atribuicoes
+      .filter((tarefa) => {
+        if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
+          return false;
+        }
+        if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
+          return false;
+        }
+        const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
+        if (
+          filtro.resultado !== "all" ||
+          diasSelecionados[vigencia.id]
+        ) return temDatasVisiveis;
+        return modo === "todos" || temDatasVisiveis;
+      })
+      .sort((a, b) => {
+        const aMarcada = Boolean(registroNaData(a, dataSelecionada));
+        const bMarcada = Boolean(registroNaData(b, dataSelecionada));
+
+        if (aMarcada === bMarcada) return 0;
+        return aMarcada ? 1 : -1;
+      });
+  };
 
   const idsVigenciasRascunho = new Set(
     vigenciasEmAndamento.map((vigencia) => vigencia.id),
