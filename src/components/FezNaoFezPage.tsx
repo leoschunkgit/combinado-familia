@@ -1206,13 +1206,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                         >
                           <CollapseChevron open={filhoAberto} className="mt-0.5" />
                           <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                              Filho
-                            </p>
                             <h3
-                              className={`mt-0.5 truncate ${uiTypography.secondaryTitleStrong}`}
+                              className={`truncate tabular-nums ${uiTypography.secondaryTitleStrong}`}
                             >
-                              {filho.nome}
+                              {formatarData(dataSelecionada)}
                             </h3>
                           </div>
                           <div className="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-sm">
@@ -1268,10 +1265,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 <div className="flex min-w-0 items-baseline gap-2">
                                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                     Tarefa(s)
-                                  </p>
-                                  <span className="text-muted-foreground">·</span>
-                                  <p className="text-sm font-semibold tabular-nums">
-                                    {formatarData(dataSelecionada)}
                                   </p>
                                 </div>
 
