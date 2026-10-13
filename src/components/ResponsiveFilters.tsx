@@ -19,12 +19,14 @@ export function ResponsiveFilters({
   onClear,
   hasActiveFilters = false,
   desktopClassName,
+  mobileActions,
 }: {
   renderFilters: FilterRenderer;
   onApply: () => void;
   onClear?: () => void;
   hasActiveFilters?: boolean;
   desktopClassName?: string;
+  mobileActions?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -40,8 +42,9 @@ export function ResponsiveFilters({
 
   return (
     <>
-      <div className="mb-4 flex justify-end gap-2 md:hidden">
-        {hasActiveFilters && onClear && (
+      <div className={cn("mb-4 flex gap-2 md:hidden", mobileActions ? "justify-between" : "justify-end")}>
+        {mobileActions}
+        {!mobileActions && hasActiveFilters && onClear && (
           <Button
             type="button"
             variant="ghost"
@@ -56,6 +59,7 @@ export function ResponsiveFilters({
           type="button"
           variant="outline"
           size="sm"
+          className={mobileActions ? "min-w-0 px-2 text-xs" : undefined}
           onClick={() => setOpen(true)}
           aria-label="Abrir filtros"
         >
