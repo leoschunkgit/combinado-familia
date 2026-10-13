@@ -178,7 +178,7 @@ function AtribuicoesPage() {
     <>
       <PageHeader
         title="Atribuições"
-        description="Associe tarefas aos filhos dentro de uma vigência."
+        description="Associe tarefas aos filhos"
         icon={<Link2 className="h-6 w-6" />}
         action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
       />
