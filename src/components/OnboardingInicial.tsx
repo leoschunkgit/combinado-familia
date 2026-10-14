@@ -28,6 +28,7 @@ import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { useActionLoading } from "@/components/ActionLoading";
 import { diasDaVigencia, sugerirInicioVigencia } from "@/lib/vigencia-periodo";
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
+import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 
@@ -48,6 +49,8 @@ export function OnboardingInicial() {
   const [nomeFilho, setNomeFilho] = useState("");
   const [temMesada, setTemMesada] = useState(false);
   const [valorMesada, setValorMesada] = useState("");
+  const [corFilho, setCorFilho] = useState("");
+  const [avatarFilho, setAvatarFilho] = useState<FilhoAvatarOpcao>("");
 
   const [nomeTarefa, setNomeTarefa] = useState("");
 
@@ -91,6 +94,10 @@ export function OnboardingInicial() {
       toast.error("Informe um valor de mesada válido");
       return;
     }
+    if (!corFilhoValida(corFilho)) {
+      toast.error("Use uma cor hexadecimal ou RGB válida");
+      return;
+    }
 
     setSalvando(true);
     const payload = {
@@ -101,6 +108,8 @@ export function OnboardingInicial() {
       tem_mesada: temMesada,
       tem_mesada_opcional: temMesada ? true : null,
       valor_mesada: temMesada ? Number(valorMesada.replace(",", ".")) : null,
+      cor: corFilho.trim() || null,
+      avatar: avatarFilho || null,
     };
     const resultado = filhoEmCorrecaoId === null
       ? await supabase.from("t_filho").insert(payload).select("id").single()
@@ -157,6 +166,8 @@ export function OnboardingInicial() {
     const comMesada = filho.tem_mesada_opcional === true && filho.valor_mesada !== null;
     setTemMesada(comMesada);
     setValorMesada(comMesada && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "");
+    setCorFilho(filho.cor ?? "");
+    setAvatarFilho(filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "");
   }
 
   function voltarParaCorrigirTarefa() {
@@ -369,6 +380,16 @@ export function OnboardingInicial() {
                 <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
               </div>
             )}
+            <div className="border-t pt-3">
+              <FilhoPersonalizacao
+                nome={nomeFilho}
+                cor={corFilho}
+                avatar={avatarFilho}
+                onCorChange={setCorFilho}
+                onAvatarChange={setAvatarFilho}
+                prefix="onboarding-filho"
+              />
+            </div>
             <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarFilho)}>
               {salvando ? "Salvando..." : filhoEmCorrecaoId !== null ? "Salvar correção e continuar" : "Cadastrar filho e continuar"}
             </Button>
