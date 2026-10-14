@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Megaphone, RefreshCw, Wrench } from "lucide-react";
 import { obterIdentificacaoApp, type IdentificacaoApp } from "@/lib/app-telemetry";
+import { supabase } from "@/integrations/supabase/client";
 import { obterAppConfigPublico, type AppConfigPublico } from "@/lib/app-system-config";
 
 export function AppSystemStatus({ ehAdmin }: { ehAdmin: boolean }) {
@@ -22,9 +23,38 @@ export function AppSystemStatus({ ehAdmin }: { ehAdmin: boolean }) {
 
   useEffect(() => {
     void carregar();
+
     const atualizar = () => void carregar();
+    const atualizarAoVoltar = () => {
+      if (document.visibilityState === "visible") void carregar();
+    };
+
     window.addEventListener("app-config-updated", atualizar);
-    return () => window.removeEventListener("app-config-updated", atualizar);
+    window.addEventListener("focus", atualizar);
+    document.addEventListener("visibilitychange", atualizarAoVoltar);
+
+    const channel = supabase
+      .channel("app-config-publico")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "t_app_config_signal",
+          filter: "id=eq.1",
+        },
+        () => {
+          void carregar();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("app-config-updated", atualizar);
+      window.removeEventListener("focus", atualizar);
+      document.removeEventListener("visibilitychange", atualizarAoVoltar);
+      void supabase.removeChannel(channel);
+    };
   }, [carregar]);
 
   if (!config) return null;

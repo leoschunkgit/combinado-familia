@@ -61,6 +61,24 @@ export type Database = {
           },
         ]
       }
+      t_app_config_signal: {
+        Row: {
+          id: number
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          id?: number
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          id?: number
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       t_app_telemetria: {
         Row: {
           first_seen_at: string
