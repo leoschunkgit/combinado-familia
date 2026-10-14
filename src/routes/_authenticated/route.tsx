@@ -297,8 +297,8 @@ function AuthenticatedLayout() {
             onClick={() => setMenuDesktopRecolhido((recolhido) => !recolhido)}
             aria-label={menuDesktopRecolhido ? "Abrir menu lateral" : "Fechar menu lateral"}
             aria-expanded={!menuDesktopRecolhido}
-            className={`absolute top-5 z-40 hidden h-6 w-6 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-[left,right,transform,background-color,color,box-shadow] duration-300 ease-out hover:bg-muted hover:text-foreground hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:flex ${
-              menuDesktopRecolhido ? "left-2" : "-right-3"
+            className={`fixed top-5 z-40 hidden h-6 w-6 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-[left,transform,background-color,color,box-shadow] duration-300 ease-out hover:bg-muted hover:text-foreground hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:flex ${
+              menuDesktopRecolhido ? "left-2" : "left-[13.25rem]"
             }`}
           >
             {menuDesktopRecolhido ? <ChevronRight className="h-3.5 w-3.5 stroke-[2.25]" /> : <ChevronLeft className="h-3.5 w-3.5 stroke-[2.25]" />}
