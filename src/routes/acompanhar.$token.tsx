@@ -17,6 +17,7 @@ export const Route = createFileRoute("/acompanhar/$token")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
     { name: "robots", content: "noindex,nofollow,noarchive" },
+    { name: "referrer", content: "no-referrer" },
   ] }),
   component: PainelPublico,
 });
