@@ -338,7 +338,7 @@ function AuthenticatedLayout() {
             <AtalhosPrincipais mobile />
             <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></div>
           </nav>
-          <div className="fixed bottom-3 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="rounded-lg bg-muted p-2.5"><p className="text-[10px] text-muted-foreground">Conectado como</p><p className="truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="mt-2 h-8 w-full text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
+          <div className="fixed bottom-4 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-2.5"><p className="min-w-0 truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5 text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
 
         <ClonarVigenciaDialog
