@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Eye, EyeOff, Fingerprint, Home, ShieldCheck, Users } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Fingerprint, Home, Loader2, ShieldCheck, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -169,6 +169,7 @@ function Index() {
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
 
+    sessionStorage.setItem("combinado_recovery_otp_validado", "1");
     setCodigoRecuperacao("");
     setRecuperacaoAguardandoCodigo(false);
     navigate({ to: "/redefinir-senha" });
@@ -234,8 +235,18 @@ function Index() {
     toast.success("Enviamos um código de 8 dígitos para seu email.");
   }
 
+  const carregando = loading || biometriaCarregando;
+
   return (
-    <div className="grid lg:min-h-screen lg:grid-cols-2">
+    <div className="relative grid lg:min-h-screen lg:grid-cols-2">
+      {carregando && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm" role="status" aria-live="polite">
+          <div className="flex items-center gap-3 rounded-xl border bg-background px-5 py-4 shadow-lg">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="text-sm font-medium">Aguarde...</span>
+          </div>
+        </div>
+      )}
       <section className="relative flex flex-col justify-between overflow-hidden bg-primary p-4 text-primary-foreground sm:p-6 md:p-8 lg:p-14">
         <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground sm:h-9 sm:w-9 lg:h-10 lg:w-10 lg:rounded-xl"><Home className="h-4 w-4 lg:h-5 lg:w-5" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-xl font-bold lg:text-2xl">Combinado</span><span className="-mt-0.5 text-[11px] font-semibold tracking-wide opacity-80 lg:-mt-1 lg:text-[13px]">família</span></span></div>
         <div className="my-4 sm:my-5 lg:my-12"><h1 className="max-w-lg text-4xl font-bold leading-tight md:text-6xl">Combinado é combinado. <span className="text-accent">Em casa também.</span></h1><p className="mt-2 max-w-md text-sm leading-snug opacity-80 sm:text-base lg:mt-6 lg:text-lg lg:leading-normal">Defina tarefas e um período para cada filho. Cadastre uma penalidade escrita e um desconto por ocorrência: quem tem mesada recebe o desconto; quem não tem recebe a penalidade escrita. Acompanhe tudo em um só lugar.</p></div>
@@ -259,7 +270,7 @@ function Index() {
                     </div>
                   )}
                   <p className="text-sm text-muted-foreground">{recuperacaoAguardandoCodigo ? "Digite o código enviado para seu email." : "Enviaremos um código de 8 dígitos para você redefinir sua senha dentro do app."}</p>
-                  <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? "Aguarde..." : recuperacaoAguardandoCodigo ? "Validar código" : "Enviar código"}</Button>
+                  <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Aguarde...</> : recuperacaoAguardandoCodigo ? "Validar código" : "Enviar código"}</Button>
                   <Button type="button" variant="ghost" className="w-full" onClick={() => { setRecuperar(false); setRecuperacaoAguardandoCodigo(false); setCodigoRecuperacao(""); }} disabled={loading}>Voltar para entrar</Button>
                 </form>
               ) : (
@@ -267,7 +278,7 @@ function Index() {
                   <div className="space-y-2"><Label htmlFor="le">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="le" type="email" required autoComplete="email" inputMode="email" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} /></div>
                   <div className="space-y-2"><Label htmlFor="ls">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ls" required autoComplete="current-password" value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} /></div>
                   <div className="text-right"><button type="button" className="text-sm font-medium text-primary underline-offset-4 hover:underline" onClick={() => { setEmailRecuperacao(login.email); setRecuperar(true); }}>Esqueci minha senha</button></div>
-                  <Button type="submit" className="w-full" size="lg" disabled={loading || biometriaCarregando}>Entrar</Button>
+                  <Button type="submit" className="w-full" size="lg" disabled={loading || biometriaCarregando}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Entrando...</> : "Entrar"}</Button>
                   {biometriaAtiva && sessaoBiometricaDisponivel && (
                     <Button
                       type="button"
@@ -300,7 +311,7 @@ function Index() {
                 <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" autoComplete="new-password" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
                   </>
                 )}
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? "Aguarde..." : emailCadastroPendente ? "Confirmar código" : "Cadastrar"}</Button>
+                <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Aguarde...</> : emailCadastroPendente ? "Confirmar código" : "Cadastrar"}</Button>
                 {emailCadastroPendente && <Button type="button" variant="ghost" className="w-full" disabled={loading} onClick={() => { setEmailCadastroPendente(""); setCodigoCadastro(""); }}>Voltar para cadastro</Button>}
               </form>
             </TabsContent>
