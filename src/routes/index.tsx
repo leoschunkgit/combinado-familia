@@ -53,6 +53,10 @@ function Index() {
   const [login, setLogin] = useState({ email: "", senha: "" });
   const [recuperar, setRecuperar] = useState(false);
   const [emailRecuperacao, setEmailRecuperacao] = useState("");
+  const [codigoRecuperacao, setCodigoRecuperacao] = useState("");
+  const [recuperacaoAguardandoCodigo, setRecuperacaoAguardandoCodigo] = useState(false);
+  const [codigoCadastro, setCodigoCadastro] = useState("");
+  const [emailCadastroPendente, setEmailCadastroPendente] = useState("");
   const [biometriaAtiva, setBiometriaAtiva] = useState(false);
   const [sessaoBiometricaDisponivel, setSessaoBiometricaDisponivel] = useState(false);
   const [biometriaCarregando, setBiometriaCarregando] = useState(false);
@@ -140,32 +144,78 @@ function Index() {
     e.preventDefault();
     const email = emailRecuperacao.trim().toLowerCase();
     if (!email || !z.string().email().safeParse(email).success) { toast.error("Informe um email válido."); return; }
+
+    if (!recuperacaoAguardandoCodigo) {
+      setLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      setLoading(false);
+      if (error) { toast.error(msgErro(error)); return; }
+      setRecuperacaoAguardandoCodigo(true);
+      toast.success("Enviamos um código de 8 dígitos para seu email.");
+      return;
+    }
+
+    if (!/^\d{8}$/.test(codigoRecuperacao)) {
+      toast.error("Digite o código de 8 dígitos.");
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: getAuthRedirectUrl("/redefinir-senha") });
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: codigoRecuperacao,
+      type: "recovery",
+    });
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Se esse email estiver cadastrado, você receberá um link para redefinir a senha.");
-    setRecuperar(false);
-    setEmailRecuperacao("");
+
+    setCodigoRecuperacao("");
+    setRecuperacaoAguardandoCodigo(false);
+    navigate({ to: "/redefinir-senha" });
   }
 
   async function cadastrar(e: FormEvent) {
     e.preventDefault();
+
+    if (emailCadastroPendente) {
+      if (!/^\d{8}$/.test(codigoCadastro)) {
+        toast.error("Digite o código de 8 dígitos.");
+        return;
+      }
+
+      setLoading(true);
+      const { error } = await supabase.auth.verifyOtp({
+        email: emailCadastroPendente,
+        token: codigoCadastro,
+        type: "signup",
+      });
+      setLoading(false);
+
+      if (error) { toast.error(msgErro(error)); return; }
+
+      setCodigoCadastro("");
+      setEmailCadastroPendente("");
+      toast.success("Email confirmado com sucesso!");
+      navigate({ to: "/inicio" });
+      return;
+    }
+
     const parsed = cadastroSchema.safeParse(cad);
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos"); return; }
+
+    const email = parsed.data.email.toLowerCase();
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
-      email: parsed.data.email.toLowerCase(),
+      email,
       password: parsed.data.senha,
       options: {
-        emailRedirectTo: getAuthRedirectUrl("/"),
         data: { nome: parsed.data.nome },
       },
     });
     setLoading(false);
+
     if (error) { toast.error(msgErro(error)); return; }
-    // Com confirmações de email habilitadas, o Supabase pode devolver um usuário
-    // ofuscado quando o email já existe. Não tratar esse caso como novo cadastro.
+
     if (data.user?.identities?.length === 0) {
       toast.error("Este email já está cadastrado. Tente entrar ou recuperar sua senha.");
       return;
@@ -174,7 +224,14 @@ function Index() {
       toast.error("Não foi possível concluir o cadastro. Tente novamente.");
       return;
     }
-    if (data.session) navigate({ to: "/inicio" }); else toast.success("Cadastro realizado! Confirme seu email para entrar.");
+
+    if (data.session) {
+      navigate({ to: "/inicio" });
+      return;
+    }
+
+    setEmailCadastroPendente(email);
+    toast.success("Enviamos um código de 8 dígitos para seu email.");
   }
 
   return (
@@ -194,10 +251,16 @@ function Index() {
               <p className="mb-4 mt-1 text-sm text-muted-foreground sm:text-base lg:mb-6">Acesse sua conta de responsável.</p>
               {recuperar ? (
                 <form onSubmit={recuperarSenha} className="space-y-4">
-                  <div className="space-y-2"><Label htmlFor="re">Email</Label><Input id="re" type="email" required autoFocus autoComplete="email" inputMode="email" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} placeholder="seu@email.com" /></div>
-                  <p className="text-sm text-muted-foreground">Enviaremos um link para o email informado para você criar uma nova senha.</p>
-                  <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? "Enviando..." : "Enviar link de recuperação"}</Button>
-                  <Button type="button" variant="ghost" className="w-full" onClick={() => setRecuperar(false)} disabled={loading}>Voltar para entrar</Button>
+                  <div className="space-y-2"><Label htmlFor="re">Email</Label><Input id="re" type="email" required autoFocus={!recuperacaoAguardandoCodigo} autoComplete="email" inputMode="email" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} placeholder="seu@email.com" disabled={recuperacaoAguardandoCodigo} /></div>
+                  {recuperacaoAguardandoCodigo && (
+                    <div className="space-y-2">
+                      <Label htmlFor="rc">Código de 8 dígitos</Label>
+                      <Input id="rc" required autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={codigoRecuperacao} onChange={(e) => setCodigoRecuperacao(e.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="00000000" />
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground">{recuperacaoAguardandoCodigo ? "Digite o código enviado para seu email." : "Enviaremos um código de 8 dígitos para você redefinir sua senha dentro do app."}</p>
+                  <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? "Aguarde..." : recuperacaoAguardandoCodigo ? "Validar código" : "Enviar código"}</Button>
+                  <Button type="button" variant="ghost" className="w-full" onClick={() => { setRecuperar(false); setRecuperacaoAguardandoCodigo(false); setCodigoRecuperacao(""); }} disabled={loading}>Voltar para entrar</Button>
                 </form>
               ) : (
                 <form onSubmit={entrar} className="space-y-4">
@@ -224,11 +287,21 @@ function Index() {
             <TabsContent value="cadastrar">
               <h2 className="mb-4 text-2xl font-bold sm:text-3xl lg:mb-6">Cadastrar usuário responsável</h2>
               <form onSubmit={cadastrar} className="space-y-4">
+                {emailCadastroPendente ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">Enviamos um código de 8 dígitos para <strong>{emailCadastroPendente}</strong>.</p>
+                    <div className="space-y-2"><Label htmlFor="ccodigo">Código de 8 dígitos <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ccodigo" autoFocus required inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={codigoCadastro} onChange={(e) => setCodigoCadastro(e.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="00000000" /></div>
+                  </>
+                ) : (
+                  <>
                 <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" type="email" autoComplete="email" inputMode="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 text-[11px] sm:text-xs" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={ok ? "text-success" : "text-destructive"}>{r.label}</li>; })}</ul></div>
                 <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" autoComplete="new-password" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>Cadastrar</Button>
+                  </>
+                )}
+                <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? "Aguarde..." : emailCadastroPendente ? "Confirmar código" : "Cadastrar"}</Button>
+                {emailCadastroPendente && <Button type="button" variant="ghost" className="w-full" disabled={loading} onClick={() => { setEmailCadastroPendente(""); setCodigoCadastro(""); }}>Voltar para cadastro</Button>}
               </form>
             </TabsContent>
           </Tabs>
