@@ -197,7 +197,6 @@ function TarefasPage() {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-destructive hover:text-destructive"
                 onClick={() => setConfirmarExclusaoTodas(true)}
               >
                 <Trash2 className="h-4 w-4" /> Excluir todas
