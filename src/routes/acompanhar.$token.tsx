@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 
 export const Route = createFileRoute("/acompanhar/$token")({
   head: () => ({ meta: [
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/acompanhar/$token")({
 type Ocorrencia = { tipo: "FEZ" | "NAO_FEZ"; data: string; bonificacao_tipo: "TEXTO" | "VALOR" | null; bonificacao_descricao: string | null; bonificacao_valor: number | null };
 type Tarefa = { id: number; nome: string; ocorrencias: Ocorrencia[] };
 type Vigencia = { id: number; data_inicio: string; data_fim: string; penalidade: string | null; qtd_ocorrencia: number; valor_debito: number | null; tarefas: Tarefa[] };
-type Painel = { filho: { nome: string; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
+type Painel = { filho: { nome: string; cor: string | null; avatar: string | null; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
 
 const dataHora = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(v));
 const data = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(v));
@@ -76,7 +77,7 @@ function PainelPublico() {
 
   return <main className="native-safe-area min-h-screen bg-muted/20 px-3 py-5 sm:px-6 sm:py-8">
     <div className="mx-auto w-full max-w-5xl space-y-4">
-      <header className="rounded-2xl border bg-card p-5"><div className="flex items-center gap-2 font-display text-lg font-bold"><House className="h-5 w-5" /> combinado <span className="text-sm font-medium text-muted-foreground">família</span></div><h1 className="mt-5 text-2xl font-bold">Olá, {painel.filho.nome} 👋</h1><p className="mt-1 text-sm text-muted-foreground">Acompanhe aqui seus combinados. Este painel é somente para consulta.</p><p className="mt-2 break-words text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p></header>
+      <header className="rounded-2xl border bg-card p-5"><div className="flex items-center gap-2 font-display text-lg font-bold"><House className="h-5 w-5" /> combinado <span className="text-sm font-medium text-muted-foreground">família</span></div><div className="mt-5 flex min-w-0 items-center gap-2.5"><FilhoAvatar nome={painel.filho.nome} cor={painel.filho.cor} avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null} className="h-8 w-8" /><h1 className="min-w-0 truncate text-2xl font-bold">Olá, {painel.filho.nome} 👋</h1></div><p className="mt-1 text-sm text-muted-foreground">Acompanhe aqui seus combinados. Este painel é somente para consulta.</p><p className="mt-2 break-words text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p></header>
 
       {vigenciaAtual ? (
         <div className="space-y-4">
