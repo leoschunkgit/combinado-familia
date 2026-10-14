@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ChevronDown, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus } from "lucide-react";
+import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -95,6 +95,7 @@ function AuthenticatedLayout() {
   const [etapa, setEtapa] = useState<number | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+  const [menuDesktopRecolhido, setMenuDesktopRecolhido] = useState(false);
   const [saindo, setSaindo] = useState(false);
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
@@ -256,8 +257,16 @@ function AuthenticatedLayout() {
       {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="min-h-screen md:flex">
-        <aside className="sticky top-0 z-30 border-b bg-sidebar md:z-auto md:flex md:h-screen md:w-56 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
-          <div className="relative flex items-center px-4 py-3 md:justify-center md:px-2.5 md:pb-5 md:pt-4">
+        <aside
+          className={`sticky top-0 z-30 border-b bg-sidebar transition-[width,border-color] duration-300 ease-out md:relative md:z-auto md:flex md:h-screen md:shrink-0 md:flex-col md:border-b-0 ${
+            menuDesktopRecolhido ? "md:w-0 md:border-r-0" : "md:w-56 md:border-r"
+          }`}
+        >
+          <div
+            className={`relative flex items-center px-4 py-3 transition-[transform,opacity] duration-200 ease-out md:w-56 md:justify-center md:px-2.5 md:pb-5 md:pt-4 ${
+              menuDesktopRecolhido ? "md:pointer-events-none md:-translate-x-full md:opacity-0" : "md:translate-x-0 md:opacity-100"
+            }`}
+          >
             <Button variant="ghost" size="icon" className="relative z-10 md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
             <Link to="/inicio" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 md:static md:translate-x-0 md:gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground md:h-10 md:w-10"><Home className="h-[18px] w-[18px] md:h-5.5 md:w-5.5" /></span>
@@ -265,14 +274,35 @@ function AuthenticatedLayout() {
             </Link>
           </div>
 
-          <nav aria-label="Navegação principal" className="hidden min-h-0 flex-1 overflow-y-auto md:flex md:flex-col md:px-1.5 md:pb-1 md:pt-1">
+          <nav
+            aria-label="Navegação principal"
+            className={`hidden min-h-0 w-56 flex-1 overflow-y-auto transition-[transform,opacity] duration-200 ease-out md:flex md:flex-col md:px-1.5 md:pb-1 md:pt-1 ${
+              menuDesktopRecolhido ? "md:pointer-events-none md:-translate-x-full md:opacity-0" : "md:translate-x-0 md:opacity-100"
+            }`}
+          >
             <MenuPrincipal />
             <AtalhosPrincipais />
-
           </nav>
-          <div className="hidden shrink-0 p-1 md:block md:w-56">
+
+          <div
+            className={`hidden w-56 shrink-0 p-1 transition-[transform,opacity] duration-200 ease-out md:block ${
+              menuDesktopRecolhido ? "md:pointer-events-none md:-translate-x-full md:opacity-0" : "md:translate-x-0 md:opacity-100"
+            }`}
+          >
             <p className="px-1 pb-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setMenuDesktopRecolhido((recolhido) => !recolhido)}
+            aria-label={menuDesktopRecolhido ? "Abrir menu lateral" : "Fechar menu lateral"}
+            aria-expanded={!menuDesktopRecolhido}
+            className={`absolute top-20 z-40 hidden h-8 w-8 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-[left,right,transform,background-color,color,box-shadow] duration-300 ease-out hover:bg-muted hover:text-foreground hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:flex ${
+              menuDesktopRecolhido ? "left-2" : "-right-4"
+            }`}
+          >
+            {menuDesktopRecolhido ? <ChevronRight className="h-4 w-4 stroke-[2.25]" /> : <ChevronLeft className="h-4 w-4 stroke-[2.25]" />}
+          </button>
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
