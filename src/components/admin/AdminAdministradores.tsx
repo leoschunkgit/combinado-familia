@@ -23,6 +23,7 @@ type AdminItem = {
   nome: string;
   email: string;
   ativo: boolean;
+  nivel: "MASTER" | "ADMIN";
   created_at: string;
   ultimo_acesso: string | null;
   eh_atual: boolean;
@@ -143,6 +144,7 @@ export function AdminAdministradores() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm font-semibold">{admin.nome}</p>
+                      {admin.nivel === "MASTER" && <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">MASTER</span>}
                       {admin.eh_atual && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">Você</span>}
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${admin.ativo ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                         {admin.ativo ? "Ativo" : "Inativo"}
@@ -157,10 +159,10 @@ export function AdminAdministradores() {
                   size="sm"
                   variant="outline"
                   className={admin.ativo ? "text-destructive hover:text-destructive" : ""}
-                  disabled={salvando || admin.eh_atual}
+                  disabled={salvando || admin.eh_atual || admin.nivel === "MASTER"}
                   onClick={() => setConfirmacao(admin)}
                 >
-                  {admin.ativo ? "Desativar" : "Ativar"}
+                  {admin.nivel === "MASTER" ? "Protegido" : admin.ativo ? "Desativar" : "Ativar"}
                 </Button>
               </div>
             ))}
@@ -168,7 +170,7 @@ export function AdminAdministradores() {
         )}
 
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          Você não pode desativar o próprio acesso. O banco também impede que o último administrador ativo seja desativado.
+          O MASTER não pode ser removido, desativado nem rebaixado pela Administração. Os demais administradores também não podem desativar o próprio acesso, e o banco impede que o sistema fique sem administrador ativo.
         </p>
       </section>
 

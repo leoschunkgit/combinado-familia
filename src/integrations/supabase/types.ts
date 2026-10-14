@@ -35,18 +35,21 @@ export type Database = {
           created_at: string
           id: number
           id_usuario_pai: number
+          nivel: string
         }
         Insert: {
           ativo?: boolean
           created_at?: string
           id?: number
           id_usuario_pai: number
+          nivel?: string
         }
         Update: {
           ativo?: boolean
           created_at?: string
           id?: number
           id_usuario_pai?: number
+          nivel?: string
         }
         Relationships: [
           {
@@ -569,6 +572,7 @@ export type Database = {
           email: string
           id: number
           id_usuario_pai: number
+          nivel: string
           nome: string
           ultimo_acesso: string | null
         }[]
