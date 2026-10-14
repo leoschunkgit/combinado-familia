@@ -628,6 +628,10 @@ export type Database = {
         Args: { p_admin_id: number; p_ativo: boolean }
         Returns: boolean
       }
+      admin_feedback_excluir: {
+        Args: { p_feedback_id: number }
+        Returns: boolean
+      }
       admin_feedbacks: {
         Args: { p_limite?: number }
         Returns: {
