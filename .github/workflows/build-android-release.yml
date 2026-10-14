@@ -52,6 +52,9 @@ jobs:
       - name: Sync Android
         run: npx cap sync android
 
+      - name: Apply centralized app version
+        run: npm run app:version:android
+
       - name: Make Gradle wrapper executable
         run: chmod +x android/gradlew
 
