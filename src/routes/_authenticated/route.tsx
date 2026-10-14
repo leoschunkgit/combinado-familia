@@ -258,7 +258,7 @@ function AuthenticatedLayout() {
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="min-h-screen md:flex">
         <aside
-          className={`sticky top-0 z-30 border-b bg-sidebar transition-[width,border-color] duration-300 ease-out md:relative md:z-auto md:flex md:h-screen md:shrink-0 md:flex-col md:border-b-0 ${
+          className={`sticky top-0 z-30 border-b bg-sidebar transition-[width,border-color] duration-300 ease-out md:sticky md:top-0 md:z-auto md:flex md:h-screen md:shrink-0 md:flex-col md:border-b-0 ${
             menuDesktopRecolhido ? "md:w-0 md:border-r-0" : "md:w-56 md:border-r"
           }`}
         >
