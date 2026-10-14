@@ -14,6 +14,7 @@ import { Pick } from "@/components/Pick";
 import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -303,9 +304,12 @@ function AtribuicoesPage() {
               {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => (
                 <section key={filhoItem.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
                   <div className="flex w-full items-center justify-between gap-4 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
-                      <p className="truncate font-bold">{filhoItem.nome}</p>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <FilhoAvatar nome={filhoItem.nome} cor={filhoItem.cor} avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null} className="h-7 w-7" />
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
+                        <p className="truncate font-bold">{filhoItem.nome}</p>
+                      </div>
                     </div>
                     <span className="shrink-0 text-xs font-medium text-muted-foreground">
                       {atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}
