@@ -9,7 +9,8 @@ const gradleCandidates = [
   path.join(root, "android", "app", "build.gradle.kts"),
 ];
 
-const config = JSON.parse(await readFile(configPath, "utf8"));
+const configText = (await readFile(configPath, "utf8")).replace(/^\uFEFF/, "");
+const config = JSON.parse(configText);
 const versionName = String(config.versionName ?? "").trim();
 const versionCode = Number(config.versionCode);
 
