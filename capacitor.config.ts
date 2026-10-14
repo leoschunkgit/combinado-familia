@@ -3,7 +3,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "app.combinadofamilia",
   appName: "Combinado Família",
-  webDir: ".output/public",
+  webDir: "dist/client",
   loggingBehavior: "none",
   plugins: {
     Keyboard: {
