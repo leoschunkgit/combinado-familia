@@ -18,7 +18,7 @@ import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigenc
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
-import { FilhoAvatar, type FilhoAvatarTipo } from "@/components/FilhoAvatar";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -69,8 +69,6 @@ const dadosExtras = (v: FilhoForm) => ({
 
 function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange: (v: FilhoForm) => void; prefix: string }) {
   const corPicker = /^#[0-9a-f]{6}$/i.test(value.cor.trim()) ? value.cor.trim() : "#0C5C3C";
-  const avatarAtual: FilhoAvatarTipo = value.avatar || null;
-
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
 
@@ -91,7 +89,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
               value.avatar === opcao.valor ? "border-primary bg-primary/5 text-primary" : "bg-background text-muted-foreground hover:bg-muted/40"
             }`}
           >
-            <FilhoAvatar nome={value.nome || "Filho"} cor={value.cor || null} avatar={opcao.valor || avatarAtual && opcao.valor} className="h-9 w-9" />
+            <FilhoAvatar nome={value.nome || "Filho"} cor={value.cor || null} avatar={opcao.valor || null} className="h-9 w-9" />
             <span>{opcao.label}</span>
           </button>
         ))}
