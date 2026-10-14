@@ -157,6 +157,23 @@
    No Android moderno, o Capacitor SystemBars injeta --safe-area-inset-*.
    O env(...) fica como fallback para iOS/WebView que já fornece os insets. */
 @supports (padding: max(0px)) {
+  /* No app nativo mobile, mantém a faixa da barra de status sempre fechada.
+     O conteúdo continua rolando normalmente, mas nunca fica visível por trás
+     do relógio/bateria do aparelho. */
+  @media (max-width: 767px) {
+    html.native-app::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: 60;
+      height: var(--app-safe-top);
+      background-color: var(--sidebar);
+      pointer-events: none;
+    }
+  }
+
   .native-app .native-safe-area {
     padding-top: var(--app-safe-top);
     padding-right: var(--app-safe-right);
