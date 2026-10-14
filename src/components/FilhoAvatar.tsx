@@ -11,24 +11,82 @@ function iniciaisDoNome(nome: string) {
 
 function BonecoMenino() {
   return (
-    <svg viewBox="0 0 32 32" className="h-[70%] w-[70%]" fill="none" aria-hidden="true">
-      <path d="M10.3 12.4c.7-4.2 3.4-6.4 6.1-6.4 2.8 0 5.2 1.8 5.9 5.4-2.8-.1-5.3-1-7.4-2.7-1.1 1.7-2.6 2.9-4.6 3.7Z" fill="currentColor" />
-      <circle cx="16" cy="14.5" r="6.1" stroke="currentColor" strokeWidth="2" />
-      <path d="M7.8 27c1.1-4.6 4.1-7 8.2-7s7.1 2.4 8.2 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M13.3 14.4h.1M18.6 14.4h.1" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M13.6 17.2c1.5 1 3.3 1 4.8 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    <svg
+      viewBox="0 0 32 32"
+      className="h-[72%] w-[72%]"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M10.4 12.1c.3-4 2.8-6.6 6.1-6.6 3.1 0 5.4 2 5.9 5.3-2.6-.2-4.8-1-6.6-2.5-1.3 1.8-3 3-5.4 3.8Z"
+        fill="currentColor"
+        opacity=".96"
+      />
+      <path
+        d="M10.2 13.1c0 4.1 2.5 7.1 5.8 7.1s5.8-3 5.8-7.1"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8.2 27c.8-3.8 3.8-6.2 7.8-6.2s7 2.4 7.8 6.2"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13.6 14.1h.1M18.3 14.1h.1"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.2 17.1c1.1.7 2.5.7 3.6 0"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function BonecoMenina() {
   return (
-    <svg viewBox="0 0 32 32" className="h-[70%] w-[70%]" fill="none" aria-hidden="true">
-      <path d="M9.2 15.1c0-6.2 2.6-9.2 6.8-9.2s6.8 3 6.8 9.2v4.2c-1.2-.7-2-1.7-2.5-3-1.2 2-2.7 3.1-4.3 3.1s-3.1-1.1-4.3-3.1c-.5 1.3-1.3 2.3-2.5 3v-4.2Z" fill="currentColor" />
-      <circle cx="16" cy="14.3" r="5.6" stroke="currentColor" strokeWidth="2" />
-      <path d="M7.8 27c1.1-4.6 4.1-7 8.2-7s7.1 2.4 8.2 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M13.3 14.2h.1M18.6 14.2h.1" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M13.6 17.1c1.5 1 3.3 1 4.8 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    <svg
+      viewBox="0 0 32 32"
+      className="h-[72%] w-[72%]"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M8.8 16.2c0-6.7 2.7-10.6 7.2-10.6s7.2 3.9 7.2 10.6v3.6c-1.2-.5-2.1-1.3-2.8-2.5-.9 1.8-2.4 2.9-4.4 2.9s-3.5-1.1-4.4-2.9c-.7 1.2-1.6 2-2.8 2.5v-3.6Z"
+        fill="currentColor"
+        opacity=".96"
+      />
+      <path
+        d="M10.5 13.1c0 4.1 2.4 7.1 5.5 7.1s5.5-3 5.5-7.1"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8.1 27c.9-3.8 3.9-6.2 7.9-6.2s7 2.4 7.9 6.2"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13.6 14.1h.1M18.3 14.1h.1"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.2 17.1c1.1.7 2.5.7 3.6 0"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -55,7 +113,9 @@ export function FilhoAvatar({
       ) : avatar === "menina" ? (
         <BonecoMenina />
       ) : (
-        <span className="text-[0.72em] font-bold leading-none tracking-tight">{iniciaisDoNome(nome)}</span>
+        <span className="text-[0.72em] font-bold leading-none tracking-tight">
+          {iniciaisDoNome(nome)}
+        </span>
       )}
     </span>
   );
