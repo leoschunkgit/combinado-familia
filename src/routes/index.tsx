@@ -55,11 +55,20 @@ function Index() {
   const [emailRecuperacao, setEmailRecuperacao] = useState("");
   const [codigoRecuperacao, setCodigoRecuperacao] = useState("");
   const [recuperacaoAguardandoCodigo, setRecuperacaoAguardandoCodigo] = useState(false);
+  const [segundosReenvioRecuperacao, setSegundosReenvioRecuperacao] = useState(0);
   const [codigoCadastro, setCodigoCadastro] = useState("");
   const [emailCadastroPendente, setEmailCadastroPendente] = useState("");
   const [biometriaAtiva, setBiometriaAtiva] = useState(false);
   const [sessaoBiometricaDisponivel, setSessaoBiometricaDisponivel] = useState(false);
   const [biometriaCarregando, setBiometriaCarregando] = useState(false);
+
+  useEffect(() => {
+    if (segundosReenvioRecuperacao <= 0) return;
+    const timer = window.setInterval(() => {
+      setSegundosReenvioRecuperacao((atual) => Math.max(0, atual - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [segundosReenvioRecuperacao]);
 
   useEffect(() => {
     let ativo = true;
@@ -140,21 +149,42 @@ function Index() {
     }
   }
 
+  async function solicitarCodigoRecuperacao() {
+    const email = emailRecuperacao.trim().toLowerCase();
+    if (!email || !z.string().email().safeParse(email).success) {
+      toast.error("Informe um email válido.");
+      return false;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    setLoading(false);
+
+    if (error) {
+      const codigoErro = (error as { code?: string }).code;
+      if (codigoErro === "over_email_send_rate_limit") {
+        toast.error("Aguarde alguns segundos antes de solicitar outro código.");
+        return false;
+      }
+      toast.error(msgErro(error));
+      return false;
+    }
+
+    setRecuperacaoAguardandoCodigo(true);
+    setSegundosReenvioRecuperacao(60);
+    toast.success("Enviamos um código de 8 dígitos para seu email.");
+    return true;
+  }
+
   async function recuperarSenha(e: FormEvent) {
     e.preventDefault();
-    const email = emailRecuperacao.trim().toLowerCase();
-    if (!email || !z.string().email().safeParse(email).success) { toast.error("Informe um email válido."); return; }
 
     if (!recuperacaoAguardandoCodigo) {
-      setLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      setLoading(false);
-      if (error) { toast.error(msgErro(error)); return; }
-      setRecuperacaoAguardandoCodigo(true);
-      toast.success("Enviamos um código de 8 dígitos para seu email.");
+      await solicitarCodigoRecuperacao();
       return;
     }
 
+    const email = emailRecuperacao.trim().toLowerCase();
     if (!/^\d{8}$/.test(codigoRecuperacao)) {
       toast.error("Digite o código de 8 dígitos.");
       return;
@@ -167,11 +197,21 @@ function Index() {
       type: "recovery",
     });
     setLoading(false);
-    if (error) { toast.error(msgErro(error)); return; }
+
+    if (error) {
+      const codigoErro = (error as { code?: string }).code;
+      if (codigoErro === "otp_expired") {
+        toast.error("Esse código expirou ou não é mais válido. Solicite um novo código.");
+        return;
+      }
+      toast.error(msgErro(error));
+      return;
+    }
 
     sessionStorage.setItem("combinado_recovery_otp_validado", "1");
     setCodigoRecuperacao("");
     setRecuperacaoAguardandoCodigo(false);
+    setSegundosReenvioRecuperacao(0);
     navigate({ to: "/redefinir-senha" });
   }
 
@@ -271,7 +311,18 @@ function Index() {
                   )}
                   <p className="text-sm text-muted-foreground">{recuperacaoAguardandoCodigo ? "Digite o código enviado para seu email." : "Enviaremos um código de 8 dígitos para você redefinir sua senha dentro do app."}</p>
                   <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Aguarde...</> : recuperacaoAguardandoCodigo ? "Validar código" : "Enviar código"}</Button>
-                  <Button type="button" variant="ghost" className="w-full" onClick={() => { setRecuperar(false); setRecuperacaoAguardandoCodigo(false); setCodigoRecuperacao(""); }} disabled={loading}>Voltar para entrar</Button>
+                  {recuperacaoAguardandoCodigo && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      disabled={loading || segundosReenvioRecuperacao > 0}
+                      onClick={() => void solicitarCodigoRecuperacao()}
+                    >
+                      {segundosReenvioRecuperacao > 0 ? `Reenviar código em ${segundosReenvioRecuperacao}s` : "Reenviar código"}
+                    </Button>
+                  )}
+                  <Button type="button" variant="ghost" className="w-full" onClick={() => { setRecuperar(false); setRecuperacaoAguardandoCodigo(false); setCodigoRecuperacao(""); setSegundosReenvioRecuperacao(0); }} disabled={loading}>Voltar para entrar</Button>
                 </form>
               ) : (
                 <form onSubmit={entrar} className="space-y-4">
