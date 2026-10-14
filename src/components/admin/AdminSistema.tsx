@@ -349,9 +349,8 @@ export function AdminSistema() {
       <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-muted/20 p-4">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
         <div>
-          <p className="text-sm font-semibold">Importante</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Alterações nesta área podem afetar todos os usuários do Combinado Família. Mudanças administrativas ficam registradas na aba Auditoria, permitindo identificar quem realizou a ação e quando ela ocorreu.
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            <strong className="text-foreground">Importante:</strong> alterações nesta área podem afetar todos os usuários do Combinado Família. As mudanças administrativas ficam registradas na Auditoria.
           </p>
         </div>
       </div>
