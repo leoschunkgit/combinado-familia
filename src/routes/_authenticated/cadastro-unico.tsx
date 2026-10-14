@@ -451,23 +451,25 @@ function CadastroUnicoPage() {
               <CardContent className="space-y-3 !p-3.5">
                 <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar novo filho</p>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(12rem,1fr)_auto_9rem] lg:items-end">
+                  <div className="mt-2 grid gap-2 lg:grid-cols-[minmax(12rem,1fr)_auto_9rem] lg:items-end">
                     <div className="space-y-1.5">
                       <Label>Nome</Label>
                       <Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" />
                     </div>
 
-                    <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border bg-background px-3 text-sm font-medium sm:self-end">
-                      <Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} />
-                      <span className="whitespace-nowrap">Tem mesada</span>
-                    </label>
+                    <div className="grid grid-cols-2 gap-2 lg:contents">
+                      <label className="flex h-10 cursor-pointer items-center gap-2 self-end rounded-md border bg-background px-3 text-sm font-medium">
+                        <Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} />
+                        <span className="whitespace-nowrap">Tem mesada</span>
+                      </label>
 
-                    {temMesada && (
-                      <div className="space-y-1.5">
-                        <Label>Mesada</Label>
-                        <CurrencyInput value={valorMesada} onValueChange={setValorMesada} />
-                      </div>
-                    )}
+                      {temMesada && (
+                        <div className="space-y-1.5">
+                          <Label>Mesada</Label>
+                          <CurrencyInput value={valorMesada} onValueChange={setValorMesada} />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-3 border-t pt-3">
