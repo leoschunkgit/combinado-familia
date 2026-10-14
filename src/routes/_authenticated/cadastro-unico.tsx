@@ -458,7 +458,7 @@ function CadastroUnicoPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 lg:contents">
-                      <label className="flex h-10 cursor-pointer items-center gap-2 self-end rounded-md border bg-background px-3 text-sm font-medium">
+                      <label className="flex h-10 cursor-pointer items-center gap-2 self-end px-3 text-sm font-medium">
                         <Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} />
                         <span className="whitespace-nowrap">Tem mesada</span>
                       </label>
