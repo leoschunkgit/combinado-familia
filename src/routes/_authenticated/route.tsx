@@ -256,7 +256,7 @@ function AuthenticatedLayout() {
       {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
       {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="min-h-screen md:flex">
-        <aside className="border-b bg-sidebar md:sticky md:top-0 md:flex md:h-screen md:w-56 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
+        <aside className="sticky top-0 z-30 border-b bg-sidebar md:flex md:h-screen md:w-56 md:shrink-0 md:flex-col md:border-b-0 md:border-r">
           <div className="relative flex items-center px-4 py-3 md:justify-center md:px-2.5 md:pb-5 md:pt-4">
             <Button variant="ghost" size="icon" className="relative z-10 md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
             <Link to="/inicio" className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 md:static md:translate-x-0 md:gap-3">
