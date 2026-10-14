@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageSquareText, Search } from "lucide-react";
+import { MessageSquareText, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -57,23 +68,56 @@ export function AdminFeedbacks() {
   const [carregando, setCarregando] = useState(true);
   const [busca, setBusca] = useState("");
   const [tipo, setTipo] = useState("TODOS");
+  const [ehMaster, setEhMaster] = useState(false);
+  const [feedbackExcluir, setFeedbackExcluir] = useState<FeedbackItem | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
-    const { data, error } = await supabase.rpc("admin_feedbacks", { p_limite: 300 });
+
+    const [feedbacksResult, adminsResult] = await Promise.all([
+      supabase.rpc("admin_feedbacks", { p_limite: 300 }),
+      supabase.rpc("admin_listar_admins"),
+    ]);
+
     setCarregando(false);
 
-    if (error) {
+    if (feedbacksResult.error) {
       toast.error("Não foi possível carregar os feedbacks.");
       return;
     }
 
-    setItens((data ?? []) as FeedbackItem[]);
+    setItens((feedbacksResult.data ?? []) as FeedbackItem[]);
+    setEhMaster(
+      !adminsResult.error
+      && (adminsResult.data ?? []).some(
+        (admin) => admin.eh_atual === true && admin.nivel === "MASTER"
+      )
+    );
   }, []);
 
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  async function excluirFeedback() {
+    if (!feedbackExcluir || !ehMaster) return;
+
+    setExcluindo(true);
+    const { error } = await supabase.rpc("admin_feedback_excluir", {
+      p_feedback_id: feedbackExcluir.id,
+    });
+    setExcluindo(false);
+
+    if (error) {
+      toast.error(error.message || "Não foi possível excluir o feedback.");
+      return;
+    }
+
+    setItens((atuais) => atuais.filter((item) => item.id !== feedbackExcluir.id));
+    setFeedbackExcluir(null);
+    toast.success("Feedback excluído.");
+  }
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLocaleLowerCase("pt-BR");
@@ -150,7 +194,22 @@ export function AdminFeedbacks() {
                     {item.usuario_nome} · {item.usuario_email}
                   </p>
                 </div>
-                <span className="text-xs text-muted-foreground">#{item.id}</span>
+                <div className="flex shrink-0 items-center gap-1">
+                  <span className="text-xs text-muted-foreground">#{item.id}</span>
+                  {ehMaster && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setFeedbackExcluir(item)}
+                      aria-label={`Excluir feedback #${item.id}`}
+                      title="Excluir feedback"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{item.mensagem}</p>
@@ -169,6 +228,37 @@ export function AdminFeedbacks() {
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={Boolean(feedbackExcluir)}
+        onOpenChange={(open) => {
+          if (!open && !excluindo) setFeedbackExcluir(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir feedback?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação exclui definitivamente o feedback
+              {feedbackExcluir ? ` #${feedbackExcluir.id} — ${feedbackExcluir.assunto}` : ""}.
+              A exclusão ficará registrada na Auditoria administrativa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluindo}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={excluindo}
+              onClick={(event) => {
+                event.preventDefault();
+                void excluirFeedback();
+              }}
+            >
+              {excluindo ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
