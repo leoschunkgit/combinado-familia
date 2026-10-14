@@ -1,24 +1,454 @@
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { ShieldCheck } from "lucide-react";
+import {
+  Baby,
+  BellRing,
+  CalendarRange,
+  Database,
+  Link2,
+  ListTodo,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  ThumbsDown,
+  ThumbsUp,
+  Users,
+  UserCheck,
+  XCircle,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { uiTypography } from "@/lib/ui-typography";
+import { uiSpacing } from "@/lib/ui-spacing";
+
+type Aba = "visao" | "usuarios" | "push" | "sistema";
+
+type AdminResumo = {
+  usuarios: number;
+  usuarios_7d: number;
+  usuarios_30d: number;
+  onboarding_concluido: number;
+  filhos: number;
+  tarefas: number;
+  vigencias_ativas: number;
+  vigencias_finalizadas: number;
+  atribuicoes: number;
+  fez_hoje: number;
+  nao_fez_hoje: number;
+  links_publicos_ativos: number;
+  push_dispositivos: number;
+  push_ativos: number;
+  push_android_ativos: number;
+  push_ios_ativos: number;
+  push_envios_hoje: number;
+  admins_ativos: number;
+};
+
+type AdminUsuario = {
+  id: number;
+  nome: string;
+  email: string;
+  created_at: string;
+  onboarding_concluido: boolean;
+  qtd_filhos: number;
+  qtd_tarefas: number;
+  qtd_vigencias: number;
+  qtd_atribuicoes: number;
+  ultimo_movimento: string;
+};
+
+type Versao = {
+  versionName: string;
+  versionCode: number;
+};
+
+const RESUMO_VAZIO: AdminResumo = {
+  usuarios: 0,
+  usuarios_7d: 0,
+  usuarios_30d: 0,
+  onboarding_concluido: 0,
+  filhos: 0,
+  tarefas: 0,
+  vigencias_ativas: 0,
+  vigencias_finalizadas: 0,
+  atribuicoes: 0,
+  fez_hoje: 0,
+  nao_fez_hoje: 0,
+  links_publicos_ativos: 0,
+  push_dispositivos: 0,
+  push_ativos: 0,
+  push_android_ativos: 0,
+  push_ios_ativos: 0,
+  push_envios_hoje: 0,
+  admins_ativos: 0,
+};
+
+function numero(valor: unknown) {
+  const n = Number(valor ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizarResumo(data: unknown): AdminResumo {
+  const r = data && typeof data === "object" ? data as Record<string, unknown> : {};
+  return {
+    usuarios: numero(r["usuarios"]),
+    usuarios_7d: numero(r["usuarios_7d"]),
+    usuarios_30d: numero(r["usuarios_30d"]),
+    onboarding_concluido: numero(r["onboarding_concluido"]),
+    filhos: numero(r["filhos"]),
+    tarefas: numero(r["tarefas"]),
+    vigencias_ativas: numero(r["vigencias_ativas"]),
+    vigencias_finalizadas: numero(r["vigencias_finalizadas"]),
+    atribuicoes: numero(r["atribuicoes"]),
+    fez_hoje: numero(r["fez_hoje"]),
+    nao_fez_hoje: numero(r["nao_fez_hoje"]),
+    links_publicos_ativos: numero(r["links_publicos_ativos"]),
+    push_dispositivos: numero(r["push_dispositivos"]),
+    push_ativos: numero(r["push_ativos"]),
+    push_android_ativos: numero(r["push_android_ativos"]),
+    push_ios_ativos: numero(r["push_ios_ativos"]),
+    push_envios_hoje: numero(r["push_envios_hoje"]),
+    admins_ativos: numero(r["admins_ativos"]),
+  };
+}
+
+function formatarNumero(valor: number) {
+  return new Intl.NumberFormat("pt-BR").format(valor);
+}
+
+function formatarDataHora(valor: string) {
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return "—";
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(data);
+}
+
+function Indicador({
+  titulo,
+  valor,
+  detalhe,
+  icon,
+}: {
+  titulo: string;
+  valor: number | string;
+  detalhe?: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="min-w-0 rounded-xl border bg-card p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">{titulo}</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums">
+            {typeof valor === "number" ? formatarNumero(valor) : valor}
+          </p>
+          {detalhe && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{detalhe}</p>}
+        </div>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function AdministracaoPage() {
+  const [aba, setAba] = useState<Aba>("visao");
+  const [resumo, setResumo] = useState<AdminResumo>(RESUMO_VAZIO);
+  const [usuarios, setUsuarios] = useState<AdminUsuario[]>([]);
+  const [versao, setVersao] = useState<Versao | null>(null);
+  const [busca, setBusca] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    setErro(null);
+
+    const [resumoResult, usuariosResult, versaoResult] = await Promise.all([
+      supabase.rpc("admin_resumo"),
+      supabase.rpc("admin_usuarios"),
+      fetch("/app-version.json", { cache: "no-store" })
+        .then(async (response) => response.ok ? await response.json() as Versao : null)
+        .catch(() => null),
+    ]);
+
+    if (resumoResult.error || usuariosResult.error) {
+      setErro("Não foi possível carregar os dados administrativos.");
+      setCarregando(false);
+      return;
+    }
+
+    setResumo(normalizarResumo(resumoResult.data));
+    setUsuarios((usuariosResult.data ?? []) as AdminUsuario[]);
+    setVersao(versaoResult);
+    setCarregando(false);
+  }, []);
+
+  useEffect(() => {
+    void carregar();
+  }, [carregar]);
+
+  const usuariosFiltrados = useMemo(() => {
+    const termo = busca.trim().toLocaleLowerCase("pt-BR");
+    if (!termo) return usuarios;
+    return usuarios.filter((usuario) =>
+      usuario.nome.toLocaleLowerCase("pt-BR").includes(termo)
+      || usuario.email.toLocaleLowerCase("pt-BR").includes(termo)
+    );
+  }, [busca, usuarios]);
+
+  const taxaOnboarding = resumo.usuarios > 0
+    ? Math.round((resumo.onboarding_concluido / resumo.usuarios) * 100)
+    : 0;
+
+  const abas: Array<{ id: Aba; label: string }> = [
+    { id: "visao", label: "Visão geral" },
+    { id: "usuarios", label: "Usuários" },
+    { id: "push", label: "Push" },
+    { id: "sistema", label: "Sistema" },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className={uiSpacing.pageStack}>
       <PageHeader
         title="Administração"
-        subtitle="Área administrativa do Combinado Família."
+        description="Acompanhe os principais indicadores do Combinado Família sem abrir o conteúdo das famílias."
         icon={<ShieldCheck className="h-6 w-6" />}
+        action={
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0 rounded-md"
+            onClick={() => void carregar()}
+            disabled={carregando}
+            aria-label="Atualizar dados administrativos"
+          >
+            <RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} />
+          </Button>
+        }
       />
 
-      <section className="max-w-2xl rounded-xl border bg-card p-5 shadow-sm">
-        <h2 className={uiTypography.secondaryTitle}>Acesso administrativo ativo</h2>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Sua conta está cadastrada como administradora. Nesta primeira etapa, a área administrativa não acessa nem altera dados de outras famílias.
-        </p>
-      </section>
+      <div className="flex max-w-full gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {abas.map((item) => (
+          <Button
+            key={item.id}
+            type="button"
+            size="sm"
+            variant={aba === item.id ? "default" : "outline"}
+            className="shrink-0"
+            onClick={() => setAba(item.id)}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </div>
+
+      {erro && (
+        <div className="rounded-xl border border-destructive/30 bg-card p-4">
+          <div className="flex items-start gap-3">
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="font-semibold text-destructive">Erro ao carregar</p>
+              <p className="mt-1 text-sm text-muted-foreground">{erro}</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => void carregar()}>
+                Tentar novamente
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!erro && carregando && (
+        <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
+          Carregando dados administrativos...
+        </div>
+      )}
+
+      {!erro && !carregando && aba === "visao" && (
+        <div className={uiSpacing.sectionStack}>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <Indicador
+              titulo="Usuários"
+              valor={resumo.usuarios}
+              detalhe={`+${formatarNumero(resumo.usuarios_7d)} em 7 dias · +${formatarNumero(resumo.usuarios_30d)} em 30 dias`}
+              icon={<Users className="h-4 w-4" />}
+            />
+            <Indicador titulo="Filhos" valor={resumo.filhos} icon={<Baby className="h-4 w-4" />} />
+            <Indicador titulo="Vigências ativas" valor={resumo.vigencias_ativas} icon={<CalendarRange className="h-4 w-4" />} />
+            <Indicador titulo="Fez hoje" valor={resumo.fez_hoje} icon={<ThumbsUp className="h-4 w-4" />} />
+            <Indicador titulo="Não fez hoje" valor={resumo.nao_fez_hoje} icon={<ThumbsDown className="h-4 w-4" />} />
+            <Indicador titulo="Links públicos ativos" valor={resumo.links_publicos_ativos} icon={<Link2 className="h-4 w-4" />} />
+          </div>
+
+          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className={uiTypography.secondaryTitle}>Uso e configuração</h2>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                <p className="text-xs font-medium text-muted-foreground">Onboarding concluído</p>
+                <p className="mt-1 text-lg font-bold">{taxaOnboarding}%</p>
+                <p className="text-xs text-muted-foreground">{formatarNumero(resumo.onboarding_concluido)} de {formatarNumero(resumo.usuarios)} usuários</p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                <p className="text-xs font-medium text-muted-foreground">Tarefas</p>
+                <p className="mt-1 text-lg font-bold">{formatarNumero(resumo.tarefas)}</p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                <p className="text-xs font-medium text-muted-foreground">Atribuições</p>
+                <p className="mt-1 text-lg font-bold">{formatarNumero(resumo.atribuicoes)}</p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                <p className="text-xs font-medium text-muted-foreground">Vigências finalizadas</p>
+                <p className="mt-1 text-lg font-bold">{formatarNumero(resumo.vigencias_finalizadas)}</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {!erro && !carregando && aba === "usuarios" && (
+        <div className={uiSpacing.sectionStack}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className={uiTypography.secondaryTitle}>Usuários cadastrados</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Informações administrativas básicas. O conteúdo das famílias não é exibido.
+              </p>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+                placeholder="Pesquisar usuário..."
+                className="pl-9"
+                aria-label="Pesquisar usuário"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 md:hidden">
+            {usuariosFiltrados.map((usuario) => (
+              <article key={usuario.id} className="rounded-2xl border bg-card p-4">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold">{usuario.nome}</p>
+                  <p className="truncate text-xs text-muted-foreground">{usuario.email}</p>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                    <p className="text-xs font-medium text-muted-foreground">Cadastro</p>
+                    <p className="mt-0.5 text-xs font-medium">{formatarDataHora(usuario.created_at)}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                    <p className="text-xs font-medium text-muted-foreground">Onboarding</p>
+                    <p className="mt-0.5 text-xs font-medium">{usuario.onboarding_concluido ? "Concluído" : "Pendente"}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                    <p className="text-xs font-medium text-muted-foreground">Filhos / tarefas</p>
+                    <p className="mt-0.5 font-medium">{usuario.qtd_filhos} / {usuario.qtd_tarefas}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                    <p className="text-xs font-medium text-muted-foreground">Vigências / atribuições</p>
+                    <p className="mt-0.5 font-medium">{usuario.qtd_vigencias} / {usuario.qtd_atribuicoes}</p>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">Último movimento: {formatarDataHora(usuario.ultimo_movimento)}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
+            <table className="w-full min-w-[900px] text-sm">
+              <thead className="border-b bg-muted/30 text-left text-xs text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Usuário</th>
+                  <th className="px-3 py-3 font-semibold">Cadastro</th>
+                  <th className="px-3 py-3 font-semibold">Onboarding</th>
+                  <th className="px-3 py-3 text-center font-semibold">Filhos</th>
+                  <th className="px-3 py-3 text-center font-semibold">Tarefas</th>
+                  <th className="px-3 py-3 text-center font-semibold">Vigências</th>
+                  <th className="px-3 py-3 text-center font-semibold">Atribuições</th>
+                  <th className="px-4 py-3 font-semibold">Último movimento</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {usuariosFiltrados.map((usuario) => (
+                  <tr key={usuario.id}>
+                    <td className="px-4 py-3">
+                      <p className="max-w-52 truncate font-semibold">{usuario.nome}</p>
+                      <p className="max-w-52 truncate text-xs text-muted-foreground">{usuario.email}</p>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3">{formatarDataHora(usuario.created_at)}</td>
+                    <td className="px-3 py-3">
+                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${usuario.onboarding_concluido ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                        {usuario.onboarding_concluido ? "Concluído" : "Pendente"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-center tabular-nums">{usuario.qtd_filhos}</td>
+                    <td className="px-3 py-3 text-center tabular-nums">{usuario.qtd_tarefas}</td>
+                    <td className="px-3 py-3 text-center tabular-nums">{usuario.qtd_vigencias}</td>
+                    <td className="px-3 py-3 text-center tabular-nums">{usuario.qtd_atribuicoes}</td>
+                    <td className="whitespace-nowrap px-4 py-3">{formatarDataHora(usuario.ultimo_movimento)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {usuariosFiltrados.length === 0 && (
+            <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+              Nenhum usuário encontrado.
+            </div>
+          )}
+        </div>
+      )}
+
+      {!erro && !carregando && aba === "push" && (
+        <div className={uiSpacing.sectionStack}>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <Indicador titulo="Dispositivos cadastrados" valor={resumo.push_dispositivos} icon={<Smartphone className="h-4 w-4" />} />
+            <Indicador titulo="Dispositivos ativos" valor={resumo.push_ativos} icon={<BellRing className="h-4 w-4" />} />
+            <Indicador titulo="Envios hoje" valor={resumo.push_envios_hoje} icon={<UserCheck className="h-4 w-4" />} />
+            <Indicador titulo="Android ativos" valor={resumo.push_android_ativos} icon={<Smartphone className="h-4 w-4" />} />
+            <Indicador titulo="iOS ativos" valor={resumo.push_ios_ativos} icon={<Smartphone className="h-4 w-4" />} />
+          </div>
+
+          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className={uiTypography.secondaryTitle}>Notificações</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Tokens de push e conteúdo das notificações não são exibidos nesta área.
+            </p>
+          </section>
+        </div>
+      )}
+
+      {!erro && !carregando && aba === "sistema" && (
+        <div className={uiSpacing.sectionStack}>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <Indicador
+              titulo="Versão atual"
+              valor={versao?.versionName ?? "—"}
+              detalhe={versao ? `versionCode ${versao.versionCode}` : "Versão não disponível"}
+              icon={<ListTodo className="h-4 w-4" />}
+            />
+            <Indicador titulo="Banco" valor="Conectado" icon={<Database className="h-4 w-4" />} />
+            <Indicador titulo="Admins ativos" valor={resumo.admins_ativos} icon={<ShieldCheck className="h-4 w-4" />} />
+          </div>
+
+          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className={uiTypography.secondaryTitle}>Segurança administrativa</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Os indicadores são obtidos por funções protegidas no banco. A área não recebe permissão direta para consultar o conteúdo das famílias.
+            </p>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
@@ -28,13 +458,8 @@ export const Route = createFileRoute("/_authenticated/administracao")({
     const { data: auth, error: authError } = await supabase.auth.getUser();
     if (authError || !auth.user) throw redirect({ to: "/" });
 
-    const { data: admin, error } = await supabase
-      .from("t_admin")
-      .select("id")
-      .eq("ativo", true)
-      .maybeSingle();
-
-    if (error || !admin) throw redirect({ to: "/inicio" });
+    const { data: admin, error } = await supabase.rpc("is_admin");
+    if (error || admin !== true) throw redirect({ to: "/inicio" });
   },
   head: () => ({
     meta: [

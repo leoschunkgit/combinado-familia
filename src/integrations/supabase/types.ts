@@ -475,7 +475,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_resumo: { Args: never; Returns: Json }
+      admin_usuarios: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: number
+          nome: string
+          onboarding_concluido: boolean
+          qtd_atribuicoes: number
+          qtd_filhos: number
+          qtd_tarefas: number
+          qtd_vigencias: number
+          ultimo_movimento: string
+        }[]
+      }
       current_pai_id: { Args: never; Returns: number }
+      is_admin: { Args: never; Returns: boolean }
       desativar_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: boolean
