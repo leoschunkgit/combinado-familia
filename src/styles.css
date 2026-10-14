@@ -168,6 +168,10 @@
     padding-bottom: max(1rem, var(--app-safe-bottom));
   }
 
+  .native-app .native-sticky-safe-top {
+    top: var(--app-safe-top);
+  }
+
   .native-app .native-fixed-safe-panel {
     padding-top: calc(var(--app-safe-top) + 1rem);
     padding-bottom: calc(var(--app-safe-bottom) + 1rem);
