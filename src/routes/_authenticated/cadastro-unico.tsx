@@ -457,15 +457,14 @@ function CadastroUnicoPage() {
                       <Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 lg:contents">
+                    <div className="grid grid-cols-[3fr_7fr] gap-2 lg:contents">
                       <label className="flex h-10 cursor-pointer items-center gap-2 self-end px-3 text-sm font-medium lg:rounded-md lg:border lg:bg-background">
                         <Checkbox checked={temMesada} onCheckedChange={(v) => setTemMesada(v === true)} />
                         <span className="whitespace-nowrap">Tem mesada</span>
                       </label>
 
                       {temMesada && (
-                        <div className="space-y-1.5">
-                          <Label>Mesada</Label>
+                        <div className="self-end">
                           <CurrencyInput value={valorMesada} onValueChange={setValorMesada} />
                         </div>
                       )}
