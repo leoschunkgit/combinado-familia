@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import {
   Activity,
   Baby,
   BellRing,
   CalendarRange,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Database,
   Globe2,
@@ -272,6 +274,9 @@ function AdministracaoPage() {
   const [busca, setBusca] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const abasRef = useRef<HTMLDivElement | null>(null);
+  const [podeIrEsquerda, setPodeIrEsquerda] = useState(false);
+  const [podeIrDireita, setPodeIrDireita] = useState(false);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -302,6 +307,39 @@ function AdministracaoPage() {
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  const atualizarSetasAbas = useCallback(() => {
+    const elemento = abasRef.current;
+    if (!elemento) return;
+    setPodeIrEsquerda(elemento.scrollLeft > 4);
+    setPodeIrDireita(elemento.scrollLeft + elemento.clientWidth < elemento.scrollWidth - 4);
+  }, []);
+
+  const rolarAbas = useCallback((direcao: "esquerda" | "direita") => {
+    const elemento = abasRef.current;
+    if (!elemento) return;
+    elemento.scrollBy({
+      left: direcao === "direita" ? Math.max(180, elemento.clientWidth * 0.65) : -Math.max(180, elemento.clientWidth * 0.65),
+      behavior: "smooth",
+    });
+  }, []);
+
+  useEffect(() => {
+    atualizarSetasAbas();
+    const elemento = abasRef.current;
+    if (!elemento) return;
+
+    const aoRolar = () => atualizarSetasAbas();
+    const aoRedimensionar = () => atualizarSetasAbas();
+
+    elemento.addEventListener("scroll", aoRolar, { passive: true });
+    window.addEventListener("resize", aoRedimensionar);
+
+    return () => {
+      elemento.removeEventListener("scroll", aoRolar);
+      window.removeEventListener("resize", aoRedimensionar);
+    };
+  }, [atualizarSetasAbas]);
 
   const usuariosFiltrados = useMemo(() => {
     const termo = busca.trim().toLocaleLowerCase("pt-BR");
@@ -345,19 +383,48 @@ function AdministracaoPage() {
         }
       />
 
-      <div className="flex max-w-full gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {abas.map((item) => (
-          <Button
-            key={item.id}
-            type="button"
-            size="sm"
-            variant={aba === item.id ? "default" : "outline"}
-            className="shrink-0"
-            onClick={() => setAba(item.id)}
-          >
-            {item.label}
-          </Button>
-        ))}
+      <div className="flex min-w-0 items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 shrink-0 rounded-md"
+          onClick={() => rolarAbas("esquerda")}
+          disabled={!podeIrEsquerda}
+          aria-label="Rolar menu administrativo para a esquerda"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+
+        <div
+          ref={abasRef}
+          className="flex min-w-0 flex-1 gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {abas.map((item) => (
+            <Button
+              key={item.id}
+              type="button"
+              size="sm"
+              variant={aba === item.id ? "default" : "outline"}
+              className="shrink-0"
+              onClick={() => setAba(item.id)}
+            >
+              {item.label}
+            </Button>
+          ))}
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 shrink-0 rounded-md"
+          onClick={() => rolarAbas("direita")}
+          disabled={!podeIrDireita}
+          aria-label="Rolar menu administrativo para a direita"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
       {erro && (
