@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
 });
 
 const REGRAS_SENHA = [
-  { id: "tam", label: "Pelo menos 6 caracteres", ok: (s: string) => s.length >= 6 },
+  { id: "tam", label: "Pelo menos 8 caracteres", ok: (s: string) => s.length >= 8 },
   { id: "min", label: "Uma letra minúscula", ok: (s: string) => /[a-z]/.test(s) },
   { id: "mai", label: "Uma letra maiúscula", ok: (s: string) => /[A-Z]/.test(s) },
   { id: "num", label: "Um número", ok: (s: string) => /\d/.test(s) },
