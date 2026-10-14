@@ -31,7 +31,9 @@ export type Database = {
       }
       t_filho: {
         Row: {
+          avatar: string | null
           celular: string | null
+          cor: string | null
           created_at: string
           email: string | null
           id: number
@@ -43,7 +45,9 @@ export type Database = {
           valor_mesada: number | null
         }
         Insert: {
+          avatar?: string | null
           celular?: string | null
+          cor?: string | null
           created_at?: string
           email?: string | null
           id?: never
@@ -55,7 +59,9 @@ export type Database = {
           valor_mesada?: number | null
         }
         Update: {
+          avatar?: string | null
           celular?: string | null
+          cor?: string | null
           created_at?: string
           email?: string | null
           id?: never

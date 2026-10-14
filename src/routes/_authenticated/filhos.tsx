@@ -18,6 +18,7 @@ import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigenc
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
+import { FilhoAvatar, type FilhoAvatarTipo } from "@/components/FilhoAvatar";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -31,11 +32,21 @@ export const Route = createFileRoute("/_authenticated/filhos")({
   component: FilhosPage,
 });
 
+const corValida = (valor: string) => {
+  const cor = valor.trim();
+  if (cor === "") return true;
+  if (/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(cor)) return true;
+  const rgb = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i.exec(cor);
+  return Boolean(rgb && rgb.slice(1).every((parte) => Number(parte) >= 0 && Number(parte) <= 255));
+};
+
 const schema = z.object({
   nome: z.string().trim().min(2, "Informe o nome").max(100),
   email: z.union([z.literal(""), z.string().trim().email("Email inválido").max(255)]),
   celular: z.string().refine((v) => v === "" || v.replace(/\D/g, "").length >= 10, "Celular inválido"),
   idade: z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 150), "Informe uma idade inteira entre 0 e 150"),
+  cor: z.string().trim().max(50).refine(corValida, "Use uma cor hexadecimal ou RGB válida"),
+  avatar: z.union([z.literal(""), z.literal("menino"), z.literal("menina")]),
   tem_mesada: z.boolean(),
   valor_mesada: z.string(),
 }).refine((v) => !v.tem_mesada || v.valor_mesada.trim() !== "", {
@@ -45,18 +56,69 @@ const schema = z.object({
 });
 
 type FilhoForm = z.input<typeof schema>;
-const vazio: FilhoForm = { nome: "", email: "", celular: "", idade: "", tem_mesada: false, valor_mesada: "" };
+const vazio: FilhoForm = { nome: "", email: "", celular: "", idade: "", cor: "", avatar: "", tem_mesada: false, valor_mesada: "" };
 const dinheiro = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dadosExtras = (v: FilhoForm) => ({
   idade: v.idade === "" ? null : Number(v.idade),
+  cor: v.cor.trim() || null,
+  avatar: v.avatar || null,
   tem_mesada: v.tem_mesada,
   tem_mesada_opcional: v.tem_mesada ? true : null,
   valor_mesada: v.tem_mesada && v.valor_mesada !== "" ? Number(v.valor_mesada.replace(",", ".")) : null,
 });
 
 function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange: (v: FilhoForm) => void; prefix: string }) {
+  const corPicker = /^#[0-9a-f]{6}$/i.test(value.cor.trim()) ? value.cor.trim() : "#0C5C3C";
+  const avatarAtual: FilhoAvatarTipo = value.avatar || null;
+
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
+
+    <div className="space-y-2">
+      <Label>Avatar <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+      <div className="grid grid-cols-3 gap-2">
+        {([
+          { valor: "" as const, label: "Iniciais" },
+          { valor: "menino" as const, label: "Menino" },
+          { valor: "menina" as const, label: "Menina" },
+        ]).map((opcao) => (
+          <button
+            key={opcao.label}
+            type="button"
+            aria-pressed={value.avatar === opcao.valor}
+            onClick={() => onChange({ ...value, avatar: opcao.valor })}
+            className={`flex min-w-0 flex-col items-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+              value.avatar === opcao.valor ? "border-primary bg-primary/5 text-primary" : "bg-background text-muted-foreground hover:bg-muted/40"
+            }`}
+          >
+            <FilhoAvatar nome={value.nome || "Filho"} cor={value.cor || null} avatar={opcao.valor || avatarAtual && opcao.valor} className="h-9 w-9" />
+            <span>{opcao.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      <Label htmlFor={`${prefix}-cor-texto`}>Cor <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+      <div className="flex items-center gap-2">
+        <input
+          id={`${prefix}-cor`}
+          type="color"
+          value={corPicker}
+          onChange={(e) => onChange({ ...value, cor: e.target.value })}
+          className="h-10 w-14 shrink-0 cursor-pointer rounded-md border bg-background p-1"
+          aria-label="Escolher cor do filho"
+        />
+        <Input
+          id={`${prefix}-cor-texto`}
+          value={value.cor}
+          onChange={(e) => onChange({ ...value, cor: e.target.value })}
+          placeholder="#0C5C3C ou rgb(12, 92, 60)"
+          maxLength={50}
+        />
+      </div>
+    </div>
+
     <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label></div>
     {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} /><p className="text-xs text-muted-foreground">Ao cadastrar uma mesada, cada “Não fez” gera o desconto definido na vigência. Sem mesada cadastrada, vale a penalidade escrita.</p></div>}
   </>;
@@ -148,7 +210,7 @@ function FilhosPage() {
 
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
-    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), tem_mesada: filho.tem_mesada_opcional === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
+    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", tem_mesada: filho.tem_mesada_opcional === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
   }
 
   async function salvarEdicao(e: FormEvent) {
@@ -186,7 +248,7 @@ function FilhosPage() {
     <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
         return <div key={f.id} className="min-w-0 max-w-full rounded-2xl border bg-card p-4">
           <div className="flex min-w-0 items-start justify-between gap-3">
-            <p className="min-w-0 flex-1 truncate text-base font-semibold">{f.nome}</p>
+            <div className="flex min-w-0 flex-1 items-center gap-2.5"><FilhoAvatar nome={f.nome} cor={f.cor} avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null} className="h-9 w-9 shrink-0" /><p className="min-w-0 flex-1 truncate text-base font-semibold">{f.nome}</p></div>
             <div className="flex shrink-0 items-center gap-1">
               <Hint content="Editar filho">
                 <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}>
