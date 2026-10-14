@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,6 +9,7 @@ type PenalidadeDialogProps = {
   value: string;
   busy?: boolean;
   inputId: string;
+  contexto?: ReactNode;
   onChange: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -18,6 +20,7 @@ export function PenalidadeDialog({
   value,
   busy = false,
   inputId,
+  contexto,
   onChange,
   onCancel,
   onConfirm,
@@ -27,7 +30,10 @@ export function PenalidadeDialog({
       <DialogContent className="top-[calc(env(safe-area-inset-top)+1rem)] translate-y-0 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Aplicar penalidade</DialogTitle>
-          <DialogDescription>Qual será a penalidade aplicada agora?</DialogDescription>
+          <DialogDescription>
+            {contexto && <span className="mb-1 flex min-w-0 items-center">{contexto}</span>}
+            Qual será a penalidade aplicada agora?
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
