@@ -46,6 +46,9 @@ jobs:
       - name: Sync Android
         run: npx cap sync android
 
+      - name: Apply centralized app version
+        run: npm run app:version:android
+
       - name: Verify Android project
         shell: bash
         run: |
