@@ -61,6 +61,94 @@ export type Database = {
           },
         ]
       }
+      t_admin_auditoria: {
+        Row: {
+          acao: string
+          created_at: string
+          detalhes: Json
+          entidade: string
+          entidade_id: string | null
+          id: number
+          id_admin: number
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          detalhes?: Json
+          entidade: string
+          entidade_id?: string | null
+          id?: number
+          id_admin: number
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          detalhes?: Json
+          entidade?: string
+          entidade_id?: string | null
+          id?: number
+          id_admin?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_admin_auditoria_id_admin_fkey"
+            columns: ["id_admin"]
+            isOneToOne: false
+            referencedRelation: "t_admin"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_app_config: {
+        Row: {
+          android_min_version_code: number | null
+          android_min_version_name: string | null
+          id: number
+          ios_min_version_code: number | null
+          ios_min_version_name: string | null
+          manutencao_ativa: boolean
+          manutencao_mensagem: string | null
+          mensagem_global: string | null
+          mensagem_global_ativa: boolean
+          updated_at: string
+          updated_by_admin_id: number | null
+        }
+        Insert: {
+          android_min_version_code?: number | null
+          android_min_version_name?: string | null
+          id?: number
+          ios_min_version_code?: number | null
+          ios_min_version_name?: string | null
+          manutencao_ativa?: boolean
+          manutencao_mensagem?: string | null
+          mensagem_global?: string | null
+          mensagem_global_ativa?: boolean
+          updated_at?: string
+          updated_by_admin_id?: number | null
+        }
+        Update: {
+          android_min_version_code?: number | null
+          android_min_version_name?: string | null
+          id?: number
+          ios_min_version_code?: number | null
+          ios_min_version_name?: string | null
+          manutencao_ativa?: boolean
+          manutencao_mensagem?: string | null
+          mensagem_global?: string | null
+          mensagem_global_ativa?: boolean
+          updated_at?: string
+          updated_by_admin_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_app_config_updated_by_admin_id_fkey"
+            columns: ["updated_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "t_admin"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_app_config_signal: {
         Row: {
           id: number
@@ -78,6 +166,44 @@ export type Database = {
           versao?: number
         }
         Relationships: []
+      }
+      t_app_feature_flag: {
+        Row: {
+          ativo: boolean
+          chave: string
+          created_at: string
+          descricao: string | null
+          nome: string
+          updated_at: string
+          updated_by_admin_id: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          chave: string
+          created_at?: string
+          descricao?: string | null
+          nome: string
+          updated_at?: string
+          updated_by_admin_id?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          chave?: string
+          created_at?: string
+          descricao?: string | null
+          nome?: string
+          updated_at?: string
+          updated_by_admin_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_app_feature_flag_updated_by_admin_id_fkey"
+            columns: ["updated_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "t_admin"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       t_app_telemetria: {
         Row: {
@@ -435,6 +561,7 @@ export type Database = {
           id_filho: number
           id_push_dispositivo: number
           id_usuario_pai: number
+          janela_envio: string
           qtd_pendencias: number
         }
         Insert: {
@@ -444,6 +571,7 @@ export type Database = {
           id_filho: number
           id_push_dispositivo: number
           id_usuario_pai: number
+          janela_envio?: string
           qtd_pendencias: number
         }
         Update: {
@@ -453,6 +581,7 @@ export type Database = {
           id_filho?: number
           id_push_dispositivo?: number
           id_usuario_pai?: number
+          janela_envio?: string
           qtd_pendencias?: number
         }
         Relationships: [
@@ -584,9 +713,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_adicionar: {
-        Args: { p_email: string }
-        Returns: number
+      admin_adicionar: { Args: { p_email: string }; Returns: number }
+      admin_auditar: {
+        Args: {
+          p_acao: string
+          p_detalhes?: Json
+          p_entidade: string
+          p_entidade_id?: string
+        }
+        Returns: undefined
       }
       admin_auditoria_listar: {
         Args: { p_limite?: number }
@@ -598,28 +733,28 @@ export type Database = {
           created_at: string
           detalhes: Json
           entidade: string
-          entidade_id: string | null
+          entidade_id: string
           id: number
         }[]
       }
       admin_comunicacao_salvar: {
         Args: {
           p_manutencao_ativa: boolean
-          p_manutencao_mensagem: string | null
-          p_mensagem_global: string | null
+          p_manutencao_mensagem: string
+          p_mensagem_global: string
           p_mensagem_global_ativa: boolean
         }
         Returns: Json
       }
       admin_config_salvar: {
         Args: {
-          p_android_min_version_code: number | null
-          p_android_min_version_name: string | null
-          p_ios_min_version_code: number | null
-          p_ios_min_version_name: string | null
+          p_android_min_version_code: number
+          p_android_min_version_name: string
+          p_ios_min_version_code: number
+          p_ios_min_version_name: string
           p_manutencao_ativa: boolean
-          p_manutencao_mensagem: string | null
-          p_mensagem_global: string | null
+          p_manutencao_mensagem: string
+          p_mensagem_global: string
           p_mensagem_global_ativa: boolean
         }
         Returns: Json
@@ -627,6 +762,19 @@ export type Database = {
       admin_definir_status: {
         Args: { p_admin_id: number; p_ativo: boolean }
         Returns: boolean
+      }
+      admin_diagnostico: {
+        Args: { p_version_code?: number; p_version_name?: string }
+        Returns: Json
+      }
+      admin_feature_salvar: {
+        Args: {
+          p_ativo: boolean
+          p_chave: string
+          p_descricao: string
+          p_nome: string
+        }
+        Returns: Json
       }
       admin_feedback_excluir: {
         Args: { p_feedback_id: number }
@@ -640,23 +788,14 @@ export type Database = {
           id: number
           id_usuario_pai: number
           mensagem: string
-          pagina_origem: string | null
+          pagina_origem: string
           plataforma: string
           tipo: string
           usuario_email: string
           usuario_nome: string
-          version_code: number | null
-          version_name: string | null
+          version_code: number
+          version_name: string
         }[]
-      }
-      admin_feature_salvar: {
-        Args: {
-          p_ativo: boolean
-          p_chave: string
-          p_descricao: string | null
-          p_nome: string
-        }
-        Returns: Json
       }
       admin_listar_admins: {
         Args: never
@@ -669,29 +808,13 @@ export type Database = {
           id_usuario_pai: number
           nivel: string
           nome: string
-          ultimo_acesso: string | null
+          ultimo_acesso: string
         }[]
       }
-      admin_registrar_acesso: { Args: never; Returns: undefined }
-      admin_sistema_obter: { Args: never; Returns: Json }
-      admin_diagnostico: {
-        Args: {
-          p_version_code?: number | null
-          p_version_name?: string | null
-        }
-        Returns: Json
-      }
       admin_operacao: { Args: never; Returns: Json }
+      admin_registrar_acesso: { Args: never; Returns: undefined }
       admin_resumo: { Args: never; Returns: Json }
-      admin_versoes_salvar: {
-        Args: {
-          p_android_min_version_code: number | null
-          p_android_min_version_name: string | null
-          p_ios_min_version_code: number | null
-          p_ios_min_version_name: string | null
-        }
-        Returns: Json
-      }
+      admin_sistema_obter: { Args: never; Returns: Json }
       admin_usuarios: {
         Args: never
         Returns: {
@@ -707,10 +830,18 @@ export type Database = {
           ultimo_movimento: string
         }[]
       }
+      admin_versoes_salvar: {
+        Args: {
+          p_android_min_version_code: number
+          p_android_min_version_name: string
+          p_ios_min_version_code: number
+          p_ios_min_version_name: string
+        }
+        Returns: Json
+      }
       app_config_publico: { Args: never; Returns: Json }
       current_admin_id: { Args: never; Returns: number }
       current_pai_id: { Args: never; Returns: number }
-      is_admin: { Args: never; Returns: boolean }
       desativar_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: boolean
@@ -729,21 +860,21 @@ export type Database = {
           qtd_atribuicoes: number
         }[]
       }
-      excluir_vigencia_com_regra: {
-        Args: { p_id_vigencia: number }
-        Returns: boolean
-      }
       enviar_feedback: {
         Args: {
           p_assunto: string
           p_mensagem: string
-          p_pagina_origem?: string | null
+          p_pagina_origem?: string
           p_plataforma: string
           p_tipo: string
-          p_version_code?: number | null
-          p_version_name?: string | null
+          p_version_code?: number
+          p_version_name?: string
         }
         Returns: number
+      }
+      excluir_vigencia_com_regra: {
+        Args: { p_id_vigencia: number }
+        Returns: boolean
       }
       existe_filho_sem_mesada_no_limite: {
         Args: { p_id_vigencia: number }
@@ -756,6 +887,7 @@ export type Database = {
           token: string
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
       obter_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: {
@@ -764,14 +896,6 @@ export type Database = {
         }[]
       }
       obter_painel_publico_filho: { Args: { p_token: string }; Returns: Json }
-      registrar_telemetria_app: {
-        Args: {
-          p_plataforma: string
-          p_version_code?: number | null
-          p_version_name?: string | null
-        }
-        Returns: undefined
-      }
       recalcular_estado_atribuicao: {
         Args: { p_id: number }
         Returns: undefined
@@ -799,6 +923,14 @@ export type Database = {
           penalidade: string
           penalizado: boolean
         }[]
+      }
+      registrar_telemetria_app: {
+        Args: {
+          p_plataforma: string
+          p_version_code?: number
+          p_version_name?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
