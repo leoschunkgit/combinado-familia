@@ -38,7 +38,11 @@ BEGIN
     END IF;
   END IF;
 
-  RETURN COALESCE(NEW, OLD);
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+
+  RETURN NEW;
 END;
 $function$;
 
@@ -49,7 +53,9 @@ BEFORE UPDATE OR DELETE ON public.t_admin
 FOR EACH ROW
 EXECUTE FUNCTION public.proteger_admin_master();
 
-CREATE OR REPLACE FUNCTION public.admin_listar_admins()
+DROP FUNCTION IF EXISTS public.admin_listar_admins();
+
+CREATE FUNCTION public.admin_listar_admins()
 RETURNS TABLE (
   id bigint,
   id_usuario_pai bigint,
