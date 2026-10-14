@@ -1,33 +1,29 @@
-# Combinado
+# Combinado Família
 
-Preciso desenvolver um app com base nas telas e no diagrama de classes fornecidos nos anexos:
+Aplicação para gestão de tarefas, vigências, atribuições, ocorrências, bônus, penalidades, acompanhamento familiar e administração do sistema.
 
-1. Cadastro de Usuário Pai (Nome, Email, CPF, Senha)
-2. Cadastro de Filho (Nome, Email, Celular associado ao Pai)
-3. Cadastro de Vigência (Data início, Data fim, Penalidade, Quantidade de ocorrências)
-4. Cadastro de Tarefas (Nome)
-5. Associação de Filho à Tarefa dentro de uma Vigência
-6. Consulta e registro de ocorrências (filtro por vigência, filho e tarefa, com checkboxes de marcação de cumprimento e botão 'não fez')
+## Ambientes
 
-Seguir a estrutura relacional do diagrama de classes (T_USUARIO_PAI, T_FILHO, T_VIGENCIA, T_TAREFA, T_FILHO_TAREFA) com uma interface moderna, intuitiva e responsiva.
+- DEV: Supabase `ewljvqwuxwhhxdxqezhn`
+- PRD: Supabase `radwzkgpgdcwyjcpfcqw`
+- Domínio público: `https://www.combinadofamilia.app.br`
 
-This project was built with [Lovable](https://lovable.dev).
+## Desenvolvimento local
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/440cb1e7-2220-460c-bca9-5a47fdd241d1).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requisitos: Node.js e npm.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+git clone <este-repositorio>
+cd combinado-familia
+npm install
 npm run dev
 ```
+
+## Builds
+
+- `npm run dev` -> DEV
+- `npm run build` -> PRD
+- `npm run build:app` -> app nativo PRD
+- `npm run build:app:dev` -> app nativo DEV
+
+A configuração de build usa Vite + TanStack Start diretamente, sem dependência da Lovable.
