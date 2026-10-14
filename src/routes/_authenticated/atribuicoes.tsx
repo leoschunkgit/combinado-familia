@@ -171,7 +171,15 @@ function AtribuicoesPage() {
   const gruposFilhos = filhos
     .map((filhoItem) => ({
       filho: filhoItem,
-      atribuicoes: atribuicoesVigenciaSelecionada.filter((item) => item.id_filho === filhoItem.id),
+      atribuicoes: atribuicoesVigenciaSelecionada
+        .filter((item) => item.id_filho === filhoItem.id)
+        .sort((a, b) =>
+          (a.t_tarefa?.nome ?? "").localeCompare(
+            b.t_tarefa?.nome ?? "",
+            "pt-BR",
+            { sensitivity: "base" },
+          ),
+        ),
     }))
     .filter((grupo) => grupo.atribuicoes.length > 0);
 
