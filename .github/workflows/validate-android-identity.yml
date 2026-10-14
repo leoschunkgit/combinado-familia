@@ -46,6 +46,9 @@ jobs:
       - name: Sync Android
         run: npx cap sync android
 
+      - name: Apply centralized app version
+        run: npm run app:version:android
+
       - name: Validate Android identity
         shell: bash
         run: |
@@ -71,6 +74,8 @@ jobs:
 
           VERSION_CODE=$(sed -n 's/.*versionCode[[:space:]]\+\([0-9][0-9]*\).*/\1/p' "$GRADLE" | head -1)
           VERSION_NAME=$(sed -n 's/.*versionName[[:space:]]\+"\([^"]*\)".*/\1/p' "$GRADLE" | head -1)
+          CONFIG_VERSION_CODE=$(node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync('public/app-version.json','utf8'));process.stdout.write(String(v.versionCode))")
+          CONFIG_VERSION_NAME=$(node -e "const fs=require('fs');const v=JSON.parse(fs.readFileSync('public/app-version.json','utf8'));process.stdout.write(String(v.versionName))")
 
           test -n "$VERSION_CODE" || {
             echo "::error::versionCode not found"
@@ -79,6 +84,16 @@ jobs:
 
           test -n "$VERSION_NAME" || {
             echo "::error::versionName not found"
+            exit 1
+          }
+
+          test "$VERSION_CODE" = "$CONFIG_VERSION_CODE" || {
+            echo "::error::versionCode differs from public/app-version.json"
+            exit 1
+          }
+
+          test "$VERSION_NAME" = "$CONFIG_VERSION_NAME" || {
+            echo "::error::versionName differs from public/app-version.json"
             exit 1
           }
 
