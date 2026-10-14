@@ -23,6 +23,7 @@ import { validarAlteracaoLimiteNaoFez } from "@/lib/penalidade";
 import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
@@ -354,8 +355,9 @@ function VigenciasPage() {
             </p>
             <div className="divide-y rounded-lg border bg-background">
               {filhosVinculadosInfo.map((filho) => (
-                <div key={filho.id} className="px-3 py-2.5 text-sm font-medium">
-                  {filho.nome}
+                <div key={filho.id} className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium">
+                  <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />
+                  <span className="min-w-0 truncate">{filho.nome}</span>
                 </div>
               ))}
             </div>
