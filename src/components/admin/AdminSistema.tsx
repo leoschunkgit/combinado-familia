@@ -77,7 +77,8 @@ export function AdminSistema() {
   const [dados, setDados] = useState<SistemaData | null>(null);
   const [form, setForm] = useState<FormConfig>(FORM_VAZIO);
   const [carregando, setCarregando] = useState(true);
-  const [salvando, setSalvando] = useState(false);
+  const [salvandoComunicacao, setSalvandoComunicacao] = useState(false);
+  const [salvandoVersoes, setSalvandoVersoes] = useState(false);
   const [novaChave, setNovaChave] = useState("");
   const [novoNome, setNovoNome] = useState("");
   const [novaDescricao, setNovaDescricao] = useState("");
@@ -113,7 +114,27 @@ export function AdminSistema() {
     void carregar();
   }, [carregar]);
 
-  async function salvarConfig() {
+  async function salvarComunicacao() {
+    setSalvandoComunicacao(true);
+    const { error } = await supabase.rpc("admin_comunicacao_salvar", {
+      p_mensagem_global_ativa: form.mensagemGlobalAtiva,
+      p_mensagem_global: form.mensagemGlobal.trim() || null,
+      p_manutencao_ativa: form.manutencaoAtiva,
+      p_manutencao_mensagem: form.manutencaoMensagem.trim() || null,
+    });
+    setSalvandoComunicacao(false);
+
+    if (error) {
+      toast.error(error.message || "Não foi possível salvar comunicação e manutenção.");
+      return;
+    }
+
+    toast.success("Comunicação e manutenção atualizadas");
+    window.dispatchEvent(new Event("app-config-updated"));
+    await carregar();
+  }
+
+  async function salvarVersoes() {
     const androidCode = inteiroOuNull(form.androidMinVersionCode);
     const iosCode = inteiroOuNull(form.iosMinVersionCode);
 
@@ -126,25 +147,21 @@ export function AdminSistema() {
       return;
     }
 
-    setSalvando(true);
-    const { error } = await supabase.rpc("admin_config_salvar", {
-      p_mensagem_global_ativa: form.mensagemGlobalAtiva,
-      p_mensagem_global: form.mensagemGlobal.trim() || null,
-      p_manutencao_ativa: form.manutencaoAtiva,
-      p_manutencao_mensagem: form.manutencaoMensagem.trim() || null,
+    setSalvandoVersoes(true);
+    const { error } = await supabase.rpc("admin_versoes_salvar", {
       p_android_min_version_name: form.androidMinVersionName.trim() || null,
       p_android_min_version_code: androidCode,
       p_ios_min_version_name: form.iosMinVersionName.trim() || null,
       p_ios_min_version_code: iosCode,
     });
-    setSalvando(false);
+    setSalvandoVersoes(false);
 
     if (error) {
-      toast.error(error.message || "Não foi possível salvar as configurações.");
+      toast.error(error.message || "Não foi possível salvar a versão mínima.");
       return;
     }
 
-    toast.success("Configurações do sistema atualizadas");
+    toast.success("Versão mínima atualizada");
     window.dispatchEvent(new Event("app-config-updated"));
     await carregar();
   }
@@ -249,6 +266,12 @@ export function AdminSistema() {
             </div>
           </div>
         </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button size="sm" onClick={() => void salvarComunicacao()} disabled={salvandoComunicacao}>
+            <Save className="h-4 w-4" /> {salvandoComunicacao ? "Salvando..." : "Salvar comunicação e manutenção"}
+          </Button>
+        </div>
       </section>
 
       <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
@@ -293,8 +316,8 @@ export function AdminSistema() {
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button size="sm" onClick={() => void salvarConfig()} disabled={salvando}>
-            <Save className="h-4 w-4" /> {salvando ? "Salvando..." : "Salvar configurações"}
+          <Button size="sm" onClick={() => void salvarVersoes()} disabled={salvandoVersoes}>
+            <Save className="h-4 w-4" /> {salvandoVersoes ? "Salvando..." : "Salvar versão mínima"}
           </Button>
         </div>
       </section>

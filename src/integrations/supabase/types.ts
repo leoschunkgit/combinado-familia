@@ -555,6 +555,15 @@ export type Database = {
           id: number
         }[]
       }
+      admin_comunicacao_salvar: {
+        Args: {
+          p_manutencao_ativa: boolean
+          p_manutencao_mensagem: string | null
+          p_mensagem_global: string | null
+          p_mensagem_global_ativa: boolean
+        }
+        Returns: Json
+      }
       admin_config_salvar: {
         Args: {
           p_android_min_version_code: number | null
@@ -606,6 +615,15 @@ export type Database = {
       }
       admin_operacao: { Args: never; Returns: Json }
       admin_resumo: { Args: never; Returns: Json }
+      admin_versoes_salvar: {
+        Args: {
+          p_android_min_version_code: number | null
+          p_android_min_version_name: string | null
+          p_ios_min_version_code: number | null
+          p_ios_min_version_name: string | null
+        }
+        Returns: Json
+      }
       admin_usuarios: {
         Args: never
         Returns: {

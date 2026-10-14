@@ -32,6 +32,8 @@ function nomeAcao(acao: string) {
   const nomes: Record<string, string> = {
     ACESSO_ADMIN: "Acesso à Administração",
     CONFIG_SISTEMA_ALTERADA: "Configuração alterada",
+    COMUNICACAO_SISTEMA_ALTERADA: "Comunicação e manutenção alteradas",
+    VERSOES_MINIMAS_ALTERADAS: "Versão mínima alterada",
     FEATURE_FLAG_CRIADA: "Funcionalidade criada",
     FEATURE_FLAG_ALTERADA: "Funcionalidade alterada",
     ADMIN_ADICIONADO: "Administrador adicionado",
