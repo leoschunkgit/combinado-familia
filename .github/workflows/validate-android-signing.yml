@@ -33,6 +33,7 @@ jobs:
       - run: npx cap add android
       - run: npm run app:assets
       - run: npx cap sync android
+      - run: npm run app:version:android
 
       - name: Create ephemeral credentials and key
         shell: bash
