@@ -64,6 +64,11 @@ function RelatorioPage() {
       }).filter(({ tarefas }) => tarefas.length > 0),
     })).filter(({ filhos: itens }) => itens.length > 0), [vigenciasOrdenadas, filtro, filhos, atribuicoes, ocorrencias]);
 
+  const relatorioExportavel = useMemo(
+    () => relatorio.filter(({ vigencia }) => situacaoVigencia(vigencia) !== "futura"),
+    [relatorio],
+  );
+
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const carregando = loadingVigencias || loadingFilhos || loadingAtribuicoes || loadingOcorrencias;
 
@@ -73,7 +78,7 @@ function RelatorioPage() {
   }
 
   async function gerarPdf() {
-    if (!relatorio.length) return;
+    if (!relatorioExportavel.length) return;
 
     const nomeVigencia = filtro.vig === "all"
       ? "Todas"
@@ -94,7 +99,7 @@ function RelatorioPage() {
         filho: nomeFilho,
         tarefa: nomeTarefa,
       },
-      vigencias: relatorio.map(({ vigencia, filhos: gruposFilhos }) => ({
+      vigencias: relatorioExportavel.map(({ vigencia, filhos: gruposFilhos }) => ({
         periodo: fmtVigencia(vigencia),
         status: statusVigencia(vigencia),
         penalidade: vigencia.penalidade || "Não cadastrada",
@@ -147,7 +152,7 @@ function RelatorioPage() {
       title="Histórico"
       description="Consulte as marcações"
       icon={<FileText className="h-6 w-6" />}
-      action={<Button size="sm" onClick={() => void gerarPdf()} disabled={carregando || !relatorio.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>}
+      action={<Button size="sm" onClick={() => void gerarPdf()} disabled={carregando || !relatorioExportavel.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>}
     />
     <ResponsiveFilters
       desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
