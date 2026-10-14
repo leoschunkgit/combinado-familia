@@ -39,21 +39,26 @@ function RedefinirSenha() {
   const [loading, setLoading] = useState(false);
   const [sessaoPronta, setSessaoPronta] = useState(false);
   const [verificandoSessao, setVerificandoSessao] = useState(true);
+  const [fluxoRecuperacaoValido, setFluxoRecuperacaoValido] = useState(false);
 
   useEffect(() => {
     let ativo = true;
 
     const verificarSessao = async () => {
+      const recuperacaoValidada = sessionStorage.getItem("combinado_recovery_otp_validado") === "1";
       const { data, error } = await supabase.auth.getSession();
       if (!ativo) return;
-      setSessaoPronta(!error && !!data.session);
+      setFluxoRecuperacaoValido(recuperacaoValidada);
+      setSessaoPronta(recuperacaoValidada && !error && !!data.session);
       setVerificandoSessao(false);
     };
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!ativo) return;
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-        setSessaoPronta(!!session);
+        const recuperacaoValidada = sessionStorage.getItem("combinado_recovery_otp_validado") === "1";
+        setFluxoRecuperacaoValido(recuperacaoValidada);
+        setSessaoPronta(recuperacaoValidada && !!session);
         setVerificandoSessao(false);
       }
       if (event === "SIGNED_OUT") {
@@ -79,20 +84,36 @@ function RedefinirSenha() {
 
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: senha });
-    setLoading(false);
 
     if (error) {
+      setLoading(false);
       toast.error(msgErro(error));
       return;
     }
 
-    toast.success("Senha redefinida com sucesso!");
-    await supabase.auth.signOut();
+    const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
+    sessionStorage.removeItem("combinado_recovery_otp_validado");
+    setLoading(false);
+
+    if (signOutError) {
+      toast.error("A senha foi alterada, mas não foi possível encerrar a sessão. Feche e abra o app antes de entrar novamente.");
+      return;
+    }
+
+    toast.success("Senha redefinida com sucesso! Entre novamente com sua nova senha.");
     navigate({ to: "/" });
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
+    <div className="relative flex min-h-screen items-center justify-center bg-muted/30 p-6">
+      {loading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm" role="status" aria-live="polite">
+          <div className="flex items-center gap-3 rounded-xl border bg-background px-5 py-4 shadow-lg">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="text-sm font-medium">Salvando nova senha...</span>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-md rounded-2xl border bg-background p-6 shadow-sm md:p-8">
         <div className="mb-6 flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Home className="h-5 w-5" /></span>
@@ -102,16 +123,18 @@ function RedefinirSenha() {
         <h1 className="text-2xl font-bold">Redefinir senha</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {verificandoSessao
-            ? "Validando seu link de recuperação..."
+            ? "Validando sua recuperação..."
             : sessaoPronta
               ? "Escolha uma nova senha para sua conta."
-              : "O link de recuperação é inválido, expirou ou já foi utilizado."}
+              : fluxoRecuperacaoValido
+                ? "Sua sessão de recuperação expirou. Solicite um novo código."
+                : "Valide primeiro o código de recuperação enviado para seu email."}
         </p>
 
         {verificandoSessao ? (
           <div className="mt-6 flex items-center justify-center gap-2 rounded-lg border bg-muted/20 px-4 py-5 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Validando link...
+            Validando recuperação...
           </div>
         ) : sessaoPronta ? (
           <form onSubmit={salvar} className="mt-6 space-y-4">
@@ -129,7 +152,7 @@ function RedefinirSenha() {
               <Label htmlFor="confirmar-senha">Confirmar nova senha</Label>
               <SenhaInput id="confirmar-senha" value={confirmacao} onChange={setConfirmacao} placeholder="Digite novamente" />
             </div>
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? "Salvando..." : "Salvar nova senha"}</Button>
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Salvando...</> : "Salvar nova senha"}</Button>
           </form>
         ) : (
           <Button className="mt-6 w-full" size="lg" onClick={() => navigate({ to: "/" })}>Voltar para o login</Button>
