@@ -138,7 +138,7 @@ function FilhosPage() {
   const [edicao, setEdicao] = useState<FilhoForm>(vazio);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [confirmarExclusaoTodos, setConfirmarExclusaoTodos] = useState(false);
-  const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string } | null>(null);
+  const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string; cor: string | null; avatar: string | null } | null>(null);
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
   async function salvar(e: FormEvent) {
@@ -149,7 +149,7 @@ function FilhosPage() {
     const { data: criado, error } = await supabase
       .from("t_filho")
       .insert({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) })
-      .select("id, nome")
+      .select("id, nome, cor, avatar")
       .single();
     setSaving(false);
     if (error || !criado) { toast.error(msgErro(error)); return; }
@@ -160,7 +160,7 @@ function FilhosPage() {
     await qc.invalidateQueries({ queryKey: ["filhos"] });
 
     if (tarefas.length > 0 && vigenciaAtual) {
-      setFilhoPosCadastro({ id: criado.id, nome: criado.nome });
+      setFilhoPosCadastro({ id: criado.id, nome: criado.nome, cor: criado.cor, avatar: criado.avatar });
       setPerguntarAtribuicao(true);
     }
   }
@@ -302,7 +302,13 @@ function FilhosPage() {
     <Dialog open={perguntarAtribuicao} onOpenChange={setPerguntarAtribuicao}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader><DialogTitle>Filho cadastrado com sucesso</DialogTitle></DialogHeader>
-        <p className="text-sm text-muted-foreground">Deseja atribuir tarefas para <strong>{filhoPosCadastro?.nome}</strong> na vigência atual?</p>
+        {filhoPosCadastro && (
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <FilhoAvatar nome={filhoPosCadastro.nome} cor={filhoPosCadastro.cor} avatar={filhoPosCadastro.avatar === "menino" || filhoPosCadastro.avatar === "menina" ? filhoPosCadastro.avatar : null} className="h-5 w-5" />
+            <span>{filhoPosCadastro.nome}</span>
+          </div>
+        )}
+        <p className="text-sm text-muted-foreground">Deseja atribuir tarefas para este filho na vigência atual?</p>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => { setPerguntarAtribuicao(false); setFilhoPosCadastro(null); }}>Agora não</Button>
           <Button type="button" onClick={() => { setPerguntarAtribuicao(false); setAtribuirAberto(true); }}>Sim, atribuir</Button>
@@ -335,7 +341,7 @@ function FilhosPage() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2"><p>Tem certeza que deseja excluir <strong>{filhos.find((f) => f.id === confirmarExclusao)?.nome}</strong>?</p><p className="text-sm text-muted-foreground">As atribuições, registros de Fez/Não fez e o link público deste filho também serão excluídos.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2">{(() => { const filho = filhos.find((f) => f.id === confirmarExclusao); return filho ? <div className="flex items-center gap-2 text-sm font-semibold"><FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" /><span>{filho.nome}</span></div> : null; })()}<p>Tem certeza que deseja excluir este filho?</p><p className="text-sm text-muted-foreground">As atribuições, registros de Fez/Não fez e o link público deste filho também serão excluídos.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader><form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4"><div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome *</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-email">Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div><CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" /><DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" disabled={saving}>Salvar alterações</Button></DialogFooter></form></DialogContent></Dialog>
   </>;
 }
