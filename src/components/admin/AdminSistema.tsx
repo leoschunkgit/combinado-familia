@@ -202,7 +202,7 @@ export function AdminSistema() {
       <div>
         <h2 className={uiTypography.secondaryTitle}>Configurações do sistema</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Controle avisos, manutenção, versões mínimas e funcionalidades sem alterar o código.
+          Gerencie comportamentos gerais do Combinado Família. Aqui você pode avisar todos os usuários, colocar o aplicativo temporariamente em manutenção, definir a versão mínima permitida e controlar funcionalidades preparadas para ativação ou desativação.
         </p>
       </div>
 
@@ -219,7 +219,9 @@ export function AdminSistema() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <Label htmlFor="mensagem-global">Mensagem global</Label>
-                    <p className="mt-1 text-xs text-muted-foreground">Exibe um aviso para usuários autenticados.</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      Exibe um aviso para todos os usuários logados. Use para comunicar novidades, atualizações, avisos importantes ou indisponibilidades programadas. Ao desativar, a mensagem deixa de aparecer, mas o texto pode permanecer salvo.
+                    </p>
                   </div>
                   <Switch checked={form.mensagemGlobalAtiva} onCheckedChange={(checked) => setForm((atual) => ({ ...atual, mensagemGlobalAtiva: checked }))} aria-label="Ativar mensagem global" />
                 </div>
@@ -230,7 +232,9 @@ export function AdminSistema() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <Label htmlFor="mensagem-manutencao">Modo manutenção</Label>
-                    <p className="mt-1 text-xs text-muted-foreground">Bloqueia o uso para usuários comuns. Administradores continuam com acesso.</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      Quando ativado, usuários comuns ficam temporariamente impedidos de utilizar o sistema e veem a mensagem informada abaixo. Administradores continuam com acesso para acompanhar o sistema e desativar a manutenção quando necessário.
+                    </p>
                   </div>
                   <Switch checked={form.manutencaoAtiva} onCheckedChange={(checked) => setForm((atual) => ({ ...atual, manutencaoAtiva: checked }))} aria-label="Ativar modo manutenção" />
                 </div>
@@ -243,7 +247,12 @@ export function AdminSistema() {
 
       <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
         <h3 className={uiTypography.secondaryTitle}>Versão mínima permitida</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Se o app instalado estiver abaixo do código mínimo, o usuário precisará atualizar para continuar.</p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          Define a versão mínima do aplicativo que poderá continuar sendo utilizada. Usuários com Android ou iOS abaixo do código informado precisarão atualizar antes de continuar. Essa regra não bloqueia o acesso pela Web.
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          O campo <strong>Versão</strong> é o nome exibido ao usuário, como 1.2.4. O <strong>versionCode</strong> no Android e o <strong>Build</strong> no iOS são os números internos usados para comparar se o aplicativo instalado está abaixo do mínimo permitido.
+        </p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border bg-muted/20 p-3">
             <p className="text-sm font-semibold">Android</p>
@@ -287,8 +296,10 @@ export function AdminSistema() {
             <Flag className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className={uiTypography.secondaryTitle}>Funcionalidades</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Recursos futuros podem consultar essas chaves e depois ser ligados ou desligados por aqui.</p>
+            <h3 className={uiTypography.secondaryTitle}>Controle de funcionalidades</h3>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Permite preparar controles para recursos do sistema que poderão ser ativados ou desativados futuramente por esta tela. Cada funcionalidade precisa estar previamente vinculada à sua chave no código; criar uma chave aqui, sozinha, não cria nem altera uma função do aplicativo.
+            </p>
 
             <div className="mt-4 space-y-2">
               {(dados?.funcionalidades ?? []).length === 0 ? (
@@ -308,6 +319,9 @@ export function AdminSistema() {
 
             <div className="mt-5 border-t pt-4">
               <p className="text-sm font-semibold">Nova funcionalidade</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                A chave é o identificador técnico usado pelo código, por exemplo <span className="font-medium text-foreground">novo_relatorio</span>. O nome é apenas a identificação amigável exibida aqui na Administração.
+              </p>
               <div className="mt-3 grid gap-2 md:grid-cols-2">
                 <Input value={novaChave} onChange={(event) => setNovaChave(event.target.value)} placeholder="chave.exemplo" />
                 <Input value={novoNome} onChange={(event) => setNovoNome(event.target.value)} placeholder="Nome da funcionalidade" />
@@ -322,6 +336,13 @@ export function AdminSistema() {
           </div>
         </div>
       </section>
+
+      <div className="rounded-xl border bg-muted/20 p-4">
+        <p className="text-sm font-semibold">Importante</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          Alterações nesta área podem afetar todos os usuários do Combinado Família. Mudanças administrativas ficam registradas na aba Auditoria, permitindo identificar quem realizou a ação e quando ela ocorreu.
+        </p>
+      </div>
     </div>
   );
 }
