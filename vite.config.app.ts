@@ -1,19 +1,23 @@
-// Build dedicado ao futuro app Android/iOS.
-//
-// Mantém o vite.config.ts atual intacto para a versão web/Lovable.
-// O app usa o SPA mode oficial do TanStack Start e gera index.html
-// dentro da saída estática, formato esperado pelo Capacitor.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import tailwindcss from "@tailwindcss/vite";
+import viteReact from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  tanstackStart: {
-    spa: {
-      enabled: true,
-      prerender: {
-        outputPath: "/index.html",
-        crawlLinks: false,
-        retryCount: 0,
+  plugins: [
+    tanstackStart({
+      spa: {
+        enabled: true,
+        prerender: {
+          outputPath: "/index.html",
+          crawlLinks: false,
+          retryCount: 0,
+        },
       },
-    },
-  },
+    }),
+    viteReact(),
+    tailwindcss(),
+    tsconfigPaths(),
+  ],
 });
