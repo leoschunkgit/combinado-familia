@@ -15,6 +15,8 @@ export type RelatorioPdfTarefa = {
 
 export type RelatorioPdfFilho = {
   nome: string;
+  cor?: string | null;
+  avatar?: "menino" | "menina" | null;
   resumo?: string | undefined;
   mesada?: {
     valor: string;
@@ -48,6 +50,46 @@ const PAGE_HEIGHT = 297;
 const MARGIN = 14;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const FOOTER_Y = 290;
+
+function corAvatarPdf(valor?: string | null): [number, number, number] {
+  const cor = valor?.trim() ?? "";
+  const curto = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(cor);
+  if (curto) return curto.slice(1).map((p) => parseInt(p + p, 16)) as [number, number, number];
+  const hex = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(cor);
+  if (hex) return hex.slice(1).map((p) => parseInt(p, 16)) as [number, number, number];
+  const rgb = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i.exec(cor);
+  if (rgb) return rgb.slice(1).map(Number).map((n) => Math.max(0, Math.min(255, n))) as [number, number, number];
+  return [12, 92, 60];
+}
+
+function iniciaisPdf(nome: string) {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  if (partes.length === 1) return partes[0]!.slice(0, 2).toUpperCase();
+  return (partes[0]![0] + partes[partes.length - 1]![0]).toUpperCase();
+}
+
+function desenharAvatarPdf(doc: jsPDF, filho: RelatorioPdfFilho, x: number, y: number) {
+  const [r, g, b] = corAvatarPdf(filho.cor);
+  doc.setFillColor(r, g, b);
+  doc.circle(x, y, 3.2, "F");
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(255, 255, 255);
+
+  if (filho.avatar === "menino" || filho.avatar === "menina") {
+    if (filho.avatar === "menina") {
+      doc.circle(x - 1.4, y - 1.2, 0.65, "F");
+      doc.circle(x + 1.4, y - 1.2, 0.65, "F");
+    }
+    doc.circle(x, y - 0.7, 1.25, "F");
+    doc.ellipse(x, y + 1.45, 1.8, 1.15, "F");
+  } else {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(5.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text(iniciaisPdf(filho.nome), x, y + 0.7, { align: "center" });
+  }
+}
 
 export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -170,10 +212,11 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
       doc.setFillColor(248, 249, 248);
       doc.setDrawColor(224, 227, 225);
       doc.roundedRect(MARGIN + 2, y, CONTENT_WIDTH - 4, 11, 2, 2, "FD");
+      desenharAvatarPdf(doc, filho, MARGIN + 7, y + 5.5);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(35, 45, 40);
-      doc.text(filho.nome, MARGIN + 6, y + 7);
+      doc.text(filho.nome, MARGIN + 12, y + 7);
       y += 15;
 
       if (filho.mesada) {
