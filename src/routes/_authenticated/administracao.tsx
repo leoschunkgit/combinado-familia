@@ -472,18 +472,18 @@ function AdministracaoPage() {
     : 0;
 
   const abas: Array<{ id: Aba; label: string }> = [
+    { id: "sistema", label: "Sistema" },
+    { id: "administradores", label: "Administradores" },
+    { id: "feedbacks", label: "Feedbacks" },
     { id: "visao", label: "Visão geral" },
     { id: "usuarios", label: "Usuários" },
-    { id: "feedbacks", label: "Feedbacks" },
     { id: "atencao", label: "Atenção" },
     { id: "funil", label: "Funil" },
     { id: "atividade", label: "Atividade" },
     { id: "versoes", label: "Versões" },
     { id: "push", label: "Push" },
     { id: "saude", label: "Saúde" },
-    { id: "sistema", label: "Sistema" },
     { id: "auditoria", label: "Auditoria" },
-    { id: "administradores", label: "Administradores" },
   ];
 
   return (
