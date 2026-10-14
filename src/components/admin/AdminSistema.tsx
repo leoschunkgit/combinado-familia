@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Flag, Plus, Save, Settings2 } from "lucide-react";
+import { AlertTriangle, Flag, Info, Plus, Save, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -200,7 +200,7 @@ export function AdminSistema() {
   return (
     <div className={uiSpacing.sectionStack}>
       <div>
-        <h2 className={uiTypography.secondaryTitle}>Configurações do sistema</h2>
+        <h2 className={uiTypography.secondaryTitle}>Administração do sistema</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Gerencie comportamentos gerais do Combinado Família. Aqui você pode avisar todos os usuários, colocar o aplicativo temporariamente em manutenção, definir a versão mínima permitida e controlar funcionalidades preparadas para ativação ou desativação.
         </p>
@@ -219,9 +219,12 @@ export function AdminSistema() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <Label htmlFor="mensagem-global">Mensagem global</Label>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      Exibe um aviso para todos os usuários logados. Use para comunicar novidades, atualizações, avisos importantes ou indisponibilidades programadas. Ao desativar, a mensagem deixa de aparecer, mas o texto pode permanecer salvo.
-                    </p>
+                    <div className="mt-2 flex items-start gap-2 rounded-lg border bg-muted/20 px-3 py-2">
+                      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                      <p className="text-xs leading-relaxed text-muted-foreground">
+                        Exibe um aviso para todos os usuários logados. Use para comunicar novidades, atualizações, avisos importantes ou indisponibilidades programadas. Ao desativar, a mensagem deixa de aparecer, mas o texto pode permanecer salvo.
+                      </p>
+                    </div>
                   </div>
                   <Switch checked={form.mensagemGlobalAtiva} onCheckedChange={(checked) => setForm((atual) => ({ ...atual, mensagemGlobalAtiva: checked }))} aria-label="Ativar mensagem global" />
                 </div>
@@ -232,9 +235,12 @@ export function AdminSistema() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <Label htmlFor="mensagem-manutencao">Modo manutenção</Label>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      Quando ativado, usuários comuns ficam temporariamente impedidos de utilizar o sistema e veem a mensagem informada abaixo. Administradores continuam com acesso para acompanhar o sistema e desativar a manutenção quando necessário.
-                    </p>
+                    <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/20 bg-muted/20 px-3 py-2">
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+                      <p className="text-xs leading-relaxed text-muted-foreground">
+                        Quando ativado, usuários comuns ficam temporariamente impedidos de utilizar o sistema e veem a mensagem informada abaixo. Administradores continuam com acesso para acompanhar o sistema e desativar a manutenção quando necessário.
+                      </p>
+                    </div>
                   </div>
                   <Switch checked={form.manutencaoAtiva} onCheckedChange={(checked) => setForm((atual) => ({ ...atual, manutencaoAtiva: checked }))} aria-label="Ativar modo manutenção" />
                 </div>
@@ -250,9 +256,12 @@ export function AdminSistema() {
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
           Define a versão mínima do aplicativo que poderá continuar sendo utilizada. Usuários com Android ou iOS abaixo do código informado precisarão atualizar antes de continuar. Essa regra não bloqueia o acesso pela Web.
         </p>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          O campo <strong>Versão</strong> é o nome exibido ao usuário, como 1.2.4. O <strong>versionCode</strong> no Android e o <strong>Build</strong> no iOS são os números internos usados para comparar se o aplicativo instalado está abaixo do mínimo permitido.
-        </p>
+        <div className="mt-3 flex items-start gap-2 rounded-lg border bg-muted/20 px-3 py-2">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            O campo <strong>Versão</strong> é o nome exibido ao usuário, como 1.2.4. O <strong>versionCode</strong> no Android e o <strong>Build</strong> no iOS são os números internos usados para comparar se o aplicativo instalado está abaixo do mínimo permitido.
+          </p>
+        </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border bg-muted/20 p-3">
             <p className="text-sm font-semibold">Android</p>
@@ -337,11 +346,14 @@ export function AdminSistema() {
         </div>
       </section>
 
-      <div className="rounded-xl border bg-muted/20 p-4">
-        <p className="text-sm font-semibold">Importante</p>
-        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Alterações nesta área podem afetar todos os usuários do Combinado Família. Mudanças administrativas ficam registradas na aba Auditoria, permitindo identificar quem realizou a ação e quando ela ocorreu.
-        </p>
+      <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-muted/20 p-4">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+        <div>
+          <p className="text-sm font-semibold">Importante</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Alterações nesta área podem afetar todos os usuários do Combinado Família. Mudanças administrativas ficam registradas na aba Auditoria, permitindo identificar quem realizou a ação e quando ela ocorreu.
+          </p>
+        </div>
       </div>
     </div>
   );
