@@ -17,6 +17,7 @@ import { botaoFezClass, botaoNaoFezClass } from "@/lib/action-button-styles";
 import { useActionLoading } from "@/components/ActionLoading";
 import { registrarNaoFezComPenalidade } from "@/lib/penalidade";
 import { PenalidadeDialog } from "@/components/PenalidadeDialog";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 type FezDraft = { tarefa: FilhoTarefa; data: string; bonusTipo: BonusTipo; descricao: string; valor: string };
@@ -256,7 +257,8 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                     return (
                     <article key={filho.id} className="overflow-hidden rounded-xl border bg-background">
                       <button type="button" className="flex w-full items-center justify-between gap-3 border-b bg-muted/40 px-4 py-3 text-left" onClick={() => alternarFilho(chaveFilho)} aria-expanded={abertoFilho}>
-                        <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-7 w-7" />
                           <div className="min-w-0">
                             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                               Filho
@@ -419,6 +421,15 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
       value={penalidadePendente?.descricao ?? ""}
       busy={busy}
       inputId="penalidade-pendencias"
+      contexto={penalidadePendente ? (() => {
+        const filho = filhos.find((item) => item.id === penalidadePendente.tarefa.id_filho);
+        return (
+          <span className="inline-flex min-w-0 items-center gap-1.5">
+            {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
+            <span className="truncate">{filho?.nome ?? "Filho"} · {penalidadePendente.tarefa.t_tarefa?.nome}</span>
+          </span>
+        );
+      })() : undefined}
       onChange={(descricao) =>
         setPenalidadePendente((atual) => atual ? { ...atual, descricao } : atual)
       }
