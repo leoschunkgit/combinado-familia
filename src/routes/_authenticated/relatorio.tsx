@@ -8,6 +8,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { CollapseChevron } from "@/components/CollapseChevron";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { fmtData, fmtDataHora, fmtVigencia, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias, useTarefas, type Ocorrencia } from "@/lib/db";
 import { descricaoPenalidade, reais, usaDesconto, valorDebitado } from "@/lib/mesada";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
@@ -115,6 +116,8 @@ function RelatorioPage() {
 
           return {
             nome: filho.nome,
+            cor: filho.cor,
+            avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null,
             resumo: comDesconto ? undefined : `Penalidade: ${vigencia.penalidade || "Não cadastrada"}`,
             mesada: comDesconto ? {
               valor: reais(filho.valor_mesada ?? 0),
@@ -205,7 +208,7 @@ function RelatorioPage() {
         {vigenciaAberta && <div className="mt-2 space-y-1.5"><div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 px-3 py-1.5 text-xs dark:border-amber-700/60 dark:bg-amber-950/10"><b>Penalidade:</b> <span className="text-muted-foreground">{vigencia.penalidade||"Não cadastrada"} · </span><b>Limite:</b> <span className="text-muted-foreground">{vigencia.qtd_ocorrencia} ocorrência(s)</span></div><div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 px-3 py-1.5 text-xs dark:border-emerald-700/60 dark:bg-emerald-950/10"><b>Desconto da mesada:</b> <span className="text-muted-foreground">{vigencia.valor_debito!==null?`${reais(vigencia.valor_debito)} por Não fez`:"Não cadastrado"}</span></div></div>}
       </CardHeader>{vigenciaAberta && <CardContent className="space-y-3">{gruposFilhos.map(({filho,tarefas,registros}) => {
         const totalNaoFez=registros.filter(naoFez).length,comDesconto=usaDesconto(filho,vigencia),totalDescontado=comDesconto?valorDebitado(filho,vigencia,totalNaoFez):0,saldoMesada=Math.max(0,(filho.valor_mesada??0)-totalDescontado),chave=`${vigencia.id}-${filho.id}`,aberto=filhosAbertos[chave]===true;
-        return <div key={filho.id} className="rounded-xl border"><button type="button" className="flex w-full cursor-pointer items-center gap-2 p-4 text-left" onClick={()=>setFilhosAbertos(a=>({...a,[chave]:!aberto}))}><CollapseChevron open={aberto} /><h3 className={`min-w-0 truncate ${uiTypography.secondaryTitleStrong}`}>{filho.nome}</h3></button>
+        return <div key={filho.id} className="rounded-xl border"><button type="button" className="flex w-full cursor-pointer items-center gap-2 p-4 text-left" onClick={()=>setFilhosAbertos(a=>({...a,[chave]:!aberto}))}><CollapseChevron open={aberto} /><FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-6 w-6" /><h3 className={`min-w-0 truncate ${uiTypography.secondaryTitleStrong}`}>{filho.nome}</h3></button>
         {aberto && <div className="border-t p-4 pt-3">{comDesconto?<div className="grid grid-cols-3 overflow-hidden rounded-lg border bg-muted/20 text-sm tabular-nums"><div className="px-3 py-2.5"><p className="text-[11px] font-medium text-muted-foreground">Mesada</p><p className="mt-0.5 font-semibold">{reais(filho.valor_mesada??0)}</p></div><div className="border-l px-3 py-2.5"><p className="text-[11px] font-medium text-muted-foreground">Descontos</p><p className="mt-0.5 font-semibold text-destructive">-{reais(totalDescontado)}</p></div><div className="border-l px-3 py-2.5"><p className="text-[11px] font-medium text-muted-foreground">Saldo atual</p><p className="mt-0.5 font-semibold text-primary">{reais(saldoMesada)}</p></div></div>:<p className="text-sm font-medium">Penalidade escrita ao atingir o limite: {vigencia.penalidade||"Não cadastrada"}</p>}<div className="mt-4 space-y-3">{tarefas.map(tarefa=>{
           const rs=ocorrencias.filter(o=>Number(o.id_filho_tarefa)===Number(tarefa.id)).sort(compararOcorrenciasPorData);
           return <div key={tarefa.id} className="border-t pt-3"><div><span className="font-semibold">{tarefa.t_tarefa?.nome}</span></div>{rs.length?<div className="mt-2 space-y-1.5">{rs.map(o=><div key={o.id} className="flex flex-wrap items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs tabular-nums">{o.tipo==="FEZ"?<ThumbsUp className="h-4 w-4 text-green-600"/>:<ThumbsDown className="h-4 w-4 text-destructive"/>}<span className="font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"}</span><span>· {fmtData(o.created_at)}</span>{bonus(o)&&<span>· Bonificação: {bonus(o)}</span>}{o.tipo!=="FEZ"&&!comDesconto&&penalizadas.has(o.id)&&<span className="font-semibold text-destructive">· Limite atingido</span>}</div>)}</div>:<p className="mt-2 text-xs text-muted-foreground">Nenhum resultado registrado.</p>}</div>;
