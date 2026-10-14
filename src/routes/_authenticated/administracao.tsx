@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import {
   Activity,
+  AlertTriangle,
   Baby,
   BellRing,
   CalendarRange,
@@ -20,6 +21,7 @@ import {
   ThumbsUp,
   Users,
   UserCheck,
+  Workflow,
   XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +31,15 @@ import { Input } from "@/components/ui/input";
 import { uiTypography } from "@/lib/ui-typography";
 import { uiSpacing } from "@/lib/ui-spacing";
 
-type Aba = "visao" | "usuarios" | "atividade" | "versoes" | "push" | "saude";
+type Aba = "visao" | "usuarios" | "atencao" | "funil" | "atividade" | "versoes" | "push" | "saude";
+
+type CategoriaAtencao =
+  | "onboarding_pendente"
+  | "sem_vigencia"
+  | "sem_atribuicao"
+  | "sem_acesso_15d"
+  | "versao_desatualizada"
+  | "sem_push_ativo";
 
 type AdminResumo = {
   usuarios: number;
@@ -77,6 +87,30 @@ type VersaoUso = {
   usuarios: number;
 };
 
+type AdminAtencaoUsuario = {
+  id: number;
+  nome: string;
+  email: string;
+  created_at: string;
+  last_seen_at: string | null;
+  plataforma: string | null;
+  version_name: string | null;
+  version_code: number | null;
+};
+
+type AdminDiagnostico = {
+  atencao: Record<CategoriaAtencao, AdminAtencaoUsuario[]>;
+  funil: {
+    cadastrados: number;
+    onboarding: number;
+    com_filho: number;
+    com_tarefa: number;
+    com_vigencia: number;
+    com_atribuicao: number;
+    com_marcacao: number;
+  };
+};
+
 type AdminOperacao = {
   atividade: {
     usuarios_monitorados: number;
@@ -119,6 +153,26 @@ const RESUMO_VAZIO: AdminResumo = {
   push_ios_ativos: 0,
   push_envios_hoje: 0,
   admins_ativos: 0,
+};
+
+const DIAGNOSTICO_VAZIO: AdminDiagnostico = {
+  atencao: {
+    onboarding_pendente: [],
+    sem_vigencia: [],
+    sem_atribuicao: [],
+    sem_acesso_15d: [],
+    versao_desatualizada: [],
+    sem_push_ativo: [],
+  },
+  funil: {
+    cadastrados: 0,
+    onboarding: 0,
+    com_filho: 0,
+    com_tarefa: 0,
+    com_vigencia: 0,
+    com_atribuicao: 0,
+    com_marcacao: 0,
+  },
 };
 
 const OPERACAO_VAZIA: AdminOperacao = {
@@ -166,6 +220,53 @@ function normalizarResumo(data: unknown): AdminResumo {
     push_ios_ativos: numero(r["push_ios_ativos"]),
     push_envios_hoje: numero(r["push_envios_hoje"]),
     admins_ativos: numero(r["admins_ativos"]),
+  };
+}
+
+function normalizarDiagnostico(data: unknown): AdminDiagnostico {
+  if (!data || typeof data !== "object") return DIAGNOSTICO_VAZIO;
+  const raiz = data as Record<string, unknown>;
+  const atencao = raiz["atencao"] && typeof raiz["atencao"] === "object"
+    ? raiz["atencao"] as Record<string, unknown>
+    : {};
+  const funil = raiz["funil"] && typeof raiz["funil"] === "object"
+    ? raiz["funil"] as Record<string, unknown>
+    : {};
+
+  const lista = (chave: CategoriaAtencao): AdminAtencaoUsuario[] => {
+    const itens = Array.isArray(atencao[chave]) ? atencao[chave] as unknown[] : [];
+    return itens
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .map((item) => ({
+        id: numero(item["id"]),
+        nome: typeof item["nome"] === "string" ? item["nome"] : "Usuário",
+        email: typeof item["email"] === "string" ? item["email"] : "",
+        created_at: typeof item["created_at"] === "string" ? item["created_at"] : "",
+        last_seen_at: typeof item["last_seen_at"] === "string" ? item["last_seen_at"] : null,
+        plataforma: typeof item["plataforma"] === "string" ? item["plataforma"] : null,
+        version_name: typeof item["version_name"] === "string" ? item["version_name"] : null,
+        version_code: item["version_code"] === null || item["version_code"] === undefined ? null : numero(item["version_code"]),
+      }));
+  };
+
+  return {
+    atencao: {
+      onboarding_pendente: lista("onboarding_pendente"),
+      sem_vigencia: lista("sem_vigencia"),
+      sem_atribuicao: lista("sem_atribuicao"),
+      sem_acesso_15d: lista("sem_acesso_15d"),
+      versao_desatualizada: lista("versao_desatualizada"),
+      sem_push_ativo: lista("sem_push_ativo"),
+    },
+    funil: {
+      cadastrados: numero(funil["cadastrados"]),
+      onboarding: numero(funil["onboarding"]),
+      com_filho: numero(funil["com_filho"]),
+      com_tarefa: numero(funil["com_tarefa"]),
+      com_vigencia: numero(funil["com_vigencia"]),
+      com_atribuicao: numero(funil["com_atribuicao"]),
+      com_marcacao: numero(funil["com_marcacao"]),
+    },
   };
 }
 
@@ -269,6 +370,8 @@ function AdministracaoPage() {
   const [aba, setAba] = useState<Aba>("visao");
   const [resumo, setResumo] = useState<AdminResumo>(RESUMO_VAZIO);
   const [operacao, setOperacao] = useState<AdminOperacao>(OPERACAO_VAZIA);
+  const [diagnostico, setDiagnostico] = useState<AdminDiagnostico>(DIAGNOSTICO_VAZIO);
+  const [categoriaAtencao, setCategoriaAtencao] = useState<CategoriaAtencao>("onboarding_pendente");
   const [usuarios, setUsuarios] = useState<AdminUsuario[]>([]);
   const [versao, setVersao] = useState<Versao | null>(null);
   const [busca, setBusca] = useState("");
@@ -282,16 +385,21 @@ function AdministracaoPage() {
     setCarregando(true);
     setErro(null);
 
-    const [resumoResult, usuariosResult, operacaoResult, versaoResult] = await Promise.all([
+    const versaoResult = await fetch("/app-version.json", { cache: "no-store" })
+      .then(async (response) => response.ok ? await response.json() as Versao : null)
+      .catch(() => null);
+
+    const [resumoResult, usuariosResult, operacaoResult, diagnosticoResult] = await Promise.all([
       supabase.rpc("admin_resumo"),
       supabase.rpc("admin_usuarios"),
       supabase.rpc("admin_operacao"),
-      fetch("/app-version.json", { cache: "no-store" })
-        .then(async (response) => response.ok ? await response.json() as Versao : null)
-        .catch(() => null),
+      supabase.rpc("admin_diagnostico", {
+        p_version_name: versaoResult?.versionName ?? null,
+        p_version_code: versaoResult?.versionCode ?? null,
+      }),
     ]);
 
-    if (resumoResult.error || usuariosResult.error || operacaoResult.error) {
+    if (resumoResult.error || usuariosResult.error || operacaoResult.error || diagnosticoResult.error) {
       setErro("Não foi possível carregar os dados administrativos.");
       setCarregando(false);
       return;
@@ -300,6 +408,7 @@ function AdministracaoPage() {
     setResumo(normalizarResumo(resumoResult.data));
     setUsuarios((usuariosResult.data ?? []) as AdminUsuario[]);
     setOperacao(normalizarOperacao(operacaoResult.data));
+    setDiagnostico(normalizarDiagnostico(diagnosticoResult.data));
     setVersao(versaoResult);
     setCarregando(false);
   }, []);
@@ -357,6 +466,8 @@ function AdministracaoPage() {
   const abas: Array<{ id: Aba; label: string }> = [
     { id: "visao", label: "Visão geral" },
     { id: "usuarios", label: "Usuários" },
+    { id: "atencao", label: "Atenção" },
+    { id: "funil", label: "Funil" },
     { id: "atividade", label: "Atividade" },
     { id: "versoes", label: "Versões" },
     { id: "push", label: "Push" },
@@ -585,6 +696,149 @@ function AdministracaoPage() {
           )}
         </div>
       )}
+
+      {!erro && !carregando && aba === "atencao" && (() => {
+        const categorias: Array<{ id: CategoriaAtencao; label: string; descricao: string }> = [
+          { id: "onboarding_pendente", label: "Onboarding pendente", descricao: "Ainda não concluíram o onboarding" },
+          { id: "sem_vigencia", label: "Sem vigência", descricao: "Ainda não criaram nenhuma vigência" },
+          { id: "sem_atribuicao", label: "Sem atribuições", descricao: "Ainda não possuem atribuições" },
+          { id: "sem_acesso_15d", label: "Sem acesso há 15 dias", descricao: "Monitorados sem acesso recente" },
+          { id: "versao_desatualizada", label: "Versão desatualizada", descricao: "Usando versão abaixo da atual" },
+          { id: "sem_push_ativo", label: "Sem push ativo", descricao: "Nenhum dispositivo com push ativo" },
+        ];
+        const selecionada = categorias.find((item) => item.id === categoriaAtencao) ?? categorias[0]!;
+        const listaSelecionada = diagnostico.atencao[categoriaAtencao];
+
+        return (
+          <div className={uiSpacing.sectionStack}>
+            <div>
+              <h2 className={uiTypography.secondaryTitle}>Usuários que precisam de atenção</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Clique em um indicador para ver os usuários daquele grupo.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+              {categorias.map((item) => {
+                const ativo = categoriaAtencao === item.id;
+                const total = diagnostico.atencao[item.id].length;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setCategoriaAtencao(item.id)}
+                    className={`min-w-0 rounded-xl border p-4 text-left shadow-sm transition-colors ${ativo ? "border-primary bg-primary/5" : "bg-card hover:bg-muted/20"}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className={`text-xs font-bold ${ativo ? "text-primary" : "text-muted-foreground"}`}>{item.label}</p>
+                        <p className="mt-1 text-lg font-bold tabular-nums">{formatarNumero(total)}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.descricao}</p>
+                      </div>
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${ativo ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
+                        <AlertTriangle className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className={uiTypography.secondaryTitle}>{selecionada.label}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{selecionada.descricao}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                  {formatarNumero(listaSelecionada.length)}
+                </span>
+              </div>
+
+              {listaSelecionada.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  Nenhum usuário neste grupo.
+                </div>
+              ) : (
+                <div className="mt-4 divide-y rounded-xl border">
+                  {listaSelecionada.map((usuario) => (
+                    <div key={usuario.id} className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{usuario.nome}</p>
+                        <p className="truncate text-xs text-muted-foreground">{usuario.email}</p>
+                      </div>
+                      <div className="shrink-0 text-xs text-muted-foreground sm:text-right">
+                        <p>{usuario.plataforma ? nomePlataforma(usuario.plataforma) : "Plataforma ainda não registrada"}</p>
+                        <p>{usuario.last_seen_at ? `Último acesso: ${formatarDataHora(usuario.last_seen_at)}` : "Acesso ainda não monitorado"}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              “Sem acesso há 15 dias” considera apenas usuários que já passaram a ter telemetria. “Sem push ativo” não significa necessariamente erro: o usuário pode estar usando somente a web ou ter recusado notificações.
+            </p>
+          </div>
+        );
+      })()}
+
+      {!erro && !carregando && aba === "funil" && (() => {
+        const total = diagnostico.funil.cadastrados;
+        const etapas = [
+          { label: "Cadastrou a conta", valor: diagnostico.funil.cadastrados },
+          { label: "Concluiu o onboarding", valor: diagnostico.funil.onboarding },
+          { label: "Cadastrou filho", valor: diagnostico.funil.com_filho },
+          { label: "Cadastrou tarefa", valor: diagnostico.funil.com_tarefa },
+          { label: "Criou vigência", valor: diagnostico.funil.com_vigencia },
+          { label: "Fez atribuição", valor: diagnostico.funil.com_atribuicao },
+          { label: "Registrou Fez / Não fez", valor: diagnostico.funil.com_marcacao },
+        ];
+
+        return (
+          <div className={uiSpacing.sectionStack}>
+            <div>
+              <h2 className={uiTypography.secondaryTitle}>Funil de uso</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Mostra até onde os usuários avançaram na configuração e no uso do Combinado Família.</p>
+            </div>
+
+            <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+              <div className="space-y-3">
+                {etapas.map((etapa, index) => {
+                  const percentual = total > 0 ? Math.round((etapa.valor / total) * 100) : 0;
+                  return (
+                    <div key={etapa.label}>
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{index + 1}</span>
+                          <span className="truncate font-semibold">{etapa.label}</span>
+                        </div>
+                        <span className="shrink-0 font-bold tabular-nums">{formatarNumero(etapa.valor)} · {percentual}%</span>
+                      </div>
+                      <div className="ml-9 mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, percentual)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Workflow className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className={uiTypography.secondaryTitle}>Leitura do funil</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    A diferença entre uma etapa e a seguinte ajuda a identificar onde os usuários param. Os percentuais usam o total de contas cadastradas como base.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        );
+      })()}
 
       {!erro && !carregando && aba === "atividade" && (
         <div className={uiSpacing.sectionStack}>

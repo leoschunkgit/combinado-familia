@@ -516,6 +516,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_diagnostico: {
+        Args: {
+          p_version_code?: number | null
+          p_version_name?: string | null
+        }
+        Returns: Json
+      }
       admin_operacao: { Args: never; Returns: Json }
       admin_resumo: { Args: never; Returns: Json }
       admin_usuarios: {
