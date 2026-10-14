@@ -17,12 +17,13 @@
     "app:add:android": "cap add android",
     "app:assets": "capacitor-assets generate",
     "app:add:ios": "cap add ios",
-    "app:sync:android": "npm run build:app && cap sync android",
+    "app:sync:android": "npm run build:app && cap sync android && npm run app:version:android",
     "app:sync:ios": "npm run build:app && cap sync ios",
     "app:open:android": "cap open android",
     "app:open:ios": "cap open ios",
     "app:run:android": "npm run app:sync:android && cap run android",
-    "app:run:ios": "npm run app:sync:ios && cap run ios"
+    "app:run:ios": "npm run app:sync:ios && cap run ios",
+    "app:version:android": "node scripts/sync-android-version.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
