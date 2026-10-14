@@ -311,15 +311,15 @@ function Index() {
                   )}
                   <p className="text-sm text-muted-foreground">{recuperacaoAguardandoCodigo ? "Digite o código enviado para seu email." : "Enviaremos um código de 8 dígitos para você redefinir sua senha dentro do app."}</p>
                   <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Aguarde...</> : recuperacaoAguardandoCodigo ? "Validar código" : "Enviar código"}</Button>
-                  {recuperacaoAguardandoCodigo && (
+                  {recuperacaoAguardandoCodigo && segundosReenvioRecuperacao === 0 && (
                     <Button
                       type="button"
                       variant="outline"
                       className="w-full"
-                      disabled={loading || segundosReenvioRecuperacao > 0}
+                      disabled={loading}
                       onClick={() => void solicitarCodigoRecuperacao()}
                     >
-                      {segundosReenvioRecuperacao > 0 ? `Reenviar código em ${segundosReenvioRecuperacao}s` : "Reenviar código"}
+                      Reenviar código
                     </Button>
                   )}
                   <Button type="button" variant="ghost" className="w-full" onClick={() => { setRecuperar(false); setRecuperacaoAguardandoCodigo(false); setCodigoRecuperacao(""); setSegundosReenvioRecuperacao(0); }} disabled={loading}>Voltar para entrar</Button>
