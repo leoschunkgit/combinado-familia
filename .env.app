@@ -1,0 +1,7 @@
+SUPABASE_PROJECT_ID="radwzkgpgdcwyjcpfcqw"
+SUPABASE_PUBLISHABLE_KEY="sb_publishable_TRbYCEwoF48xxVzmWnh2FA_qSyzf9db"
+SUPABASE_URL="https://radwzkgpgdcwyjcpfcqw.supabase.co"
+VITE_SUPABASE_PROJECT_ID="radwzkgpgdcwyjcpfcqw"
+VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_TRbYCEwoF48xxVzmWnh2FA_qSyzf9db"
+VITE_SUPABASE_URL="https://radwzkgpgdcwyjcpfcqw.supabase.co"
+VITE_PUBLIC_APP_URL="https://www.combinadofamilia.app.br"
