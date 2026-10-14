@@ -13,39 +13,13 @@ function BonecoMenino() {
   return (
     <svg
       viewBox="0 0 32 32"
-      className="h-[72%] w-[72%]"
-      fill="none"
+      className="h-[74%] w-[74%]"
+      fill="currentColor"
       aria-hidden="true"
     >
-      <path
-        d="M10.4 12.1c.3-4 2.8-6.6 6.1-6.6 3.1 0 5.4 2 5.9 5.3-2.6-.2-4.8-1-6.6-2.5-1.3 1.8-3 3-5.4 3.8Z"
-        fill="currentColor"
-        opacity=".96"
-      />
-      <path
-        d="M10.2 13.1c0 4.1 2.5 7.1 5.8 7.1s5.8-3 5.8-7.1"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8.2 27c.8-3.8 3.8-6.2 7.8-6.2s7 2.4 7.8 6.2"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M13.6 14.1h.1M18.3 14.1h.1"
-        stroke="currentColor"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14.2 17.1c1.1.7 2.5.7 3.6 0"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
+      <path d="M10.1 11.2c.7-3.9 3-6.1 6.1-6.1 2.7 0 4.9 1.6 5.7 4.7-2.6.1-4.8-.7-6.7-2.2-1.2 1.6-2.9 2.8-5.1 3.6Z" />
+      <circle cx="16" cy="14.2" r="5.5" />
+      <path d="M7.6 27.2c.8-4.6 4.1-7.3 8.4-7.3s7.6 2.7 8.4 7.3H7.6Z" />
     </svg>
   );
 }
@@ -54,39 +28,14 @@ function BonecoMenina() {
   return (
     <svg
       viewBox="0 0 32 32"
-      className="h-[72%] w-[72%]"
-      fill="none"
+      className="h-[74%] w-[74%]"
+      fill="currentColor"
       aria-hidden="true"
     >
-      <path
-        d="M8.8 16.2c0-6.7 2.7-10.6 7.2-10.6s7.2 3.9 7.2 10.6v3.6c-1.2-.5-2.1-1.3-2.8-2.5-.9 1.8-2.4 2.9-4.4 2.9s-3.5-1.1-4.4-2.9c-.7 1.2-1.6 2-2.8 2.5v-3.6Z"
-        fill="currentColor"
-        opacity=".96"
-      />
-      <path
-        d="M10.5 13.1c0 4.1 2.4 7.1 5.5 7.1s5.5-3 5.5-7.1"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8.1 27c.9-3.8 3.9-6.2 7.9-6.2s7 2.4 7.9 6.2"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M13.6 14.1h.1M18.3 14.1h.1"
-        stroke="currentColor"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14.2 17.1c1.1.7 2.5.7 3.6 0"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
+      <path d="M8.7 16.3c0-6.8 2.8-10.8 7.3-10.8s7.3 4 7.3 10.8v3.2c-1.5-.6-2.5-1.5-3.2-2.8-.9 1.8-2.3 2.8-4.1 2.8s-3.2-1-4.1-2.8c-.7 1.3-1.7 2.2-3.2 2.8v-3.2Z" />
+      <circle cx="16" cy="14.2" r="5.3" />
+      <path d="M7.6 27.2c.8-4.6 4.1-7.3 8.4-7.3s7.6 2.7 8.4 7.3H7.6Z" />
+      <circle cx="23.7" cy="8.2" r="1.8" />
     </svg>
   );
 }
