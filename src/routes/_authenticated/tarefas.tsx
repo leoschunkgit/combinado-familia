@@ -238,16 +238,18 @@ function TarefasPage() {
                     <Hint content={t.nome}>
                       <p className="min-w-0 flex-1 truncate text-sm font-medium">{t.nome}</p>
                     </Hint>
-                    <Hint content="Editar tarefa">
-                      <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    </Hint>
-                    <Hint content="Excluir tarefa">
-                      <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </Hint>
+                    <div className="flex shrink-0 items-center gap-3 sm:gap-2">
+                      <Hint content="Editar tarefa">
+                        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => { setEditando(t); setNomeEdicao(t.nome); }} aria-label={`Editar ${t.nome}`}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      </Hint>
+                      <Hint content="Excluir tarefa">
+                        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(t.id)} aria-label={`Excluir ${t.nome}`}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </Hint>
+                    </div>
                   </div>
                 ))}
               </div>

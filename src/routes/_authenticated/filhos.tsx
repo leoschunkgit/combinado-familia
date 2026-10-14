@@ -248,7 +248,7 @@ function FilhosPage() {
         return <div key={f.id} className="min-w-0 max-w-full rounded-2xl border bg-card p-4">
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-2.5"><FilhoAvatar nome={f.nome} cor={f.cor} avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null} className="h-9 w-9 shrink-0" /><p className="min-w-0 flex-1 truncate text-base font-semibold">{f.nome}</p></div>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-3 sm:gap-2">
               <Hint content="Editar filho">
                 <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}>
                   <Pencil className="h-4 w-4" />
