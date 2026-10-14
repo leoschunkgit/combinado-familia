@@ -27,7 +27,7 @@ Em 14/10/2026, DEV e PRD foram conferidos com a mesma estrutura:
 - 17 triggers;
 - 14 policies;
 - Realtime em `t_app_config_signal`;
-- migrations funcionais até `0057_restringir_funcao_interna_admin_master`;
+- migrations funcionais versionadas até `0061_consolidar_permissoes_funcoes_auditadas`;
 - Edge Functions: `registrar-push-token`, `excluir-conta`, `enviar-pendencias-push` e `enviar-whatsapp`.
 
-O cron de push antigo da Lovable não deve ser reutilizado. Cada ambiente terá seu próprio cron e seus próprios secrets.
+O cron de push antigo da Lovable não deve ser reutilizado. Cada ambiente possui seu próprio cron, secrets e Vault.\n\n## Estado de segurança após auditoria\n\n- DEV e PRD com ACLs de funções alinhadas e consolidadas em `0061_consolidar_permissoes_funcoes_auditadas`.\n- Tabelas internas e tabelas de push endurecidas em `0060_hardening_tabelas_internas_e_push`.\n- `anon` e `authenticated` sem acesso direto às tabelas internas de push; Edge Functions usam `service_role` com privilégio mínimo.\n- Painel público do filho mantém apenas a RPC `obter_painel_publico_filho(uuid)` para `anon`, por desenho.\n- Security Advisor: os 8 itens `RLS Enabled No Policy` das tabelas internas são intencionais (default deny).\n- Push agendado em duas janelas diárias por ambiente: 12:00 e 19:30 (America/Sao_Paulo), versionado em `0058` e `0059`.\n
