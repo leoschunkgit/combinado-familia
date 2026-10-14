@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import {
+  Activity,
   Baby,
   BellRing,
   CalendarRange,
+  Clock3,
   Database,
+  Globe2,
   Link2,
   ListTodo,
   RefreshCw,
@@ -24,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { uiTypography } from "@/lib/ui-typography";
 import { uiSpacing } from "@/lib/ui-spacing";
 
-type Aba = "visao" | "usuarios" | "push" | "sistema";
+type Aba = "visao" | "usuarios" | "atividade" | "versoes" | "push" | "saude";
 
 type AdminResumo = {
   usuarios: number;
@@ -65,6 +68,36 @@ type Versao = {
   versionCode: number;
 };
 
+type VersaoUso = {
+  plataforma: string;
+  version_name: string | null;
+  version_code: number | null;
+  usuarios: number;
+};
+
+type AdminOperacao = {
+  atividade: {
+    usuarios_monitorados: number;
+    usuarios_sem_telemetria: number;
+    ativos_hoje: number;
+    ativos_7d: number;
+    ativos_30d: number;
+    ultimo_acesso: string | null;
+  };
+  plataformas: {
+    web: number;
+    android: number;
+    ios: number;
+  };
+  versoes: VersaoUso[];
+  saude: {
+    banco_agora: string | null;
+    cron_push_configurado: boolean;
+    ultimo_push_envio: string | null;
+    ultima_referencia_push: string | null;
+  };
+};
+
 const RESUMO_VAZIO: AdminResumo = {
   usuarios: 0,
   usuarios_7d: 0,
@@ -84,6 +117,25 @@ const RESUMO_VAZIO: AdminResumo = {
   push_ios_ativos: 0,
   push_envios_hoje: 0,
   admins_ativos: 0,
+};
+
+const OPERACAO_VAZIA: AdminOperacao = {
+  atividade: {
+    usuarios_monitorados: 0,
+    usuarios_sem_telemetria: 0,
+    ativos_hoje: 0,
+    ativos_7d: 0,
+    ativos_30d: 0,
+    ultimo_acesso: null,
+  },
+  plataformas: { web: 0, android: 0, ios: 0 },
+  versoes: [],
+  saude: {
+    banco_agora: null,
+    cron_push_configurado: false,
+    ultimo_push_envio: null,
+    ultima_referencia_push: null,
+  },
 };
 
 function numero(valor: unknown) {
@@ -115,11 +167,57 @@ function normalizarResumo(data: unknown): AdminResumo {
   };
 }
 
+function normalizarOperacao(data: unknown): AdminOperacao {
+  if (!data || typeof data !== "object") return OPERACAO_VAZIA;
+  const raiz = data as Record<string, unknown>;
+  const atividade = raiz["atividade"] && typeof raiz["atividade"] === "object"
+    ? raiz["atividade"] as Record<string, unknown>
+    : {};
+  const plataformas = raiz["plataformas"] && typeof raiz["plataformas"] === "object"
+    ? raiz["plataformas"] as Record<string, unknown>
+    : {};
+  const saude = raiz["saude"] && typeof raiz["saude"] === "object"
+    ? raiz["saude"] as Record<string, unknown>
+    : {};
+  const versoesBrutas = Array.isArray(raiz["versoes"]) ? raiz["versoes"] : [];
+
+  return {
+    atividade: {
+      usuarios_monitorados: numero(atividade["usuarios_monitorados"]),
+      usuarios_sem_telemetria: numero(atividade["usuarios_sem_telemetria"]),
+      ativos_hoje: numero(atividade["ativos_hoje"]),
+      ativos_7d: numero(atividade["ativos_7d"]),
+      ativos_30d: numero(atividade["ativos_30d"]),
+      ultimo_acesso: typeof atividade["ultimo_acesso"] === "string" ? atividade["ultimo_acesso"] : null,
+    },
+    plataformas: {
+      web: numero(plataformas["web"]),
+      android: numero(plataformas["android"]),
+      ios: numero(plataformas["ios"]),
+    },
+    versoes: versoesBrutas
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+      .map((item) => ({
+        plataforma: typeof item["plataforma"] === "string" ? item["plataforma"] : "—",
+        version_name: typeof item["version_name"] === "string" ? item["version_name"] : null,
+        version_code: item["version_code"] === null ? null : numero(item["version_code"]),
+        usuarios: numero(item["usuarios"]),
+      })),
+    saude: {
+      banco_agora: typeof saude["banco_agora"] === "string" ? saude["banco_agora"] : null,
+      cron_push_configurado: saude["cron_push_configurado"] === true,
+      ultimo_push_envio: typeof saude["ultimo_push_envio"] === "string" ? saude["ultimo_push_envio"] : null,
+      ultima_referencia_push: typeof saude["ultima_referencia_push"] === "string" ? saude["ultima_referencia_push"] : null,
+    },
+  };
+}
+
 function formatarNumero(valor: number) {
   return new Intl.NumberFormat("pt-BR").format(valor);
 }
 
-function formatarDataHora(valor: string) {
+function formatarDataHora(valor: string | null) {
+  if (!valor) return "Ainda não registrado";
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) return "—";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -127,6 +225,13 @@ function formatarDataHora(valor: string) {
     timeStyle: "short",
     timeZone: "America/Sao_Paulo",
   }).format(data);
+}
+
+function nomePlataforma(plataforma: string) {
+  if (plataforma === "android") return "Android";
+  if (plataforma === "ios") return "iOS";
+  if (plataforma === "web") return "Web";
+  return plataforma;
 }
 
 function Indicador({
@@ -161,6 +266,7 @@ function Indicador({
 function AdministracaoPage() {
   const [aba, setAba] = useState<Aba>("visao");
   const [resumo, setResumo] = useState<AdminResumo>(RESUMO_VAZIO);
+  const [operacao, setOperacao] = useState<AdminOperacao>(OPERACAO_VAZIA);
   const [usuarios, setUsuarios] = useState<AdminUsuario[]>([]);
   const [versao, setVersao] = useState<Versao | null>(null);
   const [busca, setBusca] = useState("");
@@ -171,15 +277,16 @@ function AdministracaoPage() {
     setCarregando(true);
     setErro(null);
 
-    const [resumoResult, usuariosResult, versaoResult] = await Promise.all([
+    const [resumoResult, usuariosResult, operacaoResult, versaoResult] = await Promise.all([
       supabase.rpc("admin_resumo"),
       supabase.rpc("admin_usuarios"),
+      supabase.rpc("admin_operacao"),
       fetch("/app-version.json", { cache: "no-store" })
         .then(async (response) => response.ok ? await response.json() as Versao : null)
         .catch(() => null),
     ]);
 
-    if (resumoResult.error || usuariosResult.error) {
+    if (resumoResult.error || usuariosResult.error || operacaoResult.error) {
       setErro("Não foi possível carregar os dados administrativos.");
       setCarregando(false);
       return;
@@ -187,6 +294,7 @@ function AdministracaoPage() {
 
     setResumo(normalizarResumo(resumoResult.data));
     setUsuarios((usuariosResult.data ?? []) as AdminUsuario[]);
+    setOperacao(normalizarOperacao(operacaoResult.data));
     setVersao(versaoResult);
     setCarregando(false);
   }, []);
@@ -211,8 +319,10 @@ function AdministracaoPage() {
   const abas: Array<{ id: Aba; label: string }> = [
     { id: "visao", label: "Visão geral" },
     { id: "usuarios", label: "Usuários" },
+    { id: "atividade", label: "Atividade" },
+    { id: "versoes", label: "Versões" },
     { id: "push", label: "Push" },
-    { id: "sistema", label: "Sistema" },
+    { id: "saude", label: "Saúde" },
   ];
 
   return (
@@ -409,6 +519,83 @@ function AdministracaoPage() {
         </div>
       )}
 
+      {!erro && !carregando && aba === "atividade" && (
+        <div className={uiSpacing.sectionStack}>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <Indicador titulo="Ativos hoje" valor={operacao.atividade.ativos_hoje} icon={<Activity className="h-4 w-4" />} />
+            <Indicador titulo="Ativos em 7 dias" valor={operacao.atividade.ativos_7d} icon={<Users className="h-4 w-4" />} />
+            <Indicador titulo="Ativos em 30 dias" valor={operacao.atividade.ativos_30d} icon={<Users className="h-4 w-4" />} />
+            <Indicador titulo="Monitorados" valor={operacao.atividade.usuarios_monitorados} icon={<UserCheck className="h-4 w-4" />} />
+            <Indicador titulo="Ainda sem telemetria" valor={operacao.atividade.usuarios_sem_telemetria} icon={<Clock3 className="h-4 w-4" />} />
+            <Indicador titulo="Último acesso" valor={formatarDataHora(operacao.atividade.ultimo_acesso)} icon={<Clock3 className="h-4 w-4" />} />
+          </div>
+
+          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className={uiTypography.secondaryTitle}>Plataformas em uso</h2>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Globe2 className="h-3.5 w-3.5" />Web</div>
+                <p className="mt-1 text-lg font-bold">{formatarNumero(operacao.plataformas.web)}</p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Smartphone className="h-3.5 w-3.5" />Android</div>
+                <p className="mt-1 text-lg font-bold">{formatarNumero(operacao.plataformas.android)}</p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Smartphone className="h-3.5 w-3.5" />iOS</div>
+                <p className="mt-1 text-lg font-bold">{formatarNumero(operacao.plataformas.ios)}</p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              O monitoramento de acesso, plataforma e versão começa a partir desta implementação. Usuários antigos entram na contagem quando acessarem novamente.
+            </p>
+          </section>
+        </div>
+      )}
+
+      {!erro && !carregando && aba === "versoes" && (
+        <div className={uiSpacing.sectionStack}>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <Indicador
+              titulo="Versão atual"
+              valor={versao?.versionName ?? "—"}
+              detalhe={versao ? `versionCode ${versao.versionCode}` : "Versão não disponível"}
+              icon={<ListTodo className="h-4 w-4" />}
+            />
+            <Indicador titulo="Web monitorados" valor={operacao.plataformas.web} icon={<Globe2 className="h-4 w-4" />} />
+            <Indicador titulo="Android monitorados" valor={operacao.plataformas.android} icon={<Smartphone className="h-4 w-4" />} />
+          </div>
+
+          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <h2 className={uiTypography.secondaryTitle}>Versões registradas</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Última versão/plataforma registrada para cada usuário monitorado.</p>
+            <div className="mt-4 space-y-2">
+              {operacao.versoes.length === 0 ? (
+                <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  Ainda não há versões registradas.
+                </div>
+              ) : operacao.versoes.map((item, index) => {
+                const atual = Boolean(versao?.versionName && item.version_name === versao.versionName);
+                return (
+                  <div key={`${item.plataforma}:${item.version_name ?? "sem-versao"}:${item.version_code ?? "sem-code"}:${index}`} className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-3 py-2.5">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold">{nomePlataforma(item.plataforma)} · {item.version_name ?? "Sem versão"}</p>
+                        {atual && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">Atual</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {item.version_code !== null ? `versionCode ${item.version_code}` : "versionCode não informado"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold tabular-nums">{formatarNumero(item.usuarios)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      )}
+
       {!erro && !carregando && aba === "push" && (
         <div className={uiSpacing.sectionStack}>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
@@ -428,23 +615,24 @@ function AdministracaoPage() {
         </div>
       )}
 
-      {!erro && !carregando && aba === "sistema" && (
+      {!erro && !carregando && aba === "saude" && (
         <div className={uiSpacing.sectionStack}>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            <Indicador
-              titulo="Versão atual"
-              valor={versao?.versionName ?? "—"}
-              detalhe={versao ? `versionCode ${versao.versionCode}` : "Versão não disponível"}
-              icon={<ListTodo className="h-4 w-4" />}
-            />
             <Indicador titulo="Banco" valor="Conectado" icon={<Database className="h-4 w-4" />} />
+            <Indicador
+              titulo="Cron de push"
+              valor={operacao.saude.cron_push_configurado ? "Configurado" : "Não configurado"}
+              icon={<BellRing className="h-4 w-4" />}
+            />
             <Indicador titulo="Admins ativos" valor={resumo.admins_ativos} icon={<ShieldCheck className="h-4 w-4" />} />
+            <Indicador titulo="Último envio push" valor={formatarDataHora(operacao.saude.ultimo_push_envio)} icon={<Clock3 className="h-4 w-4" />} />
+            <Indicador titulo="Último acesso monitorado" valor={formatarDataHora(operacao.atividade.ultimo_acesso)} icon={<Activity className="h-4 w-4" />} />
           </div>
 
           <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
-            <h2 className={uiTypography.secondaryTitle}>Segurança administrativa</h2>
+            <h2 className={uiTypography.secondaryTitle}>Segurança operacional</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Os indicadores são obtidos por funções protegidas no banco. A área não recebe permissão direta para consultar o conteúdo das famílias.
+              A Administração recebe somente indicadores preparados por funções protegidas no banco. Segredos do cron, tokens de push e conteúdo das famílias não são expostos.
             </p>
           </section>
         </div>

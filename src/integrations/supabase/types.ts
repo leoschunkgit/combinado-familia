@@ -58,6 +58,47 @@ export type Database = {
           },
         ]
       }
+      t_app_telemetria: {
+        Row: {
+          first_seen_at: string
+          id: number
+          id_usuario_pai: number
+          last_seen_at: string
+          plataforma: string
+          updated_at: string
+          version_code: number | null
+          version_name: string | null
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: number
+          id_usuario_pai: number
+          last_seen_at?: string
+          plataforma: string
+          updated_at?: string
+          version_code?: number | null
+          version_name?: string | null
+        }
+        Update: {
+          first_seen_at?: string
+          id?: number
+          id_usuario_pai?: number
+          last_seen_at?: string
+          plataforma?: string
+          updated_at?: string
+          version_code?: number | null
+          version_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_app_telemetria_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: true
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_filho: {
         Row: {
           avatar: string | null
@@ -475,6 +516,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_operacao: { Args: never; Returns: Json }
       admin_resumo: { Args: never; Returns: Json }
       admin_usuarios: {
         Args: never
@@ -534,6 +576,14 @@ export type Database = {
         }[]
       }
       obter_painel_publico_filho: { Args: { p_token: string }; Returns: Json }
+      registrar_telemetria_app: {
+        Args: {
+          p_plataforma: string
+          p_version_code?: number | null
+          p_version_name?: string | null
+        }
+        Returns: undefined
+      }
       recalcular_estado_atribuicao: {
         Args: { p_id: number }
         Returns: undefined

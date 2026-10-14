@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ import { AppPushNotifications } from "@/components/AppPushNotifications";
 import { AppVersion } from "@/components/AppVersion";
 import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
+import { registrarTelemetriaApp } from "@/lib/app-telemetry";
 import {
   biometriaAtivaNesteAparelho,
   bloquearBiometriaNestaExecucao,
@@ -109,6 +110,10 @@ function AuthenticatedLayout() {
   const [saindo, setSaindo] = useState(false);
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
+
+  useEffect(() => {
+    void registrarTelemetriaApp();
+  }, []);
 
   async function clonarPeloMenu() {
     try {
