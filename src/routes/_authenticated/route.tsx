@@ -308,7 +308,7 @@ function AuthenticatedLayout() {
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
           <div className={`mb-5 hidden w-full items-center md:flex ${
             menuDesktopRecolhido
-              ? "sticky top-3 z-30 -mt-3 mx-auto justify-between border-b border-border bg-background pb-4"
+              ? "-mt-3 mx-auto justify-between border-b border-border pb-4"
               : "justify-end"
           }`}>
             {menuDesktopRecolhido && (
