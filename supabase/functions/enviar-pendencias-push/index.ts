@@ -153,6 +153,11 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
 
   try {
+    const body = await req.json().catch(() => ({})) as { janela?: unknown };
+    const janela = body?.janela === "12:00" || body?.janela === "19:30" ? body.janela : null;
+    if (!janela) {
+      return json({ error: "Janela de envio inválida" }, 400);
+    }
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const cronSecret = Deno.env.get("PUSH_CRON_SECRET");
@@ -248,7 +253,8 @@ serve(async (req) => {
       .from("t_push_envio")
       .select("id_push_dispositivo,id_filho")
       .in("id_push_dispositivo", idsDispositivos)
-      .eq("data_referencia", dataReferencia);
+      .eq("data_referencia", dataReferencia)
+      .eq("janela_envio", janela);
 
     if (enviosError) throw enviosError;
 
@@ -288,6 +294,7 @@ serve(async (req) => {
           id_usuario_pai: pendencia.idUsuarioPai,
           id_filho: pendencia.idFilho,
           data_referencia: dataReferencia,
+          janela_envio: janela,
           qtd_pendencias: pendencia.quantidade,
         });
         if (insertError && insertError.code !== "23505") {
@@ -302,6 +309,7 @@ serve(async (req) => {
     return json({
       ok: true,
       data: dataReferencia,
+      janela,
       familiasComPendencia: pais.length,
       filhosComPendencia: pendencias.length,
       enviados,
