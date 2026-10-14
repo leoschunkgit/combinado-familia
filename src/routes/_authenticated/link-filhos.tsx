@@ -11,6 +11,7 @@ import { msgErro, useFilhos, type Filho } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
 import { copyText, openExternalUrl, shareLink } from "@/lib/platform-actions";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 
 export const Route = createFileRoute("/_authenticated/link-filhos")({
   head: () => ({ meta: [
@@ -95,7 +96,8 @@ function LinkFilhosPage() {
         const acesso = acessos[f.id];
         const ativo = acesso?.ativo === true;
         return <section key={f.id} className="min-w-0 rounded-2xl border bg-card p-4">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <FilhoAvatar nome={f.nome} cor={f.cor} avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null} className="h-7 w-7" />
             <div className="min-w-0 flex-1"><h2 className={`truncate ${uiTypography.secondaryTitle}`}>{f.nome}</h2><p className="text-xs text-muted-foreground">Painel de acompanhamento</p></div>
           </div>
 
@@ -164,7 +166,21 @@ function LinkFilhosPage() {
       })}
     </div>
 
-    <Dialog open={Boolean(confirmarDesativar)} onOpenChange={(open) => !open && setConfirmarDesativar(null)}><DialogContent><DialogHeader><DialogTitle>Desativar painel</DialogTitle></DialogHeader><p>O link de <strong>{confirmarDesativar?.nome}</strong> deixará de permitir acesso ao painel. Os dados não serão apagados.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarDesativar(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { const f = confirmarDesativar; setConfirmarDesativar(null); if (f) void runAction(() => desativarLink(f)); }}>Desativar</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={Boolean(confirmarNovoLink)} onOpenChange={(open) => !open && setConfirmarNovoLink(null)}><DialogContent><DialogHeader><DialogTitle>Gerar novo link</DialogTitle></DialogHeader><p>O link atual de <strong>{confirmarNovoLink?.nome}</strong> deixará de funcionar imediatamente. Deseja continuar?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarNovoLink(null)}>Cancelar</Button><Button onClick={() => { const f = confirmarNovoLink; setConfirmarNovoLink(null); if (f) void runAction(() => gerarLink(f, true)); }}>Gerar novo link</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={Boolean(confirmarDesativar)} onOpenChange={(open) => !open && setConfirmarDesativar(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Desativar painel</DialogTitle></DialogHeader>
+        {confirmarDesativar && <div className="flex items-center gap-2 text-sm font-semibold"><FilhoAvatar nome={confirmarDesativar.nome} cor={confirmarDesativar.cor} avatar={confirmarDesativar.avatar === "menino" || confirmarDesativar.avatar === "menina" ? confirmarDesativar.avatar : null} className="h-5 w-5" /><span>{confirmarDesativar.nome}</span></div>}
+        <p>O link deixará de permitir acesso ao painel. Os dados não serão apagados.</p>
+        <DialogFooter><Button variant="outline" onClick={() => setConfirmarDesativar(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { const f = confirmarDesativar; setConfirmarDesativar(null); if (f) void runAction(() => desativarLink(f)); }}>Desativar</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog open={Boolean(confirmarNovoLink)} onOpenChange={(open) => !open && setConfirmarNovoLink(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Gerar novo link</DialogTitle></DialogHeader>
+        {confirmarNovoLink && <div className="flex items-center gap-2 text-sm font-semibold"><FilhoAvatar nome={confirmarNovoLink.nome} cor={confirmarNovoLink.cor} avatar={confirmarNovoLink.avatar === "menino" || confirmarNovoLink.avatar === "menina" ? confirmarNovoLink.avatar : null} className="h-5 w-5" /><span>{confirmarNovoLink.nome}</span></div>}
+        <p>O link atual deixará de funcionar imediatamente. Deseja continuar?</p>
+        <DialogFooter><Button variant="outline" onClick={() => setConfirmarNovoLink(null)}>Cancelar</Button><Button onClick={() => { const f = confirmarNovoLink; setConfirmarNovoLink(null); if (f) void runAction(() => gerarLink(f, true)); }}>Gerar novo link</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   </>;
 }
