@@ -18,6 +18,8 @@ import { fmtVigencia, msgErro, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas
 import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
   head: () => ({ meta: [
@@ -32,6 +34,8 @@ type FilhoNovoFluxo = {
   nome: string;
   tem_mesada: boolean;
   valor_mesada: number | null;
+  cor: string;
+  avatar: FilhoAvatarOpcao;
 };
 
 type TarefaNovaFluxo = {
@@ -80,6 +84,8 @@ function CadastroUnicoPage() {
   const [nomeFilho, setNomeFilho] = useState("");
   const [temMesada, setTemMesada] = useState(false);
   const [valorMesada, setValorMesada] = useState("");
+  const [corFilho, setCorFilho] = useState("");
+  const [avatarFilho, setAvatarFilho] = useState<FilhoAvatarOpcao>("");
   const [nomeTarefa, setNomeTarefa] = useState("");
   const [filhosSelecionados, setFilhosSelecionados] = useState<number[]>([]);
   const [filhosNovosPendentes, setFilhosNovosPendentes] = useState<FilhoNovoFluxo[]>([]);
@@ -138,6 +144,9 @@ function CadastroUnicoPage() {
     if (temMesada && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0)) {
       toast.error("Informe um valor de mesada válido"); return;
     }
+    if (!corFilhoValida(corFilho)) {
+      toast.error("Use uma cor hexadecimal ou RGB válida"); return;
+    }
 
     const valor = temMesada ? Number(valorMesada.replace(",", ".")) : null;
     setFilhosNovosPendentes((atuais) => [
@@ -147,11 +156,15 @@ function CadastroUnicoPage() {
         nome,
         tem_mesada: temMesada,
         valor_mesada: valor,
+        cor: corFilho.trim(),
+        avatar: avatarFilho,
       },
     ]);
     setNomeFilho("");
     setTemMesada(false);
     setValorMesada("");
+    setCorFilho("");
+    setAvatarFilho("");
   }
 
   async function concluirEtapaFilhos() {
@@ -171,6 +184,8 @@ function CadastroUnicoPage() {
         tem_mesada: filho.tem_mesada,
         tem_mesada_opcional: filho.tem_mesada ? true : null,
         valor_mesada: filho.valor_mesada,
+        cor: filho.cor || null,
+        avatar: filho.avatar || null,
       }));
 
       const { data, error } = await supabase.from("t_filho").insert(payload).select("id");
@@ -393,6 +408,8 @@ function CadastroUnicoPage() {
     setNomeFilho("");
     setTemMesada(false);
     setValorMesada("");
+    setCorFilho("");
+    setAvatarFilho("");
     setFilhosSelecionados([]);
     setFilhosNovosPendentes([]);
     setNomeTarefa("");
@@ -434,7 +451,7 @@ function CadastroUnicoPage() {
               <CardContent className="space-y-3 !p-3.5">
                 <div className="rounded-lg border bg-muted/20 p-2.5">
                   <p className="text-sm font-semibold">Cadastrar novo filho</p>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(12rem,1fr)_auto_9rem_auto] lg:items-end">
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(12rem,1fr)_auto_9rem] lg:items-end">
                     <div className="space-y-1.5">
                       <Label>Nome</Label>
                       <Input value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" />
@@ -451,8 +468,21 @@ function CadastroUnicoPage() {
                         <CurrencyInput value={valorMesada} onValueChange={setValorMesada} />
                       </div>
                     )}
+                  </div>
 
-                    <Button className="h-10 w-full px-3 sm:w-auto sm:self-end" size="sm" onClick={adicionarFilhoAoFluxo}>
+                  <div className="mt-3 border-t pt-3">
+                    <FilhoPersonalizacao
+                      nome={nomeFilho}
+                      cor={corFilho}
+                      avatar={avatarFilho}
+                      onCorChange={setCorFilho}
+                      onAvatarChange={setAvatarFilho}
+                      prefix="cadastro-fluxo-filho"
+                    />
+                  </div>
+
+                  <div className="mt-3 flex justify-end">
+                    <Button className="h-9 w-full px-3 sm:w-auto" size="sm" onClick={adicionarFilhoAoFluxo}>
                       <Plus className="h-4 w-4" /> Adicionar
                     </Button>
                   </div>
@@ -739,9 +769,12 @@ function CadastroUnicoPage() {
                       <div key={filho.id} className="overflow-hidden rounded-xl border bg-background">
                         <div className="border-b bg-primary/5 px-3.5 py-3">
                           <div className="flex min-w-0 items-center gap-2.5">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                              <Users className="h-4 w-4" />
-                            </span>
+                            <FilhoAvatar
+                              nome={filho.nome}
+                              cor={filho.cor}
+                              avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
+                              className="h-7 w-7"
+                            />
                             <div className="min-w-0">
                               <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Filho</p>
                               <p className="truncate text-base font-semibold">{filho.nome}</p>
