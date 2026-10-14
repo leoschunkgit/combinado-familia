@@ -14,6 +14,7 @@ import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { cadastrarAtribuicoes, prepararAtribuicoes, type AtribuicaoItem, type PoliticaVigenciaAtribuicao } from "@/lib/atribuicoes";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 
 export type AtribuicaoDialogMode = "NORMAL" | "POS_CADASTRO_FILHO" | "POS_CADASTRO_TAREFA";
 
@@ -22,7 +23,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   mode?: AtribuicaoDialogMode;
   vigenciaInicialId?: number | null;
-  filhoInicial?: { id: number; nome: string } | null;
+  filhoInicial?: { id: number; nome: string; cor?: string | null; avatar?: string | null } | null;
   tarefasIniciais?: Array<{ id: number; nome: string }>;
   onSaved?: () => void;
 };
@@ -125,7 +126,8 @@ export function AtribuicaoDialog({
     status: situacaoVigencia(v),
   });
 
-  const nomeF = (id: number) => filhoInicial?.id === id ? filhoInicial.nome : filhos.find((f) => f.id === id)?.nome ?? "";
+  const filhoPorId = (id: number) => filhos.find((f) => f.id === id);
+  const nomeF = (id: number) => filhoInicial?.id === id ? filhoInicial.nome : filhoPorId(id)?.nome ?? "";
   const nomeT = (id: number) => tarefasIniciais.find((t) => t.id === id)?.nome ?? tarefas.find((t) => t.id === id)?.nome ?? "";
   const nomeV = (id: number) => {
     const v = vigencias.find((x) => x.id === id);
@@ -349,7 +351,22 @@ export function AtribuicaoDialog({
                       <TableBody>
                         {itens.map((it, i) => (
                           <TableRow key={`${it.id_vigencia}-${it.id_filho}-${it.id_tarefa}`}>
-                            <TableCell className="font-medium">{nomeF(it.id_filho)}</TableCell>
+                            <TableCell className="font-medium">
+                              <span className="flex min-w-0 items-center gap-1.5">
+                                {(() => {
+                                  const filhoItem = filhoInicial?.id === it.id_filho ? filhoInicial : filhoPorId(it.id_filho);
+                                  return filhoItem ? (
+                                    <FilhoAvatar
+                                      nome={filhoItem.nome}
+                                      cor={filhoItem.cor}
+                                      avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null}
+                                      className="h-5 w-5"
+                                    />
+                                  ) : null;
+                                })()}
+                                <span className="truncate">{nomeF(it.id_filho)}</span>
+                              </span>
+                            </TableCell>
                             <TableCell>{nomeT(it.id_tarefa)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
@@ -397,7 +414,20 @@ export function AtribuicaoDialog({
                   <div className="grid gap-4 md:grid-cols-2">
                   {mode === "POS_CADASTRO_FILHO" ? (
                     <>
-                      <FixedInfo label="Filho" values={[filhoInicial?.nome ?? "Filho cadastrado"]} />
+                      <div className="min-w-0 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Filho</Label>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          {filhoInicial && (
+                            <FilhoAvatar
+                              nome={filhoInicial.nome}
+                              cor={filhoInicial.cor}
+                              avatar={filhoInicial.avatar === "menino" || filhoInicial.avatar === "menina" ? filhoInicial.avatar : null}
+                              className="h-5 w-5"
+                            />
+                          )}
+                          <p className="min-w-0 truncate text-xs font-medium leading-5 text-foreground">{filhoInicial?.nome ?? "Filho cadastrado"}</p>
+                        </div>
+                      </div>
                       <div className="space-y-2">
                         <Label>Tarefas <span className="text-destructive">*</span></Label>
                         <DropdownMenu>
