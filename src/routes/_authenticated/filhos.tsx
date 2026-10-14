@@ -234,7 +234,6 @@ function FilhosPage() {
             <Button
               size="sm"
               variant="outline"
-              className="text-destructive hover:text-destructive"
               onClick={() => setConfirmarExclusaoTodos(true)}
             >
               <Trash2 className="h-4 w-4" /> Excluir todos
