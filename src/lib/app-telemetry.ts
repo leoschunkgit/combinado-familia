@@ -25,37 +25,50 @@ async function versaoConfigurada() {
   }
 }
 
-export async function registrarTelemetriaApp() {
-  try {
-    const plataformaBruta = Capacitor.getPlatform();
-    const plataforma = plataformaBruta === "android" || plataformaBruta === "ios"
+export type IdentificacaoApp = {
+  plataforma: "web" | "android" | "ios";
+  versionName: string | null;
+  versionCode: number | null;
+};
+
+export async function obterIdentificacaoApp(): Promise<IdentificacaoApp> {
+  const plataformaBruta = Capacitor.getPlatform();
+  const plataforma: IdentificacaoApp["plataforma"] =
+    plataformaBruta === "android" || plataformaBruta === "ios"
       ? plataformaBruta
       : "web";
 
-    let versionName: string | null = null;
-    let versionCode: number | null = null;
+  let versionName: string | null = null;
+  let versionCode: number | null = null;
 
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const info = await App.getInfo();
-        versionName = info.version?.trim() || null;
-        const build = Number.parseInt(info.build ?? "", 10);
-        versionCode = Number.isFinite(build) ? build : null;
-      } catch {
-        const configurada = await versaoConfigurada();
-        versionName = configurada.versionName;
-        versionCode = configurada.versionCode;
-      }
-    } else {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const info = await App.getInfo();
+      versionName = info.version?.trim() || null;
+      const build = Number.parseInt(info.build ?? "", 10);
+      versionCode = Number.isFinite(build) ? build : null;
+    } catch {
       const configurada = await versaoConfigurada();
       versionName = configurada.versionName;
       versionCode = configurada.versionCode;
     }
+  } else {
+    const configurada = await versaoConfigurada();
+    versionName = configurada.versionName;
+    versionCode = configurada.versionCode;
+  }
+
+  return { plataforma, versionName, versionCode };
+}
+
+export async function registrarTelemetriaApp() {
+  try {
+    const identificacao = await obterIdentificacaoApp();
 
     await supabase.rpc("registrar_telemetria_app", {
-      p_plataforma: plataforma,
-      p_version_name: versionName,
-      p_version_code: versionCode,
+      p_plataforma: identificacao.plataforma,
+      p_version_name: identificacao.versionName,
+      p_version_code: identificacao.versionCode,
     });
   } catch {
     // Telemetria operacional nunca deve bloquear o uso normal do app.

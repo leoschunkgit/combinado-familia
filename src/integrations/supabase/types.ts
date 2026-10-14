@@ -516,6 +516,65 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adicionar: {
+        Args: { p_email: string }
+        Returns: number
+      }
+      admin_auditoria_listar: {
+        Args: { p_limite?: number }
+        Returns: {
+          acao: string
+          admin_email: string
+          admin_id: number
+          admin_nome: string
+          created_at: string
+          detalhes: Json
+          entidade: string
+          entidade_id: string | null
+          id: number
+        }[]
+      }
+      admin_config_salvar: {
+        Args: {
+          p_android_min_version_code: number | null
+          p_android_min_version_name: string | null
+          p_ios_min_version_code: number | null
+          p_ios_min_version_name: string | null
+          p_manutencao_ativa: boolean
+          p_manutencao_mensagem: string | null
+          p_mensagem_global: string | null
+          p_mensagem_global_ativa: boolean
+        }
+        Returns: Json
+      }
+      admin_definir_status: {
+        Args: { p_admin_id: number; p_ativo: boolean }
+        Returns: boolean
+      }
+      admin_feature_salvar: {
+        Args: {
+          p_ativo: boolean
+          p_chave: string
+          p_descricao: string | null
+          p_nome: string
+        }
+        Returns: Json
+      }
+      admin_listar_admins: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          created_at: string
+          eh_atual: boolean
+          email: string
+          id: number
+          id_usuario_pai: number
+          nome: string
+          ultimo_acesso: string | null
+        }[]
+      }
+      admin_registrar_acesso: { Args: never; Returns: undefined }
+      admin_sistema_obter: { Args: never; Returns: Json }
       admin_diagnostico: {
         Args: {
           p_version_code?: number | null
@@ -540,6 +599,8 @@ export type Database = {
           ultimo_movimento: string
         }[]
       }
+      app_config_publico: { Args: never; Returns: Json }
+      current_admin_id: { Args: never; Returns: number }
       current_pai_id: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       desativar_acesso_publico_filho: {

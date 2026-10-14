@@ -16,6 +16,7 @@ import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { AppPushNotifications } from "@/components/AppPushNotifications";
 import { AppVersion } from "@/components/AppVersion";
+import { AppSystemStatus } from "@/components/AppSystemStatus";
 import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import { registrarTelemetriaApp } from "@/lib/app-telemetry";
@@ -330,6 +331,7 @@ function AuthenticatedLayout() {
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
+          <AppSystemStatus ehAdmin={ehAdmin} />
           <div className={`mb-5 hidden w-full items-center md:flex ${
             menuDesktopRecolhido
               ? "-mt-3 mx-auto justify-between border-b border-border pb-4"

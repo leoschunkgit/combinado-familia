@@ -30,8 +30,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { uiTypography } from "@/lib/ui-typography";
 import { uiSpacing } from "@/lib/ui-spacing";
+import { AdminSistema } from "@/components/admin/AdminSistema";
+import { AdminAuditoria } from "@/components/admin/AdminAuditoria";
+import { AdminAdministradores } from "@/components/admin/AdminAdministradores";
 
-type Aba = "visao" | "usuarios" | "atencao" | "funil" | "atividade" | "versoes" | "push" | "saude";
+type Aba = "visao" | "usuarios" | "atencao" | "funil" | "atividade" | "versoes" | "push" | "saude" | "sistema" | "auditoria" | "administradores";
 
 type CategoriaAtencao =
   | "onboarding_pendente"
@@ -417,6 +420,10 @@ function AdministracaoPage() {
     void carregar();
   }, [carregar]);
 
+  useEffect(() => {
+    void supabase.rpc("admin_registrar_acesso");
+  }, []);
+
   const atualizarSetasAbas = useCallback(() => {
     const elemento = abasRef.current;
     if (!elemento) return;
@@ -472,6 +479,9 @@ function AdministracaoPage() {
     { id: "versoes", label: "Versões" },
     { id: "push", label: "Push" },
     { id: "saude", label: "Saúde" },
+    { id: "sistema", label: "Sistema" },
+    { id: "auditoria", label: "Auditoria" },
+    { id: "administradores", label: "Administradores" },
   ];
 
   return (
@@ -931,6 +941,12 @@ function AdministracaoPage() {
           </section>
         </div>
       )}
+
+      {!erro && !carregando && aba === "sistema" && <AdminSistema />}
+
+      {!erro && !carregando && aba === "auditoria" && <AdminAuditoria />}
+
+      {!erro && !carregando && aba === "administradores" && <AdminAdministradores />}
 
       {!erro && !carregando && aba === "saude" && (
         <div className={uiSpacing.sectionStack}>
