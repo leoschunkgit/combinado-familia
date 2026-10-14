@@ -32,6 +32,7 @@ import {
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
 import { Hint } from "@/components/Hint";
@@ -159,6 +160,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
   const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
+  const filhoDaTarefa = (tarefa?: FilhoTarefa | null) =>
+    tarefa ? filhos.find((filho) => filho.id === tarefa.id_filho) : undefined;
   const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
@@ -1145,7 +1148,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 : "border-transparent bg-transparent text-foreground hover:bg-transparent"
                             }`}
                           >
-                            {filho.nome}
+                            <span className="flex items-center gap-1.5">
+                              <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />
+                              <span>{filho.nome}</span>
+                            </span>
                           </button>
                         );
                       })}
@@ -1585,6 +1591,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         value={penalidadePendente?.descricao ?? ""}
         busy={busy}
         inputId="penalidade-limite"
+        contexto={penalidadePendente ? (() => {
+          const filho = filhoDaTarefa(penalidadePendente.tarefa);
+          return (
+            <span className="inline-flex min-w-0 items-center gap-1.5">
+              {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
+              <span className="truncate">{filho?.nome ?? "Filho"} · {penalidadePendente.tarefa.t_tarefa?.nome}</span>
+            </span>
+          );
+        })() : undefined}
         onChange={(descricao) =>
           setPenalidadePendente((atual) =>
             atual ? { ...atual, descricao } : atual,
@@ -1602,10 +1617,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           <DialogHeader>
             <DialogTitle>Bonificação do “Fez”</DialogTitle>
             <DialogDescription>
-              {bonificacaoInfo?.tarefa.t_tarefa?.nome}
-              {bonificacaoInfo
-                ? ` · ${formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}`
-                : ""}
+              {bonificacaoInfo && (() => {
+                const filho = filhoDaTarefa(bonificacaoInfo.tarefa);
+                return (
+                  <span className="inline-flex min-w-0 items-center gap-1.5">
+                    {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
+                    <span className="truncate">{filho?.nome ?? "Filho"} · {bonificacaoInfo.tarefa.t_tarefa?.nome} · {formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}</span>
+                  </span>
+                );
+              })()}
             </DialogDescription>
           </DialogHeader>
 
@@ -1669,9 +1689,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 : "Registrar “Fez”"}
             </DialogTitle>
             <DialogDescription>
-              {fez?.tarefa.t_tarefa?.nome}
-              {fez ? ` · ${formatarData(fez.data)}` : ""}
-              {" · "}A bonificação é opcional.
+              {fez && (() => {
+                const filho = filhoDaTarefa(fez.tarefa);
+                return (
+                  <>
+                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                      {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
+                      <span className="truncate">{filho?.nome ?? "Filho"} · {fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
+                    </span>
+                    {" · "}A bonificação é opcional.
+                  </>
+                );
+              })()}
             </DialogDescription>
           </DialogHeader>
 
@@ -1762,6 +1791,16 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             <DialogDescription>
               {troca && (
                 <>
+                  {(() => {
+                    const filho = filhoDaTarefa(troca.tarefa);
+                    return (
+                      <span className="mb-1 inline-flex min-w-0 items-center gap-1.5">
+                        {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
+                        <span className="truncate">{filho?.nome ?? "Filho"} · {troca.tarefa.t_tarefa?.nome}</span>
+                      </span>
+                    );
+                  })()}
+                  <br />
                   Esta tarefa está marcada como{" "}
                   {troca.direcao === "PARA_FEZ" ? "“Não fez”" : "“Fez”"} em{" "}
                   {formatarData(dataBrasil(troca.ocorrencia.created_at))}. Ao
@@ -1886,7 +1925,18 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           <DialogHeader>
             <DialogTitle>Desfazer marcações selecionadas?</DialogTitle>
             <DialogDescription>
-              {confirmarExcluirSelecionadas?.tarefa.t_tarefa?.nome} ·{" "}
+              {confirmarExcluirSelecionadas && (() => {
+                const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
+                return (
+                  <>
+                    <span className="mb-1 inline-flex min-w-0 items-center gap-1.5">
+                      {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
+                      <span className="truncate">{filho?.nome ?? "Filho"} · {confirmarExcluirSelecionadas.tarefa.t_tarefa?.nome}</span>
+                    </span>
+                    <br />
+                  </>
+                );
+              })()}
               {confirmarExcluirSelecionadas?.ids.length ?? 0} marcação(ões)
               serão desfeitas. Os dias que ficarem sem Fez ou Não fez voltarão
               para as pendências.
