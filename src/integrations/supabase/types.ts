@@ -120,6 +120,53 @@ export type Database = {
           },
         ]
       }
+      t_feedback: {
+        Row: {
+          assunto: string
+          created_at: string
+          id: number
+          id_usuario_pai: number
+          mensagem: string
+          pagina_origem: string | null
+          plataforma: string
+          tipo: string
+          version_code: number | null
+          version_name: string | null
+        }
+        Insert: {
+          assunto: string
+          created_at?: string
+          id?: number
+          id_usuario_pai: number
+          mensagem: string
+          pagina_origem?: string | null
+          plataforma: string
+          tipo: string
+          version_code?: number | null
+          version_name?: string | null
+        }
+        Update: {
+          assunto?: string
+          created_at?: string
+          id?: number
+          id_usuario_pai?: number
+          mensagem?: string
+          pagina_origem?: string | null
+          plataforma?: string
+          tipo?: string
+          version_code?: number | null
+          version_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_feedback_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_filho: {
         Row: {
           avatar: string | null
@@ -581,6 +628,23 @@ export type Database = {
         Args: { p_admin_id: number; p_ativo: boolean }
         Returns: boolean
       }
+      admin_feedbacks: {
+        Args: { p_limite?: number }
+        Returns: {
+          assunto: string
+          created_at: string
+          id: number
+          id_usuario_pai: number
+          mensagem: string
+          pagina_origem: string | null
+          plataforma: string
+          tipo: string
+          usuario_email: string
+          usuario_nome: string
+          version_code: number | null
+          version_name: string | null
+        }[]
+      }
       admin_feature_salvar: {
         Args: {
           p_ativo: boolean
@@ -664,6 +728,18 @@ export type Database = {
       excluir_vigencia_com_regra: {
         Args: { p_id_vigencia: number }
         Returns: boolean
+      }
+      enviar_feedback: {
+        Args: {
+          p_assunto: string
+          p_mensagem: string
+          p_pagina_origem?: string | null
+          p_plataforma: string
+          p_tipo: string
+          p_version_code?: number | null
+          p_version_name?: string | null
+        }
+        Returns: number
       }
       existe_filho_sem_mesada_no_limite: {
         Args: { p_id_vigencia: number }

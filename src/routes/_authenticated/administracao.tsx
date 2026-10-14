@@ -33,8 +33,9 @@ import { uiSpacing } from "@/lib/ui-spacing";
 import { AdminSistema } from "@/components/admin/AdminSistema";
 import { AdminAuditoria } from "@/components/admin/AdminAuditoria";
 import { AdminAdministradores } from "@/components/admin/AdminAdministradores";
+import { AdminFeedbacks } from "@/components/admin/AdminFeedbacks";
 
-type Aba = "visao" | "usuarios" | "atencao" | "funil" | "atividade" | "versoes" | "push" | "saude" | "sistema" | "auditoria" | "administradores";
+type Aba = "visao" | "usuarios" | "feedbacks" | "atencao" | "funil" | "atividade" | "versoes" | "push" | "saude" | "sistema" | "auditoria" | "administradores";
 
 type CategoriaAtencao =
   | "onboarding_pendente"
@@ -473,6 +474,7 @@ function AdministracaoPage() {
   const abas: Array<{ id: Aba; label: string }> = [
     { id: "visao", label: "Visão geral" },
     { id: "usuarios", label: "Usuários" },
+    { id: "feedbacks", label: "Feedbacks" },
     { id: "atencao", label: "Atenção" },
     { id: "funil", label: "Funil" },
     { id: "atividade", label: "Atividade" },
@@ -941,6 +943,8 @@ function AdministracaoPage() {
           </section>
         </div>
       )}
+
+      {!erro && !carregando && aba === "feedbacks" && <AdminFeedbacks />}
 
       {!erro && !carregando && aba === "sistema" && <AdminSistema />}
 

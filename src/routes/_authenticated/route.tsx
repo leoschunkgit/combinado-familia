@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus, ShieldCheck } from "lucide-react";
+import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus, MessageSquareText, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,6 +17,7 @@ import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { AppPushNotifications } from "@/components/AppPushNotifications";
 import { AppVersion } from "@/components/AppVersion";
 import { AppSystemStatus } from "@/components/AppSystemStatus";
+import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import { registrarTelemetriaApp } from "@/lib/app-telemetry";
@@ -111,6 +112,7 @@ function AuthenticatedLayout() {
   const [saindo, setSaindo] = useState(false);
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
+  const [feedbackAberto, setFeedbackAberto] = useState(false);
 
   useEffect(() => {
     void registrarTelemetriaApp();
@@ -261,6 +263,23 @@ function AuthenticatedLayout() {
     </div>
   );
 
+  const FeedbackButton = ({ mobile = false }: { mobile?: boolean }) => (
+    <Button
+      type="button"
+      variant="ghost"
+      className={mobile
+        ? "w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground"
+        : "h-auto w-full justify-start gap-2.5 rounded-md px-2 py-1.5 text-[12px] font-medium leading-tight text-muted-foreground"}
+      onClick={() => {
+        if (mobile) setMenuMobileAberto(false);
+        setFeedbackAberto(true);
+      }}
+    >
+      <MessageSquareText className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+      Feedback
+    </Button>
+  );
+
   const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
     <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary/10 !text-primary" }}>
       <UserCog className={mobile ? "h-5 w-5" : "h-4 w-4"} /> Minha conta
@@ -307,6 +326,9 @@ function AuthenticatedLayout() {
           >
             <MenuPrincipal />
             <AtalhosPrincipais />
+            <div className="mt-1 border-t pt-2">
+              <FeedbackButton />
+            </div>
           </nav>
 
           <div
@@ -457,10 +479,16 @@ function AuthenticatedLayout() {
           <nav className="flex flex-col px-2 pb-28 pt-3">
             <MenuPrincipal mobile />
             <AtalhosPrincipais mobile />
-            <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /><AdministracaoLink mobile /></div>
+            <div className="border-t pt-2"><FeedbackButton mobile /><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /><AdministracaoLink mobile /></div>
           </nav>
           <div className="fixed bottom-5 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-2.5"><p className="min-w-0 truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5 text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><AppVersion className="mt-2 block px-1 text-center text-[9px] leading-tight text-muted-foreground" /><p className="mt-1 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
+
+        <FeedbackDialog
+          open={feedbackAberto}
+          onOpenChange={setFeedbackAberto}
+          paginaOrigem={pathname}
+        />
 
         <ClonarVigenciaDialog
           open={confirmarCloneMenuAberto}
