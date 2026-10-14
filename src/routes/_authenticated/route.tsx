@@ -15,6 +15,7 @@ import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { AppPushNotifications } from "@/components/AppPushNotifications";
+import { AppVersion } from "@/components/AppVersion";
 import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import {
@@ -279,11 +280,15 @@ function AuthenticatedLayout() {
             <div className="group relative">
               <button
                 type="button"
-                className="flex h-9 max-w-72 items-center gap-1.5 rounded-md px-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="flex h-9 max-w-72 items-stretch overflow-hidden rounded-lg border border-border bg-background text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                 aria-haspopup="menu"
               >
-                <span className="truncate">{nomePai}</span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:rotate-180 group-focus-within:rotate-180" />
+                <span className="flex min-w-0 items-center px-3">
+                  <span className="truncate">{nomePai}</span>
+                </span>
+                <span className="flex w-9 shrink-0 items-center justify-center border-l border-border bg-muted/25 text-muted-foreground transition-colors group-hover:bg-muted/70 group-hover:text-foreground group-focus-within:bg-muted/70 group-focus-within:text-foreground">
+                  <ChevronDown className="h-4 w-4 stroke-[2.25] transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180" />
+                </span>
               </button>
               <div
                 role="menu"
@@ -318,6 +323,8 @@ function AuthenticatedLayout() {
                     <LogOut className="h-4 w-4" />
                     Sair
                   </button>
+                  <div className="my-1 h-px bg-muted" />
+                  <AppVersion className="block px-2.5 py-1 text-center text-[10px] leading-tight text-muted-foreground/80" />
                 </div>
               </div>
             </div>
@@ -367,7 +374,7 @@ function AuthenticatedLayout() {
             <AtalhosPrincipais mobile />
             <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></div>
           </nav>
-          <div className="fixed bottom-5 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-2.5"><p className="min-w-0 truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5 text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><p className="mt-2 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
+          <div className="fixed bottom-5 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-2.5"><p className="min-w-0 truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5 text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><AppVersion className="mt-2 block px-1 text-center text-[9px] leading-tight text-muted-foreground" /><p className="mt-1 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
 
         <ClonarVigenciaDialog
