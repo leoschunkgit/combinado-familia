@@ -372,6 +372,14 @@ function AuthenticatedLayout() {
                     <CircleHelp className="h-4 w-4" />
                     Ajuda
                   </button>
+                  <Link
+                    to="/admin"
+                    role="menuitem"
+                    className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
+                  >
+                    <UserCog className="h-4 w-4" />
+                    Minha conta
+                  </Link>
                   {ehAdmin && (
                     <Link
                       to="/administracao"
@@ -382,14 +390,6 @@ function AuthenticatedLayout() {
                       Administração
                     </Link>
                   )}
-                  <Link
-                    to="/admin"
-                    role="menuitem"
-                    className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
-                  >
-                    <UserCog className="h-4 w-4" />
-                    Minha conta
-                  </Link>
                   <div className="my-1 h-px bg-muted" />
                   <button
                     type="button"
@@ -450,7 +450,7 @@ function AuthenticatedLayout() {
           <nav className="flex flex-col px-2 pb-28 pt-3">
             <MenuPrincipal mobile />
             <AtalhosPrincipais mobile />
-            <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><AdministracaoLink mobile /><ContaLink mobile /></div>
+            <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /><AdministracaoLink mobile /></div>
           </nav>
           <div className="fixed bottom-5 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-2.5"><p className="min-w-0 truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5 text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><AppVersion className="mt-2 block px-1 text-center text-[9px] leading-tight text-muted-foreground" /><p className="mt-1 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
