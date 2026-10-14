@@ -36,6 +36,7 @@ function nomeAcao(acao: string) {
     VERSOES_MINIMAS_ALTERADAS: "Versão mínima alterada",
     FEATURE_FLAG_CRIADA: "Funcionalidade criada",
     FEATURE_FLAG_ALTERADA: "Funcionalidade alterada",
+    FEEDBACK_EXCLUIDO: "Feedback excluído",
     ADMIN_ADICIONADO: "Administrador adicionado",
     ADMIN_REATIVADO: "Administrador reativado",
     ADMIN_ATIVADO: "Administrador ativado",
