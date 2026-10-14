@@ -15,6 +15,7 @@ import { Route as ExclusaoDeContaRouteImport } from './routes/exclusao-de-conta'
 import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdministracaoRouteImport } from './routes/_authenticated/administracao'
 import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenticated/atribuicoes'
 import { Route as AuthenticatedCadastroUnicoRouteImport } from './routes/_authenticated/cadastro-unico'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -57,6 +58,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdministracaoRoute =
+  AuthenticatedAdministracaoRouteImport.update({
+    id: '/administracao',
+    path: '/administracao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAtribuicoesRoute =
   AuthenticatedAtribuicoesRouteImport.update({
     id: '/atribuicoes',
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/administracao': typeof AuthenticatedAdministracaoRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
   '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -147,6 +155,7 @@ export interface FileRoutesByTo {
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/administracao': typeof AuthenticatedAdministracaoRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
   '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -168,6 +177,7 @@ export interface FileRoutesById {
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/administracao': typeof AuthenticatedAdministracaoRoute
   '/_authenticated/atribuicoes': typeof AuthenticatedAtribuicoesRoute
   '/_authenticated/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/politica-de-privacidade'
     | '/redefinir-senha'
     | '/admin'
+    | '/administracao'
     | '/atribuicoes'
     | '/cadastro-unico'
     | '/dashboard'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/politica-de-privacidade'
     | '/redefinir-senha'
     | '/admin'
+    | '/administracao'
     | '/atribuicoes'
     | '/cadastro-unico'
     | '/dashboard'
@@ -228,6 +240,7 @@ export interface FileRouteTypes {
     | '/politica-de-privacidade'
     | '/redefinir-senha'
     | '/_authenticated/admin'
+    | '/_authenticated/administracao'
     | '/_authenticated/atribuicoes'
     | '/_authenticated/cadastro-unico'
     | '/_authenticated/dashboard'
@@ -293,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/administracao': {
+      id: '/_authenticated/administracao'
+      path: '/administracao'
+      fullPath: '/administracao'
+      preLoaderRoute: typeof AuthenticatedAdministracaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/atribuicoes': {
@@ -384,6 +404,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdministracaoRoute: typeof AuthenticatedAdministracaoRoute
   AuthenticatedAtribuicoesRoute: typeof AuthenticatedAtribuicoesRoute
   AuthenticatedCadastroUnicoRoute: typeof AuthenticatedCadastroUnicoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -399,6 +420,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdministracaoRoute: AuthenticatedAdministracaoRoute,
   AuthenticatedAtribuicoesRoute: AuthenticatedAtribuicoesRoute,
   AuthenticatedCadastroUnicoRoute: AuthenticatedCadastroUnicoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
