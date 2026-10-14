@@ -29,6 +29,35 @@ export type Database = {
         }
         Relationships: []
       }
+      t_admin: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: number
+          id_usuario_pai: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_usuario_pai: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_usuario_pai?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_admin_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: true
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_filho: {
         Row: {
           avatar: string | null

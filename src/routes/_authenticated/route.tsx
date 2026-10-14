@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus } from "lucide-react";
+import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -36,6 +36,7 @@ export const Route = createFileRoute("/_authenticated")({
     const user = data.user;
     const { data: pai } = await supabase.from("t_usuario_pai").select("id, nome").maybeSingle();
     let nome = pai?.nome;
+    let idPai = pai?.id;
     if (!pai) {
       const meta = user.user_metadata ?? {};
       nome = (meta["nome"] as string) || user.email?.split("@")[0] || "Responsável";
@@ -48,8 +49,17 @@ export const Route = createFileRoute("/_authenticated")({
         throw new Error("Não foi possível preparar os dados da conta do responsável.");
       }
       nome = criado.nome;
+      idPai = criado.id;
     }
-    return { user, nomePai: nome ?? "" };
+
+    const { data: admin } = await supabase
+      .from("t_admin")
+      .select("id")
+      .eq("id_usuario_pai", idPai!)
+      .eq("ativo", true)
+      .maybeSingle();
+
+    return { user, nomePai: nome ?? "", ehAdmin: Boolean(admin) };
   },
   component: AuthenticatedLayout,
 });
@@ -80,7 +90,7 @@ const ETAPAS = [
 ] as const;
 
 function AuthenticatedLayout() {
-  const { nomePai, user } = Route.useRouteContext();
+  const { nomePai, user, ehAdmin } = Route.useRouteContext();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { data: filhos = [] } = useFilhos();
@@ -251,6 +261,15 @@ function AuthenticatedLayout() {
     </Link>
   );
 
+  const AdministracaoLink = ({ mobile = false }: { mobile?: boolean }) => {
+    if (!ehAdmin) return null;
+    return (
+      <Link to="/administracao" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary/10 !text-primary" }}>
+        <ShieldCheck className={mobile ? "h-5 w-5" : "h-4 w-4"} /> Administração
+      </Link>
+    );
+  };
+
   return (
     <>
       {!saindo && <AppPushNotifications />}
@@ -353,6 +372,16 @@ function AuthenticatedLayout() {
                     <CircleHelp className="h-4 w-4" />
                     Ajuda
                   </button>
+                  {ehAdmin && (
+                    <Link
+                      to="/administracao"
+                      role="menuitem"
+                      className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Administração
+                    </Link>
+                  )}
                   <Link
                     to="/admin"
                     role="menuitem"
@@ -421,7 +450,7 @@ function AuthenticatedLayout() {
           <nav className="flex flex-col px-2 pb-28 pt-3">
             <MenuPrincipal mobile />
             <AtalhosPrincipais mobile />
-            <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /></div>
+            <div className="border-t pt-2"><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><AdministracaoLink mobile /><ContaLink mobile /></div>
           </nav>
           <div className="fixed bottom-5 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-2.5"><p className="min-w-0 truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5 text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><AppVersion className="mt-2 block px-1 text-center text-[9px] leading-tight text-muted-foreground" /><p className="mt-1 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
