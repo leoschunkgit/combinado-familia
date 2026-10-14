@@ -252,7 +252,7 @@ function Indicador({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground">{titulo}</p>
-          <p className="mt-1 text-2xl font-bold tabular-nums">
+          <p className="mt-1 text-lg font-bold leading-tight tabular-nums">
             {typeof valor === "number" ? formatarNumero(valor) : valor}
           </p>
           {detalhe && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{detalhe}</p>}
