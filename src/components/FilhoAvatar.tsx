@@ -13,21 +13,13 @@ function BonecoMenino() {
   return (
     <svg
       viewBox="0 0 32 32"
-      className="h-[78%] w-[78%]"
-      fill="none"
+      className="h-[74%] w-[74%]"
+      fill="currentColor"
       aria-hidden="true"
     >
-      <path
-        d="M10.2 11.2c.9-3.1 3.1-4.9 5.8-4.9 2.3 0 4.3 1.2 5.5 3.5l-1.8.4 1.5 1.7-1.8.4 1.2 1.7c-1.5-1.2-3.2-1.9-5.1-1.9-2 0-3.8.7-5.3 2.1l-.9-1.2 1.4-.8-1.2-1 .7-2Z"
-        fill="currentColor"
-      />
-      <circle cx="16" cy="15.3" r="5.7" stroke="currentColor" strokeWidth="2.2" />
-      <path
-        d="M8.1 27c.9-4.3 3.8-6.8 7.9-6.8s7 2.5 7.9 6.8"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
+      <path d="M10.1 11.2c.7-3.9 3-6.1 6.1-6.1 2.7 0 4.9 1.6 5.7 4.7-2.6.1-4.8-.7-6.7-2.2-1.2 1.6-2.9 2.8-5.1 3.6Z" />
+      <circle cx="16" cy="14.2" r="5.5" />
+      <path d="M7.6 27.2c.8-4.6 4.1-7.3 8.4-7.3s7.6 2.7 8.4 7.3H7.6Z" />
     </svg>
   );
 }
@@ -36,21 +28,14 @@ function BonecoMenina() {
   return (
     <svg
       viewBox="0 0 32 32"
-      className="h-[78%] w-[78%]"
-      fill="none"
+      className="h-[74%] w-[74%]"
+      fill="currentColor"
       aria-hidden="true"
     >
-      <path
-        d="M9.6 18.8V13c0-4.5 2.6-7.1 6.4-7.1s6.4 2.6 6.4 7.1v5.8c-1.4-.5-2.5-1.4-3.2-2.7-.8 1.5-1.9 2.4-3.2 2.4s-2.4-.9-3.2-2.4c-.7 1.3-1.8 2.2-3.2 2.7Z"
-        fill="currentColor"
-      />
-      <circle cx="16" cy="14.7" r="5.4" stroke="currentColor" strokeWidth="2.2" />
-      <path
-        d="M8.1 27c.9-4.3 3.8-6.8 7.9-6.8s7 2.5 7.9 6.8"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
+      <path d="M8.7 16.3c0-6.8 2.8-10.8 7.3-10.8s7.3 4 7.3 10.8v3.2c-1.5-.6-2.5-1.5-3.2-2.8-.9 1.8-2.3 2.8-4.1 2.8s-3.2-1-4.1-2.8c-.7 1.3-1.7 2.2-3.2 2.8v-3.2Z" />
+      <circle cx="16" cy="14.2" r="5.3" />
+      <path d="M7.6 27.2c.8-4.6 4.1-7.3 8.4-7.3s7.6 2.7 8.4 7.3H7.6Z" />
+      <circle cx="23.7" cy="8.2" r="1.8" />
     </svg>
   );
 }
