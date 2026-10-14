@@ -297,16 +297,31 @@ function AuthenticatedLayout() {
             onClick={() => setMenuDesktopRecolhido((recolhido) => !recolhido)}
             aria-label={menuDesktopRecolhido ? "Abrir menu lateral" : "Fechar menu lateral"}
             aria-expanded={!menuDesktopRecolhido}
-            className={`absolute top-20 z-40 hidden h-8 w-8 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-[left,right,transform,background-color,color,box-shadow] duration-300 ease-out hover:bg-muted hover:text-foreground hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:flex ${
-              menuDesktopRecolhido ? "left-2" : "-right-4"
+            className={`absolute top-5 z-40 hidden h-6 w-6 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-[left,right,transform,background-color,color,box-shadow] duration-300 ease-out hover:bg-muted hover:text-foreground hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:flex ${
+              menuDesktopRecolhido ? "left-2" : "-right-3"
             }`}
           >
-            {menuDesktopRecolhido ? <ChevronRight className="h-4 w-4 stroke-[2.25]" /> : <ChevronLeft className="h-4 w-4 stroke-[2.25]" />}
+            {menuDesktopRecolhido ? <ChevronRight className="h-3.5 w-3.5 stroke-[2.25]" /> : <ChevronLeft className="h-3.5 w-3.5 stroke-[2.25]" />}
           </button>
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
-          <div className="mb-5 hidden items-center justify-end md:flex">
+          <div className={`mb-5 hidden items-center md:flex ${menuDesktopRecolhido ? "justify-between" : "justify-end"}`}>
+            {menuDesktopRecolhido && (
+              <Link
+                to="/inicio"
+                className="flex items-center gap-2.5 opacity-100 transition-[opacity,transform] duration-300 ease-out"
+                aria-label="Ir para Início"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Home className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex flex-col items-start leading-none">
+                  <span className="font-display text-[20px] font-bold">Combinado</span>
+                  <span className="-mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span>
+                </span>
+              </Link>
+            )}
             <div className="group relative">
               <button
                 type="button"
