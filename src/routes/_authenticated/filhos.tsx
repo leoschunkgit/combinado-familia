@@ -72,9 +72,12 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
 
-    <div className="space-y-2">
+    <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label></div>
+    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} /><p className="text-xs text-muted-foreground">Ao cadastrar uma mesada, cada “Não fez” gera o desconto definido na vigência. Sem mesada cadastrada, vale a penalidade escrita.</p></div>}
+
+    <div className="space-y-2 pt-1">
       <Label>Avatar <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {([
           { valor: "" as const, label: "Iniciais" },
           { valor: "menino" as const, label: "Menino" },
@@ -85,11 +88,11 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
             type="button"
             aria-pressed={value.avatar === opcao.valor}
             onClick={() => onChange({ ...value, avatar: opcao.valor })}
-            className={`flex min-w-0 flex-col items-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+            className={`flex h-9 items-center gap-1.5 rounded-md border px-2 text-xs font-medium transition-colors ${
               value.avatar === opcao.valor ? "border-primary bg-primary/5 text-primary" : "bg-background text-muted-foreground hover:bg-muted/40"
             }`}
           >
-            <FilhoAvatar nome={value.nome || "Filho"} cor={value.cor || null} avatar={opcao.valor || null} className="h-9 w-9" />
+            <FilhoAvatar nome={value.nome || "Filho"} cor={value.cor || null} avatar={opcao.valor || null} className="h-6 w-6" />
             <span>{opcao.label}</span>
           </button>
         ))}
@@ -104,7 +107,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
           type="color"
           value={corPicker}
           onChange={(e) => onChange({ ...value, cor: e.target.value })}
-          className="h-10 w-14 shrink-0 cursor-pointer rounded-md border bg-background p-1"
+          className="h-9 w-11 shrink-0 cursor-pointer rounded-md border bg-background p-1"
           aria-label="Escolher cor do filho"
         />
         <Input
@@ -113,12 +116,10 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
           onChange={(e) => onChange({ ...value, cor: e.target.value })}
           placeholder="#0C5C3C ou rgb(12, 92, 60)"
           maxLength={50}
+          className="h-9"
         />
       </div>
     </div>
-
-    <div className="flex items-center gap-2"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label></div>
-    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} /><p className="text-xs text-muted-foreground">Ao cadastrar uma mesada, cada “Não fez” gera o desconto definido na vigência. Sem mesada cadastrada, vale a penalidade escrita.</p></div>}
   </>;
 }
 
