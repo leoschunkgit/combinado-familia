@@ -495,17 +495,15 @@ function AdministracaoPage() {
       />
 
       <div className="flex min-w-0 items-center gap-2">
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 shrink-0 rounded-md"
+          className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-30 disabled:hover:text-muted-foreground"
           onClick={() => rolarAbas("esquerda")}
           disabled={!podeIrEsquerda}
           aria-label="Rolar menu administrativo para a esquerda"
         >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+          <ChevronLeft className="h-5 w-5" />
+        </button>
 
         <div
           ref={abasRef}
@@ -525,17 +523,15 @@ function AdministracaoPage() {
           ))}
         </div>
 
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 shrink-0 rounded-md"
+          className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-30 disabled:hover:text-muted-foreground"
           onClick={() => rolarAbas("direita")}
           disabled={!podeIrDireita}
           aria-label="Rolar menu administrativo para a direita"
         >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
 
       {erro && (
