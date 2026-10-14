@@ -6,8 +6,8 @@
  * para funcionarem no navegador e, futuramente, como Android App Links /
  * iOS Universal Links.
  */
-const DEFAULT_PUBLIC_WEB_ORIGIN = "https://www.combinadofamilia.app";
-const PUBLIC_APP_HOSTS = new Set(["combinadofamilia.app", "www.combinadofamilia.app"]);
+const DEFAULT_PUBLIC_WEB_ORIGIN = "https://www.combinadofamilia.app.br";
+const PUBLIC_APP_HOSTS = new Set(["combinadofamilia.app.br", "www.combinadofamilia.app.br"]);
 
 function normalizeOrigin(value: string): string {
   return value.replace(/\/+$/, "");
