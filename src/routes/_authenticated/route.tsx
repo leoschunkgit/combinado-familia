@@ -306,7 +306,7 @@ function AuthenticatedLayout() {
         </aside>
 
         <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
-          <div className={`mb-5 hidden items-center md:flex ${menuDesktopRecolhido ? "justify-between" : "justify-end"}`}>
+          <div className={`mb-5 hidden w-full items-center md:flex ${menuDesktopRecolhido ? "justify-between border-b border-border pb-4" : "justify-end"}`}>
             {menuDesktopRecolhido && (
               <Link
                 to="/inicio"
