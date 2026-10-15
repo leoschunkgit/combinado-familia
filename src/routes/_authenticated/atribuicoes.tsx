@@ -306,66 +306,45 @@ function AtribuicoesPage() {
           ) : (
             <div className="space-y-4 md:space-y-5">
               {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => (
-                <section
-                  key={filhoItem.id}
-                  className="overflow-hidden rounded-2xl border bg-card shadow-sm"
-                >
-                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
+                <section key={filhoItem.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                  <div className="flex w-full items-center justify-between gap-4 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <FilhoAvatar
-                        nome={filhoItem.nome}
-                        cor={filhoItem.cor}
-                        avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null}
-                        className="h-7 w-7"
-                      />
+                      <FilhoAvatar nome={filhoItem.nome} cor={filhoItem.cor} avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null} className="h-7 w-7" />
                       <div className="min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
-                        <p className="min-w-0 break-words font-bold leading-tight">{filhoItem.nome}</p>
+                        <p className="truncate font-bold">{filhoItem.nome}</p>
                       </div>
                     </div>
-
-                    <Hint content="Adicionar tarefa">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 shrink-0 rounded-md"
-                        disabled={vigenciaSelecionadaFinalizada}
-                        onClick={() => setFilhoContextoId(filhoItem.id)}
-                        aria-label={`Adicionar tarefa para ${filhoItem.nome}`}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
-                    </Hint>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 shrink-0 gap-1.5 px-2.5 text-xs"
+                      disabled={vigenciaSelecionadaFinalizada}
+                      onClick={() => setFilhoContextoId(filhoItem.id)}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Adicionar
+                    </Button>
                   </div>
 
-                  <div className="bg-muted/10">
-                    {atribuicoesFilho.map((e, index) => (
-                      <div
-                        key={e.id}
-                        className={`grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 ${index > 0 ? "border-t" : ""}`}
-                      >
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</p>
-                          <p className="mt-0.5 min-w-0 break-words text-sm font-medium leading-tight">
-                            {e.t_tarefa?.nome}
-                          </p>
+                  <div className="bg-muted/10 p-2.5 sm:p-3">
+                    <div className="space-y-2">
+                      {atribuicoesFilho.map((e) => (
+                        <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-white px-3 py-2.5 dark:bg-card sm:px-4 sm:py-3">
+                          <div className="min-w-0">
+                            <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-0.5">
+                            <Hint content="Excluir atribuição">
+                              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </Hint>
+                          </div>
                         </div>
-
-                        <Hint content="Excluir atribuição">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 shrink-0 rounded-md"
-                            onClick={() => setConfirmarExclusao(e.id)}
-                            aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </Hint>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </section>
               ))}
