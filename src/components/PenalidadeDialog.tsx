@@ -31,7 +31,7 @@ export function PenalidadeDialog({
         <DialogHeader>
           <DialogTitle>Aplicar penalidade</DialogTitle>
           <DialogDescription>
-            {contexto && <span className="mb-1 flex min-w-0 items-center">{contexto}</span>}
+            {contexto && <span className="mb-1 flex min-w-0 max-w-full items-start whitespace-normal break-words">{contexto}</span>}
             Qual será a penalidade aplicada agora?
           </DialogDescription>
         </DialogHeader>
