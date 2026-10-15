@@ -327,11 +327,11 @@ function VigenciasPage() {
             </div>
             <p className="mt-2 whitespace-nowrap text-[13px] font-semibold leading-relaxed tracking-tight sm:text-base">{fmtVigencia(v)}</p>
             <div className="mt-3 space-y-2">
-              <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 md:border-amber-300/70 md:bg-amber-50/30 px-3 py-2 text-xs leading-relaxed dark:border-amber-700/60 dark:bg-amber-950/10">
+              <div className="w-full rounded-lg border border-amber-400 bg-transparent md:border-amber-300/70 px-3 py-2 text-xs leading-relaxed dark:border-amber-700/60">
                 <span className="font-semibold text-foreground">Para filhos sem mesada:</span>{" "}<span className="text-muted-foreground">limite máximo de {v.qtd_ocorrencia} “Não fez”</span>
                 {v.penalidade && <><span className="text-muted-foreground"> · </span><span className="font-semibold text-foreground">Penalidade aplicada:</span>{" "}<span className="text-muted-foreground">{v.penalidade}</span></>}
               </div>
-              <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 md:border-emerald-300/70 md:bg-emerald-50/30 px-3 py-2 text-xs leading-relaxed dark:border-emerald-700/60 dark:bg-emerald-950/10">
+              <div className="w-full rounded-lg border border-emerald-400 bg-transparent md:border-emerald-300/70 px-3 py-2 text-xs leading-relaxed dark:border-emerald-700/60">
                 <span className="font-semibold text-foreground">Para filhos com mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} de desconto por cada “Não fez”` : "Não cadastrado"}</span>
               </div>
             </div>
