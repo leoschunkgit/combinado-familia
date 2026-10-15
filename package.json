@@ -26,7 +26,9 @@
     "app:version:android": "node scripts/sync-android-version.mjs",
     "build:app:dev": "vite build --config vite.config.app.ts --mode app-dev",
     "app:sync:android:dev": "npm run build:app:dev && cap sync android && npm run app:version:android",
-    "app:sync:ios:dev": "npm run build:app:dev && cap sync ios"
+    "app:sync:ios:dev": "npm run build:app:dev && cap sync ios",
+    "build:app:closed": "vite build --config vite.config.app.ts --mode app-closed",
+    "app:sync:android:closed": "npm run build:app:closed && cap sync android && npm run app:version:android"
   },
   "overrides": {
     "rolldown": "1.2.1"
