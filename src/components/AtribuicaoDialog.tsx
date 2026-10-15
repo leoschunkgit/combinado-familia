@@ -15,6 +15,7 @@ import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigenc
 import { cadastrarAtribuicoes, prepararAtribuicoes, type AtribuicaoItem, type PoliticaVigenciaAtribuicao } from "@/lib/atribuicoes";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { TarefaIcone } from "@/components/TarefaIcone";
 
 export type AtribuicaoDialogMode = "NORMAL" | "POS_CADASTRO_FILHO" | "POS_CADASTRO_TAREFA" | "CONTEXTO_FILHO_VIGENCIA";
 
@@ -387,7 +388,10 @@ export function AtribuicaoDialog({
 
                                 <div className="min-w-0">
                                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</p>
-                                  <p className="mt-0.5 min-w-0 whitespace-normal break-words font-medium [overflow-wrap:anywhere]">{nomeT(it.id_tarefa)}</p>
+                                  <div className="mt-0.5 flex min-w-0 items-start gap-2">
+                                    <TarefaIcone nome={nomeT(it.id_tarefa)} className="mt-0.5" />
+                                    <p className="min-w-0 whitespace-normal break-words font-medium [overflow-wrap:anywhere]">{nomeT(it.id_tarefa)}</p>
+                                  </div>
                                 </div>
 
                                 <div className="min-w-0">
@@ -446,7 +450,10 @@ export function AtribuicaoDialog({
                                 </span>
                               </TableCell>
                               <TableCell className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">
-                                <span className="block min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">{nomeT(it.id_tarefa)}</span>
+                                <span className="flex min-w-0 items-start gap-2">
+                                  <TarefaIcone nome={nomeT(it.id_tarefa)} className="mt-0.5" />
+                                  <span className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">{nomeT(it.id_tarefa)}</span>
+                                </span>
                               </TableCell>
                               <TableCell className="min-w-0">
                                 <div className="flex min-w-0 flex-wrap items-center gap-2">

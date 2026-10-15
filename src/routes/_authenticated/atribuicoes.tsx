@@ -16,6 +16,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapseChevron } from "@/components/CollapseChevron";
+import { TarefaIcone } from "@/components/TarefaIcone";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -352,8 +353,9 @@ function AtribuicoesPage() {
                         <div className="space-y-2">
                           {atribuicoesFilho.map((e) => (
                             <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-white px-3 py-2.5 dark:bg-card sm:px-4 sm:py-3">
-                              <div className="min-w-0">
-                                <p className="break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
+                              <div className="flex min-w-0 items-start gap-2">
+                                <TarefaIcone nome={e.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+                                <p className="min-w-0 break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
                               </div>
                               <div className="flex shrink-0 items-center gap-0.5">
                                 <Hint content="Excluir atribuição">

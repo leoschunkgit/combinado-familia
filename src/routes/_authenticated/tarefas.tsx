@@ -16,6 +16,7 @@ import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type Tar
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
+import { TarefaIcone } from "@/components/TarefaIcone";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [
@@ -226,7 +227,7 @@ function TarefasPage() {
               <div className="grid min-w-0 max-h-[65vh] gap-2 overflow-x-hidden overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
                 {tarefasFiltradas.map((t) => (
                   <div key={t.id} className="flex min-h-12 min-w-0 max-w-full items-center gap-2 rounded-xl border bg-card px-3 py-2">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+                    <TarefaIcone nome={t.nome} className="text-primary" />
                     <Hint content={t.nome}>
                       <p className="min-w-0 flex-1 whitespace-normal break-words text-sm font-medium leading-snug">{t.nome}</p>
                     </Hint>

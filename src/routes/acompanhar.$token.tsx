@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { TarefaIcone } from "@/components/TarefaIcone";
 
 export const Route = createFileRoute("/acompanhar/$token")({
   head: () => ({ meta: [
@@ -128,7 +129,7 @@ function PainelPublico() {
                 const fezCount=t.ocorrencias.filter((o)=>o.tipo==="FEZ").length;
                 const naoFezCount=t.ocorrencias.filter((o)=>o.tipo!=="FEZ").length;
                 const temResultado=fezCount>0||naoFezCount>0;
-                return <div key={t.id} className="flex min-w-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><span className="min-w-0 break-words text-sm font-medium">{t.nome}</span>{temResultado ? <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">{fezCount>0&&<span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">👍 {fezCount} Fez</span>}{naoFezCount>0&&<span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">👎 {naoFezCount} Não fez</span>}<Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}><CalendarDays className="h-3.5 w-3.5" /> Ver resultados</Button></div> : <span className="shrink-0 text-xs text-muted-foreground">Sem registros</span>}</div>;
+                return <div key={t.id} className="flex min-w-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><span className="flex min-w-0 items-start gap-2"><TarefaIcone nome={t.nome} className="mt-0.5" /><span className="min-w-0 break-words text-sm font-medium">{t.nome}</span></span>{temResultado ? <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">{fezCount>0&&<span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">👍 {fezCount} Fez</span>}{naoFezCount>0&&<span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">👎 {naoFezCount} Não fez</span>}<Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}><CalendarDays className="h-3.5 w-3.5" /> Ver resultados</Button></div> : <span className="shrink-0 text-xs text-muted-foreground">Sem registros</span>}</div>;
               })}
               {tarefasAtual.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma tarefa atribuída nesta vigência.</p>}
             </CardContent>

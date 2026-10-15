@@ -34,6 +34,7 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
 import { Hint } from "@/components/Hint";
+import { TarefaIcone } from "@/components/TarefaIcone";
 import {
   Select,
   SelectContent,
@@ -1325,19 +1326,35 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                       className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-1 py-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
-                                        <p
-                                          className={`min-w-0 break-words text-sm font-medium leading-tight ${
+                                        <div
+                                          className={`flex min-w-0 items-start gap-2 ${
                                             registro
-                                              ? `w-36 shrink-0 sm:w-48 md:w-56 lg:w-64 ${
-                                                  registro.tipo === "FEZ"
-                                                    ? "text-green-700 dark:text-green-300"
-                                                    : "text-red-700 dark:text-red-300"
-                                                }`
+                                              ? "w-36 shrink-0 sm:w-48 md:w-56 lg:w-64"
                                               : "flex-1"
                                           }`}
                                         >
-                                          {tarefa.t_tarefa?.nome}
-                                        </p>
+                                          <TarefaIcone
+                                            nome={tarefa.t_tarefa?.nome ?? "Tarefa"}
+                                            className={`mt-0.5 ${
+                                              registro
+                                                ? registro.tipo === "FEZ"
+                                                  ? "text-green-700 dark:text-green-300"
+                                                  : "text-red-700 dark:text-red-300"
+                                                : ""
+                                            }`}
+                                          />
+                                          <p
+                                            className={`min-w-0 break-words text-sm font-medium leading-tight ${
+                                              registro
+                                                ? registro.tipo === "FEZ"
+                                                  ? "text-green-700 dark:text-green-300"
+                                                  : "text-red-700 dark:text-red-300"
+                                                : ""
+                                            }`}
+                                          >
+                                            {tarefa.t_tarefa?.nome}
+                                          </p>
+                                        </div>
                                         {registro && (
                                           <>
                                             <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>

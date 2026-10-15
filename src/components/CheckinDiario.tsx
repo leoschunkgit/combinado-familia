@@ -18,6 +18,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { registrarNaoFezComPenalidade } from "@/lib/penalidade";
 import { PenalidadeDialog } from "@/components/PenalidadeDialog";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { TarefaIcone } from "@/components/TarefaIcone";
 
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 type FezDraft = { tarefa: FilhoTarefa; data: string; bonusTipo: BonusTipo; descricao: string; valor: string };
@@ -283,9 +284,12 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
                                   <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                     Tarefa
                                   </p>
-                                  <p className="mt-0.5 break-words font-semibold">
-                                    {tarefa.t_tarefa?.nome}
-                                  </p>
+                                  <div className="mt-0.5 flex min-w-0 items-start gap-2">
+                                    <TarefaIcone nome={tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+                                    <p className="min-w-0 break-words font-semibold">
+                                      {tarefa.t_tarefa?.nome}
+                                    </p>
+                                  </div>
                                   <div className="mt-2">
                                     <span className="inline-flex items-center rounded-md border bg-primary/5 px-2.5 py-1 text-sm font-bold tabular-nums text-primary">
                                       {data.split("-").reverse().join("/")}
