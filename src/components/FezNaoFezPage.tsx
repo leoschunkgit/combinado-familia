@@ -1594,9 +1594,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         contexto={penalidadePendente ? (() => {
           const filho = filhoDaTarefa(penalidadePendente.tarefa);
           return (
-            <span className="inline-flex min-w-0 items-center gap-1.5">
+            <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
               {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-              <span className="truncate">{filho?.nome ?? "Filho"} · {penalidadePendente.tarefa.t_tarefa?.nome}</span>
+              <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {penalidadePendente.tarefa.t_tarefa?.nome}</span>
             </span>
           );
         })() : undefined}
@@ -1620,9 +1620,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               {bonificacaoInfo && (() => {
                 const filho = filhoDaTarefa(bonificacaoInfo.tarefa);
                 return (
-                  <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
                     {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                    <span className="truncate">{filho?.nome ?? "Filho"} · {bonificacaoInfo.tarefa.t_tarefa?.nome} · {formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}</span>
+                    <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {bonificacaoInfo.tarefa.t_tarefa?.nome} · {formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}</span>
                   </span>
                 );
               })()}
@@ -1693,9 +1693,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 const filho = filhoDaTarefa(fez.tarefa);
                 return (
                   <>
-                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                    <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
                       {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                      <span className="truncate">{filho?.nome ?? "Filho"} · {fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
+                      <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
                     </span>
                     {" · "}A bonificação é opcional.
                   </>
@@ -1794,9 +1794,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   {(() => {
                     const filho = filhoDaTarefa(troca.tarefa);
                     return (
-                      <span className="mb-1 inline-flex min-w-0 items-center gap-1.5">
+                      <span className="mb-1 inline-flex max-w-full min-w-0 items-start gap-1.5">
                         {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                        <span className="truncate">{filho?.nome ?? "Filho"} · {troca.tarefa.t_tarefa?.nome}</span>
+                        <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {troca.tarefa.t_tarefa?.nome}</span>
                       </span>
                     );
                   })()}
@@ -1929,9 +1929,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
                 return (
                   <>
-                    <span className="mb-1 inline-flex min-w-0 items-center gap-1.5">
+                    <span className="mb-1 inline-flex max-w-full min-w-0 items-start gap-1.5">
                       {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                      <span className="truncate">{filho?.nome ?? "Filho"} · {confirmarExcluirSelecionadas.tarefa.t_tarefa?.nome}</span>
+                      <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {confirmarExcluirSelecionadas.tarefa.t_tarefa?.nome}</span>
                     </span>
                     <br />
                   </>
