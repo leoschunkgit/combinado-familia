@@ -304,14 +304,14 @@ function AtribuicoesPage() {
           {gruposFilhos.length === 0 ? (
             <EmptyState>Nenhuma atribuição encontrada para esta vigência e filtros.</EmptyState>
           ) : (
-            <div className="space-y-2.5 sm:space-y-3">
-              {gruposFilhos.flatMap(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) =>
-                atribuicoesFilho.map((e) => (
-                  <section
-                    key={e.id}
-                    className="relative overflow-hidden rounded-2xl border bg-card shadow-sm"
-                  >
-                    <div className="flex min-w-0 items-center gap-2.5 border-b bg-muted/15 px-4 py-3.5 pr-24 text-left sm:px-5 sm:py-4 sm:pr-28">
+            <div className="space-y-4 md:space-y-5">
+              {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => (
+                <section
+                  key={filhoItem.id}
+                  className="overflow-hidden rounded-2xl border bg-card shadow-sm"
+                >
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
+                    <div className="flex min-w-0 items-center gap-2.5">
                       <FilhoAvatar
                         nome={filhoItem.nome}
                         cor={filhoItem.cor}
@@ -324,43 +324,51 @@ function AtribuicoesPage() {
                       </div>
                     </div>
 
-                    <div className="min-w-0 bg-muted/10 px-4 py-3 pr-24 sm:px-5 sm:py-3.5 sm:pr-28">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</p>
-                      <p className="mt-0.5 min-w-0 break-words text-sm font-medium leading-tight">
-                        {e.t_tarefa?.nome}
-                      </p>
-                    </div>
+                    <Hint content="Adicionar tarefa">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 rounded-md"
+                        disabled={vigenciaSelecionadaFinalizada}
+                        onClick={() => setFilhoContextoId(filhoItem.id)}
+                        aria-label={`Adicionar tarefa para ${filhoItem.nome}`}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </Hint>
+                  </div>
 
-                    <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 sm:right-4">
-                      <Hint content="Adicionar tarefa">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 shrink-0 rounded-md"
-                          disabled={vigenciaSelecionadaFinalizada}
-                          onClick={() => setFilhoContextoId(filhoItem.id)}
-                          aria-label={`Adicionar tarefa para ${filhoItem.nome}`}
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </Button>
-                      </Hint>
-                      <Hint content="Excluir atribuição">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 shrink-0 rounded-md"
-                          onClick={() => setConfirmarExclusao(e.id)}
-                          aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </Hint>
-                    </div>
-                  </section>
-                )),
-              )}
+                  <div className="bg-muted/10">
+                    {atribuicoesFilho.map((e, index) => (
+                      <div
+                        key={e.id}
+                        className={`grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 ${index > 0 ? "border-t" : ""}`}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</p>
+                          <p className="mt-0.5 min-w-0 break-words text-sm font-medium leading-tight">
+                            {e.t_tarefa?.nome}
+                          </p>
+                        </div>
+
+                        <Hint content="Excluir atribuição">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 rounded-md"
+                            onClick={() => setConfirmarExclusao(e.id)}
+                            aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </Hint>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
             </div>
           )}
         </>
