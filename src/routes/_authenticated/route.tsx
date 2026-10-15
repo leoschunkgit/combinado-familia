@@ -353,7 +353,7 @@ function AuthenticatedLayout() {
           </button>
         </aside>
 
-        <main className="flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
+        <main className="min-w-0 flex-1 p-4 md:p-10"><div className="mx-auto max-w-5xl">
           <AppSystemStatus ehAdmin={ehAdmin} />
           <div className={`mb-5 hidden w-full items-center md:flex ${
             menuDesktopRecolhido
