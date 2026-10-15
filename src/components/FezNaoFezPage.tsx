@@ -1072,12 +1072,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               [vigencia.id]: data,
                             }))
                           }
-                          className={`relative shrink-0 snap-start rounded-lg border px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                          className={`relative shrink-0 snap-start rounded-lg px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                             futura
-                              ? "cursor-not-allowed border-transparent bg-transparent text-muted-foreground/40"
+                              ? "cursor-not-allowed border border-transparent bg-transparent text-muted-foreground/40"
                               : selecionada
-                                ? "border-muted-foreground/80 bg-transparent text-foreground"
-                                : "border-transparent bg-transparent text-foreground hover:bg-transparent"
+                                ? "border-2 border-muted-foreground/80 bg-transparent text-foreground"
+                                : "border border-transparent bg-transparent text-foreground hover:bg-transparent"
                           }`}
                           style={
                             selecionada && !futura && corFilhoSelecionado
@@ -1149,10 +1149,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 [vigencia.id]: filho.id,
                               }))
                             }
-                            className={`shrink-0 snap-start rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                            className={`shrink-0 snap-start rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
-                                ? "border-muted-foreground/80 bg-transparent text-foreground"
-                                : "border-transparent bg-transparent text-foreground hover:bg-transparent"
+                                ? "border-2 border-muted-foreground/80 bg-transparent text-foreground"
+                                : "border border-transparent bg-transparent text-foreground hover:bg-transparent"
                             }`}
                             style={
                               selecionado && filho.cor?.trim()
