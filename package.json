@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "build:web:dev": "vite build --mode web-dev",
+    "build:web:dev": "vite build --config vite.config.app.ts --mode web-dev && node scripts/write-netlify-spa-redirect.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
