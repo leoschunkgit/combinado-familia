@@ -319,8 +319,8 @@ export function AtribuicaoDialog({
                           </>
                         )}
                         {tarefas.map((t) => (
-                          <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
-                            {t.nome}
+                          <DropdownMenuCheckboxItem key={t.id} className="whitespace-normal break-words" checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
+                            <span className="min-w-0 flex-1 whitespace-normal break-words">{t.nome}</span>
                           </DropdownMenuCheckboxItem>
                         ))}
                       </DropdownMenuContent>
@@ -367,7 +367,7 @@ export function AtribuicaoDialog({
                                 <span className="truncate">{nomeF(it.id_filho)}</span>
                               </span>
                             </TableCell>
-                            <TableCell>{nomeT(it.id_tarefa)}</TableCell>
+                            <TableCell className="min-w-0 whitespace-normal break-words"><span className="block min-w-0 whitespace-normal break-words">{nomeT(it.id_tarefa)}</span></TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <span>{nomeV(it.id_vigencia)}</span>
@@ -457,8 +457,8 @@ export function AtribuicaoDialog({
                               </>
                             )}
                             {tarefas.map((t) => (
-                              <DropdownMenuCheckboxItem key={t.id} checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
-                                {t.nome}
+                              <DropdownMenuCheckboxItem key={t.id} className="whitespace-normal break-words" checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
+                                <span className="min-w-0 flex-1 whitespace-normal break-words">{t.nome}</span>
                               </DropdownMenuCheckboxItem>
                             ))}
                           </DropdownMenuContent>
