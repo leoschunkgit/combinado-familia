@@ -43,6 +43,7 @@ function AtribuicoesPage() {
   const vigenciasScrollRef = useRef<HTMLDivElement>(null);
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
+  const [filhoContextoId, setFilhoContextoId] = useState<number | null>(null);
   const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
     vigencia ? Number(vigencia) : null,
   );
@@ -53,6 +54,15 @@ function AtribuicoesPage() {
   const vigenciaAtiva = vigenciasOrdenadas.find(
     (item) => situacaoVigencia(item) === "andamento",
   );
+  const vigenciaSelecionada = vigenciasOrdenadas.find(
+    (item) => item.id === vigenciaSelecionadaId,
+  ) ?? null;
+  const vigenciaSelecionadaFinalizada = Boolean(
+    vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada",
+  );
+  const filhoContexto = filhoContextoId === null
+    ? null
+    : filhos.find((filho) => filho.id === filhoContextoId) ?? null;
 
   useEffect(() => {
     if (vigenciasOrdenadas.length === 0) {
@@ -305,9 +315,17 @@ function AtribuicoesPage() {
                         <p className="truncate font-bold">{filhoItem.nome}</p>
                       </div>
                     </div>
-                    <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                      {atribuicoesFilho.length} {atribuicoesFilho.length === 1 ? "tarefa" : "tarefas"}
-                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 shrink-0 gap-1.5 px-2.5 text-xs"
+                      disabled={vigenciaSelecionadaFinalizada}
+                      onClick={() => setFilhoContextoId(filhoItem.id)}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Adicionar
+                    </Button>
                   </div>
 
                   <div className="bg-muted/10 p-2.5 sm:p-3">
@@ -340,6 +358,16 @@ function AtribuicoesPage() {
         onOpenChange={setNovoAberto}
         mode="NORMAL"
         vigenciaInicialId={vigenciaSelecionadaId ?? vigenciaAtiva?.id ?? null}
+      />
+
+      <AtribuicaoDialog
+        open={filhoContexto !== null}
+        onOpenChange={(open) => {
+          if (!open) setFilhoContextoId(null);
+        }}
+        mode="CONTEXTO_FILHO_VIGENCIA"
+        vigenciaInicialId={vigenciaSelecionadaId}
+        filhoInicial={filhoContexto}
       />
 
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
