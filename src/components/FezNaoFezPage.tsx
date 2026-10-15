@@ -1748,40 +1748,56 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         onOpenChange={(open) => !open && !busy && setTroca(null)}
       >
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+          <DialogHeader className="space-y-3">
             <DialogTitle>
               {troca?.direcao === "PARA_FEZ"
                 ? "Alterar para “Fez”?"
                 : "Alterar para “Não fez”?"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="space-y-3">
               {troca && (
                 <>
                   {(() => {
                     const filho = filhoDaTarefa(troca.tarefa);
                     return (
-                      <span className="mb-1 inline-flex max-w-full min-w-0 items-start gap-1.5">
-                        {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                        <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {troca.tarefa.t_tarefa?.nome}</span>
+                      <span className="flex max-w-full min-w-0 items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5">
+                        {filho && (
+                          <FilhoAvatar
+                            nome={filho.nome}
+                            cor={filho.cor}
+                            avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
+                            className="h-5 w-5"
+                          />
+                        )}
+                        <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
+                          {filho?.nome ?? "Filho"} · {troca.tarefa.t_tarefa?.nome}
+                        </span>
                       </span>
                     );
                   })()}
-                  <br />
-                  Esta tarefa está marcada como{" "}
-                  {troca.direcao === "PARA_FEZ" ? "“Não fez”" : "“Fez”"} em{" "}
-                  {formatarData(dataBrasil(troca.ocorrencia.created_at))}. Ao
-                  continuar, o resultado será substituído
-                  {troca.direcao === "PARA_NAO_FEZ"
-                    ? " e qualquer bonificação será removida"
-                    : ""}
-                  .
+
+                  <span className="block rounded-lg bg-muted/15 px-3 py-2.5 leading-relaxed">
+                    Esta tarefa está marcada como{" "}
+                    <span className="font-medium text-foreground">
+                      {troca.direcao === "PARA_FEZ" ? "“Não fez”" : "“Fez”"}
+                    </span>{" "}
+                    em{" "}
+                    <span className="font-medium text-foreground">
+                      {formatarData(dataBrasil(troca.ocorrencia.created_at))}
+                    </span>
+                    . Ao continuar, o resultado será substituído
+                    {troca.direcao === "PARA_NAO_FEZ"
+                      ? " e qualquer bonificação será removida"
+                      : ""}
+                    .
+                  </span>
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
 
           {troca?.direcao === "PARA_FEZ" && troca.fez && (
-            <div className="space-y-4">
+            <div className="space-y-4 rounded-xl border bg-muted/10 p-3.5 sm:p-4">
               <div className="space-y-2">
                 <Label>Bonificação</Label>
                 <Select
