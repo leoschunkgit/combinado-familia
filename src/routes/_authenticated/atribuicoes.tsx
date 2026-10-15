@@ -210,7 +210,7 @@ function AtribuicoesPage() {
         title="Atribuições"
         description="Associe tarefas aos filhos"
         icon={<Link2 className="h-6 w-6" />}
-        action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
+        action={<Button size="sm" className="h-8 px-2 text-xs sm:px-2.5" onClick={() => setNovoAberto(true)}><Plus className="h-3.5 w-3.5" /> Adicionar</Button>}
       />
 
       {existentes.length > 0 && (
