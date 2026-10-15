@@ -1891,21 +1891,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           <DialogHeader>
             <DialogTitle>Desfazer marcações selecionadas?</DialogTitle>
             <DialogDescription>
-              {confirmarExcluirSelecionadas && (() => {
-                const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
+              {(() => {
+                const quantidade = confirmarExcluirSelecionadas?.ids.length ?? 0;
                 return (
                   <>
-                    <span className="mb-1 inline-flex max-w-full min-w-0 items-start gap-1.5">
-                      {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                      <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {confirmarExcluirSelecionadas.tarefa.t_tarefa?.nome}</span>
-                    </span>
-                    <br />
+                    {quantidade} {quantidade === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
+                    {" "}Os dias que ficarem sem Fez ou Não fez voltarão para as pendências.
                   </>
                 );
               })()}
-              {confirmarExcluirSelecionadas?.ids.length ?? 0} marcação(ões)
-              serão desfeitas. Os dias que ficarem sem Fez ou Não fez voltarão
-              para as pendências.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
