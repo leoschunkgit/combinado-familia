@@ -1360,7 +1360,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                             </Hint>
                                             <button
                                               type="button"
-                                              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                               aria-label={
                                                 acoesAbertas.has(`${tarefa.id}:${dataSelecionada}`)
                                                   ? "Ocultar ações da tarefa"
