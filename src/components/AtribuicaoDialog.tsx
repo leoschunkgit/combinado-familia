@@ -16,7 +16,7 @@ import { cadastrarAtribuicoes, prepararAtribuicoes, type AtribuicaoItem, type Po
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 
-export type AtribuicaoDialogMode = "NORMAL" | "POS_CADASTRO_FILHO" | "POS_CADASTRO_TAREFA";
+export type AtribuicaoDialogMode = "NORMAL" | "POS_CADASTRO_FILHO" | "POS_CADASTRO_TAREFA" | "CONTEXTO_FILHO_VIGENCIA";
 
 type Props = {
   open: boolean;
@@ -119,6 +119,16 @@ export function AtribuicaoDialog({
   const semFilhos = filhos.length === 0;
   const semTarefas = tarefas.length === 0;
   const faltamCadastrosNormal = semVigencias || semFilhos || semTarefas;
+  const tarefasParaSelecionar = mode === "CONTEXTO_FILHO_VIGENCIA" && vigenciaInicialId && filhoInicial
+    ? tarefas.filter((tarefa) =>
+        !existentes.some((item) =>
+          item.id_vigencia === vigenciaInicialId
+          && item.id_filho === filhoInicial.id
+          && item.id_tarefa === tarefa.id
+        )
+      )
+    : tarefas;
+  const semTarefasSelecionaveis = tarefasParaSelecionar.length === 0;
 
   const statusVigencia = (v: (typeof vigencias)[number]) => ({
     value: String(v.id),
@@ -225,7 +235,7 @@ export function AtribuicaoDialog({
       return;
     }
 
-    if (mode === "POS_CADASTRO_FILHO") {
+    if (mode === "POS_CADASTRO_FILHO" || mode === "CONTEXTO_FILHO_VIGENCIA") {
       if (!filhoInicial || tarefasSelecionadas.length === 0) {
         toast.error("Selecione ao menos uma tarefa");
         return;
@@ -235,7 +245,10 @@ export function AtribuicaoDialog({
         id_filho: filhoInicial.id,
         id_tarefa,
       }));
-      await salvarItens(candidatos, "SOMENTE_ATUAL");
+      await salvarItens(
+        candidatos,
+        mode === "CONTEXTO_FILHO_VIGENCIA" ? "ATUAL_OU_FUTURA" : "SOMENTE_ATUAL",
+      );
       return;
     }
 
@@ -255,11 +268,13 @@ export function AtribuicaoDialog({
 
   const titulo = mode === "NORMAL"
     ? "Adicionar atribuição"
-    : mode === "POS_CADASTRO_FILHO"
-      ? "Atribuir tarefas ao filho"
-      : tarefasIniciais.length > 1
-        ? "Atribuir tarefas aos filhos"
-        : "Atribuir tarefa aos filhos";
+    : mode === "CONTEXTO_FILHO_VIGENCIA"
+      ? "Adicionar tarefa"
+      : mode === "POS_CADASTRO_FILHO"
+        ? "Atribuir tarefas ao filho"
+        : tarefasIniciais.length > 1
+          ? "Atribuir tarefas aos filhos"
+          : "Atribuir tarefa aos filhos";
 
   const vigenciaAtualTexto = vigenciaSelecionada ? fmtVigencia(vigenciaSelecionada) : "Vigência atual";
 
@@ -478,7 +493,7 @@ export function AtribuicaoDialog({
                   <FixedCurrentValidity value={vigenciaAtualTexto} />
 
                   <div className="grid gap-4 md:grid-cols-2">
-                  {mode === "POS_CADASTRO_FILHO" ? (
+                  {mode === "POS_CADASTRO_FILHO" || mode === "CONTEXTO_FILHO_VIGENCIA" ? (
                     <>
                       <div className="min-w-0 space-y-1">
                         <Label className="text-xs text-muted-foreground">Filho</Label>
@@ -498,10 +513,12 @@ export function AtribuicaoDialog({
                         <Label>Tarefas <span className="text-destructive">*</span></Label>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={semTarefas}>
+                            <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={semTarefasSelecionaveis}>
                               <span className="truncate">
-                                {semTarefas
-                                  ? "Nenhuma tarefa cadastrada"
+                                {semTarefasSelecionaveis
+                                  ? mode === "CONTEXTO_FILHO_VIGENCIA"
+                                    ? "Todas as tarefas já foram atribuídas"
+                                    : "Nenhuma tarefa cadastrada"
                                   : tarefasSelecionadas.length === 0
                                     ? "Selecione"
                                     : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}
@@ -510,19 +527,19 @@ export function AtribuicaoDialog({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                            {tarefas.length > 0 && (
+                            {tarefasParaSelecionar.length > 0 && (
                               <>
                                 <DropdownMenuCheckboxItem
-                                  checked={tarefasSelecionadas.length === tarefas.length}
+                                  checked={tarefasSelecionadas.length === tarefasParaSelecionar.length}
                                   onSelect={(e) => e.preventDefault()}
-                                  onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
+                                  onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefasParaSelecionar.map((t) => t.id) : [])}
                                 >
                                   Selecionar todas
                                 </DropdownMenuCheckboxItem>
                                 <DropdownMenuSeparator />
                               </>
                             )}
-                            {tarefas.map((t) => (
+                            {tarefasParaSelecionar.map((t) => (
                               <DropdownMenuCheckboxItem key={t.id} className="whitespace-normal break-words" checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
                                 <span className="min-w-0 flex-1 whitespace-normal break-words">{t.nome}</span>
                               </DropdownMenuCheckboxItem>
@@ -578,16 +595,18 @@ export function AtribuicaoDialog({
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground">
-                  Este atalho usa somente a vigência em andamento. Para preparar atribuições de uma vigência futura, use a página Atribuições.
-                </p>
+                {mode !== "CONTEXTO_FILHO_VIGENCIA" && (
+                  <p className="text-xs text-muted-foreground">
+                    Este atalho usa somente a vigência em andamento. Para preparar atribuições de uma vigência futura, use a página Atribuições.
+                  </p>
+                )}
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
                   <Button
                     type="button"
                     onClick={() => void runAction(cadastrarContextual)}
-                    disabled={saving || (mode === "POS_CADASTRO_FILHO" ? semTarefas || tarefasSelecionadas.length === 0 : semFilhos || filhosSelecionados.length === 0)}
+                    disabled={saving || ((mode === "POS_CADASTRO_FILHO" || mode === "CONTEXTO_FILHO_VIGENCIA") ? semTarefasSelecionaveis || tarefasSelecionadas.length === 0 : semFilhos || filhosSelecionados.length === 0)}
                   >
                     Cadastrar atribuição
                   </Button>
