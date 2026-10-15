@@ -1586,9 +1586,29 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               {bonificacaoInfo && (() => {
                 const filho = filhoDaTarefa(bonificacaoInfo.tarefa);
                 return (
-                  <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
-                    {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                    <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {bonificacaoInfo.tarefa.t_tarefa?.nome} · {formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}</span>
+                  <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
+                    <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
+                      {filho && (
+                        <FilhoAvatar
+                          nome={filho.nome}
+                          cor={filho.cor}
+                          avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
+                          className="h-5 w-5"
+                        />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</span>
+                        <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">{filho?.nome ?? "Filho"}</span>
+                      </span>
+                    </span>
+                    <span className="block border-t px-3 py-2.5">
+                      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
+                      <span className="mt-0.5 block min-w-0 whitespace-normal break-words font-medium text-foreground">{bonificacaoInfo.tarefa.t_tarefa?.nome}</span>
+                    </span>
+                    <span className="block border-t px-3 py-2.5">
+                      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
+                      <span className="mt-0.5 block font-medium text-foreground">{formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}</span>
+                    </span>
                   </span>
                 );
               })()}
@@ -1657,14 +1677,47 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             <DialogDescription>
               {fez && (() => {
                 const filho = filhoDaTarefa(fez.tarefa);
+
+                if (fez.modo !== "EDITAR") {
+                  return (
+                    <>
+                      <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
+                        {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
+                        <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
+                      </span>
+                      {" · "}A bonificação é opcional.
+                    </>
+                  );
+                }
+
                 return (
-                  <>
-                    <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
-                      {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                      <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
+                  <span className="block space-y-2.5">
+                    <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
+                      <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
+                        {filho && (
+                          <FilhoAvatar
+                            nome={filho.nome}
+                            cor={filho.cor}
+                            avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
+                            className="h-5 w-5"
+                          />
+                        )}
+                        <span className="min-w-0">
+                          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</span>
+                          <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">{filho?.nome ?? "Filho"}</span>
+                        </span>
+                      </span>
+                      <span className="block border-t px-3 py-2.5">
+                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
+                        <span className="mt-0.5 block min-w-0 whitespace-normal break-words font-medium text-foreground">{fez.tarefa.t_tarefa?.nome}</span>
+                      </span>
+                      <span className="block border-t px-3 py-2.5">
+                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
+                        <span className="mt-0.5 block font-medium text-foreground">{formatarData(fez.data)}</span>
+                      </span>
                     </span>
-                    {" · "}A bonificação é opcional.
-                  </>
+                    <span className="block">A bonificação é opcional.</span>
+                  </span>
                 );
               })()}
             </DialogDescription>
