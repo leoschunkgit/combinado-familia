@@ -205,7 +205,7 @@ function AtribuicoesPage() {
   });
 
   const periodoCurto = (item: (typeof vigencias)[number]) =>
-    `${formatadorDataCurta.format(new Date(item.data_inicio))} – ${formatadorDataCurta.format(new Date(item.data_fim))}`;
+    `${formatadorDataCurta.format(new Date(item.data_inicio))} à ${formatadorDataCurta.format(new Date(item.data_fim))}`;
 
   function rolarVigencias(direcao: "esquerda" | "direita") {
     const area = vigenciasScrollRef.current;
@@ -278,9 +278,12 @@ function AtribuicoesPage() {
                       role="tab"
                       aria-selected={selecionada}
                       onClick={() => selecionarVigencia(item.id)}
-                      className={`min-w-[126px] shrink-0 snap-start rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[138px] ${selecionada ? "border-muted-foreground/80 bg-transparent text-foreground" : "border-transparent bg-transparent text-foreground hover:bg-transparent"}`}
+                      className={`min-w-[126px] shrink-0 snap-start rounded-lg border-b-2 px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[138px] ${selecionada ? "border-muted-foreground/80 bg-transparent text-foreground" : "border-transparent bg-transparent text-foreground hover:bg-transparent"}`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="text-[10px] font-medium leading-none text-muted-foreground">
+                        Vigência
+                      </div>
+                      <div className="mt-1 flex items-center gap-2">
                         <span className="text-xs font-medium tabular-nums text-foreground">
                           {periodoCurto(item)}
                         </span>
