@@ -391,7 +391,7 @@ function AuthenticatedLayout() {
                 className="flex h-9 max-w-72 items-stretch overflow-hidden rounded-lg border border-border bg-background text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                 aria-haspopup="menu"
                 aria-expanded={menuUsuarioDesktopAberto}
-                onClick={() => setMenuUsuarioDesktopAberto((aberto) => !aberto)}
+                onClick={(event) => event.currentTarget.blur()}
               >
                 <span className="flex min-w-0 items-center px-3">
                   <span className="truncate">{nomePai}</span>
