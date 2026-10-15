@@ -155,7 +155,7 @@ function RelatorioPage() {
       title="Histórico"
       description="Consulte as marcações"
       icon={<FileText className="h-6 w-6" />}
-      action={<Button size="sm" onClick={() => void gerarPdf()} disabled={carregando || !relatorioExportavel.length}><FileDown className="h-4 w-4" /> Extrair PDF</Button>}
+      action={<Button size="sm" className="h-8 px-2 text-xs sm:px-2.5" onClick={() => void gerarPdf()} disabled={carregando || !relatorioExportavel.length}><FileDown className="h-3.5 w-3.5" /> Extrair PDF</Button>}
     />
     <ResponsiveFilters
       desktopClassName="md:grid-cols-[1fr_1fr_1fr_auto]"
