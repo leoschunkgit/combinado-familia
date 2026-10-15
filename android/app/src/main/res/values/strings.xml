@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Combinado Família</string>
+    <string name="title_activity_main">Combinado Família</string>
+    <string name="package_name">app.combinadofamilia</string>
+    <string name="custom_url_scheme">app.combinadofamilia</string>
+</resources>

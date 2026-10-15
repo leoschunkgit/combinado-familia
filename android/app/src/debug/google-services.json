@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "301933592762",
+    "project_id": "combinado-familia-83416",
+    "storage_bucket": "combinado-familia-83416.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:301933592762:android:727e1dd88f249052dbc283",
+        "android_client_info": {
+          "package_name": "app.combinadofamilia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpt3d7vzIepBLRSMh2WGPHS-BYklOEjR8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:301933592762:android:141f7b100c7b6ebadbc283",
+        "android_client_info": {
+          "package_name": "app.combinadofamilia.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpt3d7vzIepBLRSMh2WGPHS-BYklOEjR8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
