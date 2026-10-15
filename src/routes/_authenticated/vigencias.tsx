@@ -325,7 +325,7 @@ function VigenciasPage() {
                 </Hint>
               </div>
             </div>
-            <p className="mt-2 whitespace-nowrap text-[13px] font-semibold leading-relaxed tracking-tight sm:text-base">{fmtVigencia(v)}</p>
+            <div className="mt-2 flex items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold leading-relaxed tracking-tight sm:text-base"><CalendarRange className="h-4 w-4 shrink-0 text-primary" /><span>{fmtVigencia(v)}</span></div>
             <div className="mt-3 space-y-2">
               <div className="w-full rounded-lg border border-amber-400 bg-transparent md:border-amber-300/70 px-3 py-2 text-xs leading-relaxed dark:border-amber-700/60">
                 <span className="font-semibold text-foreground">Para filhos sem mesada:</span>{" "}<span className="text-muted-foreground">limite máximo de {v.qtd_ocorrencia} “Não fez”</span>
