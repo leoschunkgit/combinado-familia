@@ -199,7 +199,7 @@ function AuthenticatedLayout() {
   const ultimaVigencia = obterUltimaVigencia(vigencias);
 
   const AtalhosPrincipais = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className={mobile ? "mb-2 mt-8 space-y-2" : "mb-2 mt-7 space-y-1.5"}>
+    <div className={mobile ? "my-3 space-y-1.5" : "mb-2 mt-7 space-y-1.5"}>
       <Link
         to="/cadastro-unico"
         onClick={() => mobile && setMenuMobileAberto(false)}

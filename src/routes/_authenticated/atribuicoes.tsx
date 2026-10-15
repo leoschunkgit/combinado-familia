@@ -314,10 +314,10 @@ function AtribuicoesPage() {
 
                 return (
                   <section key={filhoItem.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-                    <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-muted/15 px-4 py-3.5 text-left sm:flex sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
+                    <div className="flex w-full items-center justify-between gap-4 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
                       <button
                         type="button"
-                        className="group flex min-h-8 min-w-0 items-center gap-2.5 text-left sm:flex-1"
+                        className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
                         onClick={() =>
                           setFilhosAbertos((atual) => ({
                             ...atual,
@@ -339,7 +339,7 @@ function AtribuicoesPage() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        className="h-8 shrink-0 self-center gap-1.5 px-2.5 text-xs"
+                        className="h-8 shrink-0 gap-1.5 px-2.5 text-xs"
                         disabled={vigenciaSelecionadaFinalizada}
                         onClick={() => setFilhoContextoId(filhoItem.id)}
                       >
