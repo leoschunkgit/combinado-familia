@@ -1890,13 +1890,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Desfazer marcações selecionadas?</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="pt-1">
               {confirmarExcluirSelecionadas && (() => {
                 const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
                 const quantidade = confirmarExcluirSelecionadas.ids.length;
                 return (
-                  <>
-                    <span className="mb-1 inline-flex max-w-full min-w-0 items-start gap-1.5">
+                  <span className="block space-y-3">
+                    <span className="flex max-w-full min-w-0 items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5">
                       {filho && (
                         <FilhoAvatar
                           nome={filho.nome}
@@ -1905,14 +1905,20 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                           className="h-5 w-5"
                         />
                       )}
-                      <span className="min-w-0 whitespace-normal break-words">
+                      <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
                         {filho?.nome ?? "Filho"}
                       </span>
                     </span>
-                    <br />
-                    {quantidade} {quantidade === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
-                    {" "}Os dias que ficarem sem Fez ou Não fez voltarão para as pendências.
-                  </>
+
+                    <span className="block">
+                      <span className="block font-medium text-foreground">
+                        {quantidade} {quantidade === 1 ? "marcação selecionada será desfeita" : "marcações selecionadas serão desfeitas"}.
+                      </span>
+                      <span className="mt-1.5 block leading-relaxed">
+                        As datas que ficarem sem uma marcação de “Fez” ou “Não fez” voltarão para as pendências.
+                      </span>
+                    </span>
+                  </span>
                 );
               })()}
             </DialogDescription>
