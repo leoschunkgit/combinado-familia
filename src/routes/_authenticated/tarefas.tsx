@@ -192,17 +192,18 @@ function TarefasPage() {
         description="Cadastre e organize tarefas"
         icon={<ListTodo className="h-6 w-6" />}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {podeExcluirTodas && (
               <Button
                 size="sm"
                 variant="outline"
+                className="h-8 px-2 text-xs sm:px-2.5"
                 onClick={() => setConfirmarExclusaoTodas(true)}
               >
-                <Trash2 className="h-4 w-4" /> Excluir todas
+                <Trash2 className="h-3.5 w-3.5" /> Excluir todas
               </Button>
             )}
-            <Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>
+            <Button size="sm" className="h-8 px-2 text-xs sm:px-2.5" onClick={() => setNovoAberto(true)}><Plus className="h-3.5 w-3.5" /> Adicionar</Button>
           </div>
         }
       />
