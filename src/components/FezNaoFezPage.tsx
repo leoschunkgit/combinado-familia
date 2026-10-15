@@ -166,7 +166,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
   const [filhosSelecionados, setFilhosSelecionados] = useState<Record<number, number>>({});
-  const [filhosEscolhidosManualmente, setFilhosEscolhidosManualmente] = useState<Record<number, number>>({});
   const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
@@ -1019,12 +1018,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           const grupoFilhoSelecionado =
             gruposFilhos.find(({ filho }) => filho.id === filhoSelecionadoId) ??
             gruposFilhos[0];
-          const filhoEscolhidoManualmente =
-            filhosEscolhidosManualmente[vigencia.id] === filhoSelecionadoId;
           const corFilhoSelecionado =
-            filhoEscolhidoManualmente
-              ? grupoFilhoSelecionado?.filho.cor?.trim() || null
-              : null;
+            grupoFilhoSelecionado?.filho.cor?.trim() || null;
           return (
             <section key={vigencia.id} className="space-y-3">
               <div className="flex min-w-0 items-start gap-2">
@@ -1148,25 +1143,19 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             type="button"
                             role="tab"
                             aria-selected={selecionado}
-                            onClick={() => {
+                            onClick={() =>
                               setFilhosSelecionados((atual) => ({
                                 ...atual,
                                 [vigencia.id]: filho.id,
-                              }));
-                              setFilhosEscolhidosManualmente((atual) => ({
-                                ...atual,
-                                [vigencia.id]: filho.id,
-                              }));
-                            }}
+                              }))
+                            }
                             className={`shrink-0 snap-start rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
                                 ? "border-muted-foreground/80 bg-transparent text-foreground"
                                 : "border-transparent bg-transparent text-foreground hover:bg-transparent"
                             }`}
                             style={
-                              selecionado
-                              && filhosEscolhidosManualmente[vigencia.id] === filho.id
-                              && filho.cor?.trim()
+                              selecionado && filho.cor?.trim()
                                 ? { borderColor: filho.cor.trim() }
                                 : undefined
                             }
