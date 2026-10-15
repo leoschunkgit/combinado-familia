@@ -41,7 +41,7 @@ export function Pick({
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger className="w-full">
           {childIcons && selectedOption ? (
-            <span className="flex min-w-0 items-center gap-2">
+            <span className="!flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
               <FilhoAvatar
                 nome={selectedOption.label}
                 cor={selectedOption.cor}
@@ -51,7 +51,7 @@ export function Pick({
               <span className="min-w-0 truncate">{selectedOption.label}</span>
             </span>
           ) : taskIcons && selectedOption ? (
-            <span className="flex min-w-0 items-center gap-2">
+            <span className="!flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
               <TarefaIcone nome={selectedOption.label} />
               <span className="min-w-0 truncate">{selectedOption.label}</span>
             </span>
