@@ -109,6 +109,7 @@ function AuthenticatedLayout() {
   const [salvando, setSalvando] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
   const [menuDesktopRecolhido, setMenuDesktopRecolhido] = useState(false);
+  const [menuUsuarioDesktopAberto, setMenuUsuarioDesktopAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
@@ -374,29 +375,44 @@ function AuthenticatedLayout() {
                 </span>
               </Link>
             )}
-            <div className="group relative">
+            <div
+              className="relative"
+              onMouseEnter={() => setMenuUsuarioDesktopAberto(true)}
+              onMouseLeave={() => setMenuUsuarioDesktopAberto(false)}
+              onFocusCapture={() => setMenuUsuarioDesktopAberto(true)}
+              onBlurCapture={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                  setMenuUsuarioDesktopAberto(false);
+                }
+              }}
+            >
               <button
                 type="button"
                 className="flex h-9 max-w-72 items-stretch overflow-hidden rounded-lg border border-border bg-background text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                 aria-haspopup="menu"
+                aria-expanded={menuUsuarioDesktopAberto}
+                onClick={() => setMenuUsuarioDesktopAberto((aberto) => !aberto)}
               >
                 <span className="flex min-w-0 items-center px-3">
                   <span className="truncate">{nomePai}</span>
                 </span>
-                <span className="flex w-9 shrink-0 items-center justify-center border-l border-border bg-muted/25 text-muted-foreground transition-colors group-hover:bg-muted/70 group-hover:text-foreground group-focus-within:bg-muted/70 group-focus-within:text-foreground">
-                  <ChevronDown className="h-4 w-4 stroke-[2.25] transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180" />
+                <span className={`flex w-9 shrink-0 items-center justify-center border-l border-border bg-muted/25 text-muted-foreground transition-colors ${menuUsuarioDesktopAberto ? "bg-muted/70 text-foreground" : ""}`}>
+                  <ChevronDown className={`h-4 w-4 stroke-[2.25] transition-transform duration-200 ${menuUsuarioDesktopAberto ? "rotate-180" : ""}`} />
                 </span>
               </button>
               <div
                 role="menu"
-                className="pointer-events-none absolute right-0 top-full z-40 w-44 pt-1 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+                className={`absolute right-0 top-full z-40 w-44 pt-1 transition-opacity ${menuUsuarioDesktopAberto ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
               >
                 <div className="rounded-lg border bg-popover p-1 text-popover-foreground shadow-md">
                   <button
                     type="button"
                     role="menuitem"
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
-                    onClick={abrirGuia}
+                    onClick={() => {
+                      setMenuUsuarioDesktopAberto(false);
+                      abrirGuia();
+                    }}
                   >
                     <CircleHelp className="h-4 w-4" />
                     Ajuda
@@ -404,6 +420,7 @@ function AuthenticatedLayout() {
                   <Link
                     to="/admin"
                     role="menuitem"
+                    onClick={() => setMenuUsuarioDesktopAberto(false)}
                     className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
                   >
                     <UserCog className="h-4 w-4" />
@@ -413,6 +430,7 @@ function AuthenticatedLayout() {
                     <Link
                       to="/administracao"
                       role="menuitem"
+                      onClick={() => setMenuUsuarioDesktopAberto(false)}
                       className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
                     >
                       <ShieldCheck className="h-4 w-4" />
@@ -424,7 +442,10 @@ function AuthenticatedLayout() {
                     type="button"
                     role="menuitem"
                     className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
-                    onClick={() => void runAction(sair)}
+                    onClick={() => {
+                      setMenuUsuarioDesktopAberto(false);
+                      void runAction(sair);
+                    }}
                     disabled={salvando}
                   >
                     <LogOut className="h-4 w-4" />
