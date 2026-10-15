@@ -267,16 +267,16 @@ function VigenciasPage() {
       description="Defina os períodos"
       icon={<CalendarRange className="h-6 w-6" />}
       action={
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5">
           {ultimaVigencia && (
-            <Button size="sm" variant="outline" className="px-2 sm:px-3" onClick={() => setConfirmarCloneAberto(true)}>
-              <Copy className="h-4 w-4" />
+            <Button size="sm" variant="outline" className="h-8 px-2 text-xs sm:px-2.5" onClick={() => setConfirmarCloneAberto(true)}>
+              <Copy className="h-3.5 w-3.5" />
               <span className="sm:hidden">Clonar</span>
               <span className="hidden sm:inline">Clonar vigência</span>
             </Button>
           )}
-          <Button size="sm" className="px-2 sm:px-3" onClick={abrirNovaVigencia}>
-            <Plus className="h-4 w-4" />
+          <Button size="sm" className="h-8 px-2 text-xs sm:px-2.5" onClick={abrirNovaVigencia}>
+            <Plus className="h-3.5 w-3.5" />
             <span>Adicionar</span>
           </Button>
         </div>
