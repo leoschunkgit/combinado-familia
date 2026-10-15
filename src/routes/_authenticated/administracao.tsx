@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { uiTypography } from "@/lib/ui-typography";
 import { uiSpacing } from "@/lib/ui-spacing";
+import { getAppEnvironment } from "@/lib/app-runtime";
 import { AdminSistema } from "@/components/admin/AdminSistema";
 import { AdminAuditoria } from "@/components/admin/AdminAuditoria";
 import { AdminAdministradores } from "@/components/admin/AdminAdministradores";
@@ -371,6 +372,7 @@ function Indicador({
 }
 
 function AdministracaoPage() {
+  const ambiente = getAppEnvironment();
   const [aba, setAba] = useState<Aba>("visao");
   const [resumo, setResumo] = useState<AdminResumo>(RESUMO_VAZIO);
   const [operacao, setOperacao] = useState<AdminOperacao>(OPERACAO_VAZIA);
@@ -493,16 +495,28 @@ function AdministracaoPage() {
         description="Acompanhe os principais indicadores do Combinado Família sem abrir o conteúdo das famílias."
         icon={<ShieldCheck className="h-6 w-6" />}
         action={
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 shrink-0 rounded-md"
-            onClick={() => void carregar()}
-            disabled={carregando}
-            aria-label="Atualizar dados administrativos"
-          >
-            <RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex h-8 shrink-0 items-center rounded-full border px-2.5 text-[11px] font-bold tracking-wide ${ambiente === "DEV"
+                ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
+                : "border-primary/30 bg-primary/10 text-primary"
+              }`}
+              title={`Ambiente ${ambiente}`}
+              aria-label={`Ambiente ${ambiente}`}
+            >
+              {ambiente}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0 rounded-md"
+              onClick={() => void carregar()}
+              disabled={carregando}
+              aria-label="Atualizar dados administrativos"
+            >
+              <RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} />
+            </Button>
+          </div>
         }
       />
 

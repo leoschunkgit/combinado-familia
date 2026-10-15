@@ -24,6 +24,15 @@ export function getAppOrigin(): string {
   return window.location.origin;
 }
 
+export function getAppEnvironment(): "DEV" | "PRD" {
+  const projectId =
+    typeof import.meta !== "undefined"
+      ? import.meta.env["VITE_SUPABASE_PROJECT_ID"]
+      : undefined;
+
+  return projectId === DEV_SUPABASE_PROJECT_ID ? "DEV" : "PRD";
+}
+
 export function getPublicWebOrigin(): string {
   const configured =
     typeof import.meta !== "undefined"
@@ -32,12 +41,7 @@ export function getPublicWebOrigin(): string {
 
   if (configured) return normalizeOrigin(configured);
 
-  const projectId =
-    typeof import.meta !== "undefined"
-      ? import.meta.env["VITE_SUPABASE_PROJECT_ID"]
-      : undefined;
-
-  return projectId === DEV_SUPABASE_PROJECT_ID
+  return getAppEnvironment() === "DEV"
     ? DEV_PUBLIC_WEB_ORIGIN
     : DEFAULT_PUBLIC_WEB_ORIGIN;
 }
