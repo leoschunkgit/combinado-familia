@@ -234,8 +234,6 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
         caixa("Saldo atual", filho.mesada.saldo, resumoX + (resumoWidth + resumoGap) * 2, resumoWidth, "verde");
         const ySaldo = y;
         y = Math.max(yMesada, yDescontos, ySaldo) + 1;
-      } else if (filho.resumo) {
-        escrever(filho.resumo, MARGIN + 6, CONTENT_WIDTH - 12, 8.5);
       }
 
       for (const tarefa of filho.tarefas) {
