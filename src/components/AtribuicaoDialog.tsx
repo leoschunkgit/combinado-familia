@@ -303,9 +303,15 @@ export function AtribuicaoDialog({
                   <Pick
                     required
                     label="Filho"
+                    childIcons
                     value={filho}
                     onChange={setFilho}
-                    options={filhos.map((f) => ({ value: String(f.id), label: f.nome }))}
+                    options={filhos.map((f) => ({
+                      value: String(f.id),
+                      label: f.nome,
+                      cor: f.cor,
+                      avatar: f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null,
+                    }))}
                     placeholder={semFilhos ? "Nenhum filho cadastrado" : "Selecione"}
                     disabled={semFilhos}
                   />
@@ -601,7 +607,15 @@ export function AtribuicaoDialog({
                             )}
                             {filhos.map((f) => (
                               <DropdownMenuCheckboxItem key={f.id} checked={filhosSelecionados.includes(f.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarFilho(f.id)}>
-                                {f.nome}
+                                <span className="flex min-w-0 items-center gap-2">
+                                  <FilhoAvatar
+                                    nome={f.nome}
+                                    cor={f.cor}
+                                    avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null}
+                                    className="h-5 w-5"
+                                  />
+                                  <span className="min-w-0 truncate">{f.nome}</span>
+                                </span>
                               </DropdownMenuCheckboxItem>
                             ))}
                           </DropdownMenuContent>

@@ -927,12 +927,15 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           <>
             <Pick
               label="Filho"
+              childIcons
               value={f.filho}
               onChange={alterarFilhoFiltro}
               allLabel="Todos"
               options={filhosDisponiveisFiltro.map((filho) => ({
                 value: String(filho.id),
                 label: filho.nome,
+                cor: filho.cor,
+                avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null,
               }))}
             />
             <Pick
@@ -1030,14 +1033,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                           }
                           className={`relative shrink-0 snap-start rounded-lg px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                             futura
-                              ? "cursor-not-allowed border border-transparent bg-transparent text-muted-foreground/40"
+                              ? "cursor-not-allowed border-b-2 border-transparent bg-transparent text-muted-foreground/40"
                               : selecionada
-                                ? "border-2 border-muted-foreground/80 bg-transparent text-foreground"
-                                : "border border-transparent bg-transparent text-foreground hover:bg-transparent"
+                                ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
+                                : "border-b-2 border-transparent bg-transparent text-foreground hover:bg-transparent"
                           }`}
                           style={
                             selecionada && !futura && corFilhoSelecionado
-                              ? { borderColor: corFilhoSelecionado }
+                              ? { borderBottomColor: corFilhoSelecionado }
                               : undefined
                           }
                         >
@@ -1107,12 +1110,12 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             }
                             className={`shrink-0 snap-start rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
-                                ? "border-2 border-muted-foreground/80 bg-transparent text-foreground"
-                                : "border border-transparent bg-transparent text-foreground hover:bg-transparent"
+                                ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
+                                : "border-b-2 border-transparent bg-transparent text-foreground hover:bg-transparent"
                             }`}
                             style={
                               selecionado && filho.cor?.trim()
-                                ? { borderColor: filho.cor.trim() }
+                                ? { borderBottomColor: filho.cor.trim() }
                                 : undefined
                             }
                           >
