@@ -7,7 +7,13 @@
  * iOS Universal Links.
  */
 const DEFAULT_PUBLIC_WEB_ORIGIN = "https://www.combinadofamilia.app.br";
-const PUBLIC_APP_HOSTS = new Set(["combinadofamilia.app.br", "www.combinadofamilia.app.br"]);
+const DEV_PUBLIC_WEB_ORIGIN = "https://combinado-familia-dev.netlify.app";
+const DEV_SUPABASE_PROJECT_ID = "ewljvqwuxwhhxdxqezhn";
+const PUBLIC_APP_HOSTS = new Set([
+  "combinadofamilia.app.br",
+  "www.combinadofamilia.app.br",
+  "combinado-familia-dev.netlify.app",
+]);
 
 function normalizeOrigin(value: string): string {
   return value.replace(/\/+$/, "");
@@ -24,7 +30,16 @@ export function getPublicWebOrigin(): string {
       ? import.meta.env["VITE_PUBLIC_APP_URL"]
       : undefined;
 
-  return normalizeOrigin(configured || DEFAULT_PUBLIC_WEB_ORIGIN);
+  if (configured) return normalizeOrigin(configured);
+
+  const projectId =
+    typeof import.meta !== "undefined"
+      ? import.meta.env["VITE_SUPABASE_PROJECT_ID"]
+      : undefined;
+
+  return projectId === DEV_SUPABASE_PROJECT_ID
+    ? DEV_PUBLIC_WEB_ORIGIN
+    : DEFAULT_PUBLIC_WEB_ORIGIN;
 }
 
 export function getAuthRedirectUrl(path = "/"): string {
