@@ -6,8 +6,6 @@ import {
   CalendarRange,
   ChevronLeft,
   ChevronRight,
-  ChevronsDownUp,
-  ChevronsUpDown,
   ClipboardCheck,
   Info,
   Pencil,
@@ -511,19 +509,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     aberturaInicialAplicada.current = true;
   }, [isLoading, grupos]);
 
-  function definirTudo(aberto: boolean) {
-    setFilhosAbertos(
-      Object.fromEntries(
-        grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
-          gruposFilhos.map(({ filho }) => [
-            `${vigencia.id}-${filho.id}`,
-            aberto,
-          ]),
-        ),
-      ),
-    );
-  }
-
   function dataValida(tarefa: FilhoTarefa, data: string) {
     const vigencia = tarefa.t_vigencia;
     return Boolean(
@@ -931,26 +916,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
       <ResponsiveFilters
         desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"}
-        mobileActions={
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="min-w-0 px-2 text-xs"
-              onClick={() => definirTudo(true)}
-            >
-              <ChevronsDownUp className="h-4 w-4" /> Expandir
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="min-w-0 px-2 text-xs"
-              onClick={() => definirTudo(false)}
-            >
-              <ChevronsUpDown className="h-4 w-4" /> Recolher
-            </Button>
-          </>
-        }
         onApply={() => setFiltro(f)}
         hasActiveFilters={filtrosAtivos}
         onClear={() => {
@@ -995,15 +960,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           </>
         )}
       />
-
-      <div className="mb-6 hidden flex-wrap justify-end gap-2 md:flex">
-        <Button variant="outline" size="sm" onClick={() => definirTudo(true)}>
-          <ChevronsDownUp className="h-4 w-4" /> Expandir tudo
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => definirTudo(false)}>
-          <ChevronsUpDown className="h-4 w-4" /> Recolher tudo
-        </Button>
-      </div>
 
       {!isLoading && vigenciasParaExibir.length === 0 && (
         <EmptyState>{vazio}</EmptyState>
