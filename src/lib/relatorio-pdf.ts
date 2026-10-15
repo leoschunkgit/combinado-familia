@@ -239,53 +239,130 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
       }
 
       for (const tarefa of filho.tarefas) {
-        garantirEspaco(16);
-        escrever(tarefa.nome, MARGIN + 8, CONTENT_WIDTH - 16, 9, { negrito: true });
+        const xTabela = MARGIN + 6;
+        const larguraTabela = CONTENT_WIDTH - 12;
+        const xData = xTabela + 4;
+        const xResultado = xTabela + 38;
+        const xDetalhe = xTabela + 74;
+        const larguraDetalhe = larguraTabela - 78;
+
+        const desenharCabecalhoTarefa = () => {
+          const linhasNome = doc.splitTextToSize(tarefa.nome, larguraTabela - 38) as string[];
+          const alturaCabecalho = Math.max(15, 10 + linhasNome.length * 4);
+          garantirEspaco(alturaCabecalho + 9);
+
+          doc.setFillColor(243, 248, 245);
+          doc.setDrawColor(202, 219, 209);
+          doc.roundedRect(xTabela, y, larguraTabela, alturaCabecalho, 2.5, 2.5, "FD");
+
+          doc.setFillColor(12, 92, 60);
+          doc.roundedRect(xTabela, y, 1.8, alturaCabecalho, 0.9, 0.9, "F");
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(6.8);
+          doc.setTextColor(72, 105, 88);
+          doc.text("TAREFA", xTabela + 5, y + 4.8);
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9.2);
+          doc.setTextColor(35, 45, 40);
+          doc.text(linhasNome, xTabela + 5, y + 9.5);
+
+          const totalRegistros = tarefa.registros.length;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(92, 102, 97);
+          doc.text(
+            `${totalRegistros} ${totalRegistros === 1 ? "registro" : "registros"}`,
+            xTabela + larguraTabela - 4,
+            y + 5.2,
+            { align: "right" },
+          );
+
+          y += alturaCabecalho + 2;
+        };
+
+        const desenharCabecalhoRegistros = () => {
+          garantirEspaco(8);
+          doc.setFillColor(246, 247, 246);
+          doc.setDrawColor(226, 230, 227);
+          doc.roundedRect(xTabela, y, larguraTabela, 7, 1.2, 1.2, "FD");
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.2);
+          doc.setTextColor(92, 100, 96);
+          doc.text("Data", xData, y + 4.5);
+          doc.text("Resultado", xResultado, y + 4.5);
+          doc.text("Detalhe", xDetalhe, y + 4.5);
+
+          y += 8;
+        };
+
+        desenharCabecalhoTarefa();
 
         if (!tarefa.registros.length) {
-          escrever("Nenhum resultado registrado.", MARGIN + 12, CONTENT_WIDTH - 24, 8, { cor: [105, 110, 108] });
-          y += 1;
+          garantirEspaco(10);
+          doc.setFillColor(250, 250, 250);
+          doc.setDrawColor(232, 234, 233);
+          doc.roundedRect(xTabela, y, larguraTabela, 9, 1.5, 1.5, "FD");
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(105, 110, 108);
+          doc.text("Nenhum resultado registrado.", xTabela + 4, y + 5.5);
+          y += 12;
           continue;
         }
 
-        const xData = MARGIN + 10;
-        const xResultado = MARGIN + 43;
-        const xDetalhe = MARGIN + 78;
-        garantirEspaco(9);
-        doc.setFillColor(246, 247, 246);
-        doc.rect(MARGIN + 8, y - 1, CONTENT_WIDTH - 16, 7, "F");
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.5);
-        doc.setTextColor(95, 100, 98);
-        doc.text("Data", xData, y + 3.5);
-        doc.text("Resultado", xResultado, y + 3.5);
-        doc.text("Detalhe", xDetalhe, y + 3.5);
-        y += 8;
+        desenharCabecalhoRegistros();
 
-        for (const registro of tarefa.registros) {
+        for (const [indiceRegistro, registro] of tarefa.registros.entries()) {
           const detalhe = [registro.detalhe, registro.penalidadeAtingida ? "Penalidade atingida" : ""]
             .filter(Boolean)
             .join(" · ") || "—";
-          const linhasDetalhe = doc.splitTextToSize(detalhe, CONTENT_WIDTH - 84) as string[];
-          const altura = Math.max(7, linhasDetalhe.length * 3.6 + 3);
-          garantirEspaco(altura);
+          const linhasDetalhe = doc.splitTextToSize(detalhe, larguraDetalhe) as string[];
+          const altura = Math.max(8, linhasDetalhe.length * 3.6 + 3.5);
+
+          if (y + altura > 278) {
+            novaPagina();
+            desenharCabecalhoTarefa();
+            desenharCabecalhoRegistros();
+          }
+
+          if (indiceRegistro % 2 === 0) {
+            doc.setFillColor(252, 252, 252);
+            doc.rect(xTabela, y, larguraTabela, altura, "F");
+          }
 
           doc.setDrawColor(232, 234, 233);
-          doc.line(MARGIN + 8, y + altura - 1, MARGIN + CONTENT_WIDTH - 8, y + altura - 1);
+          doc.line(xTabela, y + altura, xTabela + larguraTabela, y + altura);
+
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8);
           doc.setTextColor(55, 60, 58);
-          doc.text(registro.data, xData, y + 4);
+          doc.text(registro.data, xData, y + 4.8);
+
+          const corResultado: [number, number, number] =
+            registro.resultado === "Fez" ? [55, 125, 80] : [175, 65, 65];
+          doc.setFillColor(
+            registro.resultado === "Fez" ? 239 : 252,
+            registro.resultado === "Fez" ? 248 : 241,
+            registro.resultado === "Fez" ? 242 : 241,
+          );
+          doc.roundedRect(xResultado - 1.5, y + 1.4, 24, 5.2, 2.6, 2.6, "F");
           doc.setFont("helvetica", "bold");
-          if (registro.resultado === "Fez") doc.setTextColor(55, 125, 80);
-          else doc.setTextColor(175, 65, 65);
-          doc.text(registro.resultado, xResultado, y + 4);
+          doc.setFontSize(7.5);
+          doc.setTextColor(...corResultado);
+          doc.text(registro.resultado, xResultado + 10.5, y + 4.9, { align: "center" });
+
           doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
           doc.setTextColor(55, 60, 58);
-          doc.text(linhasDetalhe, xDetalhe, y + 4);
+          doc.text(linhasDetalhe, xDetalhe, y + 4.8);
+
           y += altura;
         }
-        y += 2;
+
+        y += 4;
       }
       y += 3;
     }
