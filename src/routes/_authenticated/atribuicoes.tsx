@@ -213,12 +213,6 @@ function AtribuicoesPage() {
         action={<Button size="sm" onClick={() => setNovoAberto(true)}><Plus className="h-4 w-4" /> Adicionar</Button>}
       />
 
-      {faltando && (
-        <div className="mb-6 rounded-2xl bg-accent/30 p-4 text-sm">
-          Para atribuir, cadastre antes pelo menos uma vigência, um filho e uma tarefa.
-        </div>
-      )}
-
       {existentes.length > 0 && (
         <ResponsiveFilters
           desktopClassName="md:grid-cols-[1fr_1fr_auto]"
