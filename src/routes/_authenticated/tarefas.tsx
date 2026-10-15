@@ -344,7 +344,18 @@ function TarefasPage() {
       <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader>
-          <div className="min-w-0 space-y-2"><p className="min-w-0 break-words">Tem certeza que deseja excluir <strong className="break-words">{tarefas.find((t) => t.id === confirmarExclusao)?.nome}</strong>?</p><p className="text-sm text-muted-foreground">As atribuições e os registros de Fez/Não fez vinculados a esta tarefa também serão excluídos.</p></div>
+          <div className="min-w-0 space-y-2">
+            {(() => {
+              const tarefa = tarefas.find((t) => t.id === confirmarExclusao);
+              return tarefa ? (
+                <div className="flex min-w-0 items-start gap-2">
+                  <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
+                  <p className="min-w-0 break-words">Tem certeza que deseja excluir <strong className="break-words">{tarefa.nome}</strong>?</p>
+                </div>
+              ) : null;
+            })()}
+            <p className="text-sm text-muted-foreground">As atribuições e os registros de Fez/Não fez vinculados a esta tarefa também serão excluídos.</p>
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
             <Button type="button" variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button>

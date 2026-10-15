@@ -156,7 +156,17 @@ function PainelPublico() {
 
     <Dialog open={tarefaDatas !== null} onOpenChange={(open) => { if (!open) setTarefaDatas(null); }}>
       <DialogContent className="max-w-sm rounded-lg">
-        <DialogHeader><DialogTitle>Resultados da tarefa</DialogTitle><DialogDescription>{tarefaDatas?.nome}</DialogDescription></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Resultados da tarefa</DialogTitle>
+          <DialogDescription>
+            {tarefaDatas && (
+              <span className="flex min-w-0 items-start gap-2">
+                <TarefaIcone nome={tarefaDatas.nome} className="mt-0.5" />
+                <span className="min-w-0 break-words">{tarefaDatas.nome}</span>
+              </span>
+            )}
+          </DialogDescription>
+        </DialogHeader>
         <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const b=bonus(o); return <div key={`${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>}<div className="min-w-0"><p className="text-sm font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"} · {data(o.data)}</p>{b&&<p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
       </DialogContent>
     </Dialog>

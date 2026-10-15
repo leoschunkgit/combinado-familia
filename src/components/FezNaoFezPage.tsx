@@ -937,6 +937,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             />
             <Pick
               label="Tarefa"
+              taskIcons
               value={f.tarefa}
               onChange={(tarefa) => setF({ ...f, tarefa })}
               allLabel="Todas"
@@ -1579,7 +1580,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           return (
             <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
               {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-              <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {penalidadePendente.tarefa.t_tarefa?.nome}</span>
+              <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} ·</span>
+              <TarefaIcone nome={penalidadePendente.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+              <span className="min-w-0 whitespace-normal break-words">{penalidadePendente.tarefa.t_tarefa?.nome}</span>
             </span>
           );
         })() : undefined}
@@ -1620,7 +1623,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     </span>
                     <span className="block border-t px-3 py-2.5">
                       <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
-                      <span className="mt-0.5 block min-w-0 whitespace-normal break-words font-medium text-foreground">{bonificacaoInfo.tarefa.t_tarefa?.nome}</span>
+                      <span className="mt-0.5 flex min-w-0 items-start gap-2">
+                        <TarefaIcone nome={bonificacaoInfo.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+                        <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">{bonificacaoInfo.tarefa.t_tarefa?.nome}</span>
+                      </span>
                     </span>
                     <span className="block border-t px-3 py-2.5">
                       <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
@@ -1700,7 +1706,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     <>
                       <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
                         {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                        <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
+                        <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} ·</span>
+                        <TarefaIcone nome={fez.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+                        <span className="min-w-0 whitespace-normal break-words">{fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
                       </span>
                       {" · "}A bonificação é opcional.
                     </>
@@ -1726,7 +1734,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                       </span>
                       <span className="block border-t px-3 py-2.5">
                         <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
-                        <span className="mt-0.5 block min-w-0 whitespace-normal break-words font-medium text-foreground">{fez.tarefa.t_tarefa?.nome}</span>
+                        <span className="mt-0.5 flex min-w-0 items-start gap-2">
+                          <TarefaIcone nome={fez.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+                          <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">{fez.tarefa.t_tarefa?.nome}</span>
+                        </span>
                       </span>
                       <span className="block border-t px-3 py-2.5">
                         <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
@@ -1853,8 +1864,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                           <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                             Tarefa
                           </span>
-                          <span className="mt-0.5 block min-w-0 whitespace-normal break-words font-medium text-foreground">
-                            {troca.tarefa.t_tarefa?.nome}
+                          <span className="mt-0.5 flex min-w-0 items-start gap-2">
+                            <TarefaIcone nome={troca.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+                            <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
+                              {troca.tarefa.t_tarefa?.nome}
+                            </span>
                           </span>
                         </span>
                       </span>

@@ -430,7 +430,9 @@ export function CheckinDiario({ open, onOpenChange }: CheckinDiarioProps) {
         return (
           <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
             {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-            <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} · {penalidadePendente.tarefa.t_tarefa?.nome}</span>
+            <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} ·</span>
+            <TarefaIcone nome={penalidadePendente.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+            <span className="min-w-0 whitespace-normal break-words">{penalidadePendente.tarefa.t_tarefa?.nome}</span>
           </span>
         );
       })() : undefined}

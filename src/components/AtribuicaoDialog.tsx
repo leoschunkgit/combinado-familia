@@ -29,13 +29,16 @@ type Props = {
   onSaved?: () => void;
 };
 
-function FixedInfo({ label, values }: { label: string; values: string[] }) {
+function FixedInfo({ label, values, taskIcons = false }: { label: string; values: string[]; taskIcons?: boolean }) {
   return (
     <div className="min-w-0 space-y-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <div className="space-y-0.5">
         {values.map((value, index) => (
-          <p key={index} className="break-words text-xs font-medium leading-5 text-foreground">{value}</p>
+          <div key={index} className="flex min-w-0 items-start gap-2">
+            {taskIcons && <TarefaIcone nome={value} className="mt-0.5" />}
+            <p className="min-w-0 break-words text-xs font-medium leading-5 text-foreground">{value}</p>
+          </div>
         ))}
       </div>
     </div>
@@ -336,7 +339,10 @@ export function AtribuicaoDialog({
                         )}
                         {tarefas.map((t) => (
                           <DropdownMenuCheckboxItem key={t.id} className="whitespace-normal break-words" checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
-                            <span className="min-w-0 flex-1 whitespace-normal break-words">{t.nome}</span>
+                            <span className="flex min-w-0 flex-1 items-start gap-2">
+                              <TarefaIcone nome={t.nome} className="mt-0.5" />
+                              <span className="min-w-0 flex-1 whitespace-normal break-words">{t.nome}</span>
+                            </span>
                           </DropdownMenuCheckboxItem>
                         ))}
                       </DropdownMenuContent>
@@ -548,7 +554,10 @@ export function AtribuicaoDialog({
                             )}
                             {tarefasParaSelecionar.map((t) => (
                               <DropdownMenuCheckboxItem key={t.id} className="whitespace-normal break-words" checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
-                                <span className="min-w-0 flex-1 whitespace-normal break-words">{t.nome}</span>
+                                <span className="flex min-w-0 flex-1 items-start gap-2">
+                                  <TarefaIcone nome={t.nome} className="mt-0.5" />
+                                  <span className="min-w-0 flex-1 whitespace-normal break-words">{t.nome}</span>
+                                </span>
                               </DropdownMenuCheckboxItem>
                             ))}
                           </DropdownMenuContent>
@@ -560,6 +569,7 @@ export function AtribuicaoDialog({
                       <FixedInfo
                         label={tarefasIniciais.length > 1 ? "Tarefas cadastradas" : "Tarefa"}
                         values={tarefasIniciais.map((t) => t.nome)}
+                        taskIcons
                       />
                       <div className="space-y-2">
                         <Label>Filhos <span className="text-destructive">*</span></Label>
