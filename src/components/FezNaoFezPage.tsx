@@ -1018,6 +1018,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           const grupoFilhoSelecionado =
             gruposFilhos.find(({ filho }) => filho.id === filhoSelecionadoId) ??
             gruposFilhos[0];
+          const corFilhoSelecionado = grupoFilhoSelecionado?.filho.cor?.trim() || null;
           return (
             <section key={vigencia.id} className="space-y-3">
               <div className="flex min-w-0 items-start gap-2">
@@ -1077,6 +1078,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 ? "border-muted-foreground/80 bg-transparent text-foreground"
                                 : "border-transparent bg-transparent text-foreground hover:bg-transparent"
                           }`}
+                          style={
+                            selecionada && !futura && corFilhoSelecionado
+                              ? { borderColor: corFilhoSelecionado }
+                              : undefined
+                          }
                         >
                           {formatarDataCurta(data)}
                           {comPendencia && (
@@ -1147,6 +1153,11 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                 ? "border-muted-foreground/80 bg-transparent text-foreground"
                                 : "border-transparent bg-transparent text-foreground hover:bg-transparent"
                             }`}
+                            style={
+                              selecionado && filho.cor?.trim()
+                                ? { borderColor: filho.cor.trim() }
+                                : undefined
+                            }
                           >
                             <span className="flex items-center gap-1.5">
                               <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />
