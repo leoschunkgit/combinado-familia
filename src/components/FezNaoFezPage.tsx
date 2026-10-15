@@ -70,7 +70,6 @@ import { useActionLoading } from "@/components/ActionLoading";
 import {
   compararVigencias,
   situacaoVigencia,
-  VigenciaStatus,
   vigenciaEmAndamento,
 } from "@/components/VigenciaStatus";
 import { uiTypography } from "@/lib/ui-typography";
@@ -985,7 +984,6 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     <h2 className={uiTypography.secondaryTitleStrongLargeDesktop}>
                       {fmtVigencia(vigencia)}
                     </h2>
-                    <VigenciaStatus vigencia={vigencia} />
                   </div>
                 </div>
               </div>
