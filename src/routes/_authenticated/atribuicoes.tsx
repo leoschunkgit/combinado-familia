@@ -239,7 +239,7 @@ function AtribuicoesPage() {
           renderFilters={() => (
             <>
               <Pick label="Filho" value={filtrosRascunho.filho} onChange={(filho) => setFiltrosRascunho((atual) => ({ ...atual, filho }))} allLabel="Todos" options={filhosDisponiveis.map((filho) => ({ value: String(filho.id), label: filho.nome }))} />
-              <Pick label="Tarefa" value={filtrosRascunho.tarefa} onChange={(tarefa) => setFiltrosRascunho((atual) => ({ ...atual, tarefa }))} allLabel="Todas" options={tarefasDisponiveis.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
+              <Pick label="Tarefa" taskIcons value={filtrosRascunho.tarefa} onChange={(tarefa) => setFiltrosRascunho((atual) => ({ ...atual, tarefa }))} allLabel="Todas" options={tarefasDisponiveis.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
             </>
           )}
         />

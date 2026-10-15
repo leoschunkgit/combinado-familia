@@ -19,6 +19,7 @@ import { cadastrarAtribuicoes } from "@/lib/atribuicoes";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
 
 export const Route = createFileRoute("/_authenticated/cadastro-unico")({
@@ -594,6 +595,7 @@ function CadastroUnicoPage() {
                         return (
                           <label key={t.id} className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/30">
                             <Checkbox checked={selecionada} onCheckedChange={() => alternar(tarefasSelecionadas, setTarefasSelecionadas, t.id)} />
+                            <TarefaIcone nome={t.nome} />
                             <span className="min-w-0 flex-1 truncate font-medium">{t.nome}</span>
                           </label>
                         );
@@ -601,6 +603,7 @@ function CadastroUnicoPage() {
                       {tarefasNovasPendentes.map((t) => (
                         <div key={t.tempId} className="flex items-center gap-2.5 px-3 py-2 text-sm">
                           <Checkbox checked disabled />
+                          <TarefaIcone nome={t.nome} />
                           <span className="min-w-0 flex-1 truncate font-medium">{t.nome}</span>
                         </div>
                       ))}
@@ -821,6 +824,7 @@ function CadastroUnicoPage() {
                                     })
                                   }
                                 />
+                                <TarefaIcone nome={tarefa.nome} />
                                 <span className="min-w-0 flex-1 truncate">{tarefa.nome}</span>
                               </label>
                             );
