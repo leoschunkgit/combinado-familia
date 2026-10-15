@@ -379,19 +379,11 @@ function AuthenticatedLayout() {
               className="relative"
               onMouseEnter={() => setMenuUsuarioDesktopAberto(true)}
               onMouseLeave={() => setMenuUsuarioDesktopAberto(false)}
-              onFocusCapture={() => setMenuUsuarioDesktopAberto(true)}
-              onBlurCapture={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                  setMenuUsuarioDesktopAberto(false);
-                }
-              }}
             >
-              <button
-                type="button"
-                className="flex h-9 max-w-72 items-stretch overflow-hidden rounded-lg border border-border bg-background text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              <div
+                className="flex h-9 max-w-72 items-stretch overflow-hidden rounded-lg border border-border bg-background text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted/40"
                 aria-haspopup="menu"
                 aria-expanded={menuUsuarioDesktopAberto}
-                onClick={(event) => event.currentTarget.blur()}
               >
                 <span className="flex min-w-0 items-center px-3">
                   <span className="truncate">{nomePai}</span>
@@ -399,7 +391,7 @@ function AuthenticatedLayout() {
                 <span className={`flex w-9 shrink-0 items-center justify-center border-l border-border bg-muted/25 text-muted-foreground transition-colors ${menuUsuarioDesktopAberto ? "bg-muted/70 text-foreground" : ""}`}>
                   <ChevronDown className={`h-4 w-4 stroke-[2.25] transition-transform duration-200 ${menuUsuarioDesktopAberto ? "rotate-180" : ""}`} />
                 </span>
-              </button>
+              </div>
               <div
                 role="menu"
                 className={`absolute right-0 top-full z-40 w-44 pt-1 transition-opacity ${menuUsuarioDesktopAberto ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
