@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type Tarefa } from "@/lib/db";
@@ -210,20 +210,12 @@ function TarefasPage() {
       <div>
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <span>Tarefas cadastradas</span>
-                  <span className="inline-flex shrink-0 items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{tarefas.length} {tarefas.length === 1 ? "tarefa" : "tarefas"}</span>
-                </CardTitle>
+            {tarefas.length > 0 && (
+              <div className="relative w-full sm:ml-auto sm:w-64">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar tarefa..." className="pl-9" aria-label="Pesquisar tarefa" />
               </div>
-              {tarefas.length > 0 && (
-                <div className="relative w-full sm:w-64">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar tarefa..." className="pl-9" aria-label="Pesquisar tarefa" />
-                </div>
-              )}
-            </div>
+            )}
           </CardHeader>
           <CardContent className="pt-0">
             {tarefas.length === 0 ? (
@@ -231,9 +223,9 @@ function TarefasPage() {
             ) : tarefasFiltradas.length === 0 ? (
               <EmptyState>Nenhuma tarefa encontrada.</EmptyState>
             ) : (
-              <div className="grid max-h-[65vh] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid min-w-0 max-h-[65vh] gap-2 overflow-x-hidden overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
                 {tarefasFiltradas.map((t) => (
-                  <div key={t.id} className="flex min-h-12 items-center gap-2 rounded-xl border bg-card px-3 py-2">
+                  <div key={t.id} className="flex min-h-12 min-w-0 max-w-full items-center gap-2 rounded-xl border bg-card px-3 py-2">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
                     <Hint content={t.nome}>
                       <p className="min-w-0 flex-1 truncate text-sm font-medium">{t.nome}</p>
