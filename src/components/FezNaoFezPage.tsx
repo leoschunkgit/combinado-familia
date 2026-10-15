@@ -1760,17 +1760,32 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                   {(() => {
                     const filho = filhoDaTarefa(troca.tarefa);
                     return (
-                      <span className="flex max-w-full min-w-0 items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5">
-                        {filho && (
-                          <FilhoAvatar
-                            nome={filho.nome}
-                            cor={filho.cor}
-                            avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                            className="h-5 w-5"
-                          />
-                        )}
-                        <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
-                          {filho?.nome ?? "Filho"} · {troca.tarefa.t_tarefa?.nome}
+                      <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
+                        <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
+                          {filho && (
+                            <FilhoAvatar
+                              nome={filho.nome}
+                              cor={filho.cor}
+                              avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
+                              className="h-5 w-5"
+                            />
+                          )}
+                          <span className="min-w-0">
+                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Filho
+                            </span>
+                            <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">
+                              {filho?.nome ?? "Filho"}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="block border-t px-3 py-2.5">
+                          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Tarefa
+                          </span>
+                          <span className="mt-0.5 block min-w-0 whitespace-normal break-words font-medium text-foreground">
+                            {troca.tarefa.t_tarefa?.nome}
+                          </span>
                         </span>
                       </span>
                     );
