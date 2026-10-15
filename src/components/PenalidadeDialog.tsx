@@ -10,6 +10,7 @@ type PenalidadeDialogProps = {
   busy?: boolean;
   inputId: string;
   contexto?: ReactNode;
+  limite?: number | null;
   onChange: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -21,6 +22,7 @@ export function PenalidadeDialog({
   busy = false,
   inputId,
   contexto,
+  limite,
   onChange,
   onCancel,
   onConfirm,
@@ -30,14 +32,16 @@ export function PenalidadeDialog({
       <DialogContent className="top-[calc(env(safe-area-inset-top)+1rem)] translate-y-0 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Aplicar penalidade</DialogTitle>
-          <DialogDescription>
-            {contexto && <span className="mb-1 flex min-w-0 max-w-full items-start whitespace-normal break-words">{contexto}</span>}
-            Qual será a penalidade aplicada agora?
+          <DialogDescription className="space-y-2">
+            {contexto && <span className="flex min-w-0 max-w-full items-start whitespace-normal break-words">{contexto}</span>}
+            <span className="block">
+              Atingiu o número máximo de “Não fez” cadastrado nesta vigência{limite != null ? ` (${limite})` : ""}.
+            </span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
-          <Label htmlFor={inputId}>Penalidade *</Label>
+          <Label htmlFor={inputId}>Penalidade à aplicar *</Label>
           <input
             id={inputId}
             autoFocus
