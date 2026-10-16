@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { uiSpacing } from "@/lib/ui-spacing";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { ThumbsDown, ThumbsUp } from "lucide-react";
 
 export function Pick({
   label,
@@ -15,6 +16,7 @@ export function Pick({
   disabled = false,
   taskIcons = false,
   childIcons = false,
+  resultIcons = false,
 }: {
   label: string;
   value: string;
@@ -32,6 +34,7 @@ export function Pick({
   disabled?: boolean;
   taskIcons?: boolean;
   childIcons?: boolean;
+  resultIcons?: boolean;
 }) {
   const selectedOption = options.find((option) => option.value === value);
 
@@ -55,7 +58,16 @@ export function Pick({
               <TarefaIcone nome={selectedOption.label} />
               <span className="min-w-0 truncate">{selectedOption.label}</span>
             </span>
-          ) : (taskIcons || childIcons) && value === "all" && allLabel ? (
+          ) : resultIcons && selectedOption ? (
+            <span className="!flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+              {selectedOption.value === "FEZ" ? (
+                <ThumbsUp className="h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />
+              ) : (
+                <ThumbsDown className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+              )}
+              <span className="min-w-0 truncate">{selectedOption.label}</span>
+            </span>
+          ) : (taskIcons || childIcons || resultIcons) && value === "all" && allLabel ? (
             <span className="min-w-0 truncate">{allLabel}</span>
           ) : (
             <SelectValue placeholder={placeholder} />
@@ -76,6 +88,8 @@ export function Pick({
                   />
                 )}
                 {taskIcons && <TarefaIcone nome={o.label} />}
+                {resultIcons && o.value === "FEZ" && <ThumbsUp className="h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />}
+                {resultIcons && o.value === "NAO_FEZ" && <ThumbsDown className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />}
                 <span className="min-w-0 truncate">{o.label}</span>
               </span>
             </SelectItem>

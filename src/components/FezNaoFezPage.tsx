@@ -952,6 +952,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
             {modo === "todos" && (
               <Pick
                 label="Fez / Não fez"
+                resultIcons
                 value={f.resultado}
                 onChange={(resultado) => setF({ ...f, resultado })}
                 allLabel="Todos"
