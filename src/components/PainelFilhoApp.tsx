@@ -570,7 +570,7 @@ export function PainelFilhoApp({
                                     +1 estrela
                                   </p>
                                 )}
-                                {b && <p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}
+                                {b && <p className="mt-1 break-words text-xs text-muted-foreground">Recompensa extra: {b}</p>}
                               </div>
                             </div>
                           );
@@ -595,7 +595,7 @@ export function PainelFilhoApp({
             <div>
               <h1 className="text-xl font-bold">Estrelas</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Cada tarefa marcada como “Fez” vale 1 estrela. “Não fez” não retira estrelas.
+                Cada tarefa marcada como “Fez” vale 1 estrela. Um “Não fez” não gera estrela; se um “Fez” for corrigido, aquela estrela é estornada.
               </p>
             </div>
 
@@ -756,7 +756,7 @@ export function PainelFilhoApp({
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{o.tipo === "FEZ" ? "Fez" : "Não fez"} · {data(o.data)}</p>
                     {o.tipo === "FEZ" && <p className="mt-1 text-xs font-medium text-amber-600">⭐ +1 estrela</p>}
-                    {b && <p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}
+                    {b && <p className="mt-1 break-words text-xs text-muted-foreground">Recompensa extra: {b}</p>}
                   </div>
                 </div>
               );
