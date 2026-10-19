@@ -359,7 +359,9 @@ function Index() {
             <AcessoFilhoLogin
               onEntrou={(painel) => setPainelFilho(painel)}
               onVoltar={() => {
-                void encerrarSessaoFilho().finally(() => setModoFilho(false));
+                void encerrarSessaoFilho()
+                  .then(() => setModoFilho(false))
+                  .catch(() => toast.error("Não foi possível trocar de acesso agora. Verifique sua conexão e tente novamente."));
               }}
             />
           ) : (
