@@ -1556,20 +1556,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             </div>
                                           )}
                                         </div>
-                                        {registro?.tipo === "NAO_FEZ" &&
-                                          revisao?.status === "PENDENTE" &&
-                                          !bloqueada && (
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="h-8 shrink-0 px-2 text-xs"
-                                              disabled={busy}
-                                              onClick={() => void manterNaoFezRevisao(revisao.id)}
-                                            >
-                                              Manter Não fez
-                                            </Button>
-                                          )}
-
                                         {registro && (
                                           <>
                                             <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
@@ -1647,6 +1633,20 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                       </div>
 
                                       <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-2">
+                                        {registro?.tipo === "NAO_FEZ" &&
+                                          revisao?.status === "PENDENTE" &&
+                                          !bloqueada && (
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-8 shrink-0 px-2 text-xs"
+                                              disabled={busy}
+                                              onClick={() => void manterNaoFezRevisao(revisao.id)}
+                                            >
+                                              Manter Não fez
+                                            </Button>
+                                          )}
+
                                         {!registro && !bloqueada && (
                                           <>
                                             <Button

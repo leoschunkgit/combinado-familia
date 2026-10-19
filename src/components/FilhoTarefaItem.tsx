@@ -71,6 +71,21 @@ export function FilhoTarefaItem({
           <ThumbsDown className="h-3.5 w-3.5" />
           Não fez
         </span>
+      ) : !registroHoje && revisaoHoje?.status === "PENDENTE" ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+          <BellRing className="h-3.5 w-3.5" />
+          Revisão enviada
+        </span>
+      ) : !registroHoje && revisaoHoje?.status === "MANTEVE_NAO_FEZ" ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+          <ThumbsDown className="h-3.5 w-3.5" />
+          Não fez mantido
+        </span>
+      ) : !registroHoje && revisaoHoje ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+          <BellRing className="h-3.5 w-3.5" />
+          Revisão encerrada
+        </span>
       ) : solicitacaoHoje ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
           <BellRing className="h-3.5 w-3.5" />
