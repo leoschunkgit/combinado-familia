@@ -1,12 +1,13 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Check, Eye, EyeOff, Home, Loader2, X } from "lucide-react";
+import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { msgErro } from "@/lib/db";
+import { AppBrand } from "@/components/AppBrand";
 
 const REGRAS_SENHA = [
   { id: "tam", label: "Pelo menos 8 caracteres", ok: (s: string) => s.length >= 8 },
@@ -115,10 +116,13 @@ function RedefinirSenha() {
         </div>
       )}
       <div className="w-full max-w-md rounded-2xl border bg-background p-6 shadow-sm md:p-8">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Home className="h-5 w-5" /></span>
-          <span className="font-display text-xl font-bold">Combinado</span>
-        </div>
+        <Link
+          to="/"
+          className="mb-6 inline-flex rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          aria-label="Ir para o início"
+        >
+          <AppBrand />
+        </Link>
 
         <h1 className="text-2xl font-bold">Redefinir senha</h1>
         <p className="mt-1 text-sm text-muted-foreground">
