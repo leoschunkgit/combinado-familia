@@ -72,9 +72,6 @@ function status(v: VigenciaFilho) {
   return s === "andamento" ? "Em andamento" : s === "futura" ? "Irá começar" : "Finalizada";
 }
 
-const corStatus = (s: string) =>
-  s === "Em andamento" ? "bg-green-400" : s === "Finalizada" ? "bg-red-300" : "bg-gray-300";
-
 function bonus(o: OcorrenciaFilho) {
   if (o.tipo !== "FEZ") return null;
   if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao;
