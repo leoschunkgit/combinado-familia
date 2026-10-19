@@ -20,6 +20,7 @@ import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedCadastroUnicoRouteImport } from './routes/_authenticated/cadastro-unico'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFilhosRouteImport } from './routes/_authenticated/filhos'
+import { Route as AuthenticatedEstrelasRouteImport } from './routes/_authenticated/estrelas'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedLinkFilhosRouteImport } from './routes/_authenticated/link-filhos'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
@@ -86,6 +87,11 @@ const AuthenticatedFilhosRoute = AuthenticatedFilhosRouteImport.update({
   path: '/filhos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEstrelasRoute = AuthenticatedEstrelasRouteImport.update({
+  id: '/estrelas',
+  path: '/estrelas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInicioRoute = AuthenticatedInicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
+  '/estrelas': typeof AuthenticatedEstrelasRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/link-filhos': typeof AuthenticatedLinkFilhosRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
+  '/estrelas': typeof AuthenticatedEstrelasRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/link-filhos': typeof AuthenticatedLinkFilhosRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/_authenticated/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/filhos': typeof AuthenticatedFilhosRoute
+  '/_authenticated/estrelas': typeof AuthenticatedEstrelasRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/link-filhos': typeof AuthenticatedLinkFilhosRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/cadastro-unico'
     | '/dashboard'
     | '/filhos'
+    | '/estrelas'
     | '/inicio'
     | '/link-filhos'
     | '/notificacoes'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/cadastro-unico'
     | '/dashboard'
     | '/filhos'
+    | '/estrelas'
     | '/inicio'
     | '/link-filhos'
     | '/notificacoes'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastro-unico'
     | '/_authenticated/dashboard'
     | '/_authenticated/filhos'
+    | '/_authenticated/estrelas'
     | '/_authenticated/inicio'
     | '/_authenticated/link-filhos'
     | '/_authenticated/notificacoes'
@@ -343,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFilhosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/estrelas': {
+      id: '/_authenticated/estrelas'
+      path: '/estrelas'
+      fullPath: '/estrelas'
+      preLoaderRoute: typeof AuthenticatedEstrelasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/inicio': {
       id: '/_authenticated/inicio'
       path: '/inicio'
@@ -409,6 +428,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastroUnicoRoute: typeof AuthenticatedCadastroUnicoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFilhosRoute: typeof AuthenticatedFilhosRoute
+  AuthenticatedEstrelasRoute: typeof AuthenticatedEstrelasRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedLinkFilhosRoute: typeof AuthenticatedLinkFilhosRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
@@ -425,6 +445,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastroUnicoRoute: AuthenticatedCadastroUnicoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFilhosRoute: AuthenticatedFilhosRoute,
+  AuthenticatedEstrelasRoute: AuthenticatedEstrelasRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedLinkFilhosRoute: AuthenticatedLinkFilhosRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
