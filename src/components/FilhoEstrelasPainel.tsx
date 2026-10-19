@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Check, Gift, Loader2, Pencil, Plus, Star, Trophy, X } from "lucide-react";
+import { Check, Gift, Loader2, Pencil, Plus, Star, Trash2, Trophy, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -74,6 +74,7 @@ function statusResgate(status: Resgate["status"]) {
 export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [resumo, setResumo] = useState<Resumo>(resumoVazio);
   const [movimentos, setMovimentos] = useState<Movimento[]>([]);
+  const [recompensasComResgate, setRecompensasComResgate] = useState<Set<number>>(new Set());
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
@@ -83,6 +84,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [estrelas, setEstrelas] = useState("");
   const [confirmacao, setConfirmacao] = useState<
     | { tipo: "DESATIVAR"; recompensa: Recompensa }
+    | { tipo: "EXCLUIR"; recompensa: Recompensa }
     | { tipo: "CANCELAR"; resgate: Resgate }
     | null
   >(null);
@@ -90,7 +92,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   async function carregar() {
     setCarregando(true);
     try {
-      const [resumoResp, movimentosResp] = await Promise.all([
+      const [resumoResp, movimentosResp, resgatesResp] = await Promise.all([
         supabase.rpc("resumo_estrelas_filho", { p_id_filho: filho.id }),
         supabase
           .from("t_estrela_movimento")
@@ -98,13 +100,21 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           .eq("id_filho", filho.id)
           .order("created_at", { ascending: false })
           .limit(30),
+        supabase
+          .from("t_recompensa_resgate")
+          .select("id_recompensa")
+          .eq("id_filho", filho.id),
       ]);
 
       if (resumoResp.error) throw resumoResp.error;
       if (movimentosResp.error) throw movimentosResp.error;
+      if (resgatesResp.error) throw resgatesResp.error;
 
       setResumo((resumoResp.data as unknown as Resumo | null) ?? resumoVazio);
       setMovimentos(movimentosResp.data ?? []);
+      setRecompensasComResgate(
+        new Set((resgatesResp.data ?? []).map((resgate) => resgate.id_recompensa)),
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível carregar as estrelas.");
     } finally {
@@ -115,6 +125,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   useEffect(() => {
     setResumo(resumoVazio);
     setMovimentos([]);
+    setRecompensasComResgate(new Set());
     setEditando(null);
     setNome("");
     setDescricao("");
@@ -229,6 +240,12 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         });
         if (error) throw error;
         toast.success("Recompensa desativada");
+      } else if (confirmacao.tipo === "EXCLUIR") {
+        const { error } = await supabase.rpc("excluir_recompensa_estrelas", {
+          p_id_recompensa: confirmacao.recompensa.id,
+        });
+        if (error) throw error;
+        toast.success("Recompensa excluída");
       } else {
         const { error } = await supabase.rpc("alterar_status_resgate_estrelas", {
           p_id_resgate: confirmacao.resgate.id,
@@ -324,6 +341,9 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button type="button" variant="outline" size="sm" onClick={() => editarRecompensa(recompensa)} disabled={salvando}><Pencil className="h-3.5 w-3.5" /> Editar</Button>
+                    {!recompensasComResgate.has(recompensa.id) && (
+                      <Button type="button" variant="outline" size="sm" onClick={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })} disabled={salvando}><Trash2 className="h-3.5 w-3.5" /> Excluir</Button>
+                    )}
                     <Button type="button" variant="outline" size="sm" onClick={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })} disabled={salvando}><X className="h-3.5 w-3.5" /> Desativar</Button>
                     <Button type="button" size="sm" onClick={() => void resgatar(recompensa)} disabled={salvando || !recompensa.disponivel}><Gift className="h-3.5 w-3.5" /> Resgatar</Button>
                   </div>
@@ -386,17 +406,32 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
       <Dialog open={confirmacao !== null} onOpenChange={(value) => !value && setConfirmacao(null)}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{confirmacao?.tipo === "DESATIVAR" ? "Desativar recompensa?" : "Cancelar resgate?"}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>
+              {confirmacao?.tipo === "DESATIVAR"
+                ? "Desativar recompensa?"
+                : confirmacao?.tipo === "EXCLUIR"
+                  ? "Excluir recompensa?"
+                  : "Cancelar resgate?"}
+            </DialogTitle>
+          </DialogHeader>
           <p className="text-sm text-muted-foreground">
             {confirmacao?.tipo === "DESATIVAR"
               ? "A recompensa deixa de aparecer para novos resgates. O histórico já existente permanece."
-              : "As estrelas usadas neste resgate serão devolvidas ao saldo e o histórico permanecerá registrado."}
+              : confirmacao?.tipo === "EXCLUIR"
+                ? "Esta recompensa nunca foi resgatada e será excluída definitivamente."
+                : "As estrelas usadas neste resgate serão devolvidas ao saldo e o histórico permanecerá registrado."}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmacao(null)}>Voltar</Button>
-            <Button type="button" onClick={() => void confirmarAcao()} disabled={salvando}>
+            <Button
+              type="button"
+              variant={confirmacao?.tipo === "EXCLUIR" ? "destructive" : "default"}
+              onClick={() => void confirmarAcao()}
+              disabled={salvando}
+            >
               {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
-              Confirmar
+              {confirmacao?.tipo === "EXCLUIR" ? "Excluir" : "Confirmar"}
             </Button>
           </DialogFooter>
         </DialogContent>
