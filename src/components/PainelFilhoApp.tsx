@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   CalendarDays,
   CircleDollarSign,
@@ -156,9 +157,11 @@ export function PainelFilhoApp({
     setSaindo(true);
     try {
       await encerrarSessaoFilho();
+      onSair();
+    } catch {
+      toast.error("Não foi possível encerrar o acesso agora. Verifique sua conexão e tente novamente.");
     } finally {
       setSaindo(false);
-      onSair();
     }
   }
 
