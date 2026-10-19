@@ -1,4 +1,4 @@
-import { BellRing, ChevronRight, RotateCcw, Send, ThumbsDown, ThumbsUp } from "lucide-react";
+import { BellRing, RotateCcw, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { Button } from "@/components/ui/button";
 import type {
@@ -13,7 +13,6 @@ export function FilhoTarefaItem({
   registroHoje,
   solicitacaoHoje,
   revisaoHoje,
-  onAbrirDetalhes,
   onAvisar,
   onPedirRevisao,
 }: {
@@ -21,24 +20,17 @@ export function FilhoTarefaItem({
   registroHoje?: OcorrenciaFilho;
   solicitacaoHoje?: SolicitacaoTarefaFilhoApp;
   revisaoHoje?: RevisaoTarefaFilhoApp;
-  onAbrirDetalhes: () => void;
   onAvisar: () => void;
   onPedirRevisao: () => void;
 }) {
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 sm:px-5">
-      <button
-        type="button"
-        onClick={onAbrirDetalhes}
-        className="group flex min-w-0 items-center gap-2.5 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-        aria-label={`Ver detalhes de ${tarefa.nome}`}
-      >
+      <div className="flex min-w-0 items-center gap-2.5">
         <TarefaIcone nome={tarefa.nome} className="shrink-0" />
         <span className="min-w-0 flex-1 break-words text-sm font-semibold leading-snug">
           {tarefa.nome}
         </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-active:translate-x-0.5" />
-      </button>
+      </div>
 
       {registroHoje?.tipo === "FEZ" ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">

@@ -72,6 +72,11 @@ const dinheiro = (v: number) => v.toLocaleString("pt-BR", {
   currency: "BRL",
 });
 
+const formatarDataHoje = (valor: string) => {
+  const [ano, mes, dia] = valor.split("-");
+  return `${dia}/${mes}/${ano}`;
+};
+
 const dataSaoPaulo = (v = new Date()) => new Intl.DateTimeFormat("en-CA", {
   timeZone: "America/Sao_Paulo",
   year: "numeric",
@@ -103,7 +108,6 @@ export function PainelFilhoApp({
   const [painel, setPainel] = useState(painelInicial);
   const [aba, setAba] = useState<AbaFilho>("inicio");
   const [menuAberto, setMenuAberto] = useState(false);
-  const [tarefaDatas, setTarefaDatas] = useState<TarefaFilho | null>(null);
   const [registroAberto, setRegistroAberto] = useState<string | null>(null);
   const [saindo, setSaindo] = useState(false);
   const [avisoTarefa, setAvisoTarefa] = useState<TarefaFilho | null>(null);
@@ -274,14 +278,6 @@ export function PainelFilhoApp({
     ? null
     : Math.max(0, painel.filho.valor_mesada - desconto);
 
-  const resultados = tarefaDatas?.ocorrencias
-    .filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ")
-    .sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
-
-  const solicitacaoDetalheHoje = tarefaDatas ? solicitacaoHoje(tarefaDatas) : undefined;
-  const revisaoDetalheHoje = tarefaDatas ? revisaoHoje(tarefaDatas) : undefined;
-  const registroDetalheHoje = tarefaDatas ? registroHoje(tarefaDatas) : undefined;
-
   async function enviarAvisoTarefa() {
     if (!avisoTarefa || enviandoAviso) return;
 
@@ -379,7 +375,6 @@ export function PainelFilhoApp({
           registroHoje={registroHoje(tarefa)}
           solicitacaoHoje={solicitacaoHoje(tarefa)}
           revisaoHoje={revisaoHoje(tarefa)}
-          onAbrirDetalhes={() => setTarefaDatas(tarefa)}
           onAvisar={() => abrirAviso(tarefa)}
           onPedirRevisao={() => abrirRevisao(tarefa)}
         />
@@ -485,16 +480,24 @@ export function PainelFilhoApp({
 
             {vigenciaAtual ? (
               <>
-                <section className="rounded-2xl border bg-card p-4 sm:p-5">
+                <button
+                  type="button"
+                  onClick={() => setAba("tarefas")}
+                  className="w-full rounded-2xl border bg-card p-4 text-left transition-colors active:bg-muted/30 sm:p-5"
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-muted-foreground">Progresso de hoje</p>
                       <p className="mt-1 text-lg font-bold">
                         {tarefasResolvidasHoje} de {tarefasAtual.length} tarefas
                       </p>
-                      {tarefasAguardandoHoje > 0 && (
+                      {tarefasAguardandoHoje > 0 ? (
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {tarefasAguardandoHoje} aguardando confirmação
+                        </p>
+                      ) : (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Ver tarefas de hoje
                         </p>
                       )}
                     </div>
@@ -503,17 +506,7 @@ export function PainelFilhoApp({
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoHoje}%` }} />
                   </div>
-                </section>
-
-                <section>
-                  <div className="mb-2.5 flex items-center justify-between gap-3">
-                    <div>
-                      <h2 className="text-sm font-semibold">Hoje</h2>
-                      <p className="mt-0.5 text-xs text-muted-foreground">Toque na tarefa para ver os detalhes.</p>
-                    </div>
-                  </div>
-                  {listaTarefas}
-                </section>
+                </button>
 
                 {recompensaDestaque && (
                   <button
@@ -594,16 +587,27 @@ export function PainelFilhoApp({
         {aba === "tarefas" && (
           <div>
             <FilhoAppPageHeader
-              title="Tarefas"
-              description="O que você precisa acompanhar hoje."
+              title="Tarefas de hoje"
+              description={`Hoje · ${formatarDataHoje(hoje)}`}
               icon={<ClipboardList className="h-4.5 w-4.5" />}
             />
 
             {vigenciaAtual ? (
               <>
-                <div className="mb-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span>{tarefasAtual.length - tarefasResolvidasHoje} pendentes</span>
-                  <span>{tarefasResolvidasHoje} concluídas pelo responsável</span>
+                <div className="mb-3 rounded-xl border bg-card px-3.5 py-3">
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="font-medium">
+                      {tarefasAtual.length - tarefasResolvidasHoje} pendente{tarefasAtual.length - tarefasResolvidasHoje === 1 ? "" : "s"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {tarefasResolvidasHoje} confirmada{tarefasResolvidasHoje === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  {tarefasAguardandoHoje > 0 && (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {tarefasAguardandoHoje} aguardando confirmação
+                    </p>
+                  )}
                 </div>
                 {listaTarefas}
               </>
@@ -765,69 +769,6 @@ export function PainelFilhoApp({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={tarefaDatas !== null} onOpenChange={(open) => { if (!open) setTarefaDatas(null); }}>
-        <DialogContent className="max-w-sm rounded-lg">
-          <DialogHeader>
-            <DialogTitle>Detalhes da tarefa</DialogTitle>
-            <DialogDescription>
-              {tarefaDatas && (
-                <span className="flex min-w-0 items-start gap-2">
-                  <TarefaIcone nome={tarefaDatas.nome} className="mt-0.5" />
-                  <span className="min-w-0 break-words">{tarefaDatas.nome}</span>
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          {tarefaDatas && !registroDetalheHoje && solicitacaoDetalheHoje && (
-            <div className="rounded-xl border bg-muted/30 px-3 py-2.5 text-xs">
-              <p className="flex items-center gap-1.5 font-semibold">
-                <BellRing className="h-3.5 w-3.5" />
-                Aguardando confirmação
-              </p>
-              {solicitacaoDetalheHoje.observacao && (
-                <p className="mt-1 break-words text-muted-foreground">“{solicitacaoDetalheHoje.observacao}”</p>
-              )}
-            </div>
-          )}
-
-          {tarefaDatas && revisaoDetalheHoje && (
-            <div className="rounded-xl border bg-muted/30 px-3 py-2.5 text-xs">
-              <p className="flex items-center gap-1.5 font-semibold">
-                <BellRing className="h-3.5 w-3.5" />
-                {revisaoDetalheHoje.status === "PENDENTE"
-                  ? "Revisão enviada"
-                  : revisaoDetalheHoje.status === "MANTEVE_NAO_FEZ"
-                    ? "Não fez mantido"
-                    : "Revisão aceita"}
-              </p>
-              {revisaoDetalheHoje.observacao && (
-                <p className="mt-1 break-words text-muted-foreground">“{revisaoDetalheHoje.observacao}”</p>
-              )}
-            </div>
-          )}
-
-          <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">
-            {resultados.map((o, i) => {
-              const b = bonus(o);
-              return (
-                <div key={`${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">
-                  {o.tipo === "FEZ"
-                    ? <ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
-                    : <ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{o.tipo === "FEZ" ? "Fez" : "Não fez"} · {data(o.data)}</p>
-                    {b && <p className="mt-1 break-words text-xs text-muted-foreground">Extra: {b}</p>}
-                  </div>
-                </div>
-              );
-            })}
-            {resultados.length === 0 && !solicitacaoDetalheHoje && (
-              <p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
