@@ -2,13 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   BellRing,
-  CalendarDays,
-  ChevronRight,
   ClipboardCheck,
   ClipboardList,
   Clock3,
-  Gift,
-  History,
   House,
   Loader2,
   LogOut,
@@ -19,13 +15,15 @@ import {
 } from "lucide-react";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { FilhoTarefaItem } from "@/components/FilhoTarefaItem";
+import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
 import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
 import { AppPageContent, appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
-import { EmptyState, PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -43,9 +41,9 @@ import {
   type VigenciaFilho,
 } from "@/lib/child-app-session";
 
-type AbaFilho = "inicio" | "tarefas" | "registros" | "estrelas" | "historico";
+type AbaFilho = "inicio" | "tarefas" | "registros" | "estrelas";
 
-const ABAS: Array<{ id: Exclude<AbaFilho, "historico">; label: string; icon: typeof House }> = [
+const ABAS: Array<{ id: AbaFilho; label: string; icon: typeof House }> = [
   { id: "inicio", label: "Início", icon: House },
   { id: "tarefas", label: "Tarefas", icon: ClipboardList },
   { id: "registros", label: "Fez / Não", icon: ClipboardCheck },
@@ -105,10 +103,7 @@ export function PainelFilhoApp({
   const [aba, setAba] = useState<AbaFilho>("inicio");
   const [menuAberto, setMenuAberto] = useState(false);
   const [tarefaDatas, setTarefaDatas] = useState<TarefaFilho | null>(null);
-  const [resultadoAberto, setResultadoAberto] = useState(false);
-  const [tarefasAbertas, setTarefasAbertas] = useState(true);
   const [registroAberto, setRegistroAberto] = useState<string | null>(null);
-  const [historicoAbertoId, setHistoricoAbertoId] = useState<number | null>(null);
   const [saindo, setSaindo] = useState(false);
   const [avisoTarefa, setAvisoTarefa] = useState<TarefaFilho | null>(null);
   const [observacaoAviso, setObservacaoAviso] = useState("");
@@ -171,12 +166,25 @@ export function PainelFilhoApp({
     [vigenciasOrdenadas],
   );
 
-  const vigenciasFinalizadas = useMemo(
-    () => vigenciasOrdenadas.filter((v) => status(v) === "Finalizada"),
-    [vigenciasOrdenadas],
-  );
-
   const tarefasAtual = vigenciaAtual?.tarefas ?? [];
+  const hoje = dataSaoPaulo();
+
+  const registroHoje = (tarefa: TarefaFilho) =>
+    tarefa.ocorrencias.find((o) => dataSaoPaulo(new Date(o.data)) === hoje);
+
+  const solicitacaoHoje = (tarefa: TarefaFilho) =>
+    (painel.solicitacoes_hoje ?? []).find(
+      (s) => s.id_filho_tarefa === tarefa.id && s.data_referencia === hoje,
+    );
+
+  const tarefasResolvidasHoje = tarefasAtual.filter((tarefa) => Boolean(registroHoje(tarefa))).length;
+  const tarefasAguardandoHoje = tarefasAtual.filter(
+    (tarefa) => !registroHoje(tarefa) && Boolean(solicitacaoHoje(tarefa)),
+  ).length;
+  const progressoHoje = tarefasAtual.length > 0
+    ? Math.round((tarefasResolvidasHoje / tarefasAtual.length) * 100)
+    : 0;
+
   const qtdNaoFez = tarefasAtual.reduce(
     (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length,
     0,
@@ -195,13 +203,15 @@ export function PainelFilhoApp({
     resgates: [],
   };
 
-  const proximaRecompensa = useMemo(
-    () => [...estrelas.recompensas].sort((a, b) => a.estrelas_necessarias - b.estrelas_necessarias)[0] ?? null,
+  const recompensasOrdenadas = useMemo(
+    () => [...estrelas.recompensas].sort((a, b) => a.estrelas_necessarias - b.estrelas_necessarias),
     [estrelas.recompensas],
   );
-
-  const progressoProximaRecompensa = proximaRecompensa
-    ? Math.min(100, Math.max(0, (estrelas.saldo / proximaRecompensa.estrelas_necessarias) * 100))
+  const proximaRecompensa = recompensasOrdenadas.find((item) => !item.disponivel) ?? null;
+  const ultimaConquistada = recompensasOrdenadas.filter((item) => item.disponivel).at(-1) ?? null;
+  const recompensaDestaque = proximaRecompensa ?? ultimaConquistada;
+  const progressoRecompensa = recompensaDestaque
+    ? Math.min(100, Math.max(0, (estrelas.saldo / recompensaDestaque.estrelas_necessarias) * 100))
     : 0;
 
   const registrosAtuais = useMemo(
@@ -256,6 +266,9 @@ export function PainelFilhoApp({
     .filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ")
     .sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
 
+  const solicitacaoDetalheHoje = tarefaDatas ? solicitacaoHoje(tarefaDatas) : undefined;
+  const registroDetalheHoje = tarefaDatas ? registroHoje(tarefaDatas) : undefined;
+
   async function enviarAvisoTarefa() {
     if (!avisoTarefa || enviandoAviso) return;
 
@@ -300,6 +313,28 @@ export function PainelFilhoApp({
     }
   }
 
+  const abrirAviso = (tarefa: TarefaFilho) => {
+    setObservacaoAviso("");
+    setAvisoTarefa(tarefa);
+  };
+
+  const listaTarefas = tarefasAtual.length > 0 ? (
+    <div className="divide-y overflow-hidden rounded-2xl border bg-card">
+      {tarefasAtual.map((tarefa) => (
+        <FilhoTarefaItem
+          key={tarefa.id}
+          tarefa={tarefa}
+          registroHoje={registroHoje(tarefa)}
+          solicitacaoHoje={solicitacaoHoje(tarefa)}
+          onAbrirDetalhes={() => setTarefaDatas(tarefa)}
+          onAvisar={() => abrirAviso(tarefa)}
+        />
+      ))}
+    </div>
+  ) : (
+    <EmptyState>Nenhuma tarefa atribuída nesta vigência.</EmptyState>
+  );
+
   const SemVigencia = () => (
     <div className="rounded-2xl border border-dashed bg-card p-5 text-center">
       <Clock3 className="mx-auto h-5 w-5 text-muted-foreground" />
@@ -309,46 +344,46 @@ export function PainelFilhoApp({
   );
 
   return (
-    <div className="min-h-screen bg-muted/20">
+    <div className="min-h-screen bg-muted/10">
       <AppFilhoPushNotifications onAbrir={abrirInicioPeloPush} />
+
       <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className={`${appPageHorizontalPaddingClass} py-2.5`}>
-          <div className={`${appPageInnerClass} grid grid-cols-[1fr_auto_1fr] items-center gap-2`}>
-          <span aria-hidden="true" />
-          <button
-            type="button"
-            onClick={() => setAba("inicio")}
-            className="min-w-0 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-            aria-label="Ir para o início"
-          >
-            <AppBrand />
-          </button>
-
-          <div className="flex items-center justify-self-end gap-2">
+          <div className={`${appPageInnerClass} flex items-center justify-between gap-3`}>
             <button
               type="button"
-              onClick={() => setAba("estrelas")}
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 transition-transform active:scale-95"
-              aria-label="Abrir estrelas"
+              onClick={() => setAba("inicio")}
+              className="min-w-0 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              aria-label="Ir para o início"
             >
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-              {estrelas.saldo}
+              <AppBrand />
             </button>
 
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-full p-0.5 transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              onClick={() => setMenuAberto(true)}
-              aria-label="Abrir perfil"
-            >
-              <FilhoAvatar
-                nome={painel.filho.nome}
-                cor={painel.filho.cor}
-                avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-                className="h-9 w-9"
-              />
-            </button>
-          </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAba("estrelas")}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold transition-transform active:scale-95"
+                aria-label="Abrir estrelas"
+              >
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                {estrelas.saldo}
+              </button>
+
+              <button
+                type="button"
+                className="rounded-full p-0.5 transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                onClick={() => setMenuAberto(true)}
+                aria-label="Abrir perfil"
+              >
+                <FilhoAvatar
+                  nome={painel.filho.nome}
+                  cor={painel.filho.cor}
+                  avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
+                  className="h-9 w-9"
+                />
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -357,254 +392,179 @@ export function PainelFilhoApp({
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Meu perfil</DialogTitle>
-            <DialogDescription>Atalhos e acesso do filho.</DialogDescription>
+            <DialogDescription>Seu acesso ao Combinado Família.</DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-2xl border bg-muted/20 p-4">
-            <div className="flex items-center gap-3">
-              <FilhoAvatar
-                nome={painel.filho.nome}
-                cor={painel.filho.cor}
-                avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-                className="h-12 w-12"
-              />
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{painel.filho.nome}</p>
-                <p className="truncate text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
-              </div>
+          <div className="flex items-center gap-3 rounded-2xl border p-4">
+            <FilhoAvatar
+              nome={painel.filho.nome}
+              cor={painel.filho.cor}
+              avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
+              className="h-12 w-12"
+            />
+            <div className="min-w-0">
+              <p className="truncate font-semibold">{painel.filho.nome}</p>
+              <p className="truncate text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full justify-between"
-              onClick={() => {
-                setAba("historico");
-                setMenuAberto(false);
-              }}
-            >
-              <span className="flex items-center gap-2"><History className="h-4 w-4" /> Histórico</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full justify-center"
-              onClick={() => void sair()}
-              disabled={saindo}
-            >
-              {saindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-              Sair
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-center"
+            onClick={() => void sair()}
+            disabled={saindo}
+          >
+            {saindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+            Sair
+          </Button>
         </DialogContent>
       </Dialog>
 
       <AppPageContent className="pb-24 md:pb-28">
         {aba === "inicio" && (
           <div className="space-y-4">
-            <section
-              className="relative overflow-hidden rounded-3xl border border-t-4 bg-card p-4 sm:p-5"
-              style={{ borderTopColor: painel.filho.cor?.trim() || "var(--primary)" }}
-            >
-              <div className="flex items-start gap-3">
-                <FilhoAvatar
-                  nome={painel.filho.nome}
-                  cor={painel.filho.cor}
-                  avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-                  className="h-12 w-12"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Seu painel</p>
-                  <h1 className="mt-0.5 truncate text-2xl font-bold">Oi, {painel.filho.nome}!</h1>
-                  <p className="mt-1 text-sm text-muted-foreground">Seus combinados em um só lugar.</p>
-                </div>
-              </div>
-            </section>
-
-            <div className="grid grid-cols-3 gap-2">
-              <button type="button" onClick={() => setAba("registros")} className="rounded-2xl border border-green-200 bg-green-50 p-3 text-left transition-transform active:scale-[0.98]">
-                <ThumbsUp className="h-5 w-5 text-green-700" />
-                <p className="mt-2 text-2xl font-bold leading-none text-green-800 tabular-nums">{qtdFez}</p>
-                <p className="mt-1 text-[11px] font-semibold text-green-700">Fez</p>
-              </button>
-              <button type="button" onClick={() => setAba("registros")} className="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-transform active:scale-[0.98]">
-                <ThumbsDown className="h-5 w-5 text-red-600" />
-                <p className="mt-2 text-2xl font-bold leading-none text-red-700 tabular-nums">{qtdNaoFez}</p>
-                <p className="mt-1 text-[11px] font-semibold text-red-600">Não fez</p>
-              </button>
-              <button type="button" onClick={() => setAba("tarefas")} className="rounded-2xl border bg-card p-3 text-left transition-transform active:scale-[0.98]">
-                <ClipboardList className="h-5 w-5 text-muted-foreground" />
-                <p className="mt-2 text-2xl font-bold leading-none tabular-nums">{tarefasAtual.length}</p>
-                <p className="mt-1 text-[11px] font-semibold text-muted-foreground">Tarefas</p>
-              </button>
+            <div className="pt-1">
+              <h1 className="text-2xl font-bold leading-tight">Oi, {painel.filho.nome}!</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Seu foco é o combinado de hoje.</p>
             </div>
-
-            {proximaRecompensa && (
-              <button type="button" onClick={() => setAba("estrelas")} className="w-full rounded-2xl border bg-card p-4 text-left transition-transform active:scale-[0.99]">
-                <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
-                    <Gift className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Próxima recompensa</p>
-                        <p className="mt-0.5 break-words text-sm font-semibold">{proximaRecompensa.nome}</p>
-                      </div>
-                      <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                        {proximaRecompensa.estrelas_necessarias}
-                      </span>
-                    </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoProximaRecompensa}%` }} />
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                      <span>{estrelas.saldo} de {proximaRecompensa.estrelas_necessarias}</span>
-                      <span className="inline-flex items-center gap-1 font-medium text-foreground">Ver recompensas <ChevronRight className="h-3 w-3" /></span>
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )}
 
             {vigenciaAtual ? (
               <>
-                <section className="rounded-2xl border bg-card p-4">
-                  <div className="flex items-center justify-between gap-3">
+                <section className="rounded-2xl border bg-card p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Combinado atual</p>
-                      <p className="mt-1 text-sm font-medium">{data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}</p>
+                      <p className="text-xs font-medium text-muted-foreground">Progresso de hoje</p>
+                      <p className="mt-1 text-lg font-bold">
+                        {tarefasResolvidasHoje} de {tarefasAtual.length} tarefas
+                      </p>
+                      {tarefasAguardandoHoje > 0 && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {tarefasAguardandoHoje} aguardando confirmação
+                        </p>
+                      )}
                     </div>
-                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">Em andamento</Badge>
+                    <span className="shrink-0 text-2xl font-bold tabular-nums">{progressoHoje}%</span>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoHoje}%` }} />
                   </div>
                 </section>
 
-                <CollapsibleSection
-                  title="Meu combinado"
-                  description={painel.filho.tem_mesada
-                    ? `Valor atual: ${dinheiro(mesadaFinal ?? 0)}`
-                    : `${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia} Não fez`}
-                  open={resultadoAberto}
-                  onOpenChange={setResultadoAberto}
-                >
-                  <div className="px-4 py-4 sm:px-5">
-                    {painel.filho.tem_mesada ? (
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Mesada</span><strong>{dinheiro(painel.filho.valor_mesada ?? 0)}</strong></div>
-                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Desconto por Não fez</span><strong>{dinheiro(descontoUnitario)}</strong></div>
-                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Não fez</span><strong>{qtdNaoFez}</strong></div>
-                        <div className="flex justify-between gap-3 border-t pt-2"><span>Valor atual</span><strong>{dinheiro(mesadaFinal ?? 0)}</strong></div>
+                <section>
+                  <div className="mb-2.5 flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-sm font-semibold">Hoje</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">Toque na tarefa para ver os detalhes.</p>
+                    </div>
+                  </div>
+                  {listaTarefas}
+                </section>
+
+                {recompensaDestaque && (
+                  <button
+                    type="button"
+                    onClick={() => setAba("estrelas")}
+                    className="w-full rounded-2xl border bg-card p-4 text-left transition-colors active:bg-muted/30"
+                  >
+                    {recompensaDestaque.disponivel ? (
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-amber-50">
+                          <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-green-700">Conquistado!</p>
+                          <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">Veja sua recompensa.</p>
+                        </div>
                       </div>
                     ) : (
-                      <div className="space-y-2 text-sm">
-                        <p><span className="text-muted-foreground">Penalidade:</span> <strong>{vigenciaAtual.penalidade || "—"}</strong></p>
-                        <p><span className="text-muted-foreground">Limite:</span> <strong>{vigenciaAtual.qtd_ocorrencia} Não fez</strong></p>
-                        <p><span className="text-muted-foreground">Atual:</span> <strong>{qtdNaoFez} Não fez</strong></p>
-                        {vigenciaAtual.qtd_ocorrencia > 0 && qtdNaoFez >= vigenciaAtual.qtd_ocorrencia && <Badge variant="destructive">Limite atingido</Badge>}
-                      </div>
+                      <>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground">Próxima recompensa</p>
+                            <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
+                          </div>
+                          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
+                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                            {recompensaDestaque.estrelas_necessarias}
+                          </span>
+                        </div>
+                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoRecompensa}%` }} />
+                        </div>
+                        <p className="mt-1.5 text-xs text-muted-foreground">
+                          Faltam {Math.max(0, recompensaDestaque.estrelas_necessarias - estrelas.saldo)} para conquistar
+                        </p>
+                      </>
                     )}
+                  </button>
+                )}
+
+                <section className="overflow-hidden rounded-2xl border bg-card">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-muted-foreground">Combinado atual</p>
+                      <p className="mt-0.5 text-sm font-semibold">{data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}</p>
+                    </div>
+                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">Em andamento</Badge>
                   </div>
-                </CollapsibleSection>
+
+                  <div className="grid grid-cols-2 border-t text-sm">
+                    <div className="px-4 py-3 sm:px-5">
+                      <p className="text-xs text-muted-foreground">{painel.filho.tem_mesada ? "Valor atual" : "Não fez"}</p>
+                      <p className="mt-0.5 font-semibold">
+                        {painel.filho.tem_mesada ? dinheiro(mesadaFinal ?? 0) : `${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia}`}
+                      </p>
+                    </div>
+                    <div className="border-l px-4 py-3 sm:px-5">
+                      <p className="text-xs text-muted-foreground">{painel.filho.tem_mesada ? "Desconto por Não fez" : "Penalidade"}</p>
+                      <p className="mt-0.5 break-words font-semibold">
+                        {painel.filho.tem_mesada ? dinheiro(descontoUnitario) : (vigenciaAtual.penalidade || "—")}
+                      </p>
+                    </div>
+                  </div>
+                </section>
               </>
-            ) : <SemVigencia />}
+            ) : (
+              <SemVigencia />
+            )}
+
+            <p className="flex items-center justify-center gap-1.5 pb-1 pt-1 text-[11px] text-muted-foreground">
+              <Clock3 className="h-3.5 w-3.5" />
+              Atualizado {dataHora(painel.atualizado_em)}
+            </p>
           </div>
         )}
 
         {aba === "tarefas" && (
           <div>
-            <PageHeader
+            <FilhoAppPageHeader
               title="Tarefas"
-              description="O que está combinado com você agora."
-              icon={<ClipboardList className="h-6 w-6" />}
+              description="O que você precisa acompanhar hoje."
+              icon={<ClipboardList className="h-4.5 w-4.5" />}
             />
 
             {vigenciaAtual ? (
-              <CollapsibleSection
-                title="Tarefas atuais"
-                count={tarefasAtual.length}
-                open={tarefasAbertas}
-                onOpenChange={setTarefasAbertas}
-              >
-                <div className="space-y-2 p-4 sm:p-5">
-                  {tarefasAtual.map((t) => {
-                    const fezCount = t.ocorrencias.filter((o) => o.tipo === "FEZ").length;
-                    const naoFezCount = t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length;
-                    const temResultado = fezCount > 0 || naoFezCount > 0;
-                    const hoje = dataSaoPaulo();
-                    const registroHoje = t.ocorrencias.find(
-                      (o) => dataSaoPaulo(new Date(o.data)) === hoje,
-                    );
-                    const solicitacaoHoje = (painel.solicitacoes_hoje ?? []).find(
-                      (s) => s.id_filho_tarefa === t.id && s.data_referencia === hoje,
-                    );
-
-                    return (
-                      <div key={t.id} className="flex min-w-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
-                        <span className="flex min-w-0 items-start gap-2">
-                          <TarefaIcone nome={t.nome} className="mt-0.5" />
-                          <span className="min-w-0 break-words text-sm font-medium">{t.nome}</span>
-                        </span>
-
-                        <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">
-                          {fezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700"><ThumbsUp className="h-3 w-3" /> {fezCount} Fez</span>}
-                          {naoFezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700"><ThumbsDown className="h-3 w-3" /> {naoFezCount} Não fez</span>}
-
-                          {!registroHoje && solicitacaoHoje && (
-                            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                              <BellRing className="h-3.5 w-3.5 shrink-0" />
-                              Aguardando confirmação
-                            </span>
-                          )}
-
-                          {!registroHoje && !solicitacaoHoje && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-8"
-                              onClick={() => {
-                                setObservacaoAviso("");
-                                setAvisoTarefa(t);
-                              }}
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                              Avisei que terminei
-                            </Button>
-                          )}
-
-                          {temResultado && (
-                            <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}>
-                              <CalendarDays className="h-3.5 w-3.5" /> Ver resultados
-                            </Button>
-                          )}
-
-                          {!registroHoje && solicitacaoHoje?.observacao && (
-                            <span className="basis-full break-words text-right text-[11px] text-muted-foreground">
-                              “{solicitacaoHoje.observacao}”
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {tarefasAtual.length === 0 && <EmptyState>Nenhuma tarefa atribuída nesta vigência.</EmptyState>}
+              <>
+                <div className="mb-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>{tarefasAtual.length - tarefasResolvidasHoje} pendentes</span>
+                  <span>{tarefasResolvidasHoje} concluídas pelo responsável</span>
                 </div>
-              </CollapsibleSection>
-            ) : <SemVigencia />}
+                {listaTarefas}
+              </>
+            ) : (
+              <SemVigencia />
+            )}
           </div>
         )}
 
         {aba === "registros" && (
           <div>
-            <PageHeader
+            <FilhoAppPageHeader
               title="Fez / Não fez"
-              description="Seus registros do combinado atual."
-              icon={<ClipboardCheck className="h-6 w-6" />}
+              description="Resultados do seu combinado atual."
+              icon={<ClipboardCheck className="h-4.5 w-4.5" />}
             />
 
             {vigenciaAtual ? (
@@ -623,7 +583,7 @@ export function PainelFilhoApp({
                           const b = bonus(ocorrencia);
                           return (
                             <div key={`${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
-                              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
                                 {ocorrencia.tipo === "FEZ" ? <ThumbsUp className="h-4 w-4" /> : <ThumbsDown className="h-4 w-4" />}
                               </span>
                               <div className="min-w-0 flex-1">
@@ -634,12 +594,7 @@ export function PainelFilhoApp({
                                 <p className={`mt-1 text-xs font-medium ${ocorrencia.tipo === "FEZ" ? "text-green-700" : "text-red-600"}`}>
                                   {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
                                 </p>
-                                {ocorrencia.tipo === "FEZ" && (
-                                  <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-600">
-                                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" /> +1 estrela
-                                  </p>
-                                )}
-                                {b && <p className="mt-1 break-words text-xs text-muted-foreground">Recompensa extra: {b}</p>}
+                                {b && <p className="mt-1 break-words text-xs text-muted-foreground">Extra: {b}</p>}
                               </div>
                             </div>
                           );
@@ -648,96 +603,50 @@ export function PainelFilhoApp({
                     </CollapsibleSection>
                   ))}
                 </div>
-              ) : <EmptyState>Nenhum registro de Fez / Não fez nesta vigência.</EmptyState>
-            ) : <SemVigencia />}
-
-            <Button type="button" variant="outline" className="mt-4 w-full justify-between" onClick={() => setAba("historico")}>
-              <span className="flex items-center gap-2"><History className="h-4 w-4" /> Ver histórico completo</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </Button>
+              ) : (
+                <EmptyState>Nenhum registro nesta vigência.</EmptyState>
+              )
+            ) : (
+              <SemVigencia />
+            )}
           </div>
         )}
 
         {aba === "estrelas" && <FilhoEstrelasPage estrelas={estrelas} />}
-
-        {aba === "historico" && (
-          <div>
-            <PageHeader
-              title="Histórico"
-              description="Resultados das vigências encerradas."
-              icon={<History className="h-6 w-6" />}
-            />
-
-            {vigenciasFinalizadas.length > 0 ? (
-              <div className="space-y-3">
-                {vigenciasFinalizadas.map((v) => {
-                  const fezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length, 0);
-                  const naoFezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length, 0);
-
-                  return (
-                    <CollapsibleSection
-                      key={v.id}
-                      title={`${data(v.data_inicio)} até ${data(v.data_fim)}`}
-                      description={`${fezV} Fez · ${naoFezV} Não fez`}
-                      count={v.tarefas.length}
-                      open={historicoAbertoId === v.id}
-                      onOpenChange={(open) => setHistoricoAbertoId(open ? v.id : null)}
-                    >
-                      <div className="divide-y">
-                        {v.tarefas.map((tarefa) => {
-                          const fez = tarefa.ocorrencias.filter((o) => o.tipo === "FEZ").length;
-                          const naoFez = tarefa.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length;
-                          return (
-                            <div key={tarefa.id} className="flex min-w-0 items-start justify-between gap-3 px-4 py-3.5 text-xs sm:px-5">
-                              <span className="flex min-w-0 items-start gap-1.5">
-                                <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
-                                <span className="min-w-0 break-words">{tarefa.nome}</span>
-                              </span>
-                              <span className="shrink-0 text-muted-foreground">{fez} Fez · {naoFez} Não fez</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CollapsibleSection>
-                  );
-                })}
-              </div>
-            ) : <EmptyState>Ainda não há vigências finalizadas no seu histórico.</EmptyState>}
-          </div>
-        )}
-
-        {aba === "inicio" && (
-          <p className="flex items-center justify-center gap-1.5 pb-2 pt-3 text-[11px] text-muted-foreground">
-            <Clock3 className="h-3.5 w-3.5" />
-            Atualizado {dataHora(painel.atualizado_em)}
-          </p>
-        )}
       </AppPageContent>
 
       <nav
         aria-label="Navegação principal do filho"
-        className="native-safe-bottom fixed bottom-0 left-1/2 z-40 w-[calc(100%-3rem)] max-w-[22rem] -translate-x-1/2 pb-2"
+        className="native-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur"
       >
-        <div className="grid grid-cols-4 gap-0.5 rounded-2xl border bg-background/95 p-1 shadow-lg backdrop-blur">
-          {ABAS.map(({ id, label, icon: Icon }) => {
-            const ativo = aba === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setAba(id)}
-                aria-current={ativo ? "page" : undefined}
-                className={`flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[9px] font-semibold transition-all active:scale-95 ${ativo ? "bg-muted/60 text-foreground" : "text-muted-foreground"}`}
-                style={ativo ? { boxShadow: `inset 0 2px 0 ${painel.filho.cor?.trim() || "var(--primary)"}` } : undefined}
-              >
-                <Icon
-                  className={`h-4.5 w-4.5 ${id === "estrelas" && ativo ? "fill-amber-400 text-amber-500" : ""}`}
-                  style={ativo && id !== "estrelas" ? { color: painel.filho.cor?.trim() || "var(--primary)" } : undefined}
-                />
-                <span className="max-w-full truncate leading-tight">{label}</span>
-              </button>
-            );
-          })}
+        <div className={`${appPageHorizontalPaddingClass}`}>
+          <div className={`${appPageInnerClass} grid grid-cols-4`}>
+            {ABAS.map(({ id, label, icon: Icon }) => {
+              const ativo = aba === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setAba(id)}
+                  aria-current={ativo ? "page" : undefined}
+                  className={`relative flex min-w-0 flex-col items-center gap-1 px-1 pb-2 pt-2.5 text-[10px] font-semibold transition-colors active:bg-muted/30 ${ativo ? "text-foreground" : "text-muted-foreground"}`}
+                >
+                  {ativo && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-5 top-0 h-0.5 rounded-full"
+                      style={{ backgroundColor: painel.filho.cor?.trim() || "var(--primary)" }}
+                    />
+                  )}
+                  <Icon
+                    className={`h-5 w-5 ${id === "estrelas" && ativo ? "fill-amber-400 text-amber-500" : ""}`}
+                    style={ativo && id !== "estrelas" ? { color: painel.filho.cor?.trim() || "var(--primary)" } : undefined}
+                  />
+                  <span className="max-w-full truncate leading-tight">{label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </nav>
 
@@ -755,7 +664,7 @@ export function PainelFilhoApp({
             <DialogTitle>Avisar que terminei</DialogTitle>
             <DialogDescription>
               {avisoTarefa
-                ? `Avise seu responsável que você terminou “${avisoTarefa.nome}”. A marcação de Fez / Não fez continua sendo feita pelo responsável.`
+                ? `Avise seu responsável que você terminou “${avisoTarefa.nome}”. A confirmação continua sendo feita pelo responsável.`
                 : ""}
             </DialogDescription>
           </DialogHeader>
@@ -771,12 +680,10 @@ export function PainelFilhoApp({
               disabled={enviandoAviso}
               className="min-h-24 resize-none"
             />
-            <p className="text-right text-[11px] text-muted-foreground">
-              {observacaoAviso.length}/120
-            </p>
+            <p className="text-right text-[11px] text-muted-foreground">{observacaoAviso.length}/120</p>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:space-x-0">
             <Button
               type="button"
               variant="outline"
@@ -788,15 +695,9 @@ export function PainelFilhoApp({
             >
               Cancelar
             </Button>
-            <Button
-              type="button"
-              onClick={() => void enviarAvisoTarefa()}
-              disabled={enviandoAviso}
-            >
-              {enviandoAviso
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <Send className="h-4 w-4" />}
-              Enviar aviso
+            <Button type="button" onClick={() => void enviarAvisoTarefa()} disabled={enviandoAviso}>
+              {enviandoAviso ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Enviar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -805,7 +706,7 @@ export function PainelFilhoApp({
       <Dialog open={tarefaDatas !== null} onOpenChange={(open) => { if (!open) setTarefaDatas(null); }}>
         <DialogContent className="max-w-sm rounded-lg">
           <DialogHeader>
-            <DialogTitle>Resultados da tarefa</DialogTitle>
+            <DialogTitle>Detalhes da tarefa</DialogTitle>
             <DialogDescription>
               {tarefaDatas && (
                 <span className="flex min-w-0 items-start gap-2">
@@ -815,6 +716,18 @@ export function PainelFilhoApp({
               )}
             </DialogDescription>
           </DialogHeader>
+
+          {tarefaDatas && !registroDetalheHoje && solicitacaoDetalheHoje && (
+            <div className="rounded-xl border bg-muted/30 px-3 py-2.5 text-xs">
+              <p className="flex items-center gap-1.5 font-semibold">
+                <BellRing className="h-3.5 w-3.5" />
+                Aguardando confirmação
+              </p>
+              {solicitacaoDetalheHoje.observacao && (
+                <p className="mt-1 break-words text-muted-foreground">“{solicitacaoDetalheHoje.observacao}”</p>
+              )}
+            </div>
+          )}
 
           <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">
             {resultados.map((o, i) => {
@@ -826,13 +739,14 @@ export function PainelFilhoApp({
                     : <ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />}
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{o.tipo === "FEZ" ? "Fez" : "Não fez"} · {data(o.data)}</p>
-                    {o.tipo === "FEZ" && <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-700"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" /> +1 estrela</p>}
-                    {b && <p className="mt-1 break-words text-xs text-muted-foreground">Recompensa extra: {b}</p>}
+                    {b && <p className="mt-1 break-words text-xs text-muted-foreground">Extra: {b}</p>}
                   </div>
                 </div>
               );
             })}
-            {resultados.length === 0 && <p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}
+            {resultados.length === 0 && !solicitacaoDetalheHoje && (
+              <p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
