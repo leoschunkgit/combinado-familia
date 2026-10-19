@@ -1,3 +1,8 @@
+export const ANDROID_NOTIFICATION_STYLE = {
+  icon: "ic_notification",
+  color: "#0C5C3C",
+} as const;
+
 export type FirebaseServiceAccount = {
   project_id: string;
   client_email: string;
@@ -94,7 +99,10 @@ export async function enviarFirebaseMensagem(args: {
             body: args.body,
           },
           data: args.data,
-          android: { priority: "high" },
+          android: {
+            priority: "high",
+            notification: ANDROID_NOTIFICATION_STYLE,
+          },
         },
       }),
     },
