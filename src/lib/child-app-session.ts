@@ -239,9 +239,8 @@ export async function revogarTokenFilho(token: string) {
 
 export async function encerrarSessaoFilho() {
   const token = await lerSessaoFilhoLocal();
-  try {
-    if (token) await revogarTokenFilho(token);
-  } finally {
-    await limparSessaoFilhoLocal();
+  if (token) {
+    await revogarTokenFilho(token);
   }
+  await limparSessaoFilhoLocal();
 }
