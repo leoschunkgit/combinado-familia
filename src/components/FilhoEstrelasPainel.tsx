@@ -468,7 +468,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
             <CollapseChevron open={extratoAberto} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold">Extrato de estrelas</h2>
+                <h2 className="text-base font-semibold">Movimentações de estrelas</h2>
                 <Badge variant="secondary" className="h-5 px-1.5 py-0 text-[10px]">{movimentos.length}</Badge>
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">Entradas, estornos, resgates e devoluções.</p>
