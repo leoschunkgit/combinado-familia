@@ -20,6 +20,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { FilhoAppAccessDialog } from "@/components/FilhoAppAccessDialog";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -143,6 +144,7 @@ function FilhosPage() {
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
   const [acessoAppFilho, setAcessoAppFilho] = useState<Filho | null>(null);
+  const [filhosAbertos, setFilhosAbertos] = useState<Record<number, boolean>>({});
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
@@ -247,10 +249,19 @@ function FilhosPage() {
       }
     />
     <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
-        return <div key={f.id} className="min-w-0 max-w-full rounded-2xl border bg-card p-4">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2.5"><FilhoAvatar nome={f.nome} cor={f.cor} avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null} className="h-9 w-9 shrink-0" /><p className="min-w-0 flex-1 truncate text-base font-semibold">{f.nome}</p></div>
-            <div className="flex shrink-0 items-center gap-3 sm:gap-2">
+        const aberto = filhosAbertos[f.id] !== false;
+        return <CollapsibleSection
+          key={f.id}
+          title={
+            <span className="flex min-w-0 items-center gap-2.5">
+              <FilhoAvatar nome={f.nome} cor={f.cor} avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null} className="h-9 w-9 shrink-0" />
+              <span className="min-w-0 truncate text-base font-semibold">{f.nome}</span>
+            </span>
+          }
+          open={aberto}
+          onOpenChange={(open) => setFilhosAbertos((atuais) => ({ ...atuais, [f.id]: open }))}
+          action={
+            <>
               <Hint content="Editar filho">
                 <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}>
                   <Pencil className="h-4 w-4" />
@@ -261,10 +272,11 @@ function FilhosPage() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </Hint>
-            </div>
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            </>
+          }
+          contentClassName="p-4"
+        >
+          <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="col-span-2 min-w-0 rounded-lg border bg-muted/20 px-3 py-2 sm:col-span-1">
               <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Mail className="h-3.5 w-3.5" />Email</div>
               <Hint content={f.email ?? undefined}>
@@ -297,7 +309,7 @@ function FilhosPage() {
               Acesso ao app
             </Button>
           </div>
-        </div>;
+        </CollapsibleSection>;
       })}</div>
     <Dialog open={novoAberto} onOpenChange={(open) => { setNovoAberto(open); if (!open) setForm(vazio); }}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
