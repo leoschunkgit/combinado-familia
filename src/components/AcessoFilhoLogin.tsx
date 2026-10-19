@@ -81,7 +81,13 @@ export function AcessoFilhoLogin({
       }
 
       await salvarSessaoFilhoLocal(pareamento.token);
-      onEntrou(pareamento.painel);
+
+      const painelAtual = await obterPainelFilhoApp(pareamento.token);
+      if (!painelAtual) {
+        throw new Error("Não foi possível carregar o painel do filho.");
+      }
+
+      onEntrou(painelAtual);
     } catch (error) {
       if (tokenNovo) {
         try {
@@ -89,6 +95,7 @@ export function AcessoFilhoLogin({
         } catch {
           // Evita esconder o erro original se a revogação de contingência falhar.
         }
+        await limparSessaoFilhoLocal();
       }
 
       toast.error(error instanceof Error ? error.message : "Não foi possível entrar como filho.");
