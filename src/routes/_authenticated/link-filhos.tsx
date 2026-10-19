@@ -12,6 +12,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { getChildTrackingUrl } from "@/lib/app-runtime";
 import { copyText, openExternalUrl, shareLink } from "@/lib/platform-actions";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 
 export const Route = createFileRoute("/_authenticated/link-filhos")({
   head: () => ({ meta: [
@@ -29,6 +30,7 @@ function LinkFilhosPage() {
   const [acessos, setAcessos] = useState<Record<number, AcessoPublico | null>>({});
   const [carregando, setCarregando] = useState<Record<number, boolean>>({});
   const [maisOpcoes, setMaisOpcoes] = useState<number | null>(null);
+  const [filhosAbertos, setFilhosAbertos] = useState<Record<number, boolean>>({});
   const [confirmarNovoLink, setConfirmarNovoLink] = useState<Filho | null>(null);
   const [confirmarDesativar, setConfirmarDesativar] = useState<Filho | null>(null);
 
@@ -95,13 +97,21 @@ function LinkFilhosPage() {
       {filhos.map((f) => {
         const acesso = acessos[f.id];
         const ativo = acesso?.ativo === true;
-        return <section key={f.id} className="min-w-0 rounded-2xl border bg-card p-4">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <FilhoAvatar nome={f.nome} cor={f.cor} avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null} className="h-7 w-7" />
-            <div className="min-w-0 flex-1"><h2 className={`truncate ${uiTypography.secondaryTitle}`}>{f.nome}</h2><p className="text-xs text-muted-foreground">Painel de acompanhamento</p></div>
-          </div>
-
-          <div className="mt-4 min-w-0 rounded-xl border bg-muted/25 p-3">
+        const aberto = filhosAbertos[f.id] !== false;
+        return <CollapsibleSection
+          key={f.id}
+          title={
+            <span className="flex min-w-0 items-center gap-2.5">
+              <FilhoAvatar nome={f.nome} cor={f.cor} avatar={f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null} className="h-7 w-7" />
+              <span className={`min-w-0 truncate ${uiTypography.secondaryTitle}`}>{f.nome}</span>
+            </span>
+          }
+          description="Painel de acompanhamento"
+          open={aberto}
+          onOpenChange={(open) => setFilhosAbertos((atuais) => ({ ...atuais, [f.id]: open }))}
+          contentClassName="p-4"
+        >
+          <div className="min-w-0 rounded-xl border bg-muted/25 p-3">
             {carregando[f.id] ? <p className="text-sm text-muted-foreground">Carregando acesso...</p> : !acesso ? <>
               <p className="text-sm text-muted-foreground">Crie um link para {f.nome} acompanhar tarefas e resultados sem fazer login.</p>
               <Button size="sm" className="mt-3" onClick={() => void runAction(() => gerarLink(f))}><Link2 className="mr-1.5 h-3.5 w-3.5" />Gerar link</Button>
@@ -162,7 +172,7 @@ function LinkFilhosPage() {
               )}
             </>}
           </div>
-        </section>;
+        </CollapsibleSection>;
       })}
     </div>
 
