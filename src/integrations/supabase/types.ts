@@ -679,6 +679,38 @@ export type Database = {
           },
         ]
       }
+      t_solicitacao_tarefa_filho: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: number
+          id_filho_tarefa: number
+          observacao: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: number
+          id_filho_tarefa: number
+          observacao?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: number
+          id_filho_tarefa?: number
+          observacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_solicitacao_tarefa_filho_id_filho_tarefa_fkey"
+            columns: ["id_filho_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_filho_tarefa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_ocorrencia: {
         Row: {
           bonificacao_descricao: string | null
