@@ -1,10 +1,13 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowLeft, KeyRound, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import {
+  lerSessaoFilhoLocal,
+  limparSessaoFilhoLocal,
+  obterPainelFilhoApp,
   parearFilhoApp,
   revogarTokenFilho,
   salvarSessaoFilhoLocal,
@@ -20,6 +23,41 @@ export function AcessoFilhoLogin({
 }) {
   const [chave, setChave] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [sessaoExistente, setSessaoExistente] = useState(false);
+
+  useEffect(() => {
+    let ativo = true;
+    void lerSessaoFilhoLocal().then((token) => {
+      if (ativo) setSessaoExistente(Boolean(token));
+    });
+    return () => { ativo = false; };
+  }, []);
+
+  async function tentarSessaoExistente() {
+    setCarregando(true);
+    try {
+      const token = await lerSessaoFilhoLocal();
+      if (!token) {
+        setSessaoExistente(false);
+        toast.error("Não há um acesso do filho salvo neste aparelho.");
+        return;
+      }
+
+      const painel = await obterPainelFilhoApp(token);
+      if (!painel) {
+        await limparSessaoFilhoLocal();
+        setSessaoExistente(false);
+        toast.error("Este acesso não está mais ativo. Peça uma nova chave ao seu responsável.");
+        return;
+      }
+
+      onEntrou(painel);
+    } catch {
+      toast.error("Não foi possível validar o acesso agora. Verifique sua conexão e tente novamente.");
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   async function entrar(e: FormEvent) {
     e.preventDefault();
@@ -69,6 +107,24 @@ export function AcessoFilhoLogin({
       </div>
 
       <form onSubmit={entrar} className="space-y-5">
+        {sessaoExistente && (
+          <div className="rounded-xl border bg-muted/25 p-3">
+            <p className="text-sm font-medium">Este aparelho já possui um acesso do filho vinculado.</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Você pode tentar abrir o acesso existente sem gerar outra chave.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3 h-10 w-full"
+              onClick={() => void tentarSessaoExistente()}
+              disabled={carregando}
+            >
+              {carregando ? <><Loader2 className="h-4 w-4 animate-spin" /> Validando...</> : "Tentar acesso existente"}
+            </Button>
+          </div>
+        )}
+
         <div className="flex justify-center">
           <InputOTP
             maxLength={6}
