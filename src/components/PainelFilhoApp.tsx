@@ -10,6 +10,7 @@ import {
   House,
   Loader2,
   LogOut,
+  Menu,
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { TarefaIcone } from "@/components/TarefaIcone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import {
   encerrarSessaoFilho,
   lerSessaoFilhoLocal,
@@ -86,6 +88,7 @@ export function PainelFilhoApp({
 }) {
   const [painel, setPainel] = useState(painelInicial);
   const [aba, setAba] = useState<AbaFilho>("inicio");
+  const [menuAberto, setMenuAberto] = useState(false);
   const [tarefaDatas, setTarefaDatas] = useState<TarefaFilho | null>(null);
   const [saindo, setSaindo] = useState(false);
 
@@ -169,6 +172,26 @@ export function PainelFilhoApp({
     [tarefasAtual],
   );
 
+  const registrosPorData = useMemo(() => {
+    const grupos: Array<{
+      data: string;
+      itens: Array<{ tarefa: TarefaFilho; ocorrencia: OcorrenciaFilho }>;
+    }> = [];
+
+    registrosAtuais.forEach((item) => {
+      const rotulo = data(item.ocorrencia.data);
+      const ultimo = grupos[grupos.length - 1];
+
+      if (ultimo?.data === rotulo) {
+        ultimo.itens.push(item);
+      } else {
+        grupos.push({ data: rotulo, itens: [item] });
+      }
+    });
+
+    return grupos;
+  }, [registrosAtuais]);
+
   const descontoUnitario = Number(vigenciaAtual?.valor_debito ?? 0);
   const desconto = painel.filho.tem_mesada
     ? Math.min(painel.filho.valor_mesada ?? 0, qtdNaoFez * descontoUnitario)
@@ -203,58 +226,121 @@ export function PainelFilhoApp({
 
   return (
     <div className="min-h-screen bg-muted/20">
-      <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-3 py-2.5 sm:px-6">
-          <div className="flex shrink-0 items-center gap-2">
+      <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background">
+        <div className="relative mx-auto flex w-full max-w-6xl items-center px-4 py-3 sm:px-6">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="relative z-10 h-9 w-9"
+            onClick={() => setMenuAberto(true)}
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
+          <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <House className="h-[18px] w-[18px]" />
             </span>
             <span className="flex flex-col items-start leading-none">
-              <span className="font-display text-lg font-bold sm:text-xl">Combinado</span>
-              <span className="-mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground sm:text-[11px]">família</span>
+              <span className="font-display text-xl font-bold">Combinado</span>
+              <span className="-mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span>
             </span>
           </div>
 
-          <div className="flex min-w-0 items-center justify-end gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <FilhoAvatar
-                nome={painel.filho.nome}
-                cor={painel.filho.cor}
-                avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-                className="h-8 w-8 shrink-0"
-              />
-              <span className="hidden max-w-40 truncate text-sm font-semibold sm:block">{painel.filho.nome}</span>
-            </div>
-            <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 px-2.5 text-xs" onClick={() => void sair()} disabled={saindo}>
-              {saindo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
-              Sair
-            </Button>
-          </div>
+          <FilhoAvatar
+            nome={painel.filho.nome}
+            cor={painel.filho.cor}
+            avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
+            className="ml-auto h-8 w-8 shrink-0"
+          />
         </div>
-
-        <nav aria-label="Navegação do filho" className="border-t bg-background">
-          <div className="mx-auto flex w-full max-w-6xl overflow-x-auto px-3 sm:px-6">
-            {ABAS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setAba(id)}
-                aria-current={aba === id ? "page" : undefined}
-                className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
-                  aba === id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </button>
-            ))}
-          </div>
-        </nav>
       </header>
 
-      <main className="native-safe-area mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-6">
+      {menuAberto && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-50 bg-black/35"
+            onClick={() => setMenuAberto(false)}
+            aria-label="Fechar menu"
+          />
+          <aside className="native-safe-area fixed inset-y-0 left-0 z-[60] flex w-[min(84vw,20rem)] flex-col border-r bg-background shadow-xl">
+            <div className="relative flex items-center border-b px-3 py-3">
+              <div className="mx-auto flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <House className="h-[18px] w-[18px]" />
+                </span>
+                <span className="flex flex-col items-start leading-none">
+                  <span className="font-display text-xl font-bold">Combinado</span>
+                  <span className="mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span>
+                </span>
+              </div>
+              <button
+                type="button"
+                className={modalCloseInlineButtonClass}
+                onClick={() => setMenuAberto(false)}
+                aria-label="Fechar menu"
+              >
+                <ModalCloseIcon />
+              </button>
+            </div>
+
+            <nav aria-label="Navegação do filho" className="flex-1 space-y-1 px-2 py-3">
+              {ABAS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setAba(id);
+                    setMenuAberto(false);
+                  }}
+                  aria-current={aba === id ? "page" : undefined}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                    aba === id
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </nav>
+
+            <div className="border-t p-3">
+              <div className="rounded-xl bg-muted/50 p-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <FilhoAvatar
+                    nome={painel.filho.nome}
+                    cor={painel.filho.cor}
+                    avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
+                    className="h-9 w-9 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{painel.filho.nome}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 w-full justify-center"
+                  onClick={() => void sair()}
+                  disabled={saindo}
+                >
+                  {saindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                  Sair
+                </Button>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
+
+      <main className="native-safe-area mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
         {aba === "inicio" && (
           <div className="space-y-4">
             <section className="rounded-2xl border bg-card p-4 sm:p-5">
@@ -392,40 +478,64 @@ export function PainelFilhoApp({
         )}
 
         {aba === "registros" && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
               <h1 className="text-xl font-bold">Fez / Não fez</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Registros da sua vigência atual, somente para consulta.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Registros da sua vigência atual, organizados por data.</p>
             </div>
 
             {vigenciaAtual ? (
-              <Card>
-                <CardContent className="space-y-2 pt-6">
-                  {registrosAtuais.map(({ tarefa, ocorrencia }, i) => {
-                    const b = bonus(ocorrencia);
-                    return (
-                      <div key={`${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 rounded-xl border p-3">
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                          ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
-                        }`}>
-                          {ocorrencia.tipo === "FEZ" ? <ThumbsUp className="h-4 w-4" /> : <ThumbsDown className="h-4 w-4" />}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex min-w-0 items-start gap-2">
-                            <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
-                            <p className="min-w-0 break-words text-sm font-semibold">{tarefa.nome}</p>
-                          </div>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"} · {data(ocorrencia.data)}
-                          </p>
-                          {b && <p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}
+              registrosPorData.length > 0 ? (
+                <div className="space-y-4">
+                  {registrosPorData.map((grupo) => (
+                    <section key={grupo.data} className="overflow-hidden rounded-2xl border bg-card">
+                      <div className="flex items-center justify-between gap-3 border-b bg-muted/30 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                          <h2 className="text-sm font-semibold">{grupo.data}</h2>
                         </div>
+                        <span className="text-xs text-muted-foreground">
+                          {grupo.itens.length === 1 ? "1 registro" : `${grupo.itens.length} registros`}
+                        </span>
                       </div>
-                    );
-                  })}
-                  {registrosAtuais.length === 0 && <p className="text-sm text-muted-foreground">Nenhum registro de Fez / Não fez nesta vigência.</p>}
-                </CardContent>
-              </Card>
+
+                      <div className="divide-y">
+                        {grupo.itens.map(({ tarefa, ocorrencia }, i) => {
+                          const b = bonus(ocorrencia);
+                          return (
+                            <div key={`${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5">
+                              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                                ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
+                              }`}>
+                                {ocorrencia.tipo === "FEZ" ? <ThumbsUp className="h-4 w-4" /> : <ThumbsDown className="h-4 w-4" />}
+                              </span>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex min-w-0 items-start gap-2">
+                                  <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
+                                  <p className="min-w-0 break-words text-sm font-semibold">{tarefa.nome}</p>
+                                </div>
+                                <p className={`mt-1 text-xs font-medium ${
+                                  ocorrencia.tipo === "FEZ" ? "text-green-700" : "text-red-600"
+                                }`}>
+                                  {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
+                                </p>
+                                {b && <p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Nenhum registro de Fez / Não fez nesta vigência.</p>
+                  </CardContent>
+                </Card>
+              )
             ) : <SemVigencia />}
           </div>
         )}
