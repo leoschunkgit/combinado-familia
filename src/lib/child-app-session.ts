@@ -29,6 +29,33 @@ export type VigenciaFilho = {
   tarefas: TarefaFilho[];
 };
 
+export type RecompensaEstrelaFilho = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  estrelas_necessarias: number;
+  disponivel: boolean;
+};
+
+export type ResgateEstrelaFilho = {
+  id: number;
+  recompensa_nome: string;
+  estrelas_utilizadas: number;
+  status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
+  created_at: string;
+  entregue_em: string | null;
+  cancelado_em: string | null;
+};
+
+export type EstrelasFilho = {
+  hoje: number;
+  vigencia_atual: number;
+  saldo: number;
+  total_conquistado: number;
+  recompensas: RecompensaEstrelaFilho[];
+  resgates: ResgateEstrelaFilho[];
+};
+
 export type PainelFilho = {
   filho: {
     nome: string;
@@ -39,6 +66,7 @@ export type PainelFilho = {
   };
   responsavel: { nome: string };
   vigencias: VigenciaFilho[];
+  estrelas?: EstrelasFilho;
   atualizado_em: string;
 };
 
