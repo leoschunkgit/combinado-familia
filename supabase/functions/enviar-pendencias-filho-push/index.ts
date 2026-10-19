@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { ANDROID_NOTIFICATION_STYLE } from "../_shared/firebase-messaging.ts";
 
 type ServiceAccount = {
   project_id: string;
@@ -127,7 +128,10 @@ async function enviarFcm(
             target: "filho",
             route: "/",
           },
-          android: { priority: "high" },
+          android: {
+            priority: "high",
+            notification: ANDROID_NOTIFICATION_STYLE,
+          },
         },
       }),
     },
