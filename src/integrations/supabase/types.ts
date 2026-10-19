@@ -246,6 +246,80 @@ export type Database = {
           },
         ]
       }
+      t_estrela_movimento: {
+        Row: {
+          created_at: string
+          data_referencia: string | null
+          descricao: string | null
+          id: number
+          id_filho: number
+          id_ocorrencia: number | null
+          id_resgate: number | null
+          id_tarefa: number | null
+          id_usuario_pai: number
+          id_vigencia: number | null
+          quantidade: number
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          data_referencia?: string | null
+          descricao?: string | null
+          id?: number
+          id_filho: number
+          id_ocorrencia?: number | null
+          id_resgate?: number | null
+          id_tarefa?: number | null
+          id_usuario_pai: number
+          id_vigencia?: number | null
+          quantidade: number
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string | null
+          descricao?: string | null
+          id?: number
+          id_filho?: number
+          id_ocorrencia?: number | null
+          id_resgate?: number | null
+          id_tarefa?: number | null
+          id_usuario_pai?: number
+          id_vigencia?: number | null
+          quantidade?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_estrela_movimento_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_estrela_movimento_id_tarefa_fkey"
+            columns: ["id_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_tarefa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_estrela_movimento_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_estrela_movimento_id_vigencia_fkey"
+            columns: ["id_vigencia"]
+            isOneToOne: false
+            referencedRelation: "t_vigencia"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_feedback: {
         Row: {
           assunto: string
@@ -345,6 +419,144 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      t_filho_acesso_app: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          dispositivo_id: string
+          dispositivo_nome: string | null
+          id: number
+          id_filho: number
+          id_usuario_pai: number
+          revogado_em: string | null
+          token_hash: string
+          ultimo_acesso_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          dispositivo_id?: string
+          dispositivo_nome?: string | null
+          id?: number
+          id_filho: number
+          id_usuario_pai: number
+          revogado_em?: string | null
+          token_hash: string
+          ultimo_acesso_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          dispositivo_id?: string
+          dispositivo_nome?: string | null
+          id?: number
+          id_filho?: number
+          id_usuario_pai?: number
+          revogado_em?: string | null
+          token_hash?: string
+          ultimo_acesso_em?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_filho_acesso_app_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_filho_acesso_app_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_filho_acesso_app_chave: {
+        Row: {
+          ativo: boolean
+          chave_hash: string
+          created_at: string
+          expira_em: string
+          id: number
+          id_filho: number
+          id_usuario_pai: number
+          max_tentativas: number
+          tentativas: number
+          updated_at: string
+          usado_em: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          chave_hash: string
+          created_at?: string
+          expira_em: string
+          id?: number
+          id_filho: number
+          id_usuario_pai: number
+          max_tentativas?: number
+          tentativas?: number
+          updated_at?: string
+          usado_em?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          chave_hash?: string
+          created_at?: string
+          expira_em?: string
+          id?: number
+          id_filho?: number
+          id_usuario_pai?: number
+          max_tentativas?: number
+          tentativas?: number
+          updated_at?: string
+          usado_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_filho_acesso_app_chave_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_filho_acesso_app_chave_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_filho_acesso_app_tentativa: {
+        Row: {
+          bloqueado_ate: string | null
+          falhas: number
+          identificador_hash: string
+          janela_inicio: string
+          updated_at: string
+        }
+        Insert: {
+          bloqueado_ate?: string | null
+          falhas?: number
+          identificador_hash: string
+          janela_inicio?: string
+          updated_at?: string
+        }
+        Update: {
+          bloqueado_ate?: string | null
+          falhas?: number
+          identificador_hash?: string
+          janela_inicio?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       t_filho_acesso_publico: {
         Row: {
@@ -608,6 +820,121 @@ export type Database = {
           },
         ]
       }
+      t_recompensa_estrela: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estrelas_necessarias: number
+          id: number
+          id_filho: number
+          id_usuario_pai: number
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estrelas_necessarias: number
+          id?: number
+          id_filho: number
+          id_usuario_pai: number
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estrelas_necessarias?: number
+          id?: number
+          id_filho?: number
+          id_usuario_pai?: number
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_recompensa_estrela_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_recompensa_estrela_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_recompensa_resgate: {
+        Row: {
+          cancelado_em: string | null
+          created_at: string
+          entregue_em: string | null
+          estrelas_utilizadas: number
+          id: number
+          id_filho: number
+          id_recompensa: number
+          id_usuario_pai: number
+          recompensa_nome: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cancelado_em?: string | null
+          created_at?: string
+          entregue_em?: string | null
+          estrelas_utilizadas: number
+          id?: number
+          id_filho: number
+          id_recompensa: number
+          id_usuario_pai: number
+          recompensa_nome: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cancelado_em?: string | null
+          created_at?: string
+          entregue_em?: string | null
+          estrelas_utilizadas?: number
+          id?: number
+          id_filho?: number
+          id_recompensa?: number
+          id_usuario_pai?: number
+          recompensa_nome?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_recompensa_resgate_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_recompensa_resgate_id_recompensa_fkey"
+            columns: ["id_recompensa"]
+            isOneToOne: false
+            referencedRelation: "t_recompensa_estrela"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_recompensa_resgate_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_tarefa: {
         Row: {
           created_at: string
@@ -839,11 +1166,19 @@ export type Database = {
         }
         Returns: Json
       }
+      alterar_status_resgate_estrelas: {
+        Args: { p_id_resgate: number; p_status: string }
+        Returns: boolean
+      }
       app_config_publico: { Args: never; Returns: Json }
       current_admin_id: { Args: never; Returns: number }
       current_pai_id: { Args: never; Returns: number }
       desativar_acesso_publico_filho: {
         Args: { p_id_filho: number }
+        Returns: boolean
+      }
+      desativar_recompensa_estrelas: {
+        Args: { p_id_recompensa: number }
         Returns: boolean
       }
       duplicar_vigencia_com_atribuicoes: {
@@ -872,6 +1207,14 @@ export type Database = {
         }
         Returns: number
       }
+      estrelas_saldo_filho_interno: {
+        Args: { p_id_filho: number; p_id_usuario_pai: number }
+        Returns: number
+      }
+      estrelas_total_conquistado_interno: {
+        Args: { p_id_filho: number; p_id_usuario_pai: number }
+        Returns: number
+      }
       excluir_vigencia_com_regra: {
         Args: { p_id_vigencia: number }
         Returns: boolean
@@ -887,7 +1230,34 @@ export type Database = {
           token: string
         }[]
       }
+      gerar_chave_acesso_app_filho: {
+        Args: { p_id_filho: number }
+        Returns: {
+          chave: string
+          expira_em: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
+      listar_acessos_app_filho: {
+        Args: { p_id_filho: number }
+        Returns: {
+          ativo: boolean
+          created_at: string
+          dispositivo_id: string
+          dispositivo_nome: string
+          id: number
+          revogado_em: string
+          ultimo_acesso_em: string
+        }[]
+      }
+      montar_painel_app_filho: {
+        Args: { p_id_filho: number; p_id_usuario_pai: number }
+        Returns: Json
+      }
+      montar_painel_filho: {
+        Args: { p_id_filho: number; p_id_usuario_pai: number }
+        Returns: Json
+      }
       obter_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: {
@@ -895,7 +1265,20 @@ export type Database = {
           token: string
         }[]
       }
+      obter_painel_app_filho_interno: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       obter_painel_publico_filho: { Args: { p_token: string }; Returns: Json }
+      parear_acesso_app_filho_interno: {
+        Args: {
+          p_chave: string
+          p_cliente_hash: string
+          p_dispositivo_nome: string
+          p_ip_hash: string
+        }
+        Returns: Json
+      }
       recalcular_estado_atribuicao: {
         Args: { p_id: number }
         Returns: undefined
@@ -931,6 +1314,37 @@ export type Database = {
           p_version_name?: string
         }
         Returns: undefined
+      }
+      resgatar_recompensa_estrelas: {
+        Args: { p_id_recompensa: number }
+        Returns: number
+      }
+      resumo_estrelas_filho: { Args: { p_id_filho: number }; Returns: Json }
+      resumo_estrelas_filho_interno: {
+        Args: { p_id_filho: number; p_id_usuario_pai: number }
+        Returns: Json
+      }
+      revogar_acesso_app_filho: {
+        Args: { p_id_acesso: number }
+        Returns: boolean
+      }
+      revogar_todos_acessos_app_filho: {
+        Args: { p_id_filho: number }
+        Returns: number
+      }
+      sair_acesso_app_filho_interno: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
+      salvar_recompensa_estrelas: {
+        Args: {
+          p_descricao: string
+          p_estrelas_necessarias: number
+          p_id_filho: number
+          p_id_recompensa?: number
+          p_nome: string
+        }
+        Returns: number
       }
     }
     Enums: {
