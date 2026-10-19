@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CollapseChevron } from "@/components/CollapseChevron";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 
 type Recompensa = {
   id: number;
@@ -400,103 +400,79 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border bg-card">
-          <button
-            type="button"
-            className="group flex w-full items-center gap-3 px-4 py-4 text-left sm:px-5"
-            onClick={() => setResgatesAbertos((atual) => !atual)}
-            aria-expanded={resgatesAbertos}
-          >
-            <CollapseChevron open={resgatesAbertos} />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold">Resgates</h2>
-                <Badge variant="secondary" className="h-5 px-1.5 py-0 text-[10px]">{resumo.resgates.length}</Badge>
-              </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">Acompanhe entregas, cancelamentos e recompensas usadas.</p>
-            </div>
-          </button>
-
-          {resgatesAbertos && (
-            <div className="border-t divide-y">
-              {resumo.resgates.map((resgate) => (
-                <div key={resgate.id} className="px-4 py-4 sm:px-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
-                        <ResgateStatus status={resgate.status} />
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
+        <CollapsibleSection
+          title="Resgates"
+          description="Acompanhe entregas, cancelamentos e recompensas usadas."
+          count={resumo.resgates.length}
+          open={resgatesAbertos}
+          onOpenChange={setResgatesAbertos}
+        >
+          <div className="divide-y">
+            {resumo.resgates.map((resgate) => (
+              <div key={resgate.id} className="px-4 py-4 sm:px-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
+                      <ResgateStatus status={resgate.status} />
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold">
-                      <Estrela />
-                      {resgate.estrelas_utilizadas}
-                    </span>
+                    <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
                   </div>
-
-                  {resgate.status !== "CANCELADO" && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {resgate.status === "PENDENTE" && (
-                        <Button type="button" size="sm" onClick={() => void marcarEntregue(resgate)} disabled={salvando}>
-                          <Check className="h-3.5 w-3.5" />
-                          Marcar entregue
-                        </Button>
-                      )}
-                      <Button type="button" variant="outline" size="sm" onClick={() => setConfirmacao({ tipo: "CANCELAR", resgate })} disabled={salvando}>
-                        <X className="h-3.5 w-3.5" />
-                        Cancelar resgate
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {resumo.resgates.length === 0 && (
-                <p className="px-4 py-6 text-center text-sm text-muted-foreground sm:px-5">Nenhum resgate realizado.</p>
-              )}
-            </div>
-          )}
-        </section>
-
-        <section className="overflow-hidden rounded-2xl border bg-card">
-          <button
-            type="button"
-            className="group flex w-full items-center gap-3 px-4 py-4 text-left sm:px-5"
-            onClick={() => setExtratoAberto((atual) => !atual)}
-            aria-expanded={extratoAberto}
-          >
-            <CollapseChevron open={extratoAberto} />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold">Movimentações de estrelas</h2>
-                <Badge variant="secondary" className="h-5 px-1.5 py-0 text-[10px]">{movimentos.length}</Badge>
-              </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">Entradas, estornos, resgates e devoluções.</p>
-            </div>
-          </button>
-
-          {extratoAberto && (
-            <div className="border-t divide-y">
-              {movimentos.map((movimento) => (
-                <div key={movimento.id} className="flex items-start justify-between gap-3 px-4 py-3.5 sm:px-5">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{movimentoLabel(movimento)}</p>
-                    <p className="mt-0.5 break-words text-xs text-muted-foreground">
-                      {movimento.descricao || "—"} · {dataHora(movimento.created_at)}
-                    </p>
-                  </div>
-                  <span className={`inline-flex shrink-0 items-center gap-1 text-sm font-bold ${movimento.quantidade > 0 ? "text-green-700" : "text-foreground"}`}>
-                    {movimento.quantidade > 0 ? "+" : ""}{movimento.quantidade}
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold">
                     <Estrela />
+                    {resgate.estrelas_utilizadas}
                   </span>
                 </div>
-              ))}
-              {movimentos.length === 0 && (
-                <p className="px-4 py-6 text-center text-sm text-muted-foreground sm:px-5">Ainda não há movimentos de estrelas.</p>
-              )}
-            </div>
-          )}
-        </section>
+
+                {resgate.status !== "CANCELADO" && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {resgate.status === "PENDENTE" && (
+                      <Button type="button" size="sm" onClick={() => void marcarEntregue(resgate)} disabled={salvando}>
+                        <Check className="h-3.5 w-3.5" />
+                        Marcar entregue
+                      </Button>
+                    )}
+                    <Button type="button" variant="outline" size="sm" onClick={() => setConfirmacao({ tipo: "CANCELAR", resgate })} disabled={salvando}>
+                      <X className="h-3.5 w-3.5" />
+                      Cancelar resgate
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+            {resumo.resgates.length === 0 && (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground sm:px-5">Nenhum resgate realizado.</p>
+            )}
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Movimentações de estrelas"
+          description="Entradas, estornos, resgates e devoluções."
+          count={movimentos.length}
+          open={extratoAberto}
+          onOpenChange={setExtratoAberto}
+        >
+          <div className="divide-y">
+            {movimentos.map((movimento) => (
+              <div key={movimento.id} className="flex items-start justify-between gap-3 px-4 py-3.5 sm:px-5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{movimentoLabel(movimento)}</p>
+                  <p className="mt-0.5 break-words text-xs text-muted-foreground">
+                    {movimento.descricao || "—"} · {dataHora(movimento.created_at)}
+                  </p>
+                </div>
+                <span className={`inline-flex shrink-0 items-center gap-1 text-sm font-bold ${movimento.quantidade > 0 ? "text-green-700" : "text-foreground"}`}>
+                  {movimento.quantidade > 0 ? "+" : ""}{movimento.quantidade}
+                  <Estrela />
+                </span>
+              </div>
+            ))}
+            {movimentos.length === 0 && (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground sm:px-5">Ainda não há movimentos de estrelas.</p>
+            )}
+          </div>
+        </CollapsibleSection>
       </div>
 
       <Dialog
