@@ -21,10 +21,10 @@ import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
 import { AppPageContent } from "@/components/AppPageContent";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { CollapseChevron } from "@/components/CollapseChevron";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   encerrarSessaoFilho,
@@ -96,6 +96,9 @@ export function PainelFilhoApp({
   const [menuAberto, setMenuAberto] = useState(false);
   const [tarefaDatas, setTarefaDatas] = useState<TarefaFilho | null>(null);
   const [resultadoAberto, setResultadoAberto] = useState(false);
+  const [tarefasAbertas, setTarefasAbertas] = useState(true);
+  const [registroAberto, setRegistroAberto] = useState<string | null>(null);
+  const [historicoAbertoId, setHistoricoAbertoId] = useState<number | null>(null);
   const [saindo, setSaindo] = useState(false);
 
   useEffect(() => {
@@ -216,6 +219,17 @@ export function PainelFilhoApp({
     return grupos;
   }, [registrosAtuais]);
 
+  useEffect(() => {
+    if (registrosPorData.length === 0) {
+      setRegistroAberto(null);
+      return;
+    }
+
+    if (!registroAberto || !registrosPorData.some((grupo) => grupo.data === registroAberto)) {
+      setRegistroAberto(registrosPorData[0].data);
+    }
+  }, [registrosPorData, registroAberto]);
+
   const descontoUnitario = Number(vigenciaAtual?.valor_debito ?? 0);
   const desconto = painel.filho.tem_mesada
     ? Math.min(painel.filho.valor_mesada ?? 0, qtdNaoFez * descontoUnitario)
@@ -251,7 +265,8 @@ export function PainelFilhoApp({
   return (
     <div className="min-h-screen bg-muted/20">
       <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-2.5 sm:px-6">
+        <div className="mx-auto grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-2.5">
+          <span aria-hidden="true" />
           <button
             type="button"
             onClick={() => setAba("inicio")}
@@ -261,7 +276,7 @@ export function PainelFilhoApp({
             <AppBrand />
           </button>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center justify-self-end gap-2">
             <button
               type="button"
               onClick={() => setAba("estrelas")}
@@ -362,29 +377,17 @@ export function PainelFilhoApp({
             </section>
 
             <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setAba("registros")}
-                className="rounded-2xl border border-green-200 bg-green-50 p-3 text-left transition-transform active:scale-[0.98]"
-              >
+              <button type="button" onClick={() => setAba("registros")} className="rounded-2xl border border-green-200 bg-green-50 p-3 text-left transition-transform active:scale-[0.98]">
                 <ThumbsUp className="h-5 w-5 text-green-700" />
                 <p className="mt-2 text-2xl font-bold leading-none text-green-800 tabular-nums">{qtdFez}</p>
                 <p className="mt-1 text-[11px] font-semibold text-green-700">Fez</p>
               </button>
-              <button
-                type="button"
-                onClick={() => setAba("registros")}
-                className="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-transform active:scale-[0.98]"
-              >
+              <button type="button" onClick={() => setAba("registros")} className="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-transform active:scale-[0.98]">
                 <ThumbsDown className="h-5 w-5 text-red-600" />
                 <p className="mt-2 text-2xl font-bold leading-none text-red-700 tabular-nums">{qtdNaoFez}</p>
                 <p className="mt-1 text-[11px] font-semibold text-red-600">Não fez</p>
               </button>
-              <button
-                type="button"
-                onClick={() => setAba("tarefas")}
-                className="rounded-2xl border bg-card p-3 text-left transition-transform active:scale-[0.98]"
-              >
+              <button type="button" onClick={() => setAba("tarefas")} className="rounded-2xl border bg-card p-3 text-left transition-transform active:scale-[0.98]">
                 <ClipboardList className="h-5 w-5 text-muted-foreground" />
                 <p className="mt-2 text-2xl font-bold leading-none tabular-nums">{tarefasAtual.length}</p>
                 <p className="mt-1 text-[11px] font-semibold text-muted-foreground">Tarefas</p>
@@ -392,11 +395,7 @@ export function PainelFilhoApp({
             </div>
 
             {proximaRecompensa && (
-              <button
-                type="button"
-                onClick={() => setAba("estrelas")}
-                className="w-full rounded-2xl border bg-card p-4 text-left transition-transform active:scale-[0.99]"
-              >
+              <button type="button" onClick={() => setAba("estrelas")} className="w-full rounded-2xl border bg-card p-4 text-left transition-transform active:scale-[0.99]">
                 <div className="flex items-start gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
                     <Gift className="h-5 w-5" />
@@ -430,69 +429,59 @@ export function PainelFilhoApp({
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Combinado atual</p>
-                      <p className="mt-1 text-sm font-medium">
-                        {data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}
-                      </p>
+                      <p className="mt-1 text-sm font-medium">{data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}</p>
                     </div>
-                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">
-                      Em andamento
-                    </Badge>
+                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">Em andamento</Badge>
                   </div>
                 </section>
 
-                <section className="overflow-hidden rounded-2xl border bg-card">
-                  <button
-                    type="button"
-                    className="group flex w-full items-center gap-3 px-4 py-3.5 text-left"
-                    onClick={() => setResultadoAberto((atual) => !atual)}
-                    aria-expanded={resultadoAberto}
-                  >
-                    <CollapseChevron open={resultadoAberto} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">Meu combinado</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {painel.filho.tem_mesada
-                          ? `Valor atual: ${dinheiro(mesadaFinal ?? 0)}`
-                          : `${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia} Não fez`}
-                      </p>
-                    </div>
-                  </button>
-
-                  {resultadoAberto && (
-                    <div className="border-t px-4 py-4">
-                      {painel.filho.tem_mesada ? (
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Mesada</span><strong>{dinheiro(painel.filho.valor_mesada ?? 0)}</strong></div>
-                          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Desconto por Não fez</span><strong>{dinheiro(descontoUnitario)}</strong></div>
-                          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Não fez</span><strong>{qtdNaoFez}</strong></div>
-                          <div className="flex justify-between gap-3 border-t pt-2"><span>Valor atual</span><strong>{dinheiro(mesadaFinal ?? 0)}</strong></div>
-                        </div>
-                      ) : (
-                        <div className="space-y-2 text-sm">
-                          <p><span className="text-muted-foreground">Penalidade:</span> <strong>{vigenciaAtual.penalidade || "—"}</strong></p>
-                          <p><span className="text-muted-foreground">Limite:</span> <strong>{vigenciaAtual.qtd_ocorrencia} Não fez</strong></p>
-                          <p><span className="text-muted-foreground">Atual:</span> <strong>{qtdNaoFez} Não fez</strong></p>
-                          {vigenciaAtual.qtd_ocorrencia > 0 && qtdNaoFez >= vigenciaAtual.qtd_ocorrencia && (
-                            <Badge variant="destructive">Limite atingido</Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </section>
+                <CollapsibleSection
+                  title="Meu combinado"
+                  description={painel.filho.tem_mesada
+                    ? `Valor atual: ${dinheiro(mesadaFinal ?? 0)}`
+                    : `${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia} Não fez`}
+                  open={resultadoAberto}
+                  onOpenChange={setResultadoAberto}
+                >
+                  <div className="px-4 py-4 sm:px-5">
+                    {painel.filho.tem_mesada ? (
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Mesada</span><strong>{dinheiro(painel.filho.valor_mesada ?? 0)}</strong></div>
+                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Desconto por Não fez</span><strong>{dinheiro(descontoUnitario)}</strong></div>
+                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Não fez</span><strong>{qtdNaoFez}</strong></div>
+                        <div className="flex justify-between gap-3 border-t pt-2"><span>Valor atual</span><strong>{dinheiro(mesadaFinal ?? 0)}</strong></div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 text-sm">
+                        <p><span className="text-muted-foreground">Penalidade:</span> <strong>{vigenciaAtual.penalidade || "—"}</strong></p>
+                        <p><span className="text-muted-foreground">Limite:</span> <strong>{vigenciaAtual.qtd_ocorrencia} Não fez</strong></p>
+                        <p><span className="text-muted-foreground">Atual:</span> <strong>{qtdNaoFez} Não fez</strong></p>
+                        {vigenciaAtual.qtd_ocorrencia > 0 && qtdNaoFez >= vigenciaAtual.qtd_ocorrencia && <Badge variant="destructive">Limite atingido</Badge>}
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleSection>
               </>
             ) : <SemVigencia />}
           </div>
         )}
 
         {aba === "tarefas" && (
-          <div className="space-y-4">
-            <div className="pb-1">
-              <h1 className="text-xl font-bold">Tarefas</h1>
-            </div>
+          <div>
+            <PageHeader
+              title="Tarefas"
+              description="O que está combinado com você agora."
+              icon={<ClipboardList className="h-6 w-6" />}
+            />
 
             {vigenciaAtual ? (
-              <div className="space-y-2">
+              <CollapsibleSection
+                title="Tarefas atuais"
+                count={tarefasAtual.length}
+                open={tarefasAbertas}
+                onOpenChange={setTarefasAbertas}
+              >
+                <div className="space-y-2 p-4 sm:p-5">
                   {tarefasAtual.map((t) => {
                     const fezCount = t.ocorrencias.filter((o) => o.tipo === "FEZ").length;
                     const naoFezCount = t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length;
@@ -504,78 +493,63 @@ export function PainelFilhoApp({
                           <TarefaIcone nome={t.nome} className="mt-0.5" />
                           <span className="min-w-0 break-words text-sm font-medium">{t.nome}</span>
                         </span>
-
                         {temResultado ? (
                           <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">
                             {fezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700"><ThumbsUp className="h-3 w-3" /> {fezCount} Fez</span>}
                             {naoFezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700"><ThumbsDown className="h-3 w-3" /> {naoFezCount} Não fez</span>}
                             <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}>
-                              <CalendarDays className="h-3.5 w-3.5" />
-                              Ver resultados
+                              <CalendarDays className="h-3.5 w-3.5" /> Ver resultados
                             </Button>
                           </div>
-                        ) : (
-                          <span className="shrink-0 text-xs text-muted-foreground">Sem registros</span>
-                        )}
+                        ) : <span className="shrink-0 text-xs text-muted-foreground">Sem registros</span>}
                       </div>
                     );
                   })}
-                {tarefasAtual.length === 0 && (
-                  <div className="rounded-2xl border border-dashed bg-card p-5 text-center text-sm text-muted-foreground">
-                    Nenhuma tarefa atribuída nesta vigência.
-                  </div>
-                )}
-              </div>
+                  {tarefasAtual.length === 0 && <EmptyState>Nenhuma tarefa atribuída nesta vigência.</EmptyState>}
+                </div>
+              </CollapsibleSection>
             ) : <SemVigencia />}
           </div>
         )}
 
         {aba === "registros" && (
-          <div className="space-y-4">
-            <div className="pb-1">
-              <h1 className="text-xl font-bold">Fez / Não fez</h1>
-            </div>
+          <div>
+            <PageHeader
+              title="Fez / Não fez"
+              description="Seus registros do combinado atual."
+              icon={<ClipboardCheck className="h-6 w-6" />}
+            />
 
             {vigenciaAtual ? (
               registrosPorData.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {registrosPorData.map((grupo) => (
-                    <section key={grupo.data} className="overflow-hidden rounded-2xl border bg-card">
-                      <div className="flex items-center justify-between gap-3 border-b bg-muted/30 px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                          <h2 className="text-sm font-semibold">{grupo.data}</h2>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {grupo.itens.length === 1 ? "1 registro" : `${grupo.itens.length} registros`}
-                        </span>
-                      </div>
-
+                    <CollapsibleSection
+                      key={grupo.data}
+                      title={grupo.data}
+                      count={grupo.itens.length}
+                      open={registroAberto === grupo.data}
+                      onOpenChange={(open) => setRegistroAberto(open ? grupo.data : null)}
+                    >
                       <div className="divide-y">
                         {grupo.itens.map(({ tarefa, ocorrencia }, i) => {
                           const b = bonus(ocorrencia);
                           return (
-                            <div key={`${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5">
-                              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                                ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
-                              }`}>
+                            <div key={`${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
+                              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
                                 {ocorrencia.tipo === "FEZ" ? <ThumbsUp className="h-4 w-4" /> : <ThumbsDown className="h-4 w-4" />}
                               </span>
-
                               <div className="min-w-0 flex-1">
                                 <div className="flex min-w-0 items-start gap-2">
                                   <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
                                   <p className="min-w-0 break-words text-sm font-semibold">{tarefa.nome}</p>
                                 </div>
-                                <p className={`mt-1 text-xs font-medium ${
-                                  ocorrencia.tipo === "FEZ" ? "text-green-700" : "text-red-600"
-                                }`}>
+                                <p className={`mt-1 text-xs font-medium ${ocorrencia.tipo === "FEZ" ? "text-green-700" : "text-red-600"}`}>
                                   {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
                                 </p>
                                 {ocorrencia.tipo === "FEZ" && (
                                   <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-600">
-                                    <Star className="h-3.5 w-3.5" />
-                                    +1 estrela
+                                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" /> +1 estrela
                                   </p>
                                 )}
                                 {b && <p className="mt-1 break-words text-xs text-muted-foreground">Recompensa extra: {b}</p>}
@@ -584,24 +558,13 @@ export function PainelFilhoApp({
                           );
                         })}
                       </div>
-                    </section>
+                    </CollapsibleSection>
                   ))}
                 </div>
-              ) : (
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground">Nenhum registro de Fez / Não fez nesta vigência.</p>
-                  </CardContent>
-                </Card>
-              )
+              ) : <EmptyState>Nenhum registro de Fez / Não fez nesta vigência.</EmptyState>
             ) : <SemVigencia />}
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full justify-between"
-              onClick={() => setAba("historico")}
-            >
+            <Button type="button" variant="outline" className="mt-4 w-full justify-between" onClick={() => setAba("historico")}>
               <span className="flex items-center gap-2"><History className="h-4 w-4" /> Ver histórico completo</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -611,62 +574,48 @@ export function PainelFilhoApp({
         {aba === "estrelas" && <FilhoEstrelasPage estrelas={estrelas} />}
 
         {aba === "historico" && (
-          <div className="space-y-4">
-            <div className="pb-1">
-              <h1 className="text-xl font-bold">Histórico</h1>
-            </div>
+          <div>
+            <PageHeader
+              title="Histórico"
+              description="Resultados das vigências encerradas."
+              icon={<History className="h-6 w-6" />}
+            />
 
             {vigenciasFinalizadas.length > 0 ? (
-              <div className="space-y-2">
-                  {vigenciasFinalizadas.map((v) => {
-                    const fezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length, 0);
-                    const naoFezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length, 0);
+              <div className="space-y-3">
+                {vigenciasFinalizadas.map((v) => {
+                  const fezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length, 0);
+                  const naoFezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length, 0);
 
-                    return (
-                      <div key={v.id} className="rounded-xl border p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium">{dataHora(v.data_inicio)} até {dataHora(v.data_fim)}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {v.tarefas.length} tarefa(s) · {fezV} Fez · {naoFezV} Não fez
-                            </p>
-                          </div>
-                          <div className="flex shrink-0 flex-col items-end gap-1.5">
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold">
-                              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                              {fezV}
-                            </span>
-                            <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                              <span className={`h-2 w-2 rounded-full ${corStatus(status(v))}`} />
-                              Finalizada
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1.5 border-t pt-3">
-                          {v.tarefas.map((tarefa) => {
-                            const fez = tarefa.ocorrencias.filter((o) => o.tipo === "FEZ").length;
-                            const naoFez = tarefa.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length;
-                            return (
-                              <div key={tarefa.id} className="flex min-w-0 items-start justify-between gap-3 text-xs">
-                                <span className="flex min-w-0 items-start gap-1.5">
-                                  <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
-                                  <span className="min-w-0 break-words">{tarefa.nome}</span>
-                                </span>
-                                <span className="shrink-0 text-muted-foreground">{fez} Fez · {naoFez} Não fez</span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                  return (
+                    <CollapsibleSection
+                      key={v.id}
+                      title={`${data(v.data_inicio)} até ${data(v.data_fim)}`}
+                      description={`${fezV} Fez · ${naoFezV} Não fez`}
+                      count={v.tarefas.length}
+                      open={historicoAbertoId === v.id}
+                      onOpenChange={(open) => setHistoricoAbertoId(open ? v.id : null)}
+                    >
+                      <div className="divide-y">
+                        {v.tarefas.map((tarefa) => {
+                          const fez = tarefa.ocorrencias.filter((o) => o.tipo === "FEZ").length;
+                          const naoFez = tarefa.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length;
+                          return (
+                            <div key={tarefa.id} className="flex min-w-0 items-start justify-between gap-3 px-4 py-3.5 text-xs sm:px-5">
+                              <span className="flex min-w-0 items-start gap-1.5">
+                                <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
+                                <span className="min-w-0 break-words">{tarefa.nome}</span>
+                              </span>
+                              <span className="shrink-0 text-muted-foreground">{fez} Fez · {naoFez} Não fez</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
+                    </CollapsibleSection>
+                  );
                 })}
               </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed bg-card p-5 text-center text-sm text-muted-foreground">
-                Ainda não há vigências finalizadas no seu histórico.
-              </div>
-            )}
+            ) : <EmptyState>Ainda não há vigências finalizadas no seu histórico.</EmptyState>}
           </div>
         )}
 
