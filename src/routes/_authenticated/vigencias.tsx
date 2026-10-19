@@ -24,6 +24,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
@@ -96,6 +97,7 @@ function VigenciasPage() {
   const [confirmarCloneAberto, setConfirmarCloneAberto] = useState(false);
   const [vigenciaParaAtribuir, setVigenciaParaAtribuir] = useState<number | null>(null);
   const [vigenciaInfoId, setVigenciaInfoId] = useState<number | null>(null);
+  const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
@@ -295,10 +297,20 @@ function VigenciasPage() {
           const finalizada = situacao === "finalizada";
           const emAndamento = situacao === "andamento";
           const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
-          return <div key={v.id} className="rounded-2xl border bg-card p-4">
-            <div className="flex items-start justify-between gap-3">
-              <VigenciaStatus vigencia={v} />
-              <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          const aberto = vigenciasAbertas[v.id] !== false;
+          return <CollapsibleSection
+            key={v.id}
+            title={<VigenciaStatus vigencia={v} />}
+            description={
+              <span className="flex min-w-0 items-start gap-1.5 text-[13px] font-semibold leading-relaxed tracking-tight text-foreground sm:text-sm">
+                <CalendarRange className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 break-words">{fmtVigencia(v)}</span>
+              </span>
+            }
+            open={aberto}
+            onOpenChange={(open) => setVigenciasAbertas((atuais) => ({ ...atuais, [v.id]: open }))}
+            action={
+              <>
                 <Hint content="Ver filhos vinculados">
                   <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setVigenciaInfoId(v.id)} aria-label="Ver filhos vinculados à vigência">
                     <Info className="h-4 w-4" />
@@ -323,10 +335,11 @@ function VigenciasPage() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </Hint>
-              </div>
-            </div>
-            <div className="mt-2 flex items-center gap-1.5 whitespace-nowrap text-[13px] font-semibold leading-relaxed tracking-tight sm:text-base"><CalendarRange className="h-4 w-4 shrink-0 text-primary" /><span>{fmtVigencia(v)}</span></div>
-            <div className="mt-3 space-y-2">
+              </>
+            }
+            contentClassName="p-4"
+          >
+            <div className="space-y-2">
               <div className="w-full rounded-lg border border-amber-400 bg-transparent md:border-amber-300/70 px-3 py-2 text-xs leading-relaxed dark:border-amber-700/60">
                 <span className="font-semibold text-foreground">Para filhos sem mesada:</span>{" "}<span className="text-muted-foreground">limite máximo de {v.qtd_ocorrencia} “Não fez”</span>
                 {v.penalidade && <><span className="text-muted-foreground"> · </span><span className="font-semibold text-foreground">Penalidade aplicada:</span>{" "}<span className="text-muted-foreground">{v.penalidade}</span></>}
@@ -335,7 +348,7 @@ function VigenciasPage() {
                 <span className="font-semibold text-foreground">Para filhos com mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} de desconto por cada “Não fez”` : "Não cadastrado"}</span>
               </div>
             </div>
-          </div>;
+          </CollapsibleSection>;
         })}
     </div>
 
