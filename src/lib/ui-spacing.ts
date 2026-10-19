@@ -2,6 +2,7 @@ export const uiSpacing = {
   pageHeader: "mb-6 md:mb-8",
   pageStack: "space-y-6",
   sectionStack: "space-y-4",
+  sectionCard: "rounded-xl border bg-card p-4 shadow-sm sm:p-5",
   compactStack: "space-y-3",
   formStack: "space-y-4",
   fieldStack: "space-y-1.5",

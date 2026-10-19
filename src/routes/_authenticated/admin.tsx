@@ -1,4 +1,5 @@
 import { uiTypography } from "@/lib/ui-typography";
+import { uiSpacing } from "@/lib/ui-spacing";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
@@ -163,7 +164,7 @@ function Admin() {
         icon={<UserCog className="h-6 w-6" />}
       />
       <div className="max-w-xl space-y-6">
-        <section className="rounded-xl border bg-card p-5 shadow-sm">
+        <section className={uiSpacing.sectionCard}>
           <h2 className={uiTypography.secondaryTitle}>Dados pessoais</h2>
           <p className="mb-5 mt-1 text-sm text-muted-foreground">Altere seu nome. O email é apenas para consulta.</p>
           <form onSubmit={(e) => { void runAction(() => salvarDados(e)); }} className="space-y-4">
@@ -174,7 +175,7 @@ function Admin() {
         </section>
 
         {biometriaEhNativa() && (
-          <section className="rounded-xl border bg-card p-5 shadow-sm">
+          <section className={uiSpacing.sectionCard}>
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Fingerprint className="h-5 w-5" />
@@ -203,7 +204,7 @@ function Admin() {
           </section>
         )}
 
-        <section className="rounded-xl border bg-card p-5 shadow-sm">
+        <section className={uiSpacing.sectionCard}>
           <h2 className={uiTypography.secondaryTitle}>Aparência</h2>
           <p className="mb-4 mt-1 text-sm text-muted-foreground">Escolha como o Combinado deve aparecer neste dispositivo.</p>
           <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Tema do aplicativo">
@@ -234,7 +235,7 @@ function Admin() {
           <p className="mt-3 text-xs text-muted-foreground">O padrão inicial é Claro. Em “Seguir sistema”, o tema acompanha automaticamente o Windows, Android ou iOS.</p>
         </section>
 
-        <section className="rounded-xl border border-destructive/30 bg-card p-5 shadow-sm">
+        <section className={`${uiSpacing.sectionCard} border-destructive/30`}>
           <h2 className={`${uiTypography.secondaryTitle} text-destructive`}>Excluir conta</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Exclui permanentemente sua conta e os dados vinculados, incluindo filhos, tarefas, vigências, atribuições, ocorrências, histórico e links públicos.
