@@ -1,7 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FezNaoFezPage } from "@/components/FezNaoFezPage";
+import { FezNaoFezPage, type FocoSolicitacaoTarefa } from "@/components/FezNaoFezPage";
+
+type OcorrenciasSearch = {
+  filho?: number;
+  atribuicao?: number;
+  data?: string;
+  aviso?: number;
+};
+
+function inteiroPositivo(valor: unknown) {
+  const numero = Number(valor);
+  return Number.isInteger(numero) && numero > 0 ? numero : undefined;
+}
+
+function dataValida(valor: unknown) {
+  return typeof valor === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valor)
+    ? valor
+    : undefined;
+}
 
 export const Route = createFileRoute("/_authenticated/ocorrencias")({
+  validateSearch: (search: Record<string, unknown>): OcorrenciasSearch => ({
+    filho: inteiroPositivo(search["filho"]),
+    atribuicao: inteiroPositivo(search["atribuicao"]),
+    data: dataValida(search["data"]),
+    aviso: inteiroPositivo(search["aviso"]),
+  }),
   head: () => ({
     meta: [
       { title: "Fez / Não fez — Combinado" },
@@ -16,5 +40,16 @@ export const Route = createFileRoute("/_authenticated/ocorrencias")({
 });
 
 function OcorrenciasPage() {
-  return <FezNaoFezPage modo="todos" />;
+  const search = Route.useSearch();
+
+  const foco: FocoSolicitacaoTarefa | undefined = search.atribuicao
+    ? {
+        idFilho: search.filho,
+        idFilhoTarefa: search.atribuicao,
+        data: search.data,
+        idSolicitacao: search.aviso,
+      }
+    : undefined;
+
+  return <FezNaoFezPage modo="todos" focoSolicitacao={foco} />;
 }

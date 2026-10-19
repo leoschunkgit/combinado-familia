@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  BellRing,
   CalendarDays,
   ChevronRight,
   ClipboardCheck,
@@ -11,6 +12,7 @@ import {
   House,
   Loader2,
   LogOut,
+  Send,
   Star,
   ThumbsDown,
   ThumbsUp,
@@ -26,8 +28,11 @@ import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
+  avisarTarefaConcluida,
   encerrarSessaoFilho,
   lerSessaoFilhoLocal,
   limparSessaoFilhoLocal,
@@ -68,6 +73,13 @@ const dinheiro = (v: number) => v.toLocaleString("pt-BR", {
   currency: "BRL",
 });
 
+const dataSaoPaulo = (v = new Date()) => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Sao_Paulo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(v);
+
 function status(v: VigenciaFilho) {
   const s = situacaoVigencia(v);
   return s === "andamento" ? "Em andamento" : s === "futura" ? "Irá começar" : "Finalizada";
@@ -98,6 +110,9 @@ export function PainelFilhoApp({
   const [registroAberto, setRegistroAberto] = useState<string | null>(null);
   const [historicoAbertoId, setHistoricoAbertoId] = useState<number | null>(null);
   const [saindo, setSaindo] = useState(false);
+  const [avisoTarefa, setAvisoTarefa] = useState<TarefaFilho | null>(null);
+  const [observacaoAviso, setObservacaoAviso] = useState("");
+  const [enviandoAviso, setEnviandoAviso] = useState(false);
   const abrirInicioPeloPush = useCallback(() => setAba("inicio"), []);
 
   useEffect(() => {
@@ -240,6 +255,38 @@ export function PainelFilhoApp({
   const resultados = tarefaDatas?.ocorrencias
     .filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ")
     .sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
+
+  async function enviarAvisoTarefa() {
+    if (!avisoTarefa || enviandoAviso) return;
+
+    setEnviandoAviso(true);
+    try {
+      const resposta = await avisarTarefaConcluida(avisoTarefa.id, observacaoAviso);
+      const token = await lerSessaoFilhoLocal();
+
+      if (token) {
+        const atual = await obterPainelFilhoApp(token);
+        if (atual) setPainel(atual);
+      }
+
+      setAvisoTarefa(null);
+      setObservacaoAviso("");
+
+      toast.success(
+        resposta.ja_existia
+          ? "Você já avisou o responsável sobre esta tarefa hoje."
+          : "Aviso enviado ao responsável.",
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar o aviso.",
+      );
+    } finally {
+      setEnviandoAviso(false);
+    }
+  }
 
   async function sair() {
     setSaindo(true);
@@ -488,6 +535,13 @@ export function PainelFilhoApp({
                     const fezCount = t.ocorrencias.filter((o) => o.tipo === "FEZ").length;
                     const naoFezCount = t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length;
                     const temResultado = fezCount > 0 || naoFezCount > 0;
+                    const hoje = dataSaoPaulo();
+                    const registroHoje = t.ocorrencias.find(
+                      (o) => dataSaoPaulo(new Date(o.data)) === hoje,
+                    );
+                    const solicitacaoHoje = (painel.solicitacoes_hoje ?? []).find(
+                      (s) => s.id_filho_tarefa === t.id && s.data_referencia === hoje,
+                    );
 
                     return (
                       <div key={t.id} className="flex min-w-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -495,15 +549,46 @@ export function PainelFilhoApp({
                           <TarefaIcone nome={t.nome} className="mt-0.5" />
                           <span className="min-w-0 break-words text-sm font-medium">{t.nome}</span>
                         </span>
-                        {temResultado ? (
-                          <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">
-                            {fezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700"><ThumbsUp className="h-3 w-3" /> {fezCount} Fez</span>}
-                            {naoFezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700"><ThumbsDown className="h-3 w-3" /> {naoFezCount} Não fez</span>}
+
+                        <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">
+                          {fezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700"><ThumbsUp className="h-3 w-3" /> {fezCount} Fez</span>}
+                          {naoFezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700"><ThumbsDown className="h-3 w-3" /> {naoFezCount} Não fez</span>}
+
+                          {!registroHoje && solicitacaoHoje && (
+                            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                              <BellRing className="h-3.5 w-3.5 shrink-0" />
+                              Aguardando confirmação
+                            </span>
+                          )}
+
+                          {!registroHoje && !solicitacaoHoje && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => {
+                                setObservacaoAviso("");
+                                setAvisoTarefa(t);
+                              }}
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              Avisei que terminei
+                            </Button>
+                          )}
+
+                          {temResultado && (
                             <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}>
                               <CalendarDays className="h-3.5 w-3.5" /> Ver resultados
                             </Button>
-                          </div>
-                        ) : <span className="shrink-0 text-xs text-muted-foreground">Sem registros</span>}
+                          )}
+
+                          {!registroHoje && solicitacaoHoje?.observacao && (
+                            <span className="basis-full break-words text-right text-[11px] text-muted-foreground">
+                              “{solicitacaoHoje.observacao}”
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -655,6 +740,67 @@ export function PainelFilhoApp({
           })}
         </div>
       </nav>
+
+      <Dialog
+        open={avisoTarefa !== null}
+        onOpenChange={(open) => {
+          if (!open && !enviandoAviso) {
+            setAvisoTarefa(null);
+            setObservacaoAviso("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Avisar que terminei</DialogTitle>
+            <DialogDescription>
+              {avisoTarefa
+                ? `Avise seu responsável que você terminou “${avisoTarefa.nome}”. A marcação de Fez / Não fez continua sendo feita pelo responsável.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="observacao-aviso-filho">Observação opcional</Label>
+            <Textarea
+              id="observacao-aviso-filho"
+              value={observacaoAviso}
+              onChange={(event) => setObservacaoAviso(event.target.value.slice(0, 120))}
+              maxLength={120}
+              placeholder="Ex.: Pode conferir meu quarto."
+              disabled={enviandoAviso}
+              className="min-h-24 resize-none"
+            />
+            <p className="text-right text-[11px] text-muted-foreground">
+              {observacaoAviso.length}/120
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setAvisoTarefa(null);
+                setObservacaoAviso("");
+              }}
+              disabled={enviandoAviso}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void enviarAvisoTarefa()}
+              disabled={enviandoAviso}
+            >
+              {enviandoAviso
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Send className="h-4 w-4" />}
+              Enviar aviso
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={tarefaDatas !== null} onOpenChange={(open) => { if (!open) setTarefaDatas(null); }}>
         <DialogContent className="max-w-sm rounded-lg">
