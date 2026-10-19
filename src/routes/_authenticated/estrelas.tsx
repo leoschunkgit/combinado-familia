@@ -47,7 +47,7 @@ function EstrelasPage() {
         <EmptyState>Cadastre um filho antes de configurar estrelas e recompensas.</EmptyState>
       ) : (
         <div className="space-y-5">
-          <section className="rounded-2xl border bg-card p-4">
+          <section className="border-b pb-4">
             <div className="max-w-sm">
               <Pick
                 label="Filho"
@@ -63,7 +63,7 @@ function EstrelasPage() {
                 }))}
               />
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
               Cada tarefa marcada como “Fez” vale 1 estrela. O saldo continua acumulado mesmo quando uma vigência termina.
             </p>
           </section>
