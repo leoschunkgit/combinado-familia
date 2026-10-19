@@ -597,7 +597,7 @@ function AdministracaoPage() {
             <Indicador titulo="Links públicos ativos" valor={resumo.links_publicos_ativos} icon={<Link2 className="h-4 w-4" />} />
           </div>
 
-          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <section className={uiSpacing.sectionCard}>
             <h2 className={uiTypography.secondaryTitle}>Uso e configuração</h2>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg border bg-muted/20 px-3 py-2">
@@ -764,7 +764,7 @@ function AdministracaoPage() {
               })}
             </div>
 
-            <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <section className={uiSpacing.sectionCard}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className={uiTypography.secondaryTitle}>{selecionada.label}</h3>
@@ -823,7 +823,7 @@ function AdministracaoPage() {
               <p className="mt-1 text-sm text-muted-foreground">Mostra até onde os usuários avançaram na configuração e no uso do Combinado Família.</p>
             </div>
 
-            <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <section className={uiSpacing.sectionCard}>
               <div className="space-y-3">
                 {etapas.map((etapa, index) => {
                   const percentual = total > 0 ? Math.round((etapa.valor / total) * 100) : 0;
@@ -845,7 +845,7 @@ function AdministracaoPage() {
               </div>
             </section>
 
-            <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+            <section className={uiSpacing.sectionCard}>
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Workflow className="h-4 w-4" />
@@ -873,7 +873,7 @@ function AdministracaoPage() {
             <Indicador titulo="Último acesso" valor={formatarDataHora(operacao.atividade.ultimo_acesso)} icon={<Clock3 className="h-4 w-4" />} />
           </div>
 
-          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <section className={uiSpacing.sectionCard}>
             <h2 className={uiTypography.secondaryTitle}>Plataformas em uso</h2>
             <div className="mt-4 grid grid-cols-3 gap-2">
               <div className="rounded-lg border bg-muted/20 px-3 py-2">
@@ -909,7 +909,7 @@ function AdministracaoPage() {
             <Indicador titulo="Android monitorados" valor={operacao.plataformas.android} icon={<Smartphone className="h-4 w-4" />} />
           </div>
 
-          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <section className={uiSpacing.sectionCard}>
             <h2 className={uiTypography.secondaryTitle}>Versões registradas</h2>
             <p className="mt-1 text-sm text-muted-foreground">Última versão/plataforma registrada para cada usuário monitorado.</p>
             <div className="mt-4 space-y-2">
@@ -949,7 +949,7 @@ function AdministracaoPage() {
             <Indicador titulo="iOS ativos" valor={resumo.push_ios_ativos} icon={<Smartphone className="h-4 w-4" />} />
           </div>
 
-          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <section className={uiSpacing.sectionCard}>
             <h2 className={uiTypography.secondaryTitle}>Notificações</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
               Tokens de push e conteúdo das notificações não são exibidos nesta área.
@@ -980,7 +980,7 @@ function AdministracaoPage() {
             <Indicador titulo="Último acesso monitorado" valor={formatarDataHora(operacao.atividade.ultimo_acesso)} icon={<Activity className="h-4 w-4" />} />
           </div>
 
-          <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <section className={uiSpacing.sectionCard}>
             <h2 className={uiTypography.secondaryTitle}>Segurança operacional</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
               A Administração recebe somente indicadores preparados por funções protegidas no banco. Segredos do cron, tokens de push e conteúdo das famílias não são expostos.
