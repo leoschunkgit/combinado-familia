@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  ArrowRight,
   BellRing,
   CalendarDays,
   ClipboardCheck,
@@ -517,6 +518,18 @@ export function PainelFilhoApp({
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoHoje}%` }} />
                   </div>
+                  <div
+                    className="mt-3 flex items-center justify-end gap-1.5 text-xs font-bold"
+                    style={{ color: painel.filho.cor?.trim() || "var(--primary)" }}
+                  >
+                    <span>Ver minhas tarefas</span>
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full border"
+                      style={{ borderColor: painel.filho.cor?.trim() || "var(--primary)" }}
+                    >
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
                 </button>
 
                 {recompensaDestaque && (
@@ -556,6 +569,18 @@ export function PainelFilhoApp({
                         </p>
                       </>
                     )}
+                    <div
+                      className="mt-3 flex items-center justify-end gap-1.5 text-xs font-bold"
+                      style={{ color: painel.filho.cor?.trim() || "var(--primary)" }}
+                    >
+                      <span>Ver minhas estrelas</span>
+                      <span
+                        className="flex h-6 w-6 items-center justify-center rounded-full border"
+                        style={{ borderColor: painel.filho.cor?.trim() || "var(--primary)" }}
+                      >
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </button>
                 )}
 
