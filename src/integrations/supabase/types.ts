@@ -1215,6 +1215,10 @@ export type Database = {
         Args: { p_id_filho: number; p_id_usuario_pai: number }
         Returns: number
       }
+      excluir_recompensa_estrelas: {
+        Args: { p_id_recompensa: number }
+        Returns: boolean
+      }
       excluir_vigencia_com_regra: {
         Args: { p_id_vigencia: number }
         Returns: boolean
