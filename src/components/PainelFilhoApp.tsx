@@ -366,23 +366,17 @@ export function PainelFilhoApp({
     setRevisaoTarefa(tarefa);
   };
 
-  const listaTarefas = tarefasAtual.length > 0 ? (
-    <div className="divide-y overflow-hidden rounded-2xl border bg-card">
-      {tarefasAtual.map((tarefa) => (
-        <FilhoTarefaItem
-          key={tarefa.id}
-          tarefa={tarefa}
-          registroHoje={registroHoje(tarefa)}
-          solicitacaoHoje={solicitacaoHoje(tarefa)}
-          revisaoHoje={revisaoHoje(tarefa)}
-          onAvisar={() => abrirAviso(tarefa)}
-          onPedirRevisao={() => abrirRevisao(tarefa)}
-        />
-      ))}
-    </div>
-  ) : (
-    <EmptyState>Nenhuma tarefa atribuída nesta vigência.</EmptyState>
-  );
+  const itensTarefasHoje = tarefasAtual.map((tarefa) => (
+    <FilhoTarefaItem
+      key={tarefa.id}
+      tarefa={tarefa}
+      registroHoje={registroHoje(tarefa)}
+      solicitacaoHoje={solicitacaoHoje(tarefa)}
+      revisaoHoje={revisaoHoje(tarefa)}
+      onAvisar={() => abrirAviso(tarefa)}
+      onPedirRevisao={() => abrirRevisao(tarefa)}
+    />
+  ));
 
   const SemVigencia = () => (
     <div className="rounded-2xl border border-dashed bg-card p-5 text-center">
@@ -586,16 +580,28 @@ export function PainelFilhoApp({
 
         {aba === "tarefas" && (
           <div>
-            <FilhoAppPageHeader
-              title="Tarefas de hoje"
-              description={`Hoje · ${formatarDataHoje(hoje)}`}
-              icon={<ClipboardList className="h-4.5 w-4.5" />}
-            />
-
             {vigenciaAtual ? (
-              <>
-                {listaTarefas}
-              </>
+              tarefasAtual.length > 0 ? (
+                <section className="overflow-hidden rounded-2xl border bg-card">
+                  <div className="flex min-w-0 items-center gap-3 px-4 py-4 sm:px-5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted/60 text-foreground">
+                      <ClipboardList className="h-4.5 w-4.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h1 className="text-lg font-bold leading-tight">Tarefas de hoje</h1>
+                      <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
+                        Hoje · {formatarDataHoje(hoje)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="divide-y border-t">
+                    {itensTarefasHoje}
+                  </div>
+                </section>
+              ) : (
+                <EmptyState>Nenhuma tarefa atribuída nesta vigência.</EmptyState>
+              )
             ) : (
               <SemVigencia />
             )}
