@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   BellRing,
+  CalendarDays,
   ClipboardCheck,
   ClipboardList,
   Clock3,
@@ -73,8 +74,14 @@ const dinheiro = (v: number) => v.toLocaleString("pt-BR", {
 });
 
 const formatarDataHoje = (valor: string) => {
-  const [ano, mes, dia] = valor.split("-");
-  return `${dia}/${mes}/${ano}`;
+  const formatada = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(`${valor}T12:00:00-03:00`));
+
+  return formatada.charAt(0).toUpperCase() + formatada.slice(1);
 };
 
 const dataSaoPaulo = (v = new Date()) => new Intl.DateTimeFormat("en-CA", {
@@ -200,6 +207,16 @@ export function PainelFilhoApp({
   const progressoHoje = tarefasAtual.length > 0
     ? Math.round((tarefasResolvidasHoje / tarefasAtual.length) * 100)
     : 0;
+
+  const tarefasParaFazerHoje = tarefasAtual.filter((tarefa) =>
+    !registroHoje(tarefa) &&
+    !solicitacaoHoje(tarefa) &&
+    !revisaoHoje(tarefa)
+  ).length;
+  const tarefasResolvidasPainelHoje = Math.max(
+    0,
+    tarefasAtual.length - tarefasParaFazerHoje - tarefasAguardandoHoje,
+  );
 
   const qtdNaoFez = tarefasAtual.reduce(
     (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length,
@@ -580,22 +597,47 @@ export function PainelFilhoApp({
 
         {aba === "tarefas" && (
           <div>
+            <FilhoAppPageHeader
+              title="Tarefas de hoje"
+              description="Veja o que você precisa fazer hoje."
+              icon={<ClipboardList className="h-4.5 w-4.5" />}
+            />
+
             {vigenciaAtual ? (
               tarefasAtual.length > 0 ? (
                 <section className="overflow-hidden rounded-2xl border bg-card">
-                  <div className="flex min-w-0 items-center gap-3 px-4 py-4 sm:px-5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted/60 text-foreground">
-                      <ClipboardList className="h-4.5 w-4.5" />
+                  <div className="flex items-center gap-3 border-b px-4 py-3.5 sm:px-5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/60">
+                      <CalendarDays
+                        className="h-5 w-5"
+                        style={{ color: painel.filho.cor?.trim() || "var(--primary)" }}
+                      />
                     </span>
                     <div className="min-w-0">
-                      <h1 className="text-lg font-bold leading-tight">Tarefas de hoje</h1>
-                      <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
-                        Hoje · {formatarDataHoje(hoje)}
-                      </p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
+                      <p className="mt-0.5 text-base font-bold leading-tight">{formatarDataHoje(hoje)}</p>
                     </div>
                   </div>
 
-                  <div className="divide-y border-t">
+                  <div className="grid grid-cols-3 border-b">
+                    <div className="flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-3 text-center">
+                      <Clock3 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-lg font-bold leading-none tabular-nums">{tarefasParaFazerHoje}</span>
+                      <span className="text-[11px] font-medium leading-tight text-muted-foreground">Pra fazer</span>
+                    </div>
+                    <div className="flex min-w-0 flex-col items-center justify-center gap-1 border-x px-2 py-3 text-center">
+                      <BellRing className="h-4 w-4 text-amber-600" />
+                      <span className="text-lg font-bold leading-none tabular-nums">{tarefasAguardandoHoje}</span>
+                      <span className="text-[11px] font-medium leading-tight text-muted-foreground">Aguardando</span>
+                    </div>
+                    <div className="flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-3 text-center">
+                      <ClipboardCheck className="h-4 w-4 text-green-600" />
+                      <span className="text-lg font-bold leading-none tabular-nums">{tarefasResolvidasPainelHoje}</span>
+                      <span className="text-[11px] font-medium leading-tight text-muted-foreground">Resolvidas</span>
+                    </div>
+                  </div>
+
+                  <div className="divide-y">
                     {itensTarefasHoje}
                   </div>
                 </section>
