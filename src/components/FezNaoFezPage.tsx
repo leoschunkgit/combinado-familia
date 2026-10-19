@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Info,
   Pencil,
+  Star,
   ThumbsDown,
   ThumbsUp,
   Trash2,
@@ -750,6 +751,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       return;
     }
 
+    const gerouEstrela = !existente || existente.tipo !== "FEZ";
+
     setBusy(true);
     try {
       const payload = {
@@ -785,9 +788,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       setFez(null);
       setTroca(null);
       toast.success(
-        draft.bonusTipo === "NENHUMA"
-          ? "“Fez” registrado"
-          : "“Fez” registrado com bonificação",
+        gerouEstrela
+          ? draft.bonusTipo === "NENHUMA"
+            ? "“Fez” registrado · +1 estrela"
+            : "“Fez” registrado com bonificação · +1 estrela"
+          : draft.bonusTipo === "NENHUMA"
+            ? "“Fez” atualizado"
+            : "Bonificação atualizada",
       );
     } catch (error) {
       toast.error(
@@ -1380,6 +1387,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                                 </span>
                                               </span>
                                             </Hint>
+                                            {registro.tipo === "FEZ" && (
+                                              <Hint content="+1 estrela">
+                                                <span className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                                                  <Star className="h-3.5 w-3.5" />
+                                                  +1
+                                                </span>
+                                              </Hint>
+                                            )}
                                             <button
                                               type="button"
                                               className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
