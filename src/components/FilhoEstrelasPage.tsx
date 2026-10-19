@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Gift, Star, Trophy } from "lucide-react";
+import { Gift, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import type { EstrelasFilho } from "@/lib/child-app-session";
@@ -38,40 +38,30 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-center">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-amber-200 bg-background">
-          <Estrela className="h-6 w-6" />
-        </span>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-amber-700">Seu saldo</p>
-        <p className="mt-1 text-4xl font-bold leading-none text-amber-900 tabular-nums">{estrelas.saldo}</p>
-        <p className="mt-1 text-xs font-medium text-amber-700">estrelas disponíveis</p>
-      </section>
-
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-2xl border bg-card p-3 text-center">
-          <Estrela className="mx-auto h-4 w-4" />
-          <p className="mt-1 text-xl font-bold tabular-nums">{estrelas.hoje}</p>
-          <p className="text-[10px] font-medium text-muted-foreground">Hoje</p>
-        </div>
-        <div className="rounded-2xl border bg-card p-3 text-center">
-          <Estrela className="mx-auto h-4 w-4" />
-          <p className="mt-1 text-xl font-bold tabular-nums">{estrelas.vigencia_atual}</p>
-          <p className="text-[10px] font-medium text-muted-foreground">Vigência</p>
-        </div>
-        <div className="rounded-2xl border bg-card p-3 text-center">
-          <Trophy className="mx-auto h-4 w-4 text-muted-foreground" />
-          <p className="mt-1 text-xl font-bold tabular-nums">{estrelas.total_conquistado}</p>
-          <p className="text-[10px] font-medium text-muted-foreground">Conquistadas</p>
-        </div>
+      <div className="pb-1">
+        <h1 className="text-xl font-bold">Estrelas</h1>
       </div>
 
-      <section>
-        <div className="mb-2.5 flex items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Escolha seu objetivo</p>
-            <h1 className="mt-0.5 text-xl font-bold">Recompensas</h1>
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-background">
+            <Estrela className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-amber-700">Saldo disponível</p>
+            <p className="mt-0.5 text-3xl font-bold leading-none text-amber-900 tabular-nums">{estrelas.saldo}</p>
           </div>
-          <Gift className="h-5 w-5 text-muted-foreground" />
+          <div className="shrink-0 text-right text-[10px] leading-relaxed text-amber-800">
+            <p>Hoje +{estrelas.hoje}</p>
+            <p>Total {estrelas.total_conquistado}</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-2.5 flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold">Recompensas</h2>
+          <Gift className="h-4 w-4 text-muted-foreground" />
         </div>
 
         <div className="space-y-2">
