@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   CalendarDays,
@@ -20,6 +20,7 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
+import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
 import { AppPageContent, appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
@@ -97,6 +98,7 @@ export function PainelFilhoApp({
   const [registroAberto, setRegistroAberto] = useState<string | null>(null);
   const [historicoAbertoId, setHistoricoAbertoId] = useState<number | null>(null);
   const [saindo, setSaindo] = useState(false);
+  const abrirInicioPeloPush = useCallback(() => setAba("inicio"), []);
 
   useEffect(() => {
     let ativo = true;
@@ -261,6 +263,7 @@ export function PainelFilhoApp({
 
   return (
     <div className="min-h-screen bg-muted/20">
+      <AppFilhoPushNotifications onAbrir={abrirInicioPeloPush} />
       <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className={`${appPageHorizontalPaddingClass} py-2.5`}>
           <div className={`${appPageInnerClass} grid grid-cols-[1fr_auto_1fr] items-center gap-2`}>

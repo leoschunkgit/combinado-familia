@@ -45,6 +45,8 @@ serve(async (req) => {
       dispositivo_nome?: unknown;
       cliente_id?: unknown;
       token?: unknown;
+      push_token?: unknown;
+      plataforma?: unknown;
     } | null;
 
     const acao = typeof body?.acao === "string" ? body.acao : "";
@@ -87,6 +89,72 @@ serve(async (req) => {
       }
 
       return json(retorno);
+    }
+
+    if (acao === "registrar_push") {
+      const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
+      const pushToken = typeof body?.push_token === "string" ? body.push_token.trim() : "";
+      const plataforma = body?.plataforma === "android"
+        ? "android"
+        : body?.plataforma === "ios"
+          ? "ios"
+          : null;
+
+      if (!/^[0-9a-f]{64}$/.test(token) || !pushToken || pushToken.length > 4096 || !plataforma) {
+        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+      }
+
+      const tokenHash = await sha256Hex(token);
+      const { data: acesso, error: acessoError } = await admin
+        .from("t_filho_acesso_app")
+        .select("id,id_usuario_pai,id_filho")
+        .eq("token_hash", tokenHash)
+        .eq("ativo", true)
+        .maybeSingle();
+
+      if (acessoError) {
+        console.error("Erro ao localizar acesso do filho para push:", acessoError);
+        return json({ error: "Não foi possível registrar notificações" }, 500);
+      }
+      if (!acesso) {
+        return json({ ok: false, codigo: "SESSAO_INVALIDA" }, 401);
+      }
+
+      const agora = new Date().toISOString();
+
+      const { error: desativarError } = await admin
+        .from("t_push_dispositivo_filho")
+        .update({ ativo: false, updated_at: agora })
+        .eq("id_acesso_app_filho", acesso.id)
+        .eq("ativo", true)
+        .neq("token", pushToken);
+
+      if (desativarError) {
+        console.error("Erro ao desativar token anterior do filho:", desativarError);
+        return json({ error: "Não foi possível atualizar notificações" }, 500);
+      }
+
+      const { error: upsertError } = await admin
+        .from("t_push_dispositivo_filho")
+        .upsert(
+          {
+            id_usuario_pai: acesso.id_usuario_pai,
+            id_filho: acesso.id_filho,
+            id_acesso_app_filho: acesso.id,
+            token: pushToken,
+            plataforma,
+            ativo: true,
+            updated_at: agora,
+          },
+          { onConflict: "token" },
+        );
+
+      if (upsertError) {
+        console.error("Erro ao registrar push do filho:", upsertError);
+        return json({ error: "Não foi possível registrar notificações" }, 500);
+      }
+
+      return json({ ok: true, ativo: true });
     }
 
     if (acao === "painel") {

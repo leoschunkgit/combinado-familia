@@ -5,3 +5,9 @@ verify_jwt = true
 
 [functions.enviar-pendencias-push]
 verify_jwt = false
+
+[functions.acesso-filho-app]
+verify_jwt = false
+
+[functions.enviar-pendencias-filho-push]
+verify_jwt = false
