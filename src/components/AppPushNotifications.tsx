@@ -35,14 +35,38 @@ export function AppPushNotifications() {
 
         const received = await PushNotifications.addListener("pushNotificationReceived", (notification) => {
           void queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
+          void queryClient.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] });
           const mensagem = notification.body?.trim();
           if (mensagem) toast.info(mensagem);
         });
         removerListeners.push(() => received.remove());
 
-        const action = await PushNotifications.addListener("pushNotificationActionPerformed", () => {
+        const action = await PushNotifications.addListener("pushNotificationActionPerformed", (event) => {
           void queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
-          navigate({ to: "/ocorrencias" });
+          void queryClient.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] });
+
+          const dados = event.notification.data ?? {};
+          if (dados["target"] === "solicitacao_tarefa_filho") {
+            const filho = Number(dados["id_filho"]);
+            const atribuicao = Number(dados["id_filho_tarefa"]);
+            const aviso = Number(dados["id_solicitacao"]);
+            const data = typeof dados["data_referencia"] === "string"
+              ? dados["data_referencia"]
+              : undefined;
+
+            navigate({
+              to: "/ocorrencias",
+              search: {
+                filho: Number.isInteger(filho) && filho > 0 ? filho : undefined,
+                atribuicao: Number.isInteger(atribuicao) && atribuicao > 0 ? atribuicao : undefined,
+                data,
+                aviso: Number.isInteger(aviso) && aviso > 0 ? aviso : undefined,
+              },
+            });
+            return;
+          }
+
+          navigate({ to: "/ocorrencias", search: {} });
         });
         removerListeners.push(() => action.remove());
 

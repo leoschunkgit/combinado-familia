@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  BellRing,
   CalendarRange,
   ChevronLeft,
   ChevronRight,
@@ -49,6 +50,7 @@ import {
   useFilhos,
   useFilhoTarefas,
   useOcorrencias,
+  useSolicitacoesTarefaFilho,
   useVigencias,
   useTarefas,
   type FilhoTarefa,
@@ -124,8 +126,16 @@ type PenalidadeDraft = {
   descricao: string;
 };
 
+export type FocoSolicitacaoTarefa = {
+  idFilho?: number;
+  idFilhoTarefa?: number;
+  data?: string;
+  idSolicitacao?: number;
+};
+
 type FezNaoFezPageProps = {
   modo: ModoPagina;
+  focoSolicitacao?: FocoSolicitacaoTarefa;
 };
 
 const checkboxExclusaoClass =
@@ -140,6 +150,15 @@ function formatarDataCurta(data: string) {
   return `${dia}/${mes}/${ano.slice(-2)}`;
 }
 
+function formatarHora(data: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(data));
+}
+
 function valorBonificacaoNumero(valor: string) {
   if (!valor.trim()) return null;
   const numero = Number(valor.replace(",", "."));
@@ -147,7 +166,7 @@ function valorBonificacaoNumero(valor: string) {
   return Math.round(numero * 100) / 100;
 }
 
-export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
+export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const { data: vigencias = [] } = useVigencias();
@@ -155,6 +174,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const { data: atribuicoes = [], isLoading } = useFilhoTarefas();
   const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
+  const { data: solicitacoesTarefaFilho = [] } = useSolicitacoesTarefaFilho();
   const hoje = useDataBrasilAtual();
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
@@ -181,6 +201,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const [saldosEstrelas, setSaldosEstrelas] = useState<Record<number, number>>({});
   const [agora, setAgora] = useState(() => Date.now());
   const aberturaInicialAplicada = useRef(false);
+  const ultimoFocoAplicado = useRef<string | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setAgora(Date.now()), 60_000);
@@ -328,6 +349,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         dataBrasil(o.created_at) === data,
     );
 
+  const solicitacaoNaData = (tarefa: FilhoTarefa, data: string) =>
+    solicitacoesTarefaFilho.find(
+      (s) =>
+        s.id_filho_tarefa === tarefa.id &&
+        s.data_referencia === data,
+    );
+
   const diaTemPendencia = (vigenciaId: number, data: string) => {
     if (data > hoje) return false;
 
@@ -392,11 +420,62 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       .sort((a, b) => {
         const aMarcada = Boolean(registroNaData(a, dataSelecionada));
         const bMarcada = Boolean(registroNaData(b, dataSelecionada));
+        const aAvisou = Boolean(solicitacaoNaData(a, dataSelecionada));
+        const bAvisou = Boolean(solicitacaoNaData(b, dataSelecionada));
 
-        if (aMarcada === bMarcada) return 0;
+        if (aMarcada === bMarcada) {
+          if (!aMarcada && aAvisou !== bAvisou) return aAvisou ? -1 : 1;
+          return 0;
+        }
         return aMarcada ? 1 : -1;
       });
   };
+
+  useEffect(() => {
+    if (!focoSolicitacao?.idFilhoTarefa || isLoading) return;
+
+    const chaveFoco = [
+      focoSolicitacao.idFilhoTarefa,
+      focoSolicitacao.data ?? "",
+      focoSolicitacao.idSolicitacao ?? "",
+    ].join(":");
+
+    if (ultimoFocoAplicado.current === chaveFoco) return;
+
+    const atribuicao = atribuicoes.find(
+      (item) => item.id === focoSolicitacao.idFilhoTarefa,
+    );
+    if (!atribuicao) return;
+
+    const vigencia = vigencias.find((item) => item.id === atribuicao.id_vigencia);
+    if (!vigencia || !vigenciaEmAndamento(vigencia)) return;
+
+    const dataFoco =
+      focoSolicitacao.data &&
+      dataPertenceAVigenciaAteHoje(vigencia, focoSolicitacao.data, hoje)
+        ? focoSolicitacao.data
+        : hoje;
+
+    const proximoFiltro = {
+      filho: String(atribuicao.id_filho),
+      tarefa: String(atribuicao.id_tarefa),
+      resultado: "all",
+    };
+
+    setF(proximoFiltro);
+    setFiltro(proximoFiltro);
+    setDiasSelecionados((atual) => ({ ...atual, [vigencia.id]: dataFoco }));
+    setFilhosSelecionados((atual) => ({
+      ...atual,
+      [vigencia.id]: atribuicao.id_filho,
+    }));
+    setFilhosAbertos((atual) => ({
+      ...atual,
+      [`${vigencia.id}-${atribuicao.id_filho}`]: true,
+    }));
+
+    ultimoFocoAplicado.current = chaveFoco;
+  }, [atribuicoes, focoSolicitacao, hoje, isLoading, vigencias]);
 
   const idsVigenciasRascunho = new Set(
     vigenciasEmAndamento.map((vigencia) => vigencia.id),
@@ -1380,35 +1459,60 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                                       className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-1 py-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
-                                        <div
-                                          className={`flex min-w-0 items-start gap-2 ${
-                                            registro
-                                              ? "w-36 shrink-0 sm:w-48 md:w-56 lg:w-64"
-                                              : "flex-1"
-                                          }`}
-                                        >
-                                          <TarefaIcone
-                                            nome={tarefa.t_tarefa?.nome ?? "Tarefa"}
-                                            className={`mt-0.5 ${
-                                              registro
-                                                ? registro.tipo === "FEZ"
-                                                  ? "text-green-700 dark:text-green-300"
-                                                  : "text-red-700 dark:text-red-300"
-                                                : ""
-                                            }`}
-                                          />
-                                          <p
-                                            className={`min-w-0 break-words text-sm font-medium leading-tight ${
-                                              registro
-                                                ? registro.tipo === "FEZ"
-                                                  ? "text-green-700 dark:text-green-300"
-                                                  : "text-red-700 dark:text-red-300"
-                                                : ""
-                                            }`}
-                                          >
-                                            {tarefa.t_tarefa?.nome}
-                                          </p>
-                                        </div>
+                                        {(() => {
+                                          const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
+                                          const filho = filhos.find((item) => item.id === tarefa.id_filho);
+
+                                          return (
+                                            <div
+                                              className={`min-w-0 ${
+                                                registro
+                                                  ? "w-36 shrink-0 sm:w-48 md:w-56 lg:w-64"
+                                                  : "flex-1"
+                                              }`}
+                                            >
+                                              <div className="flex min-w-0 items-start gap-2">
+                                                <TarefaIcone
+                                                  nome={tarefa.t_tarefa?.nome ?? "Tarefa"}
+                                                  className={`mt-0.5 ${
+                                                    registro
+                                                      ? registro.tipo === "FEZ"
+                                                        ? "text-green-700 dark:text-green-300"
+                                                        : "text-red-700 dark:text-red-300"
+                                                      : ""
+                                                  }`}
+                                                />
+                                                <p
+                                                  className={`min-w-0 break-words text-sm font-medium leading-tight ${
+                                                    registro
+                                                      ? registro.tipo === "FEZ"
+                                                        ? "text-green-700 dark:text-green-300"
+                                                        : "text-red-700 dark:text-red-300"
+                                                      : ""
+                                                  }`}
+                                                >
+                                                  {tarefa.t_tarefa?.nome}
+                                                </p>
+                                              </div>
+
+                                              {!registro && solicitacao && (
+                                                <div className="ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
+                                                  <p className="flex min-w-0 items-center gap-1 font-medium text-foreground">
+                                                    <BellRing className="h-3.5 w-3.5 shrink-0" />
+                                                    <span className="min-w-0 break-words">
+                                                      {filho?.nome ?? "Filho"} avisou que terminou às {formatarHora(solicitacao.created_at)}
+                                                    </span>
+                                                  </p>
+                                                  {solicitacao.observacao && (
+                                                    <p className="mt-0.5 break-words">
+                                                      “{solicitacao.observacao}”
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })()}
                                         {registro && (
                                           <>
                                             <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
