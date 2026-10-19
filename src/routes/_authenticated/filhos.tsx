@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Mail, Pencil, Phone, Plus, Trash2, Users, WalletCards } from "lucide-react";
+import { Mail, Pencil, Phone, Plus, Smartphone, Trash2, Users, WalletCards } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +19,7 @@ import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
+import { FilhoAppAccessDialog } from "@/components/FilhoAppAccessDialog";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -141,6 +142,7 @@ function FilhosPage() {
   const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string; cor: string | null; avatar: string | null } | null>(null);
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
+  const [acessoAppFilho, setAcessoAppFilho] = useState<Filho | null>(null);
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
@@ -282,6 +284,19 @@ function FilhosPage() {
               <p className="font-medium text-foreground">{f.tem_mesada_opcional === true && f.valor_mesada !== null ? dinheiro(f.valor_mesada) : "Não"}</p>
             </div>
           </div>
+
+          <div className="mt-3 border-t pt-3">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="w-full justify-center sm:w-auto"
+              onClick={() => setAcessoAppFilho(f)}
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              Acesso ao app
+            </Button>
+          </div>
         </div>;
       })}</div>
     <Dialog open={novoAberto} onOpenChange={(open) => { setNovoAberto(open); if (!open) setForm(vazio); }}>
@@ -343,5 +358,13 @@ function FilhosPage() {
     </Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2">{(() => { const filho = filhos.find((f) => f.id === confirmarExclusao); return filho ? <div className="flex items-center gap-2 text-sm font-semibold"><FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" /><span>{filho.nome}</span></div> : null; })()}<p>Tem certeza que deseja excluir este filho?</p><p className="text-sm text-muted-foreground">As atribuições, registros de Fez/Não fez e o link público deste filho também serão excluídos.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader><form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4"><div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome *</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-email">Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div><CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" /><DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" disabled={saving}>Salvar alterações</Button></DialogFooter></form></DialogContent></Dialog>
+
+    <FilhoAppAccessDialog
+      filho={acessoAppFilho}
+      open={acessoAppFilho !== null}
+      onOpenChange={(open) => {
+        if (!open) setAcessoAppFilho(null);
+      }}
+    />
   </>;
 }
