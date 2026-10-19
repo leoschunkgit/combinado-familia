@@ -19,6 +19,8 @@ import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
+import { AppBrand } from "@/components/AppBrand";
+import { AppPageContent } from "@/components/AppPageContent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -253,16 +255,10 @@ export function PainelFilhoApp({
           <button
             type="button"
             onClick={() => setAba("inicio")}
-            className="flex min-w-0 items-center gap-2 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            className="min-w-0 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             aria-label="Ir para o início"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <House className="h-[18px] w-[18px]" />
-            </span>
-            <span className="hidden min-w-0 sm:block">
-              <span className="block font-display text-base font-bold leading-none">Combinado</span>
-              <span className="mt-0.5 block text-[10px] font-semibold tracking-wide text-muted-foreground">modo filho</span>
-            </span>
+            <AppBrand />
           </button>
 
           <div className="ml-auto flex items-center gap-2">
@@ -343,7 +339,7 @@ export function PainelFilhoApp({
         </DialogContent>
       </Dialog>
 
-      <main className="native-safe-area min-w-0 p-4 pb-24 md:p-10 md:pb-28"><div className="mx-auto w-full max-w-5xl">
+      <AppPageContent className="pb-24 md:pb-28">
         {aba === "inicio" && (
           <div className="space-y-4">
             <section
@@ -680,11 +676,11 @@ export function PainelFilhoApp({
             Atualizado {dataHora(painel.atualizado_em)}
           </p>
         )}
-      </div></main>
+      </AppPageContent>
 
       <nav
         aria-label="Navegação principal do filho"
-        className="native-safe-area fixed bottom-0 left-1/2 z-40 w-[calc(100%-3rem)] max-w-[22rem] -translate-x-1/2 pb-2"
+        className="native-safe-bottom fixed bottom-0 left-1/2 z-40 w-[calc(100%-3rem)] max-w-[22rem] -translate-x-1/2 pb-2"
       >
         <div className="grid grid-cols-4 gap-0.5 rounded-2xl border bg-background/95 p-1 shadow-lg backdrop-blur">
           {ABAS.map(({ id, label, icon: Icon }) => {
