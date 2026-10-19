@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   avisarTarefaConcluida,
+  pedirRevisaoTarefa,
   encerrarSessaoFilho,
   lerSessaoFilhoLocal,
   limparSessaoFilhoLocal,
@@ -106,6 +107,7 @@ export function PainelFilhoApp({
   const [registroAberto, setRegistroAberto] = useState<string | null>(null);
   const [saindo, setSaindo] = useState(false);
   const [avisoTarefa, setAvisoTarefa] = useState<TarefaFilho | null>(null);
+  const [revisaoTarefa, setRevisaoTarefa] = useState<TarefaFilho | null>(null);
   const [observacaoAviso, setObservacaoAviso] = useState("");
   const [enviandoAviso, setEnviandoAviso] = useState(false);
   const abrirInicioPeloPush = useCallback(() => setAba("inicio"), []);
@@ -177,10 +179,20 @@ export function PainelFilhoApp({
       (s) => s.id_filho_tarefa === tarefa.id && s.data_referencia === hoje,
     );
 
+  const revisaoHoje = (tarefa: TarefaFilho) =>
+    (painel.revisoes_hoje ?? []).find(
+      (r) => r.id_filho_tarefa === tarefa.id && r.data_referencia === hoje,
+    );
+
   const tarefasResolvidasHoje = tarefasAtual.filter((tarefa) => Boolean(registroHoje(tarefa))).length;
-  const tarefasAguardandoHoje = tarefasAtual.filter(
-    (tarefa) => !registroHoje(tarefa) && Boolean(solicitacaoHoje(tarefa)),
-  ).length;
+  const tarefasAguardandoHoje = tarefasAtual.filter((tarefa) => {
+    const registro = registroHoje(tarefa);
+    const revisao = revisaoHoje(tarefa);
+    return (
+      (!registro && Boolean(solicitacaoHoje(tarefa))) ||
+      (registro?.tipo === "NAO_FEZ" && revisao?.status === "PENDENTE")
+    );
+  }).length;
   const progressoHoje = tarefasAtual.length > 0
     ? Math.round((tarefasResolvidasHoje / tarefasAtual.length) * 100)
     : 0;
@@ -267,6 +279,7 @@ export function PainelFilhoApp({
     .sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
 
   const solicitacaoDetalheHoje = tarefaDatas ? solicitacaoHoje(tarefaDatas) : undefined;
+  const revisaoDetalheHoje = tarefaDatas ? revisaoHoje(tarefaDatas) : undefined;
   const registroDetalheHoje = tarefaDatas ? registroHoje(tarefaDatas) : undefined;
 
   async function enviarAvisoTarefa() {
@@ -301,6 +314,38 @@ export function PainelFilhoApp({
     }
   }
 
+  async function enviarRevisaoTarefa() {
+    if (!revisaoTarefa || enviandoAviso) return;
+
+    setEnviandoAviso(true);
+    try {
+      const resposta = await pedirRevisaoTarefa(revisaoTarefa.id, observacaoAviso);
+      const token = await lerSessaoFilhoLocal();
+
+      if (token) {
+        const atual = await obterPainelFilhoApp(token);
+        if (atual) setPainel(atual);
+      }
+
+      setRevisaoTarefa(null);
+      setObservacaoAviso("");
+
+      toast.success(
+        resposta.ja_existia
+          ? "A revisão desta tarefa já foi enviada."
+          : "Pedido de revisão enviado ao responsável.",
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível pedir a revisão.",
+      );
+    } finally {
+      setEnviandoAviso(false);
+    }
+  }
+
   async function sair() {
     setSaindo(true);
     try {
@@ -315,7 +360,14 @@ export function PainelFilhoApp({
 
   const abrirAviso = (tarefa: TarefaFilho) => {
     setObservacaoAviso("");
+    setRevisaoTarefa(null);
     setAvisoTarefa(tarefa);
+  };
+
+  const abrirRevisao = (tarefa: TarefaFilho) => {
+    setObservacaoAviso("");
+    setAvisoTarefa(null);
+    setRevisaoTarefa(tarefa);
   };
 
   const listaTarefas = tarefasAtual.length > 0 ? (
@@ -326,8 +378,10 @@ export function PainelFilhoApp({
           tarefa={tarefa}
           registroHoje={registroHoje(tarefa)}
           solicitacaoHoje={solicitacaoHoje(tarefa)}
+          revisaoHoje={revisaoHoje(tarefa)}
           onAbrirDetalhes={() => setTarefaDatas(tarefa)}
           onAvisar={() => abrirAviso(tarefa)}
+          onPedirRevisao={() => abrirRevisao(tarefa)}
         />
       ))}
     </div>
@@ -651,21 +705,24 @@ export function PainelFilhoApp({
       </nav>
 
       <Dialog
-        open={avisoTarefa !== null}
+        open={avisoTarefa !== null || revisaoTarefa !== null}
         onOpenChange={(open) => {
           if (!open && !enviandoAviso) {
             setAvisoTarefa(null);
+            setRevisaoTarefa(null);
             setObservacaoAviso("");
           }
         }}
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Avisar que terminei</DialogTitle>
+            <DialogTitle>{revisaoTarefa ? "Pedir revisão" : "Avisar que terminei"}</DialogTitle>
             <DialogDescription>
-              {avisoTarefa
-                ? `Avise seu responsável que você terminou “${avisoTarefa.nome}”. A confirmação continua sendo feita pelo responsável.`
-                : ""}
+              {revisaoTarefa
+                ? `Você marcou que fez “${revisaoTarefa.nome}”, mas o responsável registrou Não fez. Envie uma revisão para ele conferir.`
+                : avisoTarefa
+                  ? `Avise seu responsável que você terminou “${avisoTarefa.nome}”. A confirmação continua sendo feita pelo responsável.`
+                  : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -689,13 +746,18 @@ export function PainelFilhoApp({
               variant="outline"
               onClick={() => {
                 setAvisoTarefa(null);
+                setRevisaoTarefa(null);
                 setObservacaoAviso("");
               }}
               disabled={enviandoAviso}
             >
               Cancelar
             </Button>
-            <Button type="button" onClick={() => void enviarAvisoTarefa()} disabled={enviandoAviso}>
+            <Button
+              type="button"
+              onClick={() => void (revisaoTarefa ? enviarRevisaoTarefa() : enviarAvisoTarefa())}
+              disabled={enviandoAviso}
+            >
               {enviandoAviso ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               Enviar
             </Button>
@@ -725,6 +787,22 @@ export function PainelFilhoApp({
               </p>
               {solicitacaoDetalheHoje.observacao && (
                 <p className="mt-1 break-words text-muted-foreground">“{solicitacaoDetalheHoje.observacao}”</p>
+              )}
+            </div>
+          )}
+
+          {tarefaDatas && revisaoDetalheHoje && (
+            <div className="rounded-xl border bg-muted/30 px-3 py-2.5 text-xs">
+              <p className="flex items-center gap-1.5 font-semibold">
+                <BellRing className="h-3.5 w-3.5" />
+                {revisaoDetalheHoje.status === "PENDENTE"
+                  ? "Revisão enviada"
+                  : revisaoDetalheHoje.status === "MANTEVE_NAO_FEZ"
+                    ? "Não fez mantido"
+                    : "Revisão aceita"}
+              </p>
+              {revisaoDetalheHoje.observacao && (
+                <p className="mt-1 break-words text-muted-foreground">“{revisaoDetalheHoje.observacao}”</p>
               )}
             </div>
           )}

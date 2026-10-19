@@ -50,6 +50,8 @@ import {
   useFilhos,
   useFilhoTarefas,
   useOcorrencias,
+  resolverRevisaoTarefaFilho,
+  useRevisoesTarefaFilho,
   useSolicitacoesTarefaFilho,
   useVigencias,
   useTarefas,
@@ -131,6 +133,7 @@ export type FocoSolicitacaoTarefa = {
   idFilhoTarefa?: number;
   data?: string;
   idSolicitacao?: number;
+  idRevisao?: number;
 };
 
 type FezNaoFezPageProps = {
@@ -175,6 +178,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const { data: solicitacoesTarefaFilho = [] } = useSolicitacoesTarefaFilho();
+  const { data: revisoesTarefaFilho = [] } = useRevisoesTarefaFilho();
   const hoje = useDataBrasilAtual();
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
@@ -356,6 +360,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         s.data_referencia === data,
     );
 
+  const revisaoNaData = (tarefa: FilhoTarefa, data: string) =>
+    revisoesTarefaFilho.find(
+      (r) =>
+        r.id_filho_tarefa === tarefa.id &&
+        r.data_referencia === data,
+    );
+
   const diaTemPendencia = (vigenciaId: number, data: string) => {
     if (data > hoje) return false;
 
@@ -422,8 +433,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         const bMarcada = Boolean(registroNaData(b, dataSelecionada));
         const aAvisou = Boolean(solicitacaoNaData(a, dataSelecionada));
         const bAvisou = Boolean(solicitacaoNaData(b, dataSelecionada));
+        const aRevisao = revisaoNaData(a, dataSelecionada)?.status === "PENDENTE";
+        const bRevisao = revisaoNaData(b, dataSelecionada)?.status === "PENDENTE";
 
         if (aMarcada === bMarcada) {
+          if (aRevisao !== bRevisao) return aRevisao ? -1 : 1;
           if (!aMarcada && aAvisou !== bAvisou) return aAvisou ? -1 : 1;
           return 0;
         }
@@ -438,6 +452,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       focoSolicitacao.idFilhoTarefa,
       focoSolicitacao.data ?? "",
       focoSolicitacao.idSolicitacao ?? "",
+      focoSolicitacao.idRevisao ?? "",
     ].join(":");
 
     if (ultimoFocoAplicado.current === chaveFoco) return;
@@ -894,6 +909,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
+        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
       ]);
       setFez(null);
       setTroca(null);
@@ -1008,6 +1024,25 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     } catch (error) {
       toast.error(
         msgErro(error instanceof Error ? { message: error.message } : null),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function manterNaoFezRevisao(idRevisao: number) {
+    setBusy(true);
+    try {
+      await resolverRevisaoTarefaFilho(idRevisao);
+      await qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] });
+      toast.success("Revisão encerrada · Não fez mantido");
+    } catch (error) {
+      toast.error(
+        msgErro(
+          error instanceof Error
+            ? { message: error.message }
+            : (error as { message?: string }),
+        ),
       );
     } finally {
       setBusy(false);
@@ -1453,66 +1488,88 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               <div className="divide-y divide-border/60">
                                 {tarefasDoFilho.map((tarefa) => {
                                   const registro = registroNaData(tarefa, dataSelecionada);
+                                  const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
+                                  const revisao = revisaoNaData(tarefa, dataSelecionada);
+                                  const filho = filhos.find((item) => item.id === tarefa.id_filho);
                                   return (
                                     <div
                                       key={tarefa.id}
                                       className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-1 py-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
-                                        {(() => {
-                                          const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
-                                          const filho = filhos.find((item) => item.id === tarefa.id_filho);
-
-                                          return (
-                                            <div
-                                              className={`min-w-0 ${
+                                        <div
+                                          className={`min-w-0 ${
+                                            registro
+                                              ? "w-36 shrink-0 sm:w-48 md:w-56 lg:w-64"
+                                              : "flex-1"
+                                          }`}
+                                        >
+                                          <div className="flex min-w-0 items-start gap-2">
+                                            <TarefaIcone
+                                              nome={tarefa.t_tarefa?.nome ?? "Tarefa"}
+                                              className={`mt-0.5 ${
                                                 registro
-                                                  ? "w-36 shrink-0 sm:w-48 md:w-56 lg:w-64"
-                                                  : "flex-1"
+                                                  ? registro.tipo === "FEZ"
+                                                    ? "text-green-700 dark:text-green-300"
+                                                    : "text-red-700 dark:text-red-300"
+                                                  : ""
+                                              }`}
+                                            />
+                                            <p
+                                              className={`min-w-0 break-words text-sm font-medium leading-tight ${
+                                                registro
+                                                  ? registro.tipo === "FEZ"
+                                                    ? "text-green-700 dark:text-green-300"
+                                                    : "text-red-700 dark:text-red-300"
+                                                  : ""
                                               }`}
                                             >
-                                              <div className="flex min-w-0 items-start gap-2">
-                                                <TarefaIcone
-                                                  nome={tarefa.t_tarefa?.nome ?? "Tarefa"}
-                                                  className={`mt-0.5 ${
-                                                    registro
-                                                      ? registro.tipo === "FEZ"
-                                                        ? "text-green-700 dark:text-green-300"
-                                                        : "text-red-700 dark:text-red-300"
-                                                      : ""
-                                                  }`}
-                                                />
-                                                <p
-                                                  className={`min-w-0 break-words text-sm font-medium leading-tight ${
-                                                    registro
-                                                      ? registro.tipo === "FEZ"
-                                                        ? "text-green-700 dark:text-green-300"
-                                                        : "text-red-700 dark:text-red-300"
-                                                      : ""
-                                                  }`}
-                                                >
-                                                  {tarefa.t_tarefa?.nome}
-                                                </p>
-                                              </div>
+                                              {tarefa.t_tarefa?.nome}
+                                            </p>
+                                          </div>
 
-                                              {!registro && solicitacao && (
-                                                <div className="ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
-                                                  <p className="flex min-w-0 items-center gap-1 font-medium text-foreground">
-                                                    <BellRing className="h-3.5 w-3.5 shrink-0" />
-                                                    <span className="min-w-0 break-words">
-                                                      {filho?.nome ?? "Filho"} avisou que terminou às {formatarHora(solicitacao.created_at)}
-                                                    </span>
-                                                  </p>
-                                                  {solicitacao.observacao && (
-                                                    <p className="mt-0.5 break-words">
-                                                      “{solicitacao.observacao}”
-                                                    </p>
-                                                  )}
-                                                </div>
+                                          {!registro && solicitacao && (
+                                            <div className="ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
+                                              <p className="flex min-w-0 items-center gap-1 font-medium text-foreground">
+                                                <BellRing className="h-3.5 w-3.5 shrink-0" />
+                                                <span className="min-w-0 break-words">
+                                                  {filho?.nome ?? "Filho"} avisou que terminou às {formatarHora(solicitacao.created_at)}
+                                                </span>
+                                              </p>
+                                              {solicitacao.observacao && (
+                                                <p className="mt-0.5 break-words">“{solicitacao.observacao}”</p>
                                               )}
                                             </div>
-                                          );
-                                        })()}
+                                          )}
+
+                                          {registro?.tipo === "NAO_FEZ" && revisao?.status === "PENDENTE" && (
+                                            <div className="ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
+                                              <p className="flex min-w-0 items-center gap-1 font-semibold text-foreground">
+                                                <BellRing className="h-3.5 w-3.5 shrink-0" />
+                                                <span className="min-w-0 break-words">
+                                                  {filho?.nome ?? "Filho"} pediu revisão às {formatarHora(revisao.created_at)}
+                                                </span>
+                                              </p>
+                                              {revisao.observacao && (
+                                                <p className="mt-0.5 break-words">“{revisao.observacao}”</p>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                        {registro?.tipo === "NAO_FEZ" &&
+                                          revisao?.status === "PENDENTE" &&
+                                          !bloqueada && (
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-8 shrink-0 px-2 text-xs"
+                                              disabled={busy}
+                                              onClick={() => void manterNaoFezRevisao(revisao.id)}
+                                            >
+                                              Manter Não fez
+                                            </Button>
+                                          )}
+
                                         {registro && (
                                           <>
                                             <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>

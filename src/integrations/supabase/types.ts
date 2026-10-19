@@ -679,6 +679,44 @@ export type Database = {
           },
         ]
       }
+      t_revisao_tarefa_filho: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: number
+          id_filho_tarefa: number
+          observacao: string | null
+          resolvido_em: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: number
+          id_filho_tarefa: number
+          observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: number
+          id_filho_tarefa?: number
+          observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_revisao_tarefa_filho_id_filho_tarefa_fkey"
+            columns: ["id_filho_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_filho_tarefa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_solicitacao_tarefa_filho: {
         Row: {
           created_at: string
@@ -1314,6 +1352,10 @@ export type Database = {
           p_ip_hash: string
         }
         Returns: Json
+      }
+      resolver_revisao_tarefa_filho: {
+        Args: { p_decisao: string; p_id_revisao: number }
+        Returns: boolean
       }
       recalcular_estado_atribuicao: {
         Args: { p_id: number }

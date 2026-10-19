@@ -1,8 +1,9 @@
-import { BellRing, ChevronRight, Send, ThumbsDown, ThumbsUp } from "lucide-react";
+import { BellRing, ChevronRight, RotateCcw, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { Button } from "@/components/ui/button";
 import type {
   OcorrenciaFilho,
+  RevisaoTarefaFilhoApp,
   SolicitacaoTarefaFilhoApp,
   TarefaFilho,
 } from "@/lib/child-app-session";
@@ -11,14 +12,18 @@ export function FilhoTarefaItem({
   tarefa,
   registroHoje,
   solicitacaoHoje,
+  revisaoHoje,
   onAbrirDetalhes,
   onAvisar,
+  onPedirRevisao,
 }: {
   tarefa: TarefaFilho;
   registroHoje?: OcorrenciaFilho;
   solicitacaoHoje?: SolicitacaoTarefaFilhoApp;
+  revisaoHoje?: RevisaoTarefaFilhoApp;
   onAbrirDetalhes: () => void;
   onAvisar: () => void;
+  onPedirRevisao: () => void;
 }) {
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 sm:px-5">
@@ -40,6 +45,27 @@ export function FilhoTarefaItem({
           <ThumbsUp className="h-3.5 w-3.5" />
           Fez
         </span>
+      ) : registroHoje?.tipo === "NAO_FEZ" && revisaoHoje?.status === "PENDENTE" ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+          <BellRing className="h-3.5 w-3.5" />
+          Revisão enviada
+        </span>
+      ) : registroHoje?.tipo === "NAO_FEZ" && revisaoHoje?.status === "MANTEVE_NAO_FEZ" ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+          <ThumbsDown className="h-3.5 w-3.5" />
+          Não fez mantido
+        </span>
+      ) : registroHoje?.tipo === "NAO_FEZ" && !revisaoHoje && !solicitacaoHoje ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 shrink-0 px-2.5 text-xs"
+          onClick={onPedirRevisao}
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Pedir revisão
+        </Button>
       ) : registroHoje?.tipo === "NAO_FEZ" ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
           <ThumbsDown className="h-3.5 w-3.5" />
