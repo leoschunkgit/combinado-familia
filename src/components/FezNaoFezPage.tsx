@@ -538,6 +538,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     }
 
     const filho = filhos.find((item) => item.id === tarefa.id_filho);
+    const estornouEstrela = existente?.tipo === "FEZ";
+    const sufixoEstrela = estornouEstrela ? " · 1 estrela estornada" : "";
     const vigenciaCompleta = vigencias.find(
       (item) => item.id === tarefa.id_vigencia,
     );
@@ -579,13 +581,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
         toast.success(
           `“Não fez” registrado · Desconto acumulado: ${reais(
             valorDebitado(filho, vigencia, resultado.novoTotal),
-          )}`,
+          )}${sufixoEstrela}`,
         );
       } else if (resultado.penalizado) {
-        toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
+        toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}${sufixoEstrela}`);
       } else {
         toast.success(
-          `“Não fez” registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})`,
+          `“Não fez” registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})${sufixoEstrela}`,
         );
       }
     } catch (error) {
@@ -637,12 +639,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
-    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
-      toast.error("Ações só podem ser feitas em uma vigência em andamento");
-      return;
-    }
-
-    setFez({
+    const draft: FezDraft = {
       modo: "REGISTRAR",
       tarefa,
       total,
@@ -651,7 +648,9 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       descricao: "",
       valor: "",
       ...(existente ? { ocorrenciaId: existente.id } : {}),
-    });
+    };
+
+    void runAction(() => salvarFez(draft, existente));
   }
 
   function abrirEdicaoBonificacao(info: BonificacaoInfo) {
@@ -789,12 +788,8 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       setTroca(null);
       toast.success(
         gerouEstrela
-          ? draft.bonusTipo === "NENHUMA"
-            ? "“Fez” registrado · +1 estrela"
-            : "“Fez” registrado com bonificação · +1 estrela"
-          : draft.bonusTipo === "NENHUMA"
-            ? "“Fez” atualizado"
-            : "Bonificação atualizada",
+          ? "“Fez” registrado · +1 estrela"
+          : "Recompensa extra atualizada",
       );
     } catch (error) {
       toast.error(
@@ -851,6 +846,10 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     }
     if (ids.length === 0) return;
 
+    const estrelasEstornadas = ocorrencias.filter(
+      (o) => ids.includes(o.id) && o.tipo === "FEZ",
+    ).length;
+
     setBusy(true);
     try {
       const { error } = await supabase
@@ -886,10 +885,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       ]);
 
       setConfirmarExcluirSelecionadas(null);
+      const sufixoEstorno =
+        estrelasEstornadas > 0
+          ? ` · ${estrelasEstornadas} estrela${estrelasEstornadas === 1 ? "" : "s"} estornada${estrelasEstornadas === 1 ? "" : "s"}`
+          : "";
       toast.success(
-        ids.length === 1
+        (ids.length === 1
           ? "Marcação desfeita"
-          : "Marcações selecionadas desfeitas",
+          : "Marcações selecionadas desfeitas") + sufixoEstorno,
       );
     } catch (error) {
       toast.error(
@@ -1619,7 +1622,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bonificação do “Fez”</DialogTitle>
+            <DialogTitle>Recompensa extra do “Fez”</DialogTitle>
             <DialogDescription>
               {bonificacaoInfo && (() => {
                 const filho = filhoDaTarefa(bonificacaoInfo.tarefa);
@@ -1661,7 +1664,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               {bonificacaoInfo.ocorrencia.bonificacao_tipo === "TEXTO" ? (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Bonificação escrita
+                    Recompensa extra escrita
                   </p>
                   <p className="text-sm font-medium">
                     {bonificacaoInfo.ocorrencia.bonificacao_descricao}
@@ -1670,7 +1673,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               ) : bonificacaoInfo.ocorrencia.bonificacao_tipo === "VALOR" ? (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Valor da bonificação
+                    Valor da recompensa extra
                   </p>
                   <p className="text-base font-semibold">
                     {reais(Number(bonificacaoInfo.ocorrencia.bonificacao_valor ?? 0))}
@@ -1678,7 +1681,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma bonificação definida.
+                  Nenhuma recompensa extra definida.
                 </p>
               )}
             </div>
@@ -1697,7 +1700,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                 onClick={() => abrirEdicaoBonificacao(bonificacaoInfo)}
               >
                 <Pencil className="h-4 w-4" />
-                Editar bonificação
+                Editar recompensa extra
               </Button>
             )}
           </DialogFooter>
@@ -1712,7 +1715,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           <DialogHeader>
             <DialogTitle>
               {fez?.modo === "EDITAR"
-                ? "Editar bonificação"
+                ? "Editar recompensa extra"
                 : "Registrar “Fez”"}
             </DialogTitle>
             <DialogDescription>
@@ -1728,7 +1731,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                         <TarefaIcone nome={fez.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
                         <span className="min-w-0 whitespace-normal break-words">{fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
                       </span>
-                      {" · "}A bonificação é opcional.
+                      {" · "}A recompensa extra é opcional.
                     </>
                   );
                 }
@@ -1762,7 +1765,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                         <span className="mt-0.5 block font-medium text-foreground">{formatarData(fez.data)}</span>
                       </span>
                     </span>
-                    <span className="block">A bonificação é opcional.</span>
+                    <span className="block">A recompensa extra é opcional.</span>
                   </span>
                 );
               })()}
@@ -1772,7 +1775,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
           {fez && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Bonificação</Label>
+                <Label>Recompensa extra</Label>
                 <Select
                   value={fez.bonusTipo}
                   onValueChange={(valor) =>
@@ -1792,7 +1795,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
 
               {fez.bonusTipo === "TEXTO" && (
                 <div className="space-y-2">
-                  <Label htmlFor="bonus-texto">Bonificação escrita</Label>
+                  <Label htmlFor="bonus-texto">Recompensa extra escrita</Label>
                   <input
                     id="bonus-texto"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -1808,7 +1811,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
               {fez.bonusTipo === "VALOR" && (
                 <div className="space-y-2">
                   <Label htmlFor="bonus-valor">
-                    Valor da bonificação (R$)
+                    Valor da recompensa extra (R$)
                   </Label>
                   <CurrencyInput
                     id="bonus-valor"
@@ -1904,85 +1907,14 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                     </span>
                     . Ao continuar, o resultado será substituído
                     {troca.direcao === "PARA_NAO_FEZ"
-                      ? " e qualquer bonificação será removida"
-                      : ""}
+                      ? ", qualquer recompensa extra será removida e 1 estrela será estornada"
+                      : " e 1 estrela será adicionada"}
                     .
                   </span>
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
-
-          {troca?.direcao === "PARA_FEZ" && troca.fez && (
-            <div className="space-y-4 rounded-xl border bg-muted/10 p-3.5 sm:p-4">
-              <div className="space-y-2">
-                <Label>Bonificação</Label>
-                <Select
-                  value={troca.fez.bonusTipo}
-                  onValueChange={(valor) =>
-                    setTroca({
-                      ...troca,
-                      fez: {
-                        ...troca.fez!,
-                        bonusTipo: valor as BonusTipo,
-                      },
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NENHUMA">Nenhuma</SelectItem>
-                    <SelectItem value="TEXTO">Escrita</SelectItem>
-                    <SelectItem value="VALOR">Valor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {troca.fez.bonusTipo === "TEXTO" && (
-                <div className="space-y-2">
-                  <Label htmlFor="troca-bonus-texto">
-                    Bonificação escrita
-                  </Label>
-                  <input
-                    id="troca-bonus-texto"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="Ex.: Escolher o filme no sábado"
-                    value={troca.fez.descricao}
-                    onChange={(event) =>
-                      setTroca({
-                        ...troca,
-                        fez: {
-                          ...troca.fez!,
-                          descricao: event.target.value,
-                        },
-                      })
-                    }
-                  />
-                </div>
-              )}
-
-              {troca.fez.bonusTipo === "VALOR" && (
-                <div className="space-y-2">
-                  <Label htmlFor="troca-bonus-valor">
-                    Valor da bonificação (R$)
-                  </Label>
-                  <CurrencyInput
-                    id="troca-bonus-valor"
-                    value={troca.fez.valor}
-                    valueMode="decimal"
-                    onValueChange={(valor) =>
-                      setTroca({
-                        ...troca,
-                        fez: { ...troca.fez!, valor },
-                      })
-                    }
-                  />
-                </div>
-              )}
-            </div>
-          )}
 
           <DialogFooter>
             <Button
