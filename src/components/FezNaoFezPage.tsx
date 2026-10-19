@@ -178,6 +178,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
   const [penalidadePendente, setPenalidadePendente] =
     useState<PenalidadeDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
+  const [saldosEstrelas, setSaldosEstrelas] = useState<Record<number, number>>({});
   const [agora, setAgora] = useState(() => Date.now());
   const aberturaInicialAplicada = useRef(false);
 
@@ -185,6 +186,37 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
     const timer = window.setInterval(() => setAgora(Date.now()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    let ativo = true;
+
+    async function carregarSaldosEstrelas() {
+      const idsFilhos = filhos.map((filho) => filho.id);
+      if (idsFilhos.length === 0) {
+        setSaldosEstrelas({});
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("t_estrela_movimento")
+        .select("id_filho, quantidade")
+        .in("id_filho", idsFilhos);
+
+      if (!ativo || error) return;
+
+      const saldos = (data ?? []).reduce<Record<number, number>>((acc, movimento) => {
+        acc[movimento.id_filho] = (acc[movimento.id_filho] ?? 0) + Number(movimento.quantidade);
+        return acc;
+      }, {});
+
+      setSaldosEstrelas(saldos);
+    }
+
+    void carregarSaldosEstrelas();
+    return () => {
+      ativo = false;
+    };
+  }, [filhos, ocorrencias]);
 
   const vigenciasOrdenadas = useMemo(
     () => [...vigencias].sort(compararVigencias),
@@ -1133,6 +1165,13 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                             <span className="flex items-center gap-1.5">
                               <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />
                               <span>{filho.nome}</span>
+                              <span
+                                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-700 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-300"
+                                aria-label={`${saldosEstrelas[filho.id] ?? 0} estrelas disponíveis`}
+                              >
+                                <Star className="animate-notification-bell h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />
+                                <span>{saldosEstrelas[filho.id] ?? 0}</span>
+                              </span>
                             </span>
                           </button>
                         );
