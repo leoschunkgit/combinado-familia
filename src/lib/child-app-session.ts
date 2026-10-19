@@ -19,6 +19,14 @@ export type TarefaFilho = {
   ocorrencias: OcorrenciaFilho[];
 };
 
+export type SolicitacaoTarefaFilhoApp = {
+  id: number;
+  id_filho_tarefa: number;
+  data_referencia: string;
+  observacao: string | null;
+  created_at: string;
+};
+
 export type VigenciaFilho = {
   id: number;
   data_inicio: string;
@@ -67,6 +75,7 @@ export type PainelFilho = {
   responsavel: { nome: string };
   vigencias: VigenciaFilho[];
   estrelas?: EstrelasFilho;
+  solicitacoes_hoje?: SolicitacaoTarefaFilhoApp[];
   atualizado_em: string;
 };
 
@@ -75,6 +84,13 @@ type RespostaPareamento = {
   token: string;
   dispositivo_id: string;
   painel: PainelFilho;
+};
+
+type RespostaSolicitacao = {
+  ok: true;
+  ja_existia: boolean;
+  solicitacao: SolicitacaoTarefaFilhoApp;
+  notificacoes_enviadas?: number;
 };
 
 type RespostaErro = {
@@ -133,7 +149,7 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     body: JSON.stringify(body),
   });
 
-  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaErro;
+  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaErro;
 
   if (!response.ok) {
     const codigo = "codigo" in data ? data.codigo : undefined;
@@ -146,6 +162,18 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     }
     if (codigo === "SESSAO_INVALIDA") {
       throw new Error("Este acesso não está mais ativo.");
+    }
+    if (codigo === "TAREFA_INVALIDA") {
+      throw new Error("Esta tarefa não pertence a este acesso.");
+    }
+    if (codigo === "VIGENCIA_INATIVA") {
+      throw new Error("Só é possível avisar durante a vigência em andamento.");
+    }
+    if (codigo === "JA_MARCADA") {
+      throw new Error("O responsável já marcou esta tarefa hoje.");
+    }
+    if (codigo === "OBSERVACAO_INVALIDA") {
+      throw new Error("A observação deve ter no máximo 120 caracteres.");
     }
 
     throw new Error(("error" in data && data.error) || "Não foi possível acessar o painel do filho.");
@@ -231,6 +259,27 @@ export async function obterPainelFilhoApp(token: string): Promise<PainelFilho | 
     }
     throw error;
   }
+}
+
+export async function avisarTarefaConcluida(
+  idFilhoTarefa: number,
+  observacao?: string,
+): Promise<RespostaSolicitacao> {
+  const token = await lerSessaoFilhoLocal();
+  if (!token) throw new Error("Este acesso não está mais ativo.");
+
+  const data = await chamarAcessoFilho({
+    acao: "avisar_tarefa_concluida",
+    token,
+    id_filho_tarefa: idFilhoTarefa,
+    observacao: observacao?.trim() || null,
+  });
+
+  if (!("ok" in data) || data.ok !== true || !("solicitacao" in data)) {
+    throw new Error("Não foi possível enviar o aviso ao responsável.");
+  }
+
+  return data as RespostaSolicitacao;
 }
 
 export async function revogarTokenFilho(token: string) {

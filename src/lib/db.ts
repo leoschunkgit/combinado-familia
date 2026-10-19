@@ -89,6 +89,21 @@ export const useFilhoTarefas = () =>
       ),
   });
 
+export type SolicitacaoTarefaFilho = Tables<"t_solicitacao_tarefa_filho">;
+
+export const useSolicitacoesTarefaFilho = () =>
+  useQuery({
+    queryKey: ["solicitacoes_tarefa_filho"],
+    queryFn: () =>
+      unwrap<SolicitacaoTarefaFilho[]>(
+        supabase
+          .from("t_solicitacao_tarefa_filho")
+          .select("*")
+          .order("created_at", { ascending: false }),
+      ),
+    refetchInterval: 30_000,
+  });
+
 export type Ocorrencia = Tables<"t_ocorrencia"> & {
   t_filho_tarefa:
     | (Pick<Tables<"t_filho_tarefa">, "id_filho" | "id_vigencia" | "id_tarefa"> & {
@@ -114,6 +129,10 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Atribuicao com aviso do filho nao pode ser excluida diretamente|Atribuição com aviso do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser excluída"],
+  [/Atribuicao com aviso do filho nao pode ser editada|Atribuição com aviso do filho não pode ser editada/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser alterada"],
+  [/Há avisos do filho fora do novo período da vigência|Ha avisos do filho fora do novo periodo da vigencia/i, "Há avisos enviados pelo filho fora do novo período. Corrija o período antes de salvar"],
+  [/Vigência com histórico de Fez\/Não fez ou aviso do filho não pode ser excluída|Vigencia com historico de Fez\/Nao fez ou aviso do filho nao pode ser excluida/i, "Esta vigência possui histórico de “Fez”/“Não fez” ou aviso do filho e não pode ser excluída"],
   [/Informe a penalidade para registrar o Não fez que atingiu o limite|Informe a penalidade para registrar o Nao fez que atingiu o limite/i, "Informe a penalidade para registrar o “Não fez” que atingiu o limite"],
   [/O limite de Não fez desta vigência já foi atingido|O limite de Nao fez desta vigencia ja foi atingido/i, "O limite de “Não fez” desta vigência já foi atingido"],
   [/Atribuicao com Fez\/Nao fez nao pode ser excluida diretamente|Atribuição com Fez\/Não fez não pode ser excluída diretamente/i, "Esta atribuição já tem registros de “Fez”/“Não fez” e não pode ser excluída"],

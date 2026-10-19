@@ -1,5 +1,10 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  enviarFirebaseMensagem,
+  obterFirebaseAccessToken,
+  type FirebaseServiceAccount,
+} from "../_shared/firebase-messaging.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,6 +52,8 @@ serve(async (req) => {
       token?: unknown;
       push_token?: unknown;
       plataforma?: unknown;
+      id_filho_tarefa?: unknown;
+      observacao?: unknown;
     } | null;
 
     const acao = typeof body?.acao === "string" ? body.acao : "";
@@ -88,7 +95,149 @@ serve(async (req) => {
         return json(retorno ?? { ok: false, codigo }, status);
       }
 
+      const tokenRetorno = typeof retorno.token === "string" ? retorno.token : "";
+      if (/^[0-9a-f]{64}$/.test(tokenRetorno)) {
+        const { data: painelApp, error: painelAppError } = await admin.rpc(
+          "obter_painel_app_filho_interno",
+          { p_token: tokenRetorno },
+        );
+        if (!painelAppError && painelApp) retorno.painel = painelApp;
+      }
+
       return json(retorno);
+    }
+
+    if (acao === "avisar_tarefa_concluida") {
+      const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
+      const idFilhoTarefa = typeof body?.id_filho_tarefa === "number"
+        ? body.id_filho_tarefa
+        : Number(body?.id_filho_tarefa);
+      const observacao = typeof body?.observacao === "string"
+        ? body.observacao.trim()
+        : null;
+
+      if (
+        !/^[0-9a-f]{64}$/.test(token) ||
+        !Number.isInteger(idFilhoTarefa) ||
+        idFilhoTarefa <= 0 ||
+        (observacao !== null && observacao.length > 120)
+      ) {
+        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+      }
+
+      const { data, error } = await admin.rpc("criar_solicitacao_tarefa_filho_interno", {
+        p_token: token,
+        p_id_filho_tarefa: idFilhoTarefa,
+        p_observacao: observacao || null,
+      });
+
+      if (error) {
+        console.error("Erro ao criar aviso de tarefa do filho:", error);
+        return json({ error: "Não foi possível enviar o aviso ao responsável" }, 500);
+      }
+
+      const retorno = data as Record<string, unknown> | null;
+      if (!retorno?.ok) {
+        const codigo = typeof retorno?.codigo === "string" ? retorno.codigo : "REQUISICAO_INVALIDA";
+        const status =
+          codigo === "SESSAO_INVALIDA" ? 401 :
+          codigo === "TAREFA_INVALIDA" ? 403 :
+          codigo === "JA_MARCADA" || codigo === "VIGENCIA_INATIVA" ? 409 :
+          400;
+        return json(retorno ?? { ok: false, codigo }, status);
+      }
+
+      const solicitacao =
+        retorno.solicitacao && typeof retorno.solicitacao === "object"
+          ? retorno.solicitacao as Record<string, unknown>
+          : null;
+
+      if (retorno.criada !== true) {
+        return json({
+          ok: true,
+          ja_existia: true,
+          solicitacao,
+          notificacoes_enviadas: 0,
+        });
+      }
+
+      let notificacoesEnviadas = 0;
+
+      try {
+        const idUsuarioPai = Number(retorno.id_usuario_pai);
+        const idFilho = Number(retorno.id_filho);
+        const nomeFilho = typeof retorno.nome_filho === "string" ? retorno.nome_filho : "Seu filho";
+        const nomeTarefa = typeof retorno.nome_tarefa === "string" ? retorno.nome_tarefa : "uma tarefa";
+        const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON");
+
+        if (Number.isInteger(idUsuarioPai) && serviceAccountJson) {
+          const serviceAccount = JSON.parse(serviceAccountJson) as FirebaseServiceAccount;
+
+          if (serviceAccount.project_id && serviceAccount.client_email && serviceAccount.private_key) {
+            const { data: dispositivos, error: dispositivosError } = await admin
+              .from("t_push_dispositivo")
+              .select("id,token")
+              .eq("id_usuario_pai", idUsuarioPai)
+              .eq("ativo", true);
+
+            if (dispositivosError) {
+              console.error("Erro ao localizar dispositivos do responsável:", dispositivosError);
+            } else if (dispositivos?.length) {
+              const accessToken = await obterFirebaseAccessToken(serviceAccount);
+              const observacaoSalva =
+                typeof solicitacao?.observacao === "string" ? solicitacao.observacao : "";
+              const textoBase = nomeFilho + " avisou que terminou: " + nomeTarefa + ".";
+              const textoPush = observacaoSalva ? textoBase + " " + observacaoSalva : textoBase;
+
+              for (const dispositivo of dispositivos) {
+                const resultado = await enviarFirebaseMensagem({
+                  serviceAccount,
+                  accessToken,
+                  token: dispositivo.token,
+                  title: "Combinado Família",
+                  body: textoPush,
+                  data: {
+                    target: "solicitacao_tarefa_filho",
+                    route: "/ocorrencias",
+                    id_filho: String(idFilho),
+                    id_filho_tarefa: String(idFilhoTarefa),
+                    id_solicitacao: String(solicitacao?.id ?? ""),
+                    data_referencia: String(solicitacao?.data_referencia ?? ""),
+                  },
+                });
+
+                if (resultado.ok) {
+                  notificacoesEnviadas += 1;
+                  continue;
+                }
+
+                console.error(
+                  "Erro FCM no aviso da tarefa do filho:",
+                  resultado.status,
+                  resultado.errorBody,
+                );
+
+                if (resultado.tokenInvalido) {
+                  await admin
+                    .from("t_push_dispositivo")
+                    .update({ ativo: false, updated_at: new Date().toISOString() })
+                    .eq("id", dispositivo.id);
+                }
+              }
+            }
+          }
+        }
+      } catch (pushError) {
+        // O aviso no banco e a fonte de verdade. Falha do push nao desfaz a solicitacao.
+        console.error("Aviso salvo, mas o push ao responsável falhou:", pushError);
+      }
+
+      return json({
+        ok: true,
+        ja_existia: false,
+        solicitacao,
+        notificacoes_enviadas: notificacoesEnviadas,
+      });
     }
 
     if (acao === "registrar_push") {
