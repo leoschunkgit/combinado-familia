@@ -20,6 +20,7 @@ import {
 import { AcessoFilhoLogin } from "@/components/AcessoFilhoLogin";
 import { PainelFilhoApp } from "@/components/PainelFilhoApp";
 import {
+  encerrarSessaoFilho,
   lerSessaoFilhoLocal,
   limparSessaoFilhoLocal,
   obterPainelFilhoApp,
@@ -101,7 +102,11 @@ function Index() {
 
           await limparSessaoFilhoLocal();
         } catch {
-          // Falha temporária de rede não apaga a credencial local do filho.
+          // Enquanto existir uma credencial local do filho, não misture com a
+          // sessão do responsável só porque houve uma falha temporária de rede.
+          setModoFilho(true);
+          setChecandoSessaoFilho(false);
+          return;
         }
       }
 
@@ -353,7 +358,9 @@ function Index() {
           {modoFilho ? (
             <AcessoFilhoLogin
               onEntrou={(painel) => setPainelFilho(painel)}
-              onVoltar={() => setModoFilho(false)}
+              onVoltar={() => {
+                void encerrarSessaoFilho().finally(() => setModoFilho(false));
+              }}
             />
           ) : (
           <Tabs defaultValue="entrar">
