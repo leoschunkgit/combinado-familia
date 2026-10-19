@@ -111,6 +111,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [estrelas, setEstrelas] = useState("");
+  const [recompensasAbertas, setRecompensasAbertas] = useState(true);
   const [resgatesAbertos, setResgatesAbertos] = useState(true);
   const [extratoAberto, setExtratoAberto] = useState(false);
   const [confirmacao, setConfirmacao] = useState<
@@ -352,15 +353,18 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border bg-card">
-          <div className="flex items-start justify-between gap-3 border-b px-4 py-4">
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold">Recompensas</h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">Cadastre o prêmio e defina quantas estrelas são necessárias.</p>
-            </div>
-            <Button type="button" size="sm" className="shrink-0" onClick={novaRecompensa}><Plus className="h-3.5 w-3.5" /> Nova</Button>
-          </div>
-
+        <CollapsibleSection
+          title="Recompensas"
+          description="Cadastre o prêmio e defina quantas estrelas são necessárias."
+          count={resumo.recompensas.length}
+          open={recompensasAbertas}
+          onOpenChange={setRecompensasAbertas}
+          action={
+            <Button type="button" size="sm" className="shrink-0" onClick={novaRecompensa}>
+              <Plus className="h-3.5 w-3.5" /> Nova
+            </Button>
+          }
+        >
           <div className="divide-y">
             {resumo.recompensas.map((recompensa) => {
               const faltam = Math.max(0, recompensa.estrelas_necessarias - resumo.saldo);
@@ -398,7 +402,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
             })}
             {resumo.recompensas.length === 0 && <p className="px-4 py-5 text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
           </div>
-        </section>
+        </CollapsibleSection>
 
         <CollapsibleSection
           title="Resgates"
