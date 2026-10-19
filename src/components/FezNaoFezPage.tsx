@@ -1166,7 +1166,7 @@ export function FezNaoFezPage({ modo }: FezNaoFezPageProps) {
                               <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />
                               <span>{filho.nome}</span>
                               <span
-                                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-700 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-300"
+                                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold leading-none text-foreground dark:border-amber-800 dark:bg-amber-950/35"
                                 aria-label={`${saldosEstrelas[filho.id] ?? 0} estrelas disponíveis`}
                               >
                                 <Star className="animate-notification-bell h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />
