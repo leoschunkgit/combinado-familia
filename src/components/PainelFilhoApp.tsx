@@ -343,7 +343,7 @@ export function PainelFilhoApp({
         </DialogContent>
       </Dialog>
 
-      <main className="native-safe-area mx-auto w-full max-w-5xl px-4 py-5 pb-28 sm:px-6 sm:py-7 sm:pb-28">
+      <main className="native-safe-area min-w-0 p-4 pb-24 md:p-10 md:pb-28"><div className="mx-auto w-full max-w-5xl">
         {aba === "inicio" && (
           <div className="space-y-4">
             <section
@@ -360,18 +360,8 @@ export function PainelFilhoApp({
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Seu painel</p>
                   <h1 className="mt-0.5 truncate text-2xl font-bold">Oi, {painel.filho.nome}!</h1>
-                  <p className="mt-1 text-sm text-muted-foreground">Veja rápido como estão seus combinados.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Seus combinados em um só lugar.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setAba("estrelas")}
-                  className="flex shrink-0 flex-col items-center rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 transition-transform active:scale-95"
-                  aria-label="Abrir estrelas e recompensas"
-                >
-                  <Star className="h-5 w-5 fill-amber-400 text-amber-500 motion-safe:animate-[pulse_3s_ease-in-out_infinite]" />
-                  <span className="mt-0.5 text-xl font-bold leading-none tabular-nums">{estrelas.saldo}</span>
-                  <span className="mt-1 text-[10px] font-semibold">estrelas</span>
-                </button>
               </div>
             </section>
 
@@ -501,14 +491,12 @@ export function PainelFilhoApp({
 
         {aba === "tarefas" && (
           <div className="space-y-4">
-            <div>
+            <div className="pb-1">
               <h1 className="text-xl font-bold">Tarefas</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Tarefas atribuídas a você na vigência atual.</p>
             </div>
 
             {vigenciaAtual ? (
-              <Card>
-                <CardContent className="space-y-2 pt-6">
+              <div className="space-y-2">
                   {tarefasAtual.map((t) => {
                     const fezCount = t.ocorrencias.filter((o) => o.tipo === "FEZ").length;
                     const naoFezCount = t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length;
@@ -536,32 +524,20 @@ export function PainelFilhoApp({
                       </div>
                     );
                   })}
-                  {tarefasAtual.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma tarefa atribuída nesta vigência.</p>}
-                </CardContent>
-              </Card>
+                {tarefasAtual.length === 0 && (
+                  <div className="rounded-2xl border border-dashed bg-card p-5 text-center text-sm text-muted-foreground">
+                    Nenhuma tarefa atribuída nesta vigência.
+                  </div>
+                )}
+              </div>
             ) : <SemVigencia />}
           </div>
         )}
 
         {aba === "registros" && (
-          <div className="space-y-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Seu acompanhamento</p>
-              <h1 className="mt-0.5 text-xl font-bold">Fez / Não fez</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Veja o que já foi registrado no combinado atual.</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl border border-green-200 bg-green-50 p-3">
-                <ThumbsUp className="h-4 w-4 text-green-700" />
-                <p className="mt-1 text-xl font-bold text-green-800">{qtdFez}</p>
-                <p className="text-[11px] font-semibold text-green-700">Fez</p>
-              </div>
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-3">
-                <ThumbsDown className="h-4 w-4 text-red-600" />
-                <p className="mt-1 text-xl font-bold text-red-700">{qtdNaoFez}</p>
-                <p className="text-[11px] font-semibold text-red-600">Não fez</p>
-              </div>
+          <div className="space-y-4">
+            <div className="pb-1">
+              <h1 className="text-xl font-bold">Fez / Não fez</h1>
             </div>
 
             {vigenciaAtual ? (
@@ -640,14 +616,12 @@ export function PainelFilhoApp({
 
         {aba === "historico" && (
           <div className="space-y-4">
-            <div>
+            <div className="pb-1">
               <h1 className="text-xl font-bold">Histórico</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Vigências finalizadas e seus resultados.</p>
             </div>
 
             {vigenciasFinalizadas.length > 0 ? (
-              <Card>
-                <CardContent className="space-y-2 pt-6">
+              <div className="space-y-2">
                   {vigenciasFinalizadas.map((v) => {
                     const fezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length, 0);
                     const naoFezV = v.tarefas.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length, 0);
@@ -690,30 +664,29 @@ export function PainelFilhoApp({
                         </div>
                       </div>
                     );
-                  })}
-                </CardContent>
-              </Card>
+                })}
+              </div>
             ) : (
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Ainda não há vigências finalizadas no seu histórico.</p>
-                </CardContent>
-              </Card>
+              <div className="rounded-2xl border border-dashed bg-card p-5 text-center text-sm text-muted-foreground">
+                Ainda não há vigências finalizadas no seu histórico.
+              </div>
             )}
           </div>
         )}
 
-        <p className="flex items-center justify-center gap-1.5 pb-4 pt-5 text-xs text-muted-foreground">
-          <Clock3 className="h-3.5 w-3.5" />
-          Atualizado {dataHora(painel.atualizado_em)}
-        </p>
-      </main>
+        {aba === "inicio" && (
+          <p className="flex items-center justify-center gap-1.5 pb-2 pt-3 text-[11px] text-muted-foreground">
+            <Clock3 className="h-3.5 w-3.5" />
+            Atualizado {dataHora(painel.atualizado_em)}
+          </p>
+        )}
+      </div></main>
 
       <nav
         aria-label="Navegação principal do filho"
-        className="native-safe-area fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-2 pb-2 pt-1.5 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur"
+        className="native-safe-area fixed bottom-0 left-1/2 z-40 w-[calc(100%-3rem)] max-w-[22rem] -translate-x-1/2 pb-2"
       >
-        <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-1">
+        <div className="grid grid-cols-4 gap-0.5 rounded-2xl border bg-background/95 p-1 shadow-lg backdrop-blur">
           {ABAS.map(({ id, label, icon: Icon }) => {
             const ativo = aba === id;
             return (
@@ -722,14 +695,14 @@ export function PainelFilhoApp({
                 type="button"
                 onClick={() => setAba(id)}
                 aria-current={ativo ? "page" : undefined}
-                className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-semibold transition-all active:scale-95 ${ativo ? "bg-muted/60 text-foreground" : "text-muted-foreground"}`}
+                className={`flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[9px] font-semibold transition-all active:scale-95 ${ativo ? "bg-muted/60 text-foreground" : "text-muted-foreground"}`}
                 style={ativo ? { boxShadow: `inset 0 2px 0 ${painel.filho.cor?.trim() || "var(--primary)"}` } : undefined}
               >
                 <Icon
-                  className={`h-5 w-5 ${id === "estrelas" && ativo ? "fill-amber-400 text-amber-500" : ""}`}
+                  className={`h-4.5 w-4.5 ${id === "estrelas" && ativo ? "fill-amber-400 text-amber-500" : ""}`}
                   style={ativo && id !== "estrelas" ? { color: painel.filho.cor?.trim() || "var(--primary)" } : undefined}
                 />
-                <span className="truncate">{label}</span>
+                <span className="max-w-full truncate leading-tight">{label}</span>
               </button>
             );
           })}
