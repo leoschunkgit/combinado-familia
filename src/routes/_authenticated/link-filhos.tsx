@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Copy, ExternalLink, Link2, PowerOff, RefreshCw, Share2, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, ExternalLink, KeyRound, Link2, PowerOff, RefreshCw, Share2, Smartphone, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,6 +22,16 @@ export const Route = createFileRoute("/_authenticated/link-filhos")({
 });
 
 type AcessoPublico = { token: string; ativo: boolean };
+type AcessoApp = {
+  id: number;
+  dispositivo_id: string;
+  dispositivo_nome: string | null;
+  ativo: boolean;
+  ultimo_acesso_em: string | null;
+  revogado_em: string | null;
+  created_at: string;
+};
+type ChaveApp = { chave: string; expira_em: string };
 
 function LinkFilhosPage() {
   const { runAction } = useActionLoading();
@@ -31,6 +41,11 @@ function LinkFilhosPage() {
   const [maisOpcoes, setMaisOpcoes] = useState<number | null>(null);
   const [confirmarNovoLink, setConfirmarNovoLink] = useState<Filho | null>(null);
   const [confirmarDesativar, setConfirmarDesativar] = useState<Filho | null>(null);
+  const [acessosApp, setAcessosApp] = useState<Record<number, AcessoApp[]>>({});
+  const [chavesApp, setChavesApp] = useState<Record<number, ChaveApp | null>>({});
+  const [carregandoApp, setCarregandoApp] = useState<Record<number, boolean>>({});
+  const [confirmarRevogarApp, setConfirmarRevogarApp] = useState<{ filho: Filho; acesso: AcessoApp } | null>(null);
+  const [confirmarRevogarTodosApp, setConfirmarRevogarTodosApp] = useState<Filho | null>(null);
 
   const rpc = supabase.rpc.bind(supabase) as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 
@@ -41,6 +56,47 @@ function LinkFilhosPage() {
     return typeof r["token"] === "string" ? { token: r["token"], ativo: r["ativo"] === true } : null;
   }
 
+  function normalizarAcessosApp(data: unknown): AcessoApp[] {
+    if (!Array.isArray(data)) return [];
+
+    return data.flatMap((row) => {
+      if (!row || typeof row !== "object") return [];
+      const r = row as Record<string, unknown>;
+      if (typeof r["id"] !== "number" || typeof r["dispositivo_id"] !== "string") return [];
+
+      return [{
+        id: r["id"],
+        dispositivo_id: r["dispositivo_id"],
+        dispositivo_nome: typeof r["dispositivo_nome"] === "string" ? r["dispositivo_nome"] : null,
+        ativo: r["ativo"] === true,
+        ultimo_acesso_em: typeof r["ultimo_acesso_em"] === "string" ? r["ultimo_acesso_em"] : null,
+        revogado_em: typeof r["revogado_em"] === "string" ? r["revogado_em"] : null,
+        created_at: typeof r["created_at"] === "string" ? r["created_at"] : "",
+      }];
+    });
+  }
+
+  function normalizarChaveApp(data: unknown): ChaveApp | null {
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row || typeof row !== "object") return null;
+    const r = row as Record<string, unknown>;
+
+    if (typeof r["chave"] !== "string" || !/^\d{6}$/.test(r["chave"]) || typeof r["expira_em"] !== "string") {
+      return null;
+    }
+
+    return { chave: r["chave"], expira_em: r["expira_em"] };
+  }
+
+  const dataHoraCurta = (valor: string) => new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(valor));
+
   async function carregarAcesso(idFilho: number) {
     setCarregando((v) => ({ ...v, [idFilho]: true }));
     const { data, error } = await rpc("obter_acesso_publico_filho", { p_id_filho: idFilho });
@@ -49,8 +105,19 @@ function LinkFilhosPage() {
     setAcessos((v) => ({ ...v, [idFilho]: normalizarAcesso(data) }));
   }
 
+  async function carregarAcessosApp(idFilho: number) {
+    setCarregandoApp((v) => ({ ...v, [idFilho]: true }));
+    const { data, error } = await rpc("listar_acessos_app_filho", { p_id_filho: idFilho });
+    setCarregandoApp((v) => ({ ...v, [idFilho]: false }));
+    if (error) return;
+    setAcessosApp((v) => ({ ...v, [idFilho]: normalizarAcessosApp(data) }));
+  }
+
   useEffect(() => {
-    filhos.forEach((f) => { if (!(f.id in acessos) && !carregando[f.id]) void carregarAcesso(f.id); });
+    filhos.forEach((f) => {
+      if (!(f.id in acessos) && !carregando[f.id]) void carregarAcesso(f.id);
+      if (!(f.id in acessosApp) && !carregandoApp[f.id]) void carregarAcessosApp(f.id);
+    });
   }, [filhos]);
 
   async function gerarLink(filho: Filho, regenerar = false) {
@@ -69,6 +136,48 @@ function LinkFilhosPage() {
     setAcessos((v) => ({ ...v, [filho.id]: v[filho.id] ? { ...v[filho.id]!, ativo: false } : null }));
     setMaisOpcoes(null);
     toast.success("Acesso ao painel desativado");
+  }
+
+  async function gerarChaveApp(filho: Filho) {
+    const { data, error } = await rpc("gerar_chave_acesso_app_filho", { p_id_filho: filho.id });
+    if (error) { toast.error(msgErro(error)); return; }
+
+    const chave = normalizarChaveApp(data);
+    if (!chave) {
+      toast.error("Não foi possível gerar a chave de acesso.");
+      return;
+    }
+
+    setChavesApp((v) => ({ ...v, [filho.id]: chave }));
+    toast.success("Chave gerada. Ela vale por 15 minutos e pode ser usada uma única vez.");
+  }
+
+  async function copiarChaveApp(chave: string) {
+    try {
+      await copyText(chave);
+      toast.success("Chave copiada");
+    } catch {
+      toast.error("Não foi possível copiar a chave");
+    }
+  }
+
+  async function revogarAcessoApp(filho: Filho, acesso: AcessoApp) {
+    const { error } = await rpc("revogar_acesso_app_filho", { p_id_acesso: acesso.id });
+    if (error) { toast.error(msgErro(error)); return; }
+
+    setConfirmarRevogarApp(null);
+    await carregarAcessosApp(filho.id);
+    toast.success("Acesso do aparelho revogado");
+  }
+
+  async function revogarTodosAcessosApp(filho: Filho) {
+    const { error } = await rpc("revogar_todos_acessos_app_filho", { p_id_filho: filho.id });
+    if (error) { toast.error(msgErro(error)); return; }
+
+    setConfirmarRevogarTodosApp(null);
+    setChavesApp((v) => ({ ...v, [filho.id]: null }));
+    await carregarAcessosApp(filho.id);
+    toast.success("Todos os acessos do aplicativo foram revogados");
   }
 
   const urlAcesso = (token: string) => getChildTrackingUrl(token);
@@ -162,6 +271,112 @@ function LinkFilhosPage() {
               )}
             </>}
           </div>
+
+          <div className="mt-3 min-w-0 rounded-xl border bg-muted/25 p-3">
+            <div className="flex items-start gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Smartphone className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">Acesso pelo aplicativo</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  Gere uma chave temporária para {f.nome} entrar no próprio app. O acesso é somente para consulta.
+                </p>
+              </div>
+            </div>
+
+            {chavesApp[f.id] && (
+              <div className="mt-3 rounded-lg border bg-background p-3">
+                <p className="text-xs font-medium text-muted-foreground">Chave temporária</p>
+                <div className="mt-1 flex items-center justify-between gap-3">
+                  <span className="font-mono text-2xl font-bold tracking-[0.18em]">{chavesApp[f.id]!.chave}</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => void copiarChaveApp(chavesApp[f.id]!.chave)}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copiar
+                  </Button>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Válida até {dataHoraCurta(chavesApp[f.id]!.expira_em)} · uso único.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void runAction(() => gerarChaveApp(f))}
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                {chavesApp[f.id] ? "Gerar nova chave" : "Gerar chave de acesso"}
+              </Button>
+            </div>
+
+            <div className="mt-4 border-t pt-3">
+              {carregandoApp[f.id] ? (
+                <p className="text-sm text-muted-foreground">Carregando aparelhos...</p>
+              ) : (() => {
+                const ativos = (acessosApp[f.id] ?? []).filter((a) => a.ativo);
+
+                if (ativos.length === 0) {
+                  return <p className="text-xs text-muted-foreground">Nenhum aparelho conectado.</p>;
+                }
+
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {ativos.length === 1 ? "1 aparelho conectado" : `${ativos.length} aparelhos conectados`}
+                      </p>
+                      {ativos.length > 1 && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                          onClick={() => setConfirmarRevogarTodosApp(f)}
+                        >
+                          Revogar todos
+                        </Button>
+                      )}
+                    </div>
+
+                    {ativos.map((acessoApp) => (
+                      <div key={acessoApp.id} className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2.5">
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-1.5 text-sm font-medium">
+                            <Smartphone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{acessoApp.dispositivo_nome || "Aparelho"}</span>
+                          </p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            {acessoApp.ultimo_acesso_em
+                              ? `Último acesso: ${dataHoraCurta(acessoApp.ultimo_acesso_em)}`
+                              : "Ainda sem acesso registrado"}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 shrink-0 px-2 text-xs text-destructive hover:text-destructive"
+                          onClick={() => setConfirmarRevogarApp({ filho: f, acesso: acessoApp })}
+                        >
+                          <PowerOff className="h-3.5 w-3.5" />
+                          Revogar
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
         </section>;
       })}
     </div>
@@ -180,6 +395,58 @@ function LinkFilhosPage() {
         {confirmarNovoLink && <div className="flex items-center gap-2 text-sm font-semibold"><FilhoAvatar nome={confirmarNovoLink.nome} cor={confirmarNovoLink.cor} avatar={confirmarNovoLink.avatar === "menino" || confirmarNovoLink.avatar === "menina" ? confirmarNovoLink.avatar : null} className="h-5 w-5" /><span>{confirmarNovoLink.nome}</span></div>}
         <p>O link atual deixará de funcionar imediatamente. Deseja continuar?</p>
         <DialogFooter><Button variant="outline" onClick={() => setConfirmarNovoLink(null)}>Cancelar</Button><Button onClick={() => { const f = confirmarNovoLink; setConfirmarNovoLink(null); if (f) void runAction(() => gerarLink(f, true)); }}>Gerar novo link</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={Boolean(confirmarRevogarApp)} onOpenChange={(open) => !open && setConfirmarRevogarApp(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Revogar acesso do aparelho</DialogTitle></DialogHeader>
+        {confirmarRevogarApp && (
+          <>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <FilhoAvatar nome={confirmarRevogarApp.filho.nome} cor={confirmarRevogarApp.filho.cor} avatar={confirmarRevogarApp.filho.avatar === "menino" || confirmarRevogarApp.filho.avatar === "menina" ? confirmarRevogarApp.filho.avatar : null} className="h-5 w-5" />
+              <span>{confirmarRevogarApp.filho.nome}</span>
+            </div>
+            <p>O aparelho <strong>{confirmarRevogarApp.acesso.dispositivo_nome || "Aparelho"}</strong> perderá o acesso ao painel do filho.</p>
+          </>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setConfirmarRevogarApp(null)}>Cancelar</Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              const atual = confirmarRevogarApp;
+              if (atual) void runAction(() => revogarAcessoApp(atual.filho, atual.acesso));
+            }}
+          >
+            Revogar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={Boolean(confirmarRevogarTodosApp)} onOpenChange={(open) => !open && setConfirmarRevogarTodosApp(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Revogar todos os acessos do app</DialogTitle></DialogHeader>
+        {confirmarRevogarTodosApp && (
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <FilhoAvatar nome={confirmarRevogarTodosApp.nome} cor={confirmarRevogarTodosApp.cor} avatar={confirmarRevogarTodosApp.avatar === "menino" || confirmarRevogarTodosApp.avatar === "menina" ? confirmarRevogarTodosApp.avatar : null} className="h-5 w-5" />
+            <span>{confirmarRevogarTodosApp.nome}</span>
+          </div>
+        )}
+        <p>Todos os aparelhos conectados serão desconectados e qualquer chave temporária ainda ativa será invalidada.</p>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setConfirmarRevogarTodosApp(null)}>Cancelar</Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              const filho = confirmarRevogarTodosApp;
+              if (filho) void runAction(() => revogarTodosAcessosApp(filho));
+            }}
+          >
+            Revogar todos
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   </>;
