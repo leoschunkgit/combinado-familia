@@ -6,13 +6,16 @@ import {
   ClipboardCheck,
   ClipboardList,
   Clock3,
+  Gift,
   History,
   House,
   Loader2,
   LogOut,
   Menu,
+  Star,
   ThumbsDown,
   ThumbsUp,
+  Trophy,
 } from "lucide-react";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
@@ -32,12 +35,13 @@ import {
   type VigenciaFilho,
 } from "@/lib/child-app-session";
 
-type AbaFilho = "inicio" | "tarefas" | "registros" | "historico";
+type AbaFilho = "inicio" | "tarefas" | "registros" | "estrelas" | "historico";
 
 const ABAS: Array<{ id: AbaFilho; label: string; icon: typeof House }> = [
   { id: "inicio", label: "Início", icon: House },
   { id: "tarefas", label: "Tarefas", icon: ClipboardList },
   { id: "registros", label: "Fez / Não fez", icon: ClipboardCheck },
+  { id: "estrelas", label: "Estrelas", icon: Star },
   { id: "historico", label: "Histórico", icon: History },
 ];
 
@@ -162,6 +166,15 @@ export function PainelFilhoApp({
     (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length,
     0,
   );
+
+  const estrelas = painel.estrelas ?? {
+    hoje: 0,
+    vigencia_atual: qtdFez,
+    saldo: qtdFez,
+    total_conquistado: qtdFez,
+    recompensas: [],
+    resgates: [],
+  };
 
   const registrosAtuais = useMemo(
     () => tarefasAtual
@@ -359,6 +372,37 @@ export function PainelFilhoApp({
               <p className="mt-3 text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
             </section>
 
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Card className="flex min-h-[92px] items-center justify-center">
+                <div className="text-center">
+                  <Star className="mx-auto h-5 w-5 text-amber-500" />
+                  <p className="mt-1 text-xl font-bold">{estrelas.hoje}</p>
+                  <p className="text-[11px] text-muted-foreground">Hoje</p>
+                </div>
+              </Card>
+              <Card className="flex min-h-[92px] items-center justify-center">
+                <div className="text-center">
+                  <Star className="mx-auto h-5 w-5 text-amber-500" />
+                  <p className="mt-1 text-xl font-bold">{estrelas.vigencia_atual}</p>
+                  <p className="text-[11px] text-muted-foreground">Nesta vigência</p>
+                </div>
+              </Card>
+              <Card className="flex min-h-[92px] items-center justify-center">
+                <div className="text-center">
+                  <Gift className="mx-auto h-5 w-5 text-muted-foreground" />
+                  <p className="mt-1 text-xl font-bold">{estrelas.saldo}</p>
+                  <p className="text-[11px] text-muted-foreground">Saldo</p>
+                </div>
+              </Card>
+              <Card className="flex min-h-[92px] items-center justify-center">
+                <div className="text-center">
+                  <Trophy className="mx-auto h-5 w-5 text-muted-foreground" />
+                  <p className="mt-1 text-xl font-bold">{estrelas.total_conquistado}</p>
+                  <p className="text-[11px] text-muted-foreground">Total conquistado</p>
+                </div>
+              </Card>
+            </div>
+
             {vigenciaAtual ? (
               <>
                 <Card>
@@ -520,6 +564,12 @@ export function PainelFilhoApp({
                                 }`}>
                                   {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
                                 </p>
+                                {ocorrencia.tipo === "FEZ" && (
+                                  <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-600">
+                                    <Star className="h-3.5 w-3.5" />
+                                    +1 estrela
+                                  </p>
+                                )}
                                 {b && <p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}
                               </div>
                             </div>
@@ -537,6 +587,82 @@ export function PainelFilhoApp({
                 </Card>
               )
             ) : <SemVigencia />}
+          </div>
+        )}
+
+        {aba === "estrelas" && (
+          <div className="space-y-5">
+            <div>
+              <h1 className="text-xl font-bold">Estrelas</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cada tarefa marcada como “Fez” vale 1 estrela. “Não fez” não retira estrelas.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Card><CardContent className="pt-5 text-center"><Star className="mx-auto h-5 w-5 text-amber-500" /><p className="mt-1 text-2xl font-bold">{estrelas.hoje}</p><p className="text-xs text-muted-foreground">Hoje</p></CardContent></Card>
+              <Card><CardContent className="pt-5 text-center"><Star className="mx-auto h-5 w-5 text-amber-500" /><p className="mt-1 text-2xl font-bold">{estrelas.vigencia_atual}</p><p className="text-xs text-muted-foreground">Nesta vigência</p></CardContent></Card>
+              <Card><CardContent className="pt-5 text-center"><Gift className="mx-auto h-5 w-5 text-muted-foreground" /><p className="mt-1 text-2xl font-bold">{estrelas.saldo}</p><p className="text-xs text-muted-foreground">Saldo disponível</p></CardContent></Card>
+              <Card><CardContent className="pt-5 text-center"><Trophy className="mx-auto h-5 w-5 text-muted-foreground" /><p className="mt-1 text-2xl font-bold">{estrelas.total_conquistado}</p><p className="text-xs text-muted-foreground">Total conquistado</p></CardContent></Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Gift className="h-4 w-4" />
+                  Recompensas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {estrelas.recompensas.map((recompensa) => {
+                  const faltam = Math.max(0, recompensa.estrelas_necessarias - estrelas.saldo);
+                  return (
+                    <div key={recompensa.id} className="rounded-xl border p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="break-words text-sm font-semibold">{recompensa.nome}</p>
+                          {recompensa.descricao && <p className="mt-1 break-words text-xs text-muted-foreground">{recompensa.descricao}</p>}
+                        </div>
+                        <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold">
+                          <Star className="h-4 w-4 text-amber-500" />
+                          {recompensa.estrelas_necessarias}
+                        </span>
+                      </div>
+                      <p className={`mt-2 text-xs font-medium ${recompensa.disponivel ? "text-green-700" : "text-muted-foreground"}`}>
+                        {recompensa.disponivel ? "Recompensa disponível" : `Faltam ${faltam} estrela(s)`}
+                      </p>
+                    </div>
+                  );
+                })}
+                {estrelas.recompensas.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Seu responsável ainda não cadastrou recompensas.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Histórico de recompensas</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {estrelas.resgates.map((resgate) => (
+                  <div key={resgate.id} className="flex items-start justify-between gap-3 rounded-xl border p-3">
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
+                      <p className="mt-1 text-xs font-medium">
+                        {resgate.status === "PENDENTE" ? "Pendente" : resgate.status === "ENTREGUE" ? "Entregue" : "Cancelado"}
+                      </p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold">
+                      <Star className="h-4 w-4 text-amber-500" />
+                      {resgate.estrelas_utilizadas}
+                    </span>
+                  </div>
+                ))}
+                {estrelas.resgates.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhuma recompensa resgatada ainda.</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -560,7 +686,7 @@ export function PainelFilhoApp({
                           <div className="min-w-0">
                             <p className="text-sm font-medium">{dataHora(v.data_inicio)} até {dataHora(v.data_fim)}</p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {v.tarefas.length} tarefa(s) · {fezV} Fez · {naoFezV} Não fez
+                              {v.tarefas.length} tarefa(s) · {fezV} Fez · {naoFezV} Não fez · ⭐ {fezV}
                             </p>
                           </div>
                           <span className="inline-flex shrink-0 items-center gap-1.5 text-xs">
@@ -629,6 +755,7 @@ export function PainelFilhoApp({
                     : <ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />}
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{o.tipo === "FEZ" ? "Fez" : "Não fez"} · {data(o.data)}</p>
+                    {o.tipo === "FEZ" && <p className="mt-1 text-xs font-medium text-amber-600">⭐ +1 estrela</p>}
                     {b && <p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}
                   </div>
                 </div>
