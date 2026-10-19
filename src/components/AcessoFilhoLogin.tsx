@@ -74,8 +74,11 @@ export function AcessoFilhoLogin({
       const pareamento = await parearFilhoApp(chave);
       tokenNovo = pareamento.token;
 
-      const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) throw signOutError;
+      const { data: sessaoAtual } = await supabase.auth.getSession();
+      if (sessaoAtual.session) {
+        const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+        if (signOutError) throw signOutError;
+      }
 
       await salvarSessaoFilhoLocal(pareamento.token);
       onEntrou(pareamento.painel);
