@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Mail, Pencil, Phone, Plus, Smartphone, Trash2, Users, WalletCards } from "lucide-react";
+import { Mail, Pencil, Phone, Plus, Smartphone, Star, Trash2, Users, WalletCards } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +20,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { FilhoAppAccessDialog } from "@/components/FilhoAppAccessDialog";
+import { FilhoEstrelasDialog } from "@/components/FilhoEstrelasDialog";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -143,6 +144,7 @@ function FilhosPage() {
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
   const [acessoAppFilho, setAcessoAppFilho] = useState<Filho | null>(null);
+  const [estrelasFilho, setEstrelasFilho] = useState<Filho | null>(null);
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
@@ -285,7 +287,17 @@ function FilhosPage() {
             </div>
           </div>
 
-          <div className="mt-3 border-t pt-3">
+          <div className="mt-3 flex flex-col gap-2 border-t pt-3 sm:flex-row">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="w-full justify-center sm:w-auto"
+              onClick={() => setEstrelasFilho(f)}
+            >
+              <Star className="h-3.5 w-3.5" />
+              Estrelas e recompensas
+            </Button>
             <Button
               type="button"
               size="sm"
@@ -364,6 +376,14 @@ function FilhosPage() {
       open={acessoAppFilho !== null}
       onOpenChange={(open) => {
         if (!open) setAcessoAppFilho(null);
+      }}
+    />
+
+    <FilhoEstrelasDialog
+      filho={estrelasFilho}
+      open={estrelasFilho !== null}
+      onOpenChange={(open) => {
+        if (!open) setEstrelasFilho(null);
       }}
     />
   </>;
