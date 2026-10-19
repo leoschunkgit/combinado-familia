@@ -90,6 +90,7 @@ export const useFilhoTarefas = () =>
   });
 
 export type SolicitacaoTarefaFilho = Tables<"t_solicitacao_tarefa_filho">;
+export type RevisaoTarefaFilho = Tables<"t_revisao_tarefa_filho">;
 
 export const useSolicitacoesTarefaFilho = () =>
   useQuery({
@@ -103,6 +104,28 @@ export const useSolicitacoesTarefaFilho = () =>
       ),
     refetchInterval: 30_000,
   });
+
+export const useRevisoesTarefaFilho = () =>
+  useQuery({
+    queryKey: ["revisoes_tarefa_filho"],
+    queryFn: () =>
+      unwrap<RevisaoTarefaFilho[]>(
+        supabase
+          .from("t_revisao_tarefa_filho")
+          .select("*")
+          .order("created_at", { ascending: false }),
+      ),
+    refetchInterval: 30_000,
+  });
+
+export async function resolverRevisaoTarefaFilho(idRevisao: number) {
+  const { data, error } = await supabase.rpc("resolver_revisao_tarefa_filho", {
+    p_id_revisao: idRevisao,
+    p_decisao: "MANTER_NAO_FEZ",
+  });
+  if (error) throw error;
+  return data;
+}
 
 export type Ocorrencia = Tables<"t_ocorrencia"> & {
   t_filho_tarefa:
@@ -129,6 +152,8 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Atribuicao com revisao do filho nao pode ser excluida diretamente|Atribuição com revisão do filho não pode ser excluída diretamente/i, "Esta atribuição possui uma revisão enviada pelo filho e não pode ser excluída"],
+  [/Atribuicao com revisao do filho nao pode ser editada|Atribuição com revisão do filho não pode ser editada/i, "Esta atribuição possui uma revisão enviada pelo filho e não pode ser alterada"],
   [/Atribuicao com aviso do filho nao pode ser excluida diretamente|Atribuição com aviso do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser excluída"],
   [/Atribuicao com aviso do filho nao pode ser editada|Atribuição com aviso do filho não pode ser editada/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser alterada"],
   [/Há avisos do filho fora do novo período da vigência|Ha avisos do filho fora do novo periodo da vigencia/i, "Há avisos enviados pelo filho fora do novo período. Corrija o período antes de salvar"],

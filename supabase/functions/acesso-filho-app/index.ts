@@ -32,6 +32,75 @@ function getClientIp(req: Request) {
   return real || "ip-indisponivel";
 }
 
+async function enviarPushAoResponsavel(
+  admin: ReturnType<typeof createClient>,
+  args: {
+    idUsuarioPai: number;
+    body: string;
+    data: Record<string, string>;
+    contexto: string;
+  },
+) {
+  let enviados = 0;
+
+  try {
+    const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON");
+    if (!Number.isInteger(args.idUsuarioPai) || !serviceAccountJson) return 0;
+
+    const serviceAccount = JSON.parse(serviceAccountJson) as FirebaseServiceAccount;
+    if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+      return 0;
+    }
+
+    const { data: dispositivos, error: dispositivosError } = await admin
+      .from("t_push_dispositivo")
+      .select("id,token")
+      .eq("id_usuario_pai", args.idUsuarioPai)
+      .eq("ativo", true);
+
+    if (dispositivosError) {
+      console.error("Erro ao localizar dispositivos do responsável:", dispositivosError);
+      return 0;
+    }
+    if (!dispositivos?.length) return 0;
+
+    const accessToken = await obterFirebaseAccessToken(serviceAccount);
+
+    for (const dispositivo of dispositivos) {
+      const resultado = await enviarFirebaseMensagem({
+        serviceAccount,
+        accessToken,
+        token: dispositivo.token,
+        title: "Combinado Família",
+        body: args.body,
+        data: args.data,
+      });
+
+      if (resultado.ok) {
+        enviados += 1;
+        continue;
+      }
+
+      console.error(
+        "Erro FCM em " + args.contexto + ":",
+        resultado.status,
+        resultado.errorBody,
+      );
+
+      if (resultado.tokenInvalido) {
+        await admin
+          .from("t_push_dispositivo")
+          .update({ ativo: false, updated_at: new Date().toISOString() })
+          .eq("id", dispositivo.id);
+      }
+    }
+  } catch (pushError) {
+    console.error("Registro salvo, mas o push falhou em " + args.contexto + ":", pushError);
+  }
+
+  return enviados;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
@@ -161,81 +230,118 @@ serve(async (req) => {
         });
       }
 
-      let notificacoesEnviadas = 0;
+      const idUsuarioPai = Number(retorno.id_usuario_pai);
+      const idFilho = Number(retorno.id_filho);
+      const nomeFilho = typeof retorno.nome_filho === "string" ? retorno.nome_filho : "Seu filho";
+      const nomeTarefa = typeof retorno.nome_tarefa === "string" ? retorno.nome_tarefa : "uma tarefa";
+      const observacaoSalva =
+        typeof solicitacao?.observacao === "string" ? solicitacao.observacao : "";
+      const textoBase = nomeFilho + " avisou que terminou: " + nomeTarefa + ".";
+      const textoPush = observacaoSalva ? textoBase + " " + observacaoSalva : textoBase;
 
-      try {
-        const idUsuarioPai = Number(retorno.id_usuario_pai);
-        const idFilho = Number(retorno.id_filho);
-        const nomeFilho = typeof retorno.nome_filho === "string" ? retorno.nome_filho : "Seu filho";
-        const nomeTarefa = typeof retorno.nome_tarefa === "string" ? retorno.nome_tarefa : "uma tarefa";
-        const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON");
-
-        if (Number.isInteger(idUsuarioPai) && serviceAccountJson) {
-          const serviceAccount = JSON.parse(serviceAccountJson) as FirebaseServiceAccount;
-
-          if (serviceAccount.project_id && serviceAccount.client_email && serviceAccount.private_key) {
-            const { data: dispositivos, error: dispositivosError } = await admin
-              .from("t_push_dispositivo")
-              .select("id,token")
-              .eq("id_usuario_pai", idUsuarioPai)
-              .eq("ativo", true);
-
-            if (dispositivosError) {
-              console.error("Erro ao localizar dispositivos do responsável:", dispositivosError);
-            } else if (dispositivos?.length) {
-              const accessToken = await obterFirebaseAccessToken(serviceAccount);
-              const observacaoSalva =
-                typeof solicitacao?.observacao === "string" ? solicitacao.observacao : "";
-              const textoBase = nomeFilho + " avisou que terminou: " + nomeTarefa + ".";
-              const textoPush = observacaoSalva ? textoBase + " " + observacaoSalva : textoBase;
-
-              for (const dispositivo of dispositivos) {
-                const resultado = await enviarFirebaseMensagem({
-                  serviceAccount,
-                  accessToken,
-                  token: dispositivo.token,
-                  title: "Combinado Família",
-                  body: textoPush,
-                  data: {
-                    target: "solicitacao_tarefa_filho",
-                    route: "/ocorrencias",
-                    id_filho: String(idFilho),
-                    id_filho_tarefa: String(idFilhoTarefa),
-                    id_solicitacao: String(solicitacao?.id ?? ""),
-                    data_referencia: String(solicitacao?.data_referencia ?? ""),
-                  },
-                });
-
-                if (resultado.ok) {
-                  notificacoesEnviadas += 1;
-                  continue;
-                }
-
-                console.error(
-                  "Erro FCM no aviso da tarefa do filho:",
-                  resultado.status,
-                  resultado.errorBody,
-                );
-
-                if (resultado.tokenInvalido) {
-                  await admin
-                    .from("t_push_dispositivo")
-                    .update({ ativo: false, updated_at: new Date().toISOString() })
-                    .eq("id", dispositivo.id);
-                }
-              }
-            }
-          }
-        }
-      } catch (pushError) {
-        // O aviso no banco e a fonte de verdade. Falha do push nao desfaz a solicitacao.
-        console.error("Aviso salvo, mas o push ao responsável falhou:", pushError);
-      }
+      const notificacoesEnviadas = await enviarPushAoResponsavel(admin, {
+        idUsuarioPai,
+        body: textoPush,
+        data: {
+          target: "solicitacao_tarefa_filho",
+          route: "/ocorrencias",
+          id_filho: String(idFilho),
+          id_filho_tarefa: String(idFilhoTarefa),
+          id_solicitacao: String(solicitacao?.id ?? ""),
+          data_referencia: String(solicitacao?.data_referencia ?? ""),
+        },
+        contexto: "aviso de tarefa concluída",
+      });
 
       return json({
         ok: true,
         ja_existia: false,
         solicitacao,
+        notificacoes_enviadas: notificacoesEnviadas,
+      });
+    }
+
+    if (acao === "pedir_revisao_nao_fez") {
+      const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
+      const idFilhoTarefa = typeof body?.id_filho_tarefa === "number"
+        ? body.id_filho_tarefa
+        : Number(body?.id_filho_tarefa);
+      const observacao = typeof body?.observacao === "string"
+        ? body.observacao.trim()
+        : null;
+
+      if (
+        !/^[0-9a-f]{64}$/.test(token) ||
+        !Number.isInteger(idFilhoTarefa) ||
+        idFilhoTarefa <= 0 ||
+        (observacao !== null && observacao.length > 120)
+      ) {
+        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+      }
+
+      const { data, error } = await admin.rpc("criar_revisao_tarefa_filho_interno", {
+        p_token: token,
+        p_id_filho_tarefa: idFilhoTarefa,
+        p_observacao: observacao || null,
+      });
+
+      if (error) {
+        console.error("Erro ao criar revisão da tarefa do filho:", error);
+        return json({ error: "Não foi possível pedir a revisão ao responsável" }, 500);
+      }
+
+      const retorno = data as Record<string, unknown> | null;
+      if (!retorno?.ok) {
+        const codigo = typeof retorno?.codigo === "string" ? retorno.codigo : "REQUISICAO_INVALIDA";
+        const status =
+          codigo === "SESSAO_INVALIDA" ? 401 :
+          codigo === "TAREFA_INVALIDA" ? 403 :
+          codigo === "REVISAO_INDISPONIVEL" || codigo === "VIGENCIA_INATIVA" ? 409 :
+          400;
+        return json(retorno ?? { ok: false, codigo }, status);
+      }
+
+      const revisao =
+        retorno.revisao && typeof retorno.revisao === "object"
+          ? retorno.revisao as Record<string, unknown>
+          : null;
+
+      if (retorno.criada !== true) {
+        return json({
+          ok: true,
+          ja_existia: true,
+          revisao,
+          notificacoes_enviadas: 0,
+        });
+      }
+
+      const idUsuarioPai = Number(retorno.id_usuario_pai);
+      const idFilho = Number(retorno.id_filho);
+      const nomeFilho = typeof retorno.nome_filho === "string" ? retorno.nome_filho : "Seu filho";
+      const nomeTarefa = typeof retorno.nome_tarefa === "string" ? retorno.nome_tarefa : "uma tarefa";
+      const observacaoSalva =
+        typeof revisao?.observacao === "string" ? revisao.observacao : "";
+      const textoBase = nomeFilho + " pediu revisão: " + nomeTarefa + " foi marcado como Não fez.";
+      const textoPush = observacaoSalva ? textoBase + " " + observacaoSalva : textoBase;
+
+      const notificacoesEnviadas = await enviarPushAoResponsavel(admin, {
+        idUsuarioPai,
+        body: textoPush,
+        data: {
+          target: "revisao_tarefa_filho",
+          route: "/ocorrencias",
+          id_filho: String(idFilho),
+          id_filho_tarefa: String(idFilhoTarefa),
+          id_revisao: String(revisao?.id ?? ""),
+          data_referencia: String(revisao?.data_referencia ?? ""),
+        },
+        contexto: "pedido de revisão",
+      });
+
+      return json({
+        ok: true,
+        ja_existia: false,
+        revisao,
         notificacoes_enviadas: notificacoesEnviadas,
       });
     }

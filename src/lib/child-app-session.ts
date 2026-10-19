@@ -27,6 +27,16 @@ export type SolicitacaoTarefaFilhoApp = {
   created_at: string;
 };
 
+export type RevisaoTarefaFilhoApp = {
+  id: number;
+  id_filho_tarefa: number;
+  data_referencia: string;
+  observacao: string | null;
+  status: "PENDENTE" | "MANTEVE_NAO_FEZ" | "ALTERADO_PARA_FEZ";
+  created_at: string;
+  resolvido_em: string | null;
+};
+
 export type VigenciaFilho = {
   id: number;
   data_inicio: string;
@@ -76,6 +86,7 @@ export type PainelFilho = {
   vigencias: VigenciaFilho[];
   estrelas?: EstrelasFilho;
   solicitacoes_hoje?: SolicitacaoTarefaFilhoApp[];
+  revisoes_hoje?: RevisaoTarefaFilhoApp[];
   atualizado_em: string;
 };
 
@@ -90,6 +101,13 @@ type RespostaSolicitacao = {
   ok: true;
   ja_existia: boolean;
   solicitacao: SolicitacaoTarefaFilhoApp;
+  notificacoes_enviadas?: number;
+};
+
+type RespostaRevisao = {
+  ok: true;
+  ja_existia: boolean;
+  revisao: RevisaoTarefaFilhoApp;
   notificacoes_enviadas?: number;
 };
 
@@ -149,7 +167,7 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     body: JSON.stringify(body),
   });
 
-  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaErro;
+  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRevisao | RespostaErro;
 
   if (!response.ok) {
     const codigo = "codigo" in data ? data.codigo : undefined;
@@ -171,6 +189,12 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     }
     if (codigo === "JA_MARCADA") {
       throw new Error("O responsável já marcou esta tarefa hoje.");
+    }
+    if (codigo === "REVISAO_INDISPONIVEL") {
+      throw new Error("Esta marcação não está disponível para revisão.");
+    }
+    if (codigo === "REVISAO_JA_SOLICITADA") {
+      throw new Error("A revisão desta tarefa já foi solicitada.");
     }
     if (codigo === "OBSERVACAO_INVALIDA") {
       throw new Error("A observação deve ter no máximo 120 caracteres.");
@@ -280,6 +304,27 @@ export async function avisarTarefaConcluida(
   }
 
   return data as RespostaSolicitacao;
+}
+
+export async function pedirRevisaoTarefa(
+  idFilhoTarefa: number,
+  observacao?: string,
+): Promise<RespostaRevisao> {
+  const token = await lerSessaoFilhoLocal();
+  if (!token) throw new Error("Este acesso não está mais ativo.");
+
+  const data = await chamarAcessoFilho({
+    acao: "pedir_revisao_nao_fez",
+    token,
+    id_filho_tarefa: idFilhoTarefa,
+    observacao: observacao?.trim() || null,
+  });
+
+  if (!("ok" in data) || data.ok !== true || !("revisao" in data)) {
+    throw new Error("Não foi possível pedir a revisão ao responsável.");
+  }
+
+  return data as RespostaRevisao;
 }
 
 export async function revogarTokenFilho(token: string) {
