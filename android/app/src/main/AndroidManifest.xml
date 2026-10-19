@@ -30,11 +30,11 @@
 
                 <data
                     android:scheme="https"
-                    android:host="combinadofamilia.app" />
+                    android:host="combinadofamilia.app.br" />
 
                 <data
                     android:scheme="https"
-                    android:host="www.combinadofamilia.app" />
+                    android:host="www.combinadofamilia.app.br" />
             </intent-filter>
 
         </activity>
