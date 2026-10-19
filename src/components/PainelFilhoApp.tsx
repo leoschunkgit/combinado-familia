@@ -594,21 +594,6 @@ export function PainelFilhoApp({
 
             {vigenciaAtual ? (
               <>
-                <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  <span>
-                    {tarefasAtual.length - tarefasResolvidasHoje} pendente{tarefasAtual.length - tarefasResolvidasHoje === 1 ? "" : "s"}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>
-                    {tarefasResolvidasHoje} confirmada{tarefasResolvidasHoje === 1 ? "" : "s"}
-                  </span>
-                  {tarefasAguardandoHoje > 0 && (
-                    <>
-                      <span aria-hidden="true">·</span>
-                      <span>{tarefasAguardandoHoje} aguardando confirmação</span>
-                    </>
-                  )}
-                </div>
                 {listaTarefas}
               </>
             ) : (
