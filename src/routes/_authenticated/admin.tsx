@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { msgErro } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
+import { PageHeader } from "@/components/PageHeader";
 import { getThemePreference, saveThemePreference, type ThemePreference } from "@/lib/theme";
 import {
   ativarBiometriaNesteAparelho,
@@ -155,8 +156,12 @@ function Admin() {
   if (carregando) return <div className="py-10 text-center text-muted-foreground">Carregando seus dados...</div>;
 
   return (
-    <div className="space-y-6">
-      <div><div className="flex items-center gap-2"><UserCog className="h-6 w-6 text-primary" /><h1 className="text-2xl font-bold">Minha conta</h1></div><p className="mt-1 text-muted-foreground">Consulte seus dados pessoais e atualize seu nome.</p></div>
+    <div>
+      <PageHeader
+        title="Minha conta"
+        description="Consulte seus dados pessoais e atualize seu nome."
+        icon={<UserCog className="h-6 w-6" />}
+      />
       <div className="max-w-xl space-y-6">
         <section className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className={uiTypography.secondaryTitle}>Dados pessoais</h2>
