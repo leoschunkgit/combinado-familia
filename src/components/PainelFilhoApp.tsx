@@ -2,15 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   CalendarDays,
-  CircleDollarSign,
+  ChevronRight,
   ClipboardCheck,
   ClipboardList,
   Clock3,
+  Gift,
   History,
   House,
   Loader2,
   LogOut,
-  Menu,
   Star,
   ThumbsDown,
   ThumbsUp,
@@ -19,10 +19,11 @@ import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { CollapseChevron } from "@/components/CollapseChevron";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import {
   encerrarSessaoFilho,
   lerSessaoFilhoLocal,
@@ -36,12 +37,11 @@ import {
 
 type AbaFilho = "inicio" | "tarefas" | "registros" | "estrelas" | "historico";
 
-const ABAS: Array<{ id: AbaFilho; label: string; icon: typeof House }> = [
+const ABAS: Array<{ id: Exclude<AbaFilho, "historico">; label: string; icon: typeof House }> = [
   { id: "inicio", label: "Início", icon: House },
   { id: "tarefas", label: "Tarefas", icon: ClipboardList },
-  { id: "registros", label: "Fez / Não fez", icon: ClipboardCheck },
-  { id: "estrelas", label: "Estrelas e recompensas", icon: Star },
-  { id: "historico", label: "Histórico", icon: History },
+  { id: "registros", label: "Fez / Não", icon: ClipboardCheck },
+  { id: "estrelas", label: "Estrelas", icon: Star },
 ];
 
 const dataHora = (v: string) => new Intl.DateTimeFormat("pt-BR", {
@@ -93,6 +93,7 @@ export function PainelFilhoApp({
   const [aba, setAba] = useState<AbaFilho>("inicio");
   const [menuAberto, setMenuAberto] = useState(false);
   const [tarefaDatas, setTarefaDatas] = useState<TarefaFilho | null>(null);
+  const [resultadoAberto, setResultadoAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
 
   useEffect(() => {
@@ -175,6 +176,15 @@ export function PainelFilhoApp({
     resgates: [],
   };
 
+  const proximaRecompensa = useMemo(
+    () => [...estrelas.recompensas].sort((a, b) => a.estrelas_necessarias - b.estrelas_necessarias)[0] ?? null,
+    [estrelas.recompensas],
+  );
+
+  const progressoProximaRecompensa = proximaRecompensa
+    ? Math.min(100, Math.max(0, (estrelas.saldo / proximaRecompensa.estrelas_necessarias) * 100))
+    : 0;
+
   const registrosAtuais = useMemo(
     () => tarefasAtual
       .flatMap((tarefa) => tarefa.ocorrencias
@@ -229,217 +239,261 @@ export function PainelFilhoApp({
   }
 
   const SemVigencia = () => (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-sm text-muted-foreground">Não há uma vigência em andamento neste momento.</p>
-      </CardContent>
-    </Card>
+    <div className="rounded-2xl border border-dashed bg-card p-5 text-center">
+      <Clock3 className="mx-auto h-5 w-5 text-muted-foreground" />
+      <p className="mt-2 text-sm font-medium">Nenhum combinado em andamento agora.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Quando começar uma nova vigência, ela aparece aqui.</p>
+    </div>
   );
 
   return (
     <div className="min-h-screen bg-muted/20">
-      <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background">
-        <div className="relative mx-auto flex w-full max-w-6xl items-center px-4 py-3 sm:px-6">
-          <Button
+      <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-2.5 sm:px-6">
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
-            className="relative z-10 h-9 w-9"
-            onClick={() => setMenuAberto(true)}
-            aria-label="Abrir menu"
+            onClick={() => setAba("inicio")}
+            className="flex min-w-0 items-center gap-2 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            aria-label="Ir para o início"
           >
-            <Menu className="h-5 w-5" />
-          </Button>
-
-          <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <House className="h-[18px] w-[18px]" />
             </span>
-            <span className="flex flex-col items-start leading-none">
-              <span className="font-display text-xl font-bold">Combinado</span>
-              <span className="-mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span>
+            <span className="hidden min-w-0 sm:block">
+              <span className="block font-display text-base font-bold leading-none">Combinado</span>
+              <span className="mt-0.5 block text-[10px] font-semibold tracking-wide text-muted-foreground">modo filho</span>
             </span>
-          </div>
+          </button>
 
-          <FilhoAvatar
-            nome={painel.filho.nome}
-            cor={painel.filho.cor}
-            avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-            className="ml-auto h-8 w-8 shrink-0"
-          />
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAba("estrelas")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 transition-transform active:scale-95"
+              aria-label="Abrir estrelas"
+            >
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+              {estrelas.saldo}
+            </button>
+
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-full p-0.5 transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              onClick={() => setMenuAberto(true)}
+              aria-label="Abrir perfil"
+            >
+              <FilhoAvatar
+                nome={painel.filho.nome}
+                cor={painel.filho.cor}
+                avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
+                className="h-9 w-9"
+              />
+            </button>
+          </div>
         </div>
       </header>
 
-      {menuAberto && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-50 bg-black/35"
-            onClick={() => setMenuAberto(false)}
-            aria-label="Fechar menu"
-          />
-          <aside className="native-safe-area fixed inset-y-0 left-0 z-[60] flex w-[min(84vw,20rem)] flex-col border-r bg-background shadow-xl">
-            <div className="relative flex items-center border-b px-3 py-3">
-              <div className="mx-auto flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <House className="h-[18px] w-[18px]" />
-                </span>
-                <span className="flex flex-col items-start leading-none">
-                  <span className="font-display text-xl font-bold">Combinado</span>
-                  <span className="mt-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground">família</span>
-                </span>
-              </div>
-              <button
-                type="button"
-                className={modalCloseInlineButtonClass}
-                onClick={() => setMenuAberto(false)}
-                aria-label="Fechar menu"
-              >
-                <ModalCloseIcon />
-              </button>
-            </div>
+      <Dialog open={menuAberto} onOpenChange={setMenuAberto}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Meu perfil</DialogTitle>
+            <DialogDescription>Atalhos e acesso do filho.</DialogDescription>
+          </DialogHeader>
 
-            <nav aria-label="Navegação do filho" className="flex-1 space-y-1 px-2 py-3">
-              {ABAS.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => {
-                    setAba(id);
-                    setMenuAberto(false);
-                  }}
-                  aria-current={aba === id ? "page" : undefined}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                    aba === id
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-
-            <div className="border-t p-3">
-              <div className="rounded-xl bg-muted/50 p-3">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <FilhoAvatar
-                    nome={painel.filho.nome}
-                    cor={painel.filho.cor}
-                    avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-                    className="h-9 w-9 shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{painel.filho.nome}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 w-full justify-center"
-                  onClick={() => void sair()}
-                  disabled={saindo}
-                >
-                  {saindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-                  Sair
-                </Button>
+          <div className="rounded-2xl border bg-muted/20 p-4">
+            <div className="flex items-center gap-3">
+              <FilhoAvatar
+                nome={painel.filho.nome}
+                cor={painel.filho.cor}
+                avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
+                className="h-12 w-12"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{painel.filho.nome}</p>
+                <p className="truncate text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
               </div>
             </div>
-          </aside>
-        </>
-      )}
+          </div>
 
-      <main className="native-safe-area mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7">
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-between"
+              onClick={() => {
+                setAba("historico");
+                setMenuAberto(false);
+              }}
+            >
+              <span className="flex items-center gap-2"><History className="h-4 w-4" /> Histórico</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-center"
+              onClick={() => void sair()}
+              disabled={saindo}
+            >
+              {saindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+              Sair
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <main className="native-safe-area mx-auto w-full max-w-5xl px-4 py-5 pb-28 sm:px-6 sm:py-7 sm:pb-28">
         {aba === "inicio" && (
           <div className="space-y-4">
-            <section className="rounded-2xl border bg-card p-4 sm:p-5">
-              <div className="flex min-w-0 items-center gap-2.5">
+            <section
+              className="relative overflow-hidden rounded-3xl border border-t-4 bg-card p-4 sm:p-5"
+              style={{ borderTopColor: painel.filho.cor?.trim() || "var(--primary)" }}
+            >
+              <div className="flex items-start gap-3">
                 <FilhoAvatar
                   nome={painel.filho.nome}
                   cor={painel.filho.cor}
                   avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-                  className="h-9 w-9"
+                  className="h-12 w-12"
                 />
-                <div className="min-w-0">
-                  <h1 className="truncate text-xl font-bold sm:text-2xl">Olá, {painel.filho.nome}</h1>
-                  <p className="text-sm text-muted-foreground">Acompanhe seus combinados. Esta área é somente para consulta.</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Seu painel</p>
+                  <h1 className="mt-0.5 truncate text-2xl font-bold">Oi, {painel.filho.nome}!</h1>
+                  <p className="mt-1 text-sm text-muted-foreground">Veja rápido como estão seus combinados.</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setAba("estrelas")}
+                  className="flex shrink-0 flex-col items-center rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 transition-transform active:scale-95"
+                  aria-label="Abrir estrelas e recompensas"
+                >
+                  <Star className="h-5 w-5 fill-amber-400 text-amber-500 motion-safe:animate-[pulse_3s_ease-in-out_infinite]" />
+                  <span className="mt-0.5 text-xl font-bold leading-none tabular-nums">{estrelas.saldo}</span>
+                  <span className="mt-1 text-[10px] font-semibold">estrelas</span>
+                </button>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
             </section>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setAba("registros")}
+                className="rounded-2xl border border-green-200 bg-green-50 p-3 text-left transition-transform active:scale-[0.98]"
+              >
+                <ThumbsUp className="h-5 w-5 text-green-700" />
+                <p className="mt-2 text-2xl font-bold leading-none text-green-800 tabular-nums">{qtdFez}</p>
+                <p className="mt-1 text-[11px] font-semibold text-green-700">Fez</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAba("registros")}
+                className="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-transform active:scale-[0.98]"
+              >
+                <ThumbsDown className="h-5 w-5 text-red-600" />
+                <p className="mt-2 text-2xl font-bold leading-none text-red-700 tabular-nums">{qtdNaoFez}</p>
+                <p className="mt-1 text-[11px] font-semibold text-red-600">Não fez</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAba("tarefas")}
+                className="rounded-2xl border bg-card p-3 text-left transition-transform active:scale-[0.98]"
+              >
+                <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                <p className="mt-2 text-2xl font-bold leading-none tabular-nums">{tarefasAtual.length}</p>
+                <p className="mt-1 text-[11px] font-semibold text-muted-foreground">Tarefas</p>
+              </button>
+            </div>
+
+            {proximaRecompensa && (
+              <button
+                type="button"
+                onClick={() => setAba("estrelas")}
+                className="w-full rounded-2xl border bg-card p-4 text-left transition-transform active:scale-[0.99]"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+                    <Gift className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Próxima recompensa</p>
+                        <p className="mt-0.5 break-words text-sm font-semibold">{proximaRecompensa.nome}</p>
+                      </div>
+                      <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                        {proximaRecompensa.estrelas_necessarias}
+                      </span>
+                    </div>
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoProximaRecompensa}%` }} />
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                      <span>{estrelas.saldo} de {proximaRecompensa.estrelas_necessarias}</span>
+                      <span className="inline-flex items-center gap-1 font-medium text-foreground">Ver recompensas <ChevronRight className="h-3 w-3" /></span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            )}
 
             {vigenciaAtual ? (
               <>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <CardTitle className="text-base">Vigência atual</CardTitle>
-                      <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium">
-                        <span className="h-2 w-2 rounded-full bg-green-400" />
-                        Em andamento
-                      </span>
+                <section className="rounded-2xl border bg-card p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Combinado atual</p>
+                      <p className="mt-1 text-sm font-medium">
+                        {data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}
+                      </p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm">{dataHora(vigenciaAtual.data_inicio)} até {dataHora(vigenciaAtual.data_fim)}</p>
-                  </CardContent>
-                </Card>
+                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">
+                      Em andamento
+                    </Badge>
+                  </div>
+                </section>
 
-                <div className="grid w-full grid-cols-3 gap-2">
-                  <Card className="flex min-h-[88px] items-center justify-center">
-                    <div className="flex flex-col items-center justify-center gap-1 text-center">
-                      <ClipboardList className="h-5 w-5 text-muted-foreground" />
-                      <p className="text-xl font-bold leading-none">{tarefasAtual.length}</p>
-                      <p className="text-[11px] leading-none text-muted-foreground">Tarefas</p>
+                <section className="overflow-hidden rounded-2xl border bg-card">
+                  <button
+                    type="button"
+                    className="group flex w-full items-center gap-3 px-4 py-3.5 text-left"
+                    onClick={() => setResultadoAberto((atual) => !atual)}
+                    aria-expanded={resultadoAberto}
+                  >
+                    <CollapseChevron open={resultadoAberto} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold">Meu combinado</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {painel.filho.tem_mesada
+                          ? `Valor atual: ${dinheiro(mesadaFinal ?? 0)}`
+                          : `${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia} Não fez`}
+                      </p>
                     </div>
-                  </Card>
-                  <Card className="flex min-h-[88px] items-center justify-center">
-                    <div className="flex flex-col items-center justify-center gap-1 text-center">
-                      <ThumbsUp className="h-5 w-5 text-green-600" />
-                      <p className="text-xl font-bold leading-none">{qtdFez}</p>
-                      <p className="text-[11px] leading-none text-muted-foreground">Fez</p>
-                    </div>
-                  </Card>
-                  <Card className="flex min-h-[88px] items-center justify-center">
-                    <div className="flex flex-col items-center justify-center gap-1 text-center">
-                      <ThumbsDown className="h-5 w-5 text-red-500" />
-                      <p className="text-xl font-bold leading-none">{qtdNaoFez}</p>
-                      <p className="text-[11px] leading-none text-muted-foreground">Não fez</p>
-                    </div>
-                  </Card>
-                </div>
+                  </button>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <CircleDollarSign className="h-4 w-4" />
-                      Resultado da vigência
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {painel.filho.tem_mesada ? (
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between gap-3"><span>Mesada</span><strong>{dinheiro(painel.filho.valor_mesada ?? 0)}</strong></div>
-                        <div className="flex justify-between gap-3"><span>Desconto por cada “Não fez”</span><strong>{dinheiro(descontoUnitario)}</strong></div>
-                        <div className="flex justify-between gap-3"><span>Quantidade de “Não fez”</span><strong>{qtdNaoFez}</strong></div>
-                        <div className="flex justify-between gap-3"><span>Total de descontos</span><strong>{dinheiro(desconto)}</strong></div>
-                        <div className="flex justify-between gap-3 border-t pt-2"><span>Valor atual</span><strong>{dinheiro(mesadaFinal ?? 0)}</strong></div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2 text-sm">
-                        <p><span className="text-muted-foreground">Penalidade:</span> <strong>{vigenciaAtual.penalidade || "—"}</strong></p>
-                        <p><span className="text-muted-foreground">Quantidade de “Não fez” para ser penalizado:</span> <strong>{vigenciaAtual.qtd_ocorrencia}</strong></p>
-                        <p><span className="text-muted-foreground">Quantidade atual:</span> <strong>{qtdNaoFez}</strong></p>
-                        {vigenciaAtual.qtd_ocorrencia > 0 && qtdNaoFez >= vigenciaAtual.qtd_ocorrencia && (
-                          <p className="rounded-lg border border-red-200 p-2 text-xs font-medium text-red-700">Limite atingido</p>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  {resultadoAberto && (
+                    <div className="border-t px-4 py-4">
+                      {painel.filho.tem_mesada ? (
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Mesada</span><strong>{dinheiro(painel.filho.valor_mesada ?? 0)}</strong></div>
+                          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Desconto por Não fez</span><strong>{dinheiro(descontoUnitario)}</strong></div>
+                          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Não fez</span><strong>{qtdNaoFez}</strong></div>
+                          <div className="flex justify-between gap-3 border-t pt-2"><span>Valor atual</span><strong>{dinheiro(mesadaFinal ?? 0)}</strong></div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2 text-sm">
+                          <p><span className="text-muted-foreground">Penalidade:</span> <strong>{vigenciaAtual.penalidade || "—"}</strong></p>
+                          <p><span className="text-muted-foreground">Limite:</span> <strong>{vigenciaAtual.qtd_ocorrencia} Não fez</strong></p>
+                          <p><span className="text-muted-foreground">Atual:</span> <strong>{qtdNaoFez} Não fez</strong></p>
+                          {vigenciaAtual.qtd_ocorrencia > 0 && qtdNaoFez >= vigenciaAtual.qtd_ocorrencia && (
+                            <Badge variant="destructive">Limite atingido</Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
               </>
             ) : <SemVigencia />}
           </div>
@@ -469,8 +523,8 @@ export function PainelFilhoApp({
 
                         {temResultado ? (
                           <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">
-                            {fezCount > 0 && <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">👍 {fezCount} Fez</span>}
-                            {naoFezCount > 0 && <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">👎 {naoFezCount} Não fez</span>}
+                            {fezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700"><ThumbsUp className="h-3 w-3" /> {fezCount} Fez</span>}
+                            {naoFezCount > 0 && <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700"><ThumbsDown className="h-3 w-3" /> {naoFezCount} Não fez</span>}
                             <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}>
                               <CalendarDays className="h-3.5 w-3.5" />
                               Ver resultados
@@ -492,8 +546,22 @@ export function PainelFilhoApp({
         {aba === "registros" && (
           <div className="space-y-5">
             <div>
-              <h1 className="text-xl font-bold">Fez / Não fez</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Registros da sua vigência atual, organizados por data.</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Seu acompanhamento</p>
+              <h1 className="mt-0.5 text-xl font-bold">Fez / Não fez</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Veja o que já foi registrado no combinado atual.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-2xl border border-green-200 bg-green-50 p-3">
+                <ThumbsUp className="h-4 w-4 text-green-700" />
+                <p className="mt-1 text-xl font-bold text-green-800">{qtdFez}</p>
+                <p className="text-[11px] font-semibold text-green-700">Fez</p>
+              </div>
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-3">
+                <ThumbsDown className="h-4 w-4 text-red-600" />
+                <p className="mt-1 text-xl font-bold text-red-700">{qtdNaoFez}</p>
+                <p className="text-[11px] font-semibold text-red-600">Não fez</p>
+              </div>
             </div>
 
             {vigenciaAtual ? (
@@ -555,6 +623,16 @@ export function PainelFilhoApp({
                 </Card>
               )
             ) : <SemVigencia />}
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-between"
+              onClick={() => setAba("historico")}
+            >
+              <span className="flex items-center gap-2"><History className="h-4 w-4" /> Ver histórico completo</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Button>
           </div>
         )}
 
@@ -580,13 +658,19 @@ export function PainelFilhoApp({
                           <div className="min-w-0">
                             <p className="text-sm font-medium">{dataHora(v.data_inicio)} até {dataHora(v.data_fim)}</p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {v.tarefas.length} tarefa(s) · {fezV} Fez · {naoFezV} Não fez · ⭐ {fezV}
+                              {v.tarefas.length} tarefa(s) · {fezV} Fez · {naoFezV} Não fez
                             </p>
                           </div>
-                          <span className="inline-flex shrink-0 items-center gap-1.5 text-xs">
-                            <span className={`h-2 w-2 rounded-full ${corStatus(status(v))}`} />
-                            Finalizada
-                          </span>
+                          <div className="flex shrink-0 flex-col items-end gap-1.5">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                              {fezV}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                              <span className={`h-2 w-2 rounded-full ${corStatus(status(v))}`} />
+                              Finalizada
+                            </span>
+                          </div>
                         </div>
 
                         <div className="mt-3 space-y-1.5 border-t pt-3">
@@ -625,6 +709,33 @@ export function PainelFilhoApp({
         </p>
       </main>
 
+      <nav
+        aria-label="Navegação principal do filho"
+        className="native-safe-area fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-2 pb-2 pt-1.5 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur"
+      >
+        <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-1">
+          {ABAS.map(({ id, label, icon: Icon }) => {
+            const ativo = aba === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setAba(id)}
+                aria-current={ativo ? "page" : undefined}
+                className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-semibold transition-all active:scale-95 ${ativo ? "bg-muted/60 text-foreground" : "text-muted-foreground"}`}
+                style={ativo ? { boxShadow: `inset 0 2px 0 ${painel.filho.cor?.trim() || "var(--primary)"}` } : undefined}
+              >
+                <Icon
+                  className={`h-5 w-5 ${id === "estrelas" && ativo ? "fill-amber-400 text-amber-500" : ""}`}
+                  style={ativo && id !== "estrelas" ? { color: painel.filho.cor?.trim() || "var(--primary)" } : undefined}
+                />
+                <span className="truncate">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
       <Dialog open={tarefaDatas !== null} onOpenChange={(open) => { if (!open) setTarefaDatas(null); }}>
         <DialogContent className="max-w-sm rounded-lg">
           <DialogHeader>
@@ -649,7 +760,7 @@ export function PainelFilhoApp({
                     : <ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />}
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{o.tipo === "FEZ" ? "Fez" : "Não fez"} · {data(o.data)}</p>
-                    {o.tipo === "FEZ" && <p className="mt-1 text-xs font-medium text-amber-600">⭐ +1 estrela</p>}
+                    {o.tipo === "FEZ" && <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-700"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" /> +1 estrela</p>}
                     {b && <p className="mt-1 break-words text-xs text-muted-foreground">Recompensa extra: {b}</p>}
                   </div>
                 </div>
