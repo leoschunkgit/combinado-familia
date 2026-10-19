@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Eye, EyeOff, Fingerprint, Home, Loader2, ShieldCheck, Users } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Fingerprint, Home, Loader2, ShieldCheck, UserRound, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,14 @@ import {
   biometriaAtivaNesteAparelho,
   liberarBiometriaNestaExecucao,
 } from "@/lib/biometric-auth";
+import { AcessoFilhoLogin } from "@/components/AcessoFilhoLogin";
+import { PainelFilhoApp } from "@/components/PainelFilhoApp";
+import {
+  lerSessaoFilhoLocal,
+  limparSessaoFilhoLocal,
+  obterPainelFilhoApp,
+  type PainelFilho,
+} from "@/lib/child-app-session";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Combinado Família" }, { name: "description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:title", content: "Combinado — Tarefas da família com regras claras" }, { property: "og:description", content: "Cadastre filhos, tarefas e vigências e acompanhe as ocorrências de cada combinado." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -41,9 +49,9 @@ const cadastroSchema = z.object({
   message: "As senhas não coincidem",
 });
 
-function SenhaInput(props: React.ComponentProps<typeof Input>) {
+function SenhaInput({ className, ...props }: React.ComponentProps<typeof Input>) {
   const [ver, setVer] = useState(false);
-  return <div className="relative"><Input {...props} type={ver ? "text" : "password"} className="pr-10" /><button type="button" onClick={() => setVer(!ver)} aria-label={ver ? "Ocultar senha" : "Mostrar senha"} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">{ver ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div>;
+  return <div className="relative"><Input {...props} type={ver ? "text" : "password"} className={`pr-10 ${className ?? ""}`} /><button type="button" onClick={() => setVer(!ver)} aria-label={ver ? "Ocultar senha" : "Mostrar senha"} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">{ver ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div>;
 }
 
 function Index() {
@@ -61,6 +69,9 @@ function Index() {
   const [biometriaAtiva, setBiometriaAtiva] = useState(false);
   const [sessaoBiometricaDisponivel, setSessaoBiometricaDisponivel] = useState(false);
   const [biometriaCarregando, setBiometriaCarregando] = useState(false);
+  const [modoFilho, setModoFilho] = useState(false);
+  const [painelFilho, setPainelFilho] = useState<PainelFilho | null>(null);
+  const [checandoSessaoFilho, setChecandoSessaoFilho] = useState(true);
 
   useEffect(() => {
     if (segundosReenvioRecuperacao <= 0) return;
@@ -74,6 +85,28 @@ function Index() {
     let ativo = true;
 
     async function encaminharSessaoExistente() {
+      const tokenFilho = await lerSessaoFilhoLocal();
+      if (!ativo) return;
+
+      if (tokenFilho) {
+        try {
+          const painelSalvo = await obterPainelFilhoApp(tokenFilho);
+          if (!ativo) return;
+
+          if (painelSalvo) {
+            setPainelFilho(painelSalvo);
+            setChecandoSessaoFilho(false);
+            return;
+          }
+
+          await limparSessaoFilhoLocal();
+        } catch {
+          // Falha temporária de rede não apaga a credencial local do filho.
+        }
+      }
+
+      setChecandoSessaoFilho(false);
+
       if (Capacitor.isNativePlatform()) {
         const launch = await App.getLaunchUrl();
         const launchRoute = launch?.url ? getPublicRouteFromUrl(launch.url) : null;
@@ -126,6 +159,7 @@ function Index() {
     });
     setLoading(false);
     if (error) { toast.error(msgErro(error)); return; }
+    await limparSessaoFilhoLocal();
     liberarBiometriaNestaExecucao();
     navigate({ to: "/inicio" });
   }
@@ -141,7 +175,10 @@ function Index() {
       }
 
       const autorizado = await autenticarComBiometria();
-      if (autorizado) navigate({ to: "/inicio" });
+      if (autorizado) {
+        await limparSessaoFilhoLocal();
+        navigate({ to: "/inicio" });
+      }
     } catch {
       toast.error("Não foi possível validar a biometria. Você pode entrar com sua senha.");
     } finally {
@@ -237,6 +274,7 @@ function Index() {
       setCodigoCadastro("");
       setEmailCadastroPendente("");
       toast.success("Email confirmado com sucesso!");
+      await limparSessaoFilhoLocal();
       navigate({ to: "/inicio" });
       return;
     }
@@ -267,6 +305,7 @@ function Index() {
     }
 
     if (data.session) {
+      await limparSessaoFilhoLocal();
       navigate({ to: "/inicio" });
       return;
     }
@@ -275,7 +314,23 @@ function Index() {
     toast.success("Enviamos um código de 8 dígitos para seu email.");
   }
 
-  const carregando = loading || biometriaCarregando;
+  const carregando = loading || biometriaCarregando || checandoSessaoFilho;
+
+  if (painelFilho) {
+    return (
+      <PainelFilhoApp
+        painelInicial={painelFilho}
+        onSair={() => {
+          setPainelFilho(null);
+          setModoFilho(false);
+        }}
+        onSessaoInvalida={() => {
+          setPainelFilho(null);
+          setModoFilho(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="relative grid lg:min-h-screen lg:grid-cols-2">
@@ -295,11 +350,15 @@ function Index() {
       </section>
       <section className="flex items-start justify-center p-4 sm:p-6 lg:items-center lg:p-14">
         <div className="w-full max-w-md">
+          {modoFilho ? (
+            <AcessoFilhoLogin
+              onEntrou={(painel) => setPainelFilho(painel)}
+              onVoltar={() => setModoFilho(false)}
+            />
+          ) : (
           <Tabs defaultValue="entrar">
-            <TabsList className="mb-4 grid w-full grid-cols-2 lg:mb-6"><TabsTrigger value="entrar">Entrar</TabsTrigger><TabsTrigger value="cadastrar">Cadastrar</TabsTrigger></TabsList>
+            <TabsList className="mb-5 grid h-12 w-full grid-cols-2 p-1 lg:mb-6"><TabsTrigger value="entrar" className="h-10 text-sm font-semibold">Entrar</TabsTrigger><TabsTrigger value="cadastrar" className="h-10 text-sm font-semibold">Cadastrar</TabsTrigger></TabsList>
             <TabsContent value="entrar">
-              <h2 className="text-2xl font-bold sm:text-3xl">Bem-vindo de volta</h2>
-              <p className="mb-4 mt-1 text-sm text-muted-foreground sm:text-base lg:mb-6">Acesse sua conta de responsável.</p>
               {recuperar ? (
                 <form onSubmit={recuperarSenha} className="space-y-4">
                   <div className="space-y-2"><Label htmlFor="re">Email</Label><Input id="re" type="email" required autoFocus={!recuperacaoAguardandoCodigo} autoComplete="email" inputMode="email" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} placeholder="seu@email.com" disabled={recuperacaoAguardandoCodigo} /></div>
@@ -326,15 +385,15 @@ function Index() {
                 </form>
               ) : (
                 <form onSubmit={entrar} className="space-y-4">
-                  <div className="space-y-2"><Label htmlFor="le">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="le" type="email" required autoComplete="email" inputMode="email" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} /></div>
-                  <div className="space-y-2"><Label htmlFor="ls">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ls" required autoComplete="current-password" value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} /></div>
+                  <div className="space-y-2"><Label htmlFor="le">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="le" className="h-12 text-base" type="email" required autoComplete="email" inputMode="email" value={login.email} onChange={(e) => setLogin({ ...login, email: e.target.value })} /></div>
+                  <div className="space-y-2"><Label htmlFor="ls">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ls" className="h-12 text-base" required autoComplete="current-password" value={login.senha} onChange={(e) => setLogin({ ...login, senha: e.target.value })} /></div>
                   <div className="text-right"><button type="button" className="text-sm font-medium text-primary underline-offset-4 hover:underline" onClick={() => { setEmailRecuperacao(login.email); setRecuperar(true); }}>Esqueci minha senha</button></div>
-                  <Button type="submit" className="w-full" size="lg" disabled={loading || biometriaCarregando}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Entrando...</> : "Entrar"}</Button>
+                  <Button type="submit" className="h-12 w-full text-base font-semibold" size="lg" disabled={loading || biometriaCarregando}>{loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Entrando...</> : "Entrar"}</Button>
                   {biometriaAtiva && sessaoBiometricaDisponivel && (
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full"
+                      className="h-12 w-full text-base font-semibold"
                       size="lg"
                       disabled={loading || biometriaCarregando}
                       onClick={() => void entrarComBiometria()}
@@ -343,6 +402,21 @@ function Index() {
                       {biometriaCarregando ? "Validando biometria..." : "Entrar com biometria"}
                     </Button>
                   )}
+                  <div className="flex items-center gap-3 py-1" aria-hidden="true">
+                    <span className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-medium text-muted-foreground">ou</span>
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 w-full text-base font-semibold"
+                    onClick={() => setModoFilho(true)}
+                    disabled={loading || biometriaCarregando}
+                  >
+                    <UserRound className="h-5 w-5" />
+                    Entrar como filho
+                  </Button>
                 </form>
               )}
             </TabsContent>
@@ -367,6 +441,7 @@ function Index() {
               </form>
             </TabsContent>
           </Tabs>
+          )}
         </div>
       </section>
     </div>
