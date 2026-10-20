@@ -724,6 +724,8 @@ export type Database = {
           id: number
           id_filho_tarefa: number
           observacao: string | null
+          resolvido_em: string | null
+          status: string
         }
         Insert: {
           created_at?: string
@@ -731,6 +733,8 @@ export type Database = {
           id?: number
           id_filho_tarefa: number
           observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
         }
         Update: {
           created_at?: string
@@ -738,6 +742,8 @@ export type Database = {
           id?: number
           id_filho_tarefa?: number
           observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
         }
         Relationships: [
           {

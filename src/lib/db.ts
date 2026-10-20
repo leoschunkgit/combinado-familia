@@ -152,6 +152,9 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Atribuicao com revisao pendente do filho nao pode ser excluida diretamente|Atribuição com revisão pendente do filho não pode ser excluída diretamente/i, "Esta atribuição possui uma revisão pendente do filho e não pode ser excluída"],
+  [/Atribuicao com aviso pendente do filho nao pode ser excluida diretamente|Atribuição com aviso pendente do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso pendente do filho e não pode ser excluída"],
+  [/Vigência com Fez\/Não fez ou pedido pendente do filho não pode ser excluída|Vigencia com Fez\/Nao fez ou pedido pendente do filho nao pode ser excluida/i, "Esta vigência possui “Fez”/“Não fez” ou pedido pendente do filho e não pode ser excluída"],
   [/Atribuicao com revisao do filho nao pode ser excluida diretamente|Atribuição com revisão do filho não pode ser excluída diretamente/i, "Esta atribuição possui uma revisão enviada pelo filho e não pode ser excluída"],
   [/Atribuicao com revisao do filho nao pode ser editada|Atribuição com revisão do filho não pode ser editada/i, "Esta atribuição possui uma revisão enviada pelo filho e não pode ser alterada"],
   [/Atribuicao com aviso do filho nao pode ser excluida diretamente|Atribuição com aviso do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser excluída"],
