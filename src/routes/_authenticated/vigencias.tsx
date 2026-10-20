@@ -297,7 +297,7 @@ function VigenciasPage() {
           const finalizada = situacao === "finalizada";
           const emAndamento = situacao === "andamento";
           const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
-          const aberto = vigenciasAbertas[v.id] !== false;
+          const aberto = vigenciasAbertas[v.id] === true;
           return <CollapsibleSection
             key={v.id}
             title={<VigenciaStatus vigencia={v} />}

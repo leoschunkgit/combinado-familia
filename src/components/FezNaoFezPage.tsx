@@ -623,13 +623,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   useEffect(() => {
     if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
 
-    setFilhosAbertos(
+    setFilhosAbertos((atual) =>
       Object.fromEntries(
         grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
-          gruposFilhos.map(({ filho }) => [
-            `${vigencia.id}-${filho.id}`,
-            true,
-          ]),
+          gruposFilhos.map(({ filho }) => {
+            const chave = `${vigencia.id}-${filho.id}`;
+            return [chave, atual[chave] === true];
+          }),
         ),
       ),
     );

@@ -310,7 +310,7 @@ function AtribuicoesPage() {
             <div className="space-y-4 md:space-y-5">
               {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
                 const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
-                const aberto = filhosAbertos[chave] !== false;
+                const aberto = filhosAbertos[chave] === true;
 
                 return (
                   <section key={filhoItem.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">

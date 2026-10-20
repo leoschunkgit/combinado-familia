@@ -97,7 +97,7 @@ function LinkFilhosPage() {
       {filhos.map((f) => {
         const acesso = acessos[f.id];
         const ativo = acesso?.ativo === true;
-        const aberto = filhosAbertos[f.id] !== false;
+        const aberto = filhosAbertos[f.id] === true;
         return <CollapsibleSection
           key={f.id}
           title={

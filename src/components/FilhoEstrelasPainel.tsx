@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Check, Gift, Loader2, Pencil, Plus, Star, Trash2, Trophy, X } from "lucide-react";
+import { Check, EllipsisVertical, Gift, Loader2, Pencil, Plus, Star, Trash2, Trophy, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -7,6 +7,7 @@ import type { Filho } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -111,8 +112,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [estrelas, setEstrelas] = useState("");
-  const [recompensasAbertas, setRecompensasAbertas] = useState(true);
-  const [resgatesAbertos, setResgatesAbertos] = useState(true);
+  const [recompensasAbertas, setRecompensasAbertas] = useState(false);
+  const [entregasAbertas, setEntregasAbertas] = useState(false);
   const [extratoAberto, setExtratoAberto] = useState(false);
   const [confirmacao, setConfirmacao] = useState<
     | { tipo: "DESATIVAR"; recompensa: Recompensa }
@@ -142,7 +143,9 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       if (movimentosResp.error) throw movimentosResp.error;
       if (resgatesResp.error) throw resgatesResp.error;
 
-      setResumo((resumoResp.data as unknown as Resumo | null) ?? resumoVazio);
+      const proximoResumo = (resumoResp.data as unknown as Resumo | null) ?? resumoVazio;
+      setResumo(proximoResumo);
+      setEntregasAbertas(proximoResumo.resgates.some((resgate) => resgate.status === "PENDENTE"));
       setMovimentos(movimentosResp.data ?? []);
       setRecompensasComResgate(
         new Set((resgatesResp.data ?? []).map((resgate) => resgate.id_recompensa)),
@@ -163,7 +166,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     setDescricao("");
     setEstrelas("");
     setFormAberto(false);
-    setResgatesAbertos(true);
+    setRecompensasAbertas(false);
+    setEntregasAbertas(false);
     setExtratoAberto(false);
     setConfirmacao(null);
     void carregar();
@@ -298,6 +302,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     }
   }
 
+  const resgatesPendentes = resumo.resgates.filter((resgate) => resgate.status === "PENDENTE");
+
   if (carregando) {
     return (
       <div className="flex min-h-64 items-center justify-center rounded-2xl border bg-card">
@@ -359,18 +365,19 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           count={resumo.recompensas.length}
           open={recompensasAbertas}
           onOpenChange={setRecompensasAbertas}
+          contentClassName="bg-muted/10 p-2.5 sm:p-3"
           action={
-            <Button type="button" size="sm" className="shrink-0" onClick={novaRecompensa}>
+            <Button type="button" size="sm" className="h-8 shrink-0 px-2.5 text-xs" onClick={novaRecompensa}>
               <Plus className="h-3.5 w-3.5" /> Nova
             </Button>
           }
         >
-          <div className="divide-y">
+          <div className="space-y-2.5">
             {resumo.recompensas.map((recompensa) => {
               const faltam = Math.max(0, recompensa.estrelas_necessarias - resumo.saldo);
               const progresso = Math.min(100, Math.max(0, (resumo.saldo / recompensa.estrelas_necessarias) * 100));
               return (
-                <div key={recompensa.id} className="px-4 py-3.5">
+                <article key={recompensa.id} className="rounded-xl border bg-background p-3 shadow-sm sm:p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-semibold">{recompensa.nome}</p>
@@ -379,7 +386,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{recompensa.estrelas_necessarias}</span>
                   </div>
 
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progresso}%` }} />
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
@@ -389,66 +396,68 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                     </span>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => editarRecompensa(recompensa)} disabled={salvando}><Pencil className="h-3.5 w-3.5" /> Editar</Button>
-                    {!recompensasComResgate.has(recompensa.id) && (
-                      <Button type="button" variant="outline" size="sm" onClick={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })} disabled={salvando}><Trash2 className="h-3.5 w-3.5" /> Excluir</Button>
-                    )}
-                    <Button type="button" variant="outline" size="sm" onClick={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })} disabled={salvando}><X className="h-3.5 w-3.5" /> Desativar</Button>
-                    <Button type="button" size="sm" onClick={() => void resgatar(recompensa)} disabled={salvando || !recompensa.disponivel}><Gift className="h-3.5 w-3.5" /> Resgatar</Button>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3">
+                    <Button type="button" size="sm" className="h-8 px-2.5 text-xs" onClick={() => void resgatar(recompensa)} disabled={salvando || !recompensa.disponivel}>
+                      <Gift className="h-3.5 w-3.5" /> Resgatar
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome}`}>
+                          <EllipsisVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onSelect={() => editarRecompensa(recompensa)}><Pencil className="h-4 w-4" />Editar</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}><X className="h-4 w-4" />Desativar</DropdownMenuItem>
+                        {!recompensasComResgate.has(recompensa.id) && (
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
+                            <Trash2 className="h-4 w-4" />Excluir
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </div>
+                </article>
               );
             })}
-            {resumo.recompensas.length === 0 && <p className="px-4 py-5 text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
+            {resumo.recompensas.length === 0 && <p className="rounded-xl border border-dashed bg-background px-4 py-5 text-center text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
           </div>
         </CollapsibleSection>
 
-        <CollapsibleSection
-          title="Resgates"
-          description="Acompanhe entregas, cancelamentos e recompensas usadas."
-          count={resumo.resgates.length}
-          open={resgatesAbertos}
-          onOpenChange={setResgatesAbertos}
-        >
-          <div className="divide-y">
-            {resumo.resgates.map((resgate) => (
-              <div key={resgate.id} className="px-4 py-4 sm:px-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
-                      <ResgateStatus status={resgate.status} />
+        {resgatesPendentes.length > 0 && (
+          <CollapsibleSection
+            title="Aguardando entrega"
+            description="Recompensas resgatadas que ainda precisam ser entregues."
+            count={resgatesPendentes.length}
+            open={entregasAbertas}
+            onOpenChange={setEntregasAbertas}
+          >
+            <div className="divide-y">
+              {resgatesPendentes.map((resgate) => (
+                <div key={resgate.id} className="px-4 py-3.5 sm:px-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
+                        <ResgateStatus status={resgate.status} />
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{resgate.estrelas_utilizadas}</span>
                   </div>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold">
-                    <Estrela />
-                    {resgate.estrelas_utilizadas}
-                  </span>
-                </div>
-
-                {resgate.status !== "CANCELADO" && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {resgate.status === "PENDENTE" && (
-                      <Button type="button" size="sm" onClick={() => void marcarEntregue(resgate)} disabled={salvando}>
-                        <Check className="h-3.5 w-3.5" />
-                        Marcar entregue
-                      </Button>
-                    )}
-                    <Button type="button" variant="outline" size="sm" onClick={() => setConfirmacao({ tipo: "CANCELAR", resgate })} disabled={salvando}>
-                      <X className="h-3.5 w-3.5" />
-                      Cancelar resgate
+                    <Button type="button" size="sm" className="h-8 px-2.5 text-xs" onClick={() => void marcarEntregue(resgate)} disabled={salvando}>
+                      <Check className="h-3.5 w-3.5" />Marcar entregue
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 px-2.5 text-xs" onClick={() => setConfirmacao({ tipo: "CANCELAR", resgate })} disabled={salvando}>
+                      <X className="h-3.5 w-3.5" />Cancelar
                     </Button>
                   </div>
-                )}
-              </div>
-            ))}
-            {resumo.resgates.length === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground sm:px-5">Nenhum resgate realizado.</p>
-            )}
-          </div>
-        </CollapsibleSection>
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
 
         <CollapsibleSection
           title="Movimentações de estrelas"

@@ -249,7 +249,7 @@ function FilhosPage() {
       }
     />
     <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
-        const aberto = filhosAbertos[f.id] !== false;
+        const aberto = filhosAbertos[f.id] === true;
         return <CollapsibleSection
           key={f.id}
           title={
