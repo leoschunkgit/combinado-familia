@@ -1546,8 +1546,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               <span
                                                 className={
                                                   registro.tipo === "FEZ"
-                                                    ? "inline-flex h-5 w-5 items-center justify-center text-green-600 dark:text-green-400"
-                                                    : "inline-flex h-5 w-5 items-center justify-center text-red-600 dark:text-red-400"
+                                                    ? "animate-subtle-shake inline-flex h-5 w-5 items-center justify-center text-green-600 dark:text-green-400"
+                                                    : "animate-subtle-shake inline-flex h-5 w-5 items-center justify-center text-red-600 dark:text-red-400"
                                                 }
                                               >
                                                 {registro.tipo === "FEZ" ? (
@@ -1563,7 +1563,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                                             {registro.tipo === "FEZ" && (
                                               <Hint content="+1 estrela">
-                                                <span className="ml-1.5 inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                                                <span className="animate-subtle-shake ml-1.5 inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
                                                   <Star className="h-3.5 w-3.5" />
                                                   +1
                                                 </span>
