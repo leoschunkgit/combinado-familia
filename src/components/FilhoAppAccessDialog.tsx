@@ -231,10 +231,11 @@ export function FilhoAppAccessManager({ filho }: { filho: Filho }) {
               <Button
                 type="button"
                 size="sm"
-                variant="ghost"
-                className="h-8 shrink-0 px-2 text-xs text-destructive hover:text-destructive"
+                variant="outline"
+                className="h-8 shrink-0 gap-1.5 rounded-full border-destructive/25 bg-background px-3 text-xs font-semibold text-destructive shadow-sm transition-colors hover:border-destructive/40 hover:bg-destructive/5 hover:text-destructive"
                 onClick={() => setConfirmarRevogarTodos(true)}
               >
+                <PowerOff className="h-3.5 w-3.5" />
                 Revogar todos
               </Button>
             )}
@@ -266,11 +267,13 @@ export function FilhoAppAccessManager({ filho }: { filho: Filho }) {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="h-8 shrink-0 px-2 text-xs text-destructive hover:text-destructive"
+                    className="h-8 shrink-0 gap-1.5 rounded-full border-destructive/25 bg-background px-3 text-xs font-semibold text-destructive shadow-sm transition-colors hover:border-destructive/40 hover:bg-destructive/5 hover:text-destructive"
                     onClick={() => setConfirmarRevogar(acesso)}
                   >
-                    <PowerOff className="h-3.5 w-3.5" />
-                    Revogar
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive/10">
+                      <PowerOff className="h-3 w-3" />
+                    </span>
+                    Revogar acesso
                   </Button>
                 </div>
               ))
@@ -300,12 +303,14 @@ export function FilhoAppAccessManager({ filho }: { filho: Filho }) {
             <Button variant="outline" onClick={() => setConfirmarRevogar(null)}>Cancelar</Button>
             <Button
               variant="destructive"
+              className="gap-2 rounded-full px-4 shadow-sm"
               onClick={() => {
                 const acesso = confirmarRevogar;
                 if (acesso) void runAction(() => revogarAcesso(acesso));
               }}
             >
-              Revogar
+              <PowerOff className="h-4 w-4" />
+              Revogar acesso
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -326,7 +331,10 @@ export function FilhoAppAccessManager({ filho }: { filho: Filho }) {
           <p>Todos os aparelhos conectados serão desconectados e qualquer chave temporária ainda ativa será invalidada.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmarRevogarTodos(false)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => void runAction(revogarTodos)}>Revogar todos</Button>
+            <Button variant="destructive" className="gap-2 rounded-full px-4 shadow-sm" onClick={() => void runAction(revogarTodos)}>
+              <PowerOff className="h-4 w-4" />
+              Revogar todos
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
