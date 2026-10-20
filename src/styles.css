@@ -228,8 +228,15 @@ button[role="combobox"] {
   will-change: transform;
 }
 
+.animate-subtle-shake {
+  animation: notification-bell-shake 1.8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-notification-bell {
+  .animate-notification-bell,
+  .animate-subtle-shake {
     animation: none;
   }
 }
