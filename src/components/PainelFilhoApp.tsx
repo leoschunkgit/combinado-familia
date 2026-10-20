@@ -429,7 +429,7 @@ export function PainelFilhoApp({
               <button
                 type="button"
                 onClick={() => setAba("estrelas")}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold transition-transform active:scale-95"
+                className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold transition-transform active:scale-95"
                 aria-label="Abrir estrelas"
               >
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
@@ -567,7 +567,7 @@ export function PainelFilhoApp({
                             <p className="text-xs font-medium text-muted-foreground">Próxima recompensa</p>
                             <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
                           </div>
-                          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
+                          <span className="animate-subtle-shake inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
                             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
                             {recompensaDestaque.estrelas_necessarias}
                           </span>
