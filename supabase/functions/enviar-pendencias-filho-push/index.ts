@@ -221,11 +221,20 @@ serve(async (req) => {
 
     if (ocorrenciasError) throw ocorrenciasError;
 
+    const { data: solicitacoes, error: solicitacoesError } = await admin
+      .from("t_solicitacao_tarefa_filho")
+      .select("id_filho_tarefa")
+      .in("id_filho_tarefa", idsAtribuicoes)
+      .eq("data_referencia", dataReferencia);
+
+    if (solicitacoesError) throw solicitacoesError;
+
     const marcadas = new Set((ocorrencias ?? []).map((o) => o.id_filho_tarefa));
+    const avisadas = new Set((solicitacoes ?? []).map((s) => s.id_filho_tarefa));
     const agrupadas = new Map<string, PendenciaAgrupada>();
 
     for (const atribuicao of atribuicoes) {
-      if (marcadas.has(atribuicao.id)) continue;
+      if (marcadas.has(atribuicao.id) || avisadas.has(atribuicao.id)) continue;
       const chave = String(atribuicao.id_usuario_pai) + ":" + String(atribuicao.id_filho);
       const atual = agrupadas.get(chave);
       if (atual) {
