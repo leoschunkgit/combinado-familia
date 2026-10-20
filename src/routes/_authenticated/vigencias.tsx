@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, CircleStop, Copy, EllipsisVertical, Info, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarRange, CircleStop, Copy, EllipsisVertical, FileDown, Info, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
+import { extrairPdfVigencia, podeExtrairPdfVigencia } from "@/lib/vigencia-relatorio-pdf";
 
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
@@ -202,6 +203,23 @@ function VigenciasPage() {
     }
   }
 
+  async function extrairPdf(vigencia: Vigencia) {
+    try {
+      await extrairPdfVigencia({
+        vigencia,
+        filhos,
+        atribuicoes,
+        ocorrencias,
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível salvar ou compartilhar o PDF.",
+      );
+    }
+  }
+
   function abrirEdicao(v: Vigencia) {
     if (new Date(v.data_fim).getTime() < Date.now()) { toast.error("Vigências finalizadas não podem ser editadas"); return; }
     setEditando(v);
@@ -295,7 +313,6 @@ function VigenciasPage() {
           const situacao = situacaoVigencia(v, agora);
           const finalizada = situacao === "finalizada";
           const emAndamento = situacao === "andamento";
-          const temAtribuicoes = atribuicoes.some((a) => a.id_vigencia === v.id);
           const aberto = vigenciasAbertas[v.id] === true;
           return <CollapsibleSection
             key={v.id}
@@ -342,6 +359,20 @@ function VigenciasPage() {
                     <Pencil className="h-4 w-4" />
                     Editar vigência
                   </DropdownMenuItem>
+
+                  {situacao !== "futura" && (
+                    <DropdownMenuItem
+                      disabled={!podeExtrairPdfVigencia(v, atribuicoes)}
+                      onSelect={() => {
+                        if (podeExtrairPdfVigencia(v, atribuicoes)) {
+                          void runAction(() => extrairPdf(v));
+                        }
+                      }}
+                    >
+                      <FileDown className="h-4 w-4" />
+                      Extrair PDF
+                    </DropdownMenuItem>
+                  )}
 
                   <DropdownMenuSeparator />
 
