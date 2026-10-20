@@ -1541,7 +1541,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             </p>
                                           </div>
 
-                                          {!registro && solicitacao && (
+                                          {!registro && solicitacao?.status === "PENDENTE" && (
                                             <div className="ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
                                               <p className="flex min-w-0 items-center gap-1 font-medium text-foreground">
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
