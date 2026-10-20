@@ -18,7 +18,16 @@ export function useActionLoading() {
 export function ActionLoadingProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const routeLoading = useRouterState({ select: (state) => state.isLoading });
-  const fetching = useIsFetching();
+  const fetching = useIsFetching({
+    predicate: (query) => {
+      const raiz = query.queryKey[0];
+      const atualizacaoSilenciosa =
+        raiz === "solicitacoes_tarefa_filho" ||
+        raiz === "revisoes_tarefa_filho";
+
+      return !atualizacaoSilenciosa || query.state.data === undefined;
+    },
+  });
   const mutating = useIsMutating();
   const processando = loading || routeLoading || fetching > 0 || mutating > 0;
   const [mostrar, setMostrar] = useState(false);
