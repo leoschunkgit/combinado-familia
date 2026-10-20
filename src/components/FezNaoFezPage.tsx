@@ -357,7 +357,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     solicitacoesTarefaFilho.find(
       (s) =>
         s.id_filho_tarefa === tarefa.id &&
-        s.data_referencia === data,
+        s.data_referencia === data &&
+        s.status === "PENDENTE",
     );
 
   const revisaoNaData = (tarefa: FilhoTarefa, data: string) =>
@@ -699,6 +700,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
+        qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
+        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
       ]);
       setTroca(null);
       setPenalidadePendente(null);
@@ -909,6 +912,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
+        qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
+        qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
         qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
       ]);
       setFez(null);
@@ -1007,6 +1012,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         }),
         qc.invalidateQueries({
           queryKey: ["filho_tarefas"],
+          refetchType: "all",
+        }),
+        qc.invalidateQueries({
+          queryKey: ["solicitacoes_tarefa_filho"],
+          refetchType: "all",
+        }),
+        qc.invalidateQueries({
+          queryKey: ["revisoes_tarefa_filho"],
           refetchType: "all",
         }),
       ]);

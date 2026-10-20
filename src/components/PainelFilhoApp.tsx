@@ -199,9 +199,10 @@ export function PainelFilhoApp({
   const tarefasResolvidasHoje = tarefasAtual.filter((tarefa) => Boolean(registroHoje(tarefa))).length;
   const tarefasAguardandoHoje = tarefasAtual.filter((tarefa) => {
     const registro = registroHoje(tarefa);
+    const solicitacao = solicitacaoHoje(tarefa);
     const revisao = revisaoHoje(tarefa);
     return (
-      (!registro && Boolean(solicitacaoHoje(tarefa))) ||
+      (!registro && solicitacao?.status === "PENDENTE") ||
       (registro?.tipo === "NAO_FEZ" && revisao?.status === "PENDENTE")
     );
   }).length;
