@@ -98,6 +98,10 @@ export type PainelFilho = {
   estrelas?: EstrelasFilho;
   solicitacoes_hoje?: SolicitacaoTarefaFilhoApp[];
   revisoes_hoje?: RevisaoTarefaFilhoApp[];
+  comunicacao?: {
+    mensagem_global_ativa: boolean;
+    mensagem_global: string | null;
+  };
   atualizado_em: string;
 };
 
