@@ -1649,18 +1649,39 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                         {registro?.tipo === "NAO_FEZ" &&
                                           revisao?.status === "PENDENTE" &&
                                           !bloqueada && (
-                                            <Hint content="Manter Não fez">
-                                              <Button
-                                                size="icon"
-                                                variant="outline"
-                                                className="h-8 w-8 shrink-0 rounded-full"
-                                                disabled={busy}
-                                                aria-label="Manter Não fez"
-                                                onClick={() => void manterNaoFezRevisao(revisao.id)}
-                                              >
-                                                <ThumbsDown className="h-4 w-4 text-red-600" />
-                                              </Button>
-                                            </Hint>
+                                            <>
+                                              <Hint content="Aceitar revisão e alterar para Fez">
+                                                <Button
+                                                  size="icon"
+                                                  variant="outline"
+                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  disabled={busy}
+                                                  aria-label="Aceitar revisão e alterar para Fez"
+                                                  onClick={() =>
+                                                    abrirTrocaMarcacao(
+                                                      tarefa,
+                                                      totalNaoFez,
+                                                      dataSelecionada,
+                                                      registro,
+                                                    )
+                                                  }
+                                                >
+                                                  <ThumbsUp className="h-4 w-4 text-green-600" />
+                                                </Button>
+                                              </Hint>
+                                              <Hint content="Manter Não fez">
+                                                <Button
+                                                  size="icon"
+                                                  variant="outline"
+                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  disabled={busy}
+                                                  aria-label="Manter Não fez"
+                                                  onClick={() => void manterNaoFezRevisao(revisao.id)}
+                                                >
+                                                  <ThumbsDown className="h-4 w-4 text-red-600" />
+                                                </Button>
+                                              </Hint>
+                                            </>
                                           )}
 
                                         {!registro && !bloqueada && (
