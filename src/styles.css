@@ -234,9 +234,23 @@ button[role="combobox"] {
   will-change: transform;
 }
 
+@keyframes soft-attention-shake {
+  0%, 82%, 100% { transform: translateX(0); }
+  86% { transform: translateX(0.6px); }
+  90% { transform: translateX(-0.6px); }
+  94% { transform: translateX(0.35px); }
+  97% { transform: translateX(-0.25px); }
+}
+
+.animate-soft-attention {
+  animation: soft-attention-shake 3s ease-in-out infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-notification-bell,
-  .animate-subtle-shake {
+  .animate-subtle-shake,
+  .animate-soft-attention {
     animation: none;
   }
 }
