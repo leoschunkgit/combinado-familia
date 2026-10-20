@@ -412,40 +412,21 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     return datasFiltradas;
   };
 
-  const tarefasVisiveis = (vigencia: Vigencia, idFilho: number) => {
-    const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
-
-    return atribuicoes
-      .filter((tarefa) => {
-        if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
-          return false;
-        }
-        if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
-          return false;
-        }
-        const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
-        if (
-          filtro.resultado !== "all" ||
-          diasSelecionados[vigencia.id]
-        ) return temDatasVisiveis;
-        return modo === "todos" || temDatasVisiveis;
-      })
-      .sort((a, b) => {
-        const aMarcada = Boolean(registroNaData(a, dataSelecionada));
-        const bMarcada = Boolean(registroNaData(b, dataSelecionada));
-        const aAvisou = Boolean(solicitacaoNaData(a, dataSelecionada));
-        const bAvisou = Boolean(solicitacaoNaData(b, dataSelecionada));
-        const aRevisao = revisaoNaData(a, dataSelecionada)?.status === "PENDENTE";
-        const bRevisao = revisaoNaData(b, dataSelecionada)?.status === "PENDENTE";
-
-        if (aMarcada === bMarcada) {
-          if (aRevisao !== bRevisao) return aRevisao ? -1 : 1;
-          if (!aMarcada && aAvisou !== bAvisou) return aAvisou ? -1 : 1;
-          return 0;
-        }
-        return aMarcada ? 1 : -1;
-      });
-  };
+  const tarefasVisiveis = (vigencia: Vigencia, idFilho: number) =>
+    atribuicoes.filter((tarefa) => {
+      if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
+        return false;
+      }
+      if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
+        return false;
+      }
+      const temDatasVisiveis = datasDaTarefa(tarefa, vigencia).length > 0;
+      if (
+        filtro.resultado !== "all" ||
+        diasSelecionados[vigencia.id]
+      ) return temDatasVisiveis;
+      return modo === "todos" || temDatasVisiveis;
+    });
 
   useEffect(() => {
     if (!focoSolicitacao?.idFilhoTarefa || isLoading) return;
