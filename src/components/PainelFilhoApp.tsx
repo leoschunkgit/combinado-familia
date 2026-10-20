@@ -514,7 +514,7 @@ export function PainelFilhoApp({
               <div className="min-w-0 flex-1 pt-0.5">
                 <p className="truncate text-sm font-semibold">{painel.filho.nome}</p>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  Filho · Responsável: {painel.responsavel?.nome}
+                  Responsável: {painel.responsavel?.nome}
                 </p>
               </div>
               <button
