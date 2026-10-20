@@ -65,7 +65,7 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
         <section className="rounded-2xl border bg-card p-4 sm:p-5">
           <div className="flex items-center gap-4">
             <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border bg-amber-50">
-              <Estrela className="h-9 w-9" />
+              <Estrela className="animate-subtle-shake h-9 w-9" />
             </span>
             <div className="min-w-0">
               <p className="text-xs font-medium text-muted-foreground">Seu saldo</p>
