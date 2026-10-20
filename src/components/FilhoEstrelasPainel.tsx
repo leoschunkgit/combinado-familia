@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Check, EllipsisVertical, Gift, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
 import type { Filho } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,6 @@ type Resumo = {
   resgates: Resgate[];
 };
 
-type Movimento = Tables<"t_estrela_movimento">;
 
 const resumoVazio: Resumo = {
   hoje: 0,
@@ -59,14 +57,6 @@ const dataHora = (valor: string) =>
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(valor));
-
-function movimentoLabel(movimento: Movimento) {
-  if (movimento.tipo === "FEZ") return "Tarefa cumprida";
-  if (movimento.tipo === "ESTORNO_FEZ") return "Fez corrigido";
-  if (movimento.tipo === "RESGATE") return "Recompensa resgatada";
-  if (movimento.tipo === "CANCELAMENTO_RESGATE") return "Resgate cancelado";
-  return movimento.tipo;
-}
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -103,7 +93,6 @@ function ResgateStatus({ status }: { status: Resgate["status"] }) {
 
 export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [resumo, setResumo] = useState<Resumo>(resumoVazio);
-  const [movimentos, setMovimentos] = useState<Movimento[]>([]);
   const [recompensasComResgate, setRecompensasComResgate] = useState<Set<number>>(new Set());
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -114,7 +103,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [estrelas, setEstrelas] = useState("");
   const [recompensasAbertas, setRecompensasAbertas] = useState(false);
   const [entregasAbertas, setEntregasAbertas] = useState(false);
-  const [extratoAberto, setExtratoAberto] = useState(false);
   const [confirmacao, setConfirmacao] = useState<
     | { tipo: "DESATIVAR"; recompensa: Recompensa }
     | { tipo: "EXCLUIR"; recompensa: Recompensa }
@@ -125,14 +113,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   async function carregar() {
     setCarregando(true);
     try {
-      const [resumoResp, movimentosResp, resgatesResp] = await Promise.all([
+      const [resumoResp, resgatesResp] = await Promise.all([
         supabase.rpc("resumo_estrelas_filho", { p_id_filho: filho.id }),
-        supabase
-          .from("t_estrela_movimento")
-          .select("*")
-          .eq("id_filho", filho.id)
-          .order("created_at", { ascending: false })
-          .limit(30),
         supabase
           .from("t_recompensa_resgate")
           .select("id_recompensa")
@@ -140,13 +122,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       ]);
 
       if (resumoResp.error) throw resumoResp.error;
-      if (movimentosResp.error) throw movimentosResp.error;
       if (resgatesResp.error) throw resgatesResp.error;
 
       const proximoResumo = (resumoResp.data as unknown as Resumo | null) ?? resumoVazio;
       setResumo(proximoResumo);
       setEntregasAbertas(proximoResumo.resgates.some((resgate) => resgate.status === "PENDENTE"));
-      setMovimentos(movimentosResp.data ?? []);
       setRecompensasComResgate(
         new Set((resgatesResp.data ?? []).map((resgate) => resgate.id_recompensa)),
       );
@@ -159,7 +139,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
   useEffect(() => {
     setResumo(resumoVazio);
-    setMovimentos([]);
     setRecompensasComResgate(new Set());
     setEditando(null);
     setNome("");
@@ -168,7 +147,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     setFormAberto(false);
     setRecompensasAbertas(false);
     setEntregasAbertas(false);
-    setExtratoAberto(false);
     setConfirmacao(null);
     void carregar();
   }, [filho.id]);
@@ -432,33 +410,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           </CollapsibleSection>
         )}
 
-        <CollapsibleSection
-          title="Movimentações de estrelas"
-          description="Entradas, estornos, resgates e devoluções."
-          count={movimentos.length}
-          open={extratoAberto}
-          onOpenChange={setExtratoAberto}
-        >
-          <div className="divide-y">
-            {movimentos.map((movimento) => (
-              <div key={movimento.id} className="flex items-start justify-between gap-3 px-4 py-3.5 sm:px-5">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{movimentoLabel(movimento)}</p>
-                  <p className="mt-0.5 break-words text-xs text-muted-foreground">
-                    {movimento.descricao || "—"} · {dataHora(movimento.created_at)}
-                  </p>
-                </div>
-                <span className={`inline-flex shrink-0 items-center gap-1 text-sm font-bold ${movimento.quantidade > 0 ? "text-green-700" : "text-foreground"}`}>
-                  {movimento.quantidade > 0 ? "+" : ""}{movimento.quantidade}
-                  <Estrela />
-                </span>
-              </div>
-            ))}
-            {movimentos.length === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground sm:px-5">Ainda não há movimentos de estrelas.</p>
-            )}
-          </div>
-        </CollapsibleSection>
       </div>
 
       <Dialog
