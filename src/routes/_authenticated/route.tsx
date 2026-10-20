@@ -112,6 +112,7 @@ function AuthenticatedLayout() {
   const [etapa, setEtapa] = useState<number | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+  const [menuUsuarioMobileAberto, setMenuUsuarioMobileAberto] = useState(false);
   const [menuDesktopRecolhido, setMenuDesktopRecolhido] = useState(false);
   const [menuUsuarioDesktopAberto, setMenuUsuarioDesktopAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
@@ -160,6 +161,7 @@ function AuthenticatedLayout() {
     setSaindo(true);
     setSalvando(true);
     setMenuMobileAberto(false);
+    setMenuUsuarioMobileAberto(false);
     await qc.cancelQueries();
 
     try {
@@ -201,9 +203,10 @@ function AuthenticatedLayout() {
     ...pendenciasPassadas.map((p) => p.tarefa.id_filho),
   ]).size;
   const ultimaVigencia = obterUltimaVigencia(vigencias);
+  const inicialResponsavel = nomePai.trim().charAt(0).toUpperCase() || "R";
 
   const AtalhosPrincipais = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className={mobile ? "my-3 space-y-1.5" : "mb-2 mt-7 space-y-1.5"}>
+    <div className={mobile ? "mt-5 space-y-2" : "mb-2 mt-7 space-y-1.5"}>
       <Link
         to="/cadastro-unico"
         onClick={() => mobile && setMenuMobileAberto(false)}
@@ -245,7 +248,7 @@ function AuthenticatedLayout() {
   );
 
   const MenuPrincipal = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className={mobile ? "space-y-1" : "space-y-1.5"}>
+    <div className={mobile ? "space-y-1.5" : "space-y-1.5"}>
       {NAV_ITENS.map(({ to, label, icon: Icon }) => (
         <Link
           key={to}
@@ -268,37 +271,17 @@ function AuthenticatedLayout() {
     </div>
   );
 
-  const FeedbackButton = ({ mobile = false }: { mobile?: boolean }) => (
+  const FeedbackButton = () => (
     <Button
       type="button"
       variant="ghost"
-      className={mobile
-        ? "w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground"
-        : "h-auto w-full justify-start gap-2.5 rounded-md px-2 py-1.5 text-[12px] font-medium leading-tight text-muted-foreground"}
-      onClick={() => {
-        if (mobile) setMenuMobileAberto(false);
-        setFeedbackAberto(true);
-      }}
+      className="h-auto w-full justify-start gap-2.5 rounded-md px-2 py-1.5 text-[12px] font-medium leading-tight text-muted-foreground"
+      onClick={() => setFeedbackAberto(true)}
     >
-      <MessageSquareText className={mobile ? "h-5 w-5" : "h-4 w-4"} />
+      <MessageSquareText className="h-4 w-4" />
       Feedback
     </Button>
   );
-
-  const ContaLink = ({ mobile = false }: { mobile?: boolean }) => (
-    <Link to="/admin" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary/10 !text-primary" }}>
-      <UserCog className={mobile ? "h-5 w-5" : "h-4 w-4"} /> Minha conta
-    </Link>
-  );
-
-  const AdministracaoLink = ({ mobile = false }: { mobile?: boolean }) => {
-    if (!ehAdmin) return null;
-    return (
-      <Link to="/administracao" onClick={() => mobile && setMenuMobileAberto(false)} className={mobile ? "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" : "flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"} activeProps={{ className: "!bg-primary/10 !text-primary" }}>
-        <ShieldCheck className={mobile ? "h-5 w-5" : "h-4 w-4"} /> Administração
-      </Link>
-    );
-  };
 
   return (
     <>
@@ -316,10 +299,42 @@ function AuthenticatedLayout() {
               menuDesktopRecolhido ? "md:pointer-events-none md:-translate-x-full md:opacity-0" : "md:translate-x-0 md:opacity-100"
             }`}
           >
-            <Button variant="ghost" size="icon" className="relative z-10 md:hidden" onClick={() => setMenuMobileAberto(true)} aria-label="Abrir menu"><Menu className="h-5 w-5" />{quantidadeNotificacoes > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" aria-label={`${quantidadeNotificacoes} notificações pendentes`} />}</Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative z-10 md:hidden"
+              onClick={() => {
+                setMenuUsuarioMobileAberto(false);
+                setMenuMobileAberto(true);
+              }}
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-5 w-5" />
+              {quantidadeNotificacoes > 0 && (
+                <span
+                  className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar"
+                  aria-label={`${quantidadeNotificacoes} notificações pendentes`}
+                />
+              )}
+            </Button>
+
             <Link to="/inicio" className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0" aria-label="Ir para Início">
               <AppBrand />
             </Link>
+
+            <button
+              type="button"
+              className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/25 bg-primary text-sm font-bold uppercase text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:hidden"
+              onClick={() => {
+                setMenuMobileAberto(false);
+                setMenuUsuarioMobileAberto((aberto) => !aberto);
+              }}
+              aria-label={`Abrir menu de ${nomePai}`}
+              aria-haspopup="menu"
+              aria-expanded={menuUsuarioMobileAberto}
+            >
+              {inicialResponsavel}
+            </button>
           </div>
 
           <nav
@@ -484,14 +499,123 @@ function AuthenticatedLayout() {
           </Hint>
         )}
 
+        {menuUsuarioMobileAberto && (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-40 bg-black/20 md:hidden"
+              aria-label="Fechar menu do responsável"
+              onClick={() => setMenuUsuarioMobileAberto(false)}
+            />
+            <div
+              role="menu"
+              aria-label="Menu do responsável"
+              className="fixed z-50 w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-2xl md:hidden"
+              style={{
+                top: "calc(env(safe-area-inset-top) + 4.25rem)",
+                right: "calc(env(safe-area-inset-right) + .75rem)",
+              }}
+            >
+              <div className="flex items-start gap-3 border-b px-4 py-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold uppercase text-primary-foreground">
+                  {inicialResponsavel}
+                </span>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <p className="truncate text-sm font-semibold">{nomePai}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Responsável</p>
+                </div>
+                <button
+                  type="button"
+                  className={modalCloseInlineButtonClass}
+                  onClick={() => setMenuUsuarioMobileAberto(false)}
+                  aria-label="Fechar menu do responsável"
+                >
+                  <ModalCloseIcon />
+                </button>
+              </div>
+
+              <div className="p-2">
+                <Link
+                  to="/admin"
+                  role="menuitem"
+                  onClick={() => setMenuUsuarioMobileAberto(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <UserCog className="h-4 w-4" />
+                  Minha conta
+                </Link>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => {
+                    setMenuUsuarioMobileAberto(false);
+                    abrirGuia();
+                  }}
+                >
+                  <CircleHelp className="h-4 w-4" />
+                  Ajuda
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => {
+                    setMenuUsuarioMobileAberto(false);
+                    setFeedbackAberto(true);
+                  }}
+                >
+                  <MessageSquareText className="h-4 w-4" />
+                  Feedback
+                </button>
+
+                {ehAdmin && (
+                  <Link
+                    to="/administracao"
+                    role="menuitem"
+                    onClick={() => setMenuUsuarioMobileAberto(false)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Administração
+                  </Link>
+                )}
+
+                <div className="my-2 h-px bg-border" />
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                  onClick={() => {
+                    setMenuUsuarioMobileAberto(false);
+                    void runAction(sair);
+                  }}
+                  disabled={salvando}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sair
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
         {menuMobileAberto && <><button type="button" className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-label="Fechar menu" onClick={() => setMenuMobileAberto(false)} /><aside className="native-safe-area fixed inset-y-0 left-0 z-50 w-[84vw] max-w-xs overflow-y-auto border-r bg-sidebar shadow-2xl md:hidden" aria-label="Menu lateral mobile">
           <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center border-b p-3"><span aria-hidden="true" /><Link to="/inicio" className="mx-auto" onClick={() => setMenuMobileAberto(false)} aria-label="Ir para Início"><AppBrand /></Link><button type="button" className={modalCloseInlineButtonClass} onClick={() => setMenuMobileAberto(false)} aria-label="Fechar menu"><ModalCloseIcon /></button></div>
-          <nav className="flex flex-col px-2 pb-28 pt-3">
+          <nav className="flex flex-col px-2 pb-5 pt-4">
             <MenuPrincipal mobile />
             <AtalhosPrincipais mobile />
-            <div className="border-t pt-2"><FeedbackButton mobile /><Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm text-muted-foreground" onClick={() => { setMenuMobileAberto(false); abrirGuia(); }}><CircleHelp className="h-5 w-5" /> Ajuda</Button><ContaLink mobile /><AdministracaoLink mobile /></div>
+
+            <div className="mt-5 border-t px-2 pt-3">
+              <AppVersion className="block text-center text-[9px] leading-tight text-muted-foreground" />
+              <p className="mt-1 text-center text-[9px] leading-tight text-muted-foreground">
+                © 2026 Combinado Família. Todos os direitos reservados.
+              </p>
+            </div>
           </nav>
-          <div className="fixed bottom-5 left-3 right-auto w-[calc(min(84vw,20rem)-1.5rem)] max-w-[calc(20rem-1.5rem)]"><div className="flex items-center justify-between gap-3 rounded-lg bg-muted p-2.5"><p className="min-w-0 truncate text-xs font-semibold">{nomePai}</p><Button variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5 text-xs" onClick={sair} disabled={salvando}><LogOut className="h-4 w-4" /> Sair</Button></div><AppVersion className="mt-2 block px-1 text-center text-[9px] leading-tight text-muted-foreground" /><p className="mt-1 px-1 text-center text-[9px] leading-tight text-muted-foreground">© 2026 Combinado Família. Todos os direitos reservados.</p></div>
         </aside></>}
 
         <FeedbackDialog
