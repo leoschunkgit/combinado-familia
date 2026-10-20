@@ -133,7 +133,7 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                     </div>
 
                     {recompensa.disponivel ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[10px] font-bold text-green-700 dark:border-green-800 dark:bg-green-950/35 dark:text-green-300 dark:text-green-300">
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[10px] font-bold text-green-700 dark:border-green-800 dark:bg-green-950/35 dark:text-green-300">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Conquistado
                       </span>
