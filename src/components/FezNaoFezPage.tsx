@@ -1575,13 +1575,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           )}
                                         </div>
                                         {registro && (
-                                          <>
+                                          <div className="grid shrink-0 grid-cols-[1rem_1.75rem_2rem] items-center gap-1">
                                             <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
                                               <span
                                                 className={
                                                   registro.tipo === "FEZ"
-                                                    ? "inline-flex shrink-0 items-center justify-center text-green-600 dark:text-green-400"
-                                                    : "inline-flex shrink-0 items-center justify-center text-red-600 dark:text-red-400"
+                                                    ? "inline-flex h-4 w-4 items-center justify-center text-green-600 dark:text-green-400"
+                                                    : "inline-flex h-4 w-4 items-center justify-center text-red-600 dark:text-red-400"
                                                 }
                                               >
                                                 {registro.tipo === "FEZ" ? (
@@ -1594,14 +1594,18 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 </span>
                                               </span>
                                             </Hint>
-                                            {registro.tipo === "FEZ" && (
-                                              <Hint content="+1 estrela">
-                                                <span className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-amber-600">
-                                                  <Star className="h-3.5 w-3.5" />
-                                                  +1
-                                                </span>
-                                              </Hint>
-                                            )}
+
+                                            <span className="inline-flex h-5 w-7 items-center justify-center">
+                                              {registro.tipo === "FEZ" && (
+                                                <Hint content="+1 estrela">
+                                                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                                                    <Star className="h-3.5 w-3.5" />
+                                                    +1
+                                                  </span>
+                                                </Hint>
+                                              )}
+                                            </span>
+
                                             <DropdownMenu>
                                               <DropdownMenuTrigger asChild>
                                                 <Button
@@ -1649,7 +1653,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )}
                                               </DropdownMenuContent>
                                             </DropdownMenu>
-                                          </>
+                                          </div>
                                         )}
                                         {registro &&
                                           registro.tipo !== "FEZ" &&
