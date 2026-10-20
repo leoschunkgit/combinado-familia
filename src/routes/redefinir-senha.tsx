@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { msgErro } from "@/lib/db";
 import { AppBrand } from "@/components/AppBrand";
+import { encerrarSessaoResponsavelNesteAparelho } from "@/lib/responsavel-session";
 
 const REGRAS_SENHA = [
   { id: "tam", label: "Pelo menos 8 caracteres", ok: (s: string) => s.length >= 8 },
@@ -92,16 +93,16 @@ function RedefinirSenha() {
       return;
     }
 
-    const { error: signOutError } = await supabase.auth.signOut({ scope: "global" });
+    const { error: signOutError } = await encerrarSessaoResponsavelNesteAparelho();
     sessionStorage.removeItem("combinado_recovery_otp_validado");
     setLoading(false);
 
     if (signOutError) {
-      toast.error("A senha foi alterada, mas não foi possível encerrar a sessão. Feche e abra o app antes de entrar novamente.");
+      toast.error("A senha foi alterada, mas não foi possível encerrar a sessão deste aparelho. Feche e abra o app antes de entrar novamente.");
       return;
     }
 
-    toast.success("Senha redefinida com sucesso! Entre novamente com sua nova senha.");
+    toast.success("Senha redefinida com sucesso! Entre novamente neste aparelho com sua nova senha.");
     navigate({ to: "/" });
   }
 
