@@ -279,13 +279,8 @@ export function PainelFilhoApp({
   }, [registrosAtuais]);
 
   useEffect(() => {
-    if (registrosPorData.length === 0) {
+    if (registroAberto && !registrosPorData.some((grupo) => grupo.data === registroAberto)) {
       setRegistroAberto(null);
-      return;
-    }
-
-    if (!registroAberto || !registrosPorData.some((grupo) => grupo.data === registroAberto)) {
-      setRegistroAberto(registrosPorData[0].data);
     }
   }, [registrosPorData, registroAberto]);
 
