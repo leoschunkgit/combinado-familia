@@ -24,9 +24,7 @@ import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import { registrarTelemetriaApp } from "@/lib/app-telemetry";
 import {
-  biometriaAtivaNesteAparelho,
   bloquearBiometriaNestaExecucao,
-  desativarBiometriaNesteAparelho,
   podeAcessarAreaAutenticada,
 } from "@/lib/biometric-auth";
 
@@ -162,29 +160,19 @@ function AuthenticatedLayout() {
     setMenuUsuarioMobileAberto(false);
     await qc.cancelQueries();
 
-    try {
-      const biometriaAtiva = await biometriaAtivaNesteAparelho();
-      if (biometriaAtiva) {
-        bloquearBiometriaNestaExecucao();
-        qc.clear();
-        navigate({ to: "/", replace: true });
-        return;
-      }
-    } catch (error) {
-      console.error("Não foi possível consultar a biometria local ao sair:", error);
-    }
+    bloquearBiometriaNestaExecucao();
 
     try {
       await desativarPushAtual();
     } catch (error) {
       console.error("Não foi possível desativar o push deste aparelho ao sair:", error);
     }
-    try {
-      await desativarBiometriaNesteAparelho();
-    } catch (error) {
-      console.error("Não foi possível remover a biometria local ao sair:", error);
+
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) {
+      console.error("Não foi possível encerrar a sessão local:", error);
     }
-    await supabase.auth.signOut();
+
     qc.clear();
     navigate({ to: "/", replace: true });
   }
