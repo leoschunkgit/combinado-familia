@@ -17,6 +17,7 @@ import {
   biometriaAtivaNesteAparelho,
   liberarBiometriaNestaExecucao,
 } from "@/lib/biometric-auth";
+import { obterSessaoResponsavelPersistida } from "@/lib/responsavel-session";
 import { AcessoFilhoLogin } from "@/components/AcessoFilhoLogin";
 import { PainelFilhoApp } from "@/components/PainelFilhoApp";
 import {
@@ -120,8 +121,8 @@ function Index() {
         if (launchRoute && launchRoute !== "/") return;
       }
 
-      const { data } = await supabase.auth.getSession();
-      if (!ativo || !data.session) return;
+      const sessaoResponsavel = await obterSessaoResponsavelPersistida();
+      if (!ativo || !sessaoResponsavel) return;
 
       if (Capacitor.isNativePlatform()) {
         try {
@@ -172,8 +173,8 @@ function Index() {
   async function entrarComBiometria() {
     setBiometriaCarregando(true);
     try {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      const sessaoResponsavel = await obterSessaoResponsavelPersistida();
+      if (!sessaoResponsavel) {
         setSessaoBiometricaDisponivel(false);
         toast.error("Sua sessão expirou. Entre novamente com email e senha.");
         return;

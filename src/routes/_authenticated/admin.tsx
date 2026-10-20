@@ -23,6 +23,7 @@ import {
   biometriaEhNativa,
   desativarBiometriaNesteAparelho,
 } from "@/lib/biometric-auth";
+import { encerrarSessaoResponsavelNesteAparelho } from "@/lib/responsavel-session";
 
 function Admin() {
   const router = useRouter();
@@ -148,7 +149,7 @@ function Admin() {
     } catch {
       // A exclusão da conta não deve ser bloqueada por uma falha local da biometria.
     }
-    await supabase.auth.signOut();
+    await encerrarSessaoResponsavelNesteAparelho();
     setConfirmarExclusao(false);
     toast.success("Conta e dados excluídos.");
     navigate({ to: "/", replace: true });

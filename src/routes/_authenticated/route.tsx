@@ -27,6 +27,10 @@ import {
   bloquearBiometriaNestaExecucao,
   podeAcessarAreaAutenticada,
 } from "@/lib/biometric-auth";
+import {
+  encerrarSessaoResponsavelNesteAparelho,
+  obterUsuarioResponsavelPersistido,
+} from "@/lib/responsavel-session";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -34,9 +38,8 @@ export const Route = createFileRoute("/_authenticated")({
     const podeAcessar = await podeAcessarAreaAutenticada();
     if (!podeAcessar) throw redirect({ to: "/" });
 
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/" });
-    const user = data.user;
+    const user = await obterUsuarioResponsavelPersistido();
+    if (!user) throw redirect({ to: "/" });
     const { data: pai } = await supabase.from("t_usuario_pai").select("id, nome").maybeSingle();
     let nome = pai?.nome;
     let idPai = pai?.id;
@@ -168,7 +171,7 @@ function AuthenticatedLayout() {
       console.error("Não foi possível desativar o push deste aparelho ao sair:", error);
     }
 
-    const { error } = await supabase.auth.signOut({ scope: "local" });
+    const { error } = await encerrarSessaoResponsavelNesteAparelho();
     if (error) {
       console.error("Não foi possível encerrar a sessão local:", error);
     }
