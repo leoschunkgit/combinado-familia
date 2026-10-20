@@ -15,6 +15,36 @@ alter table public.t_solicitacao_tarefa_filho
 alter table public.t_solicitacao_tarefa_filho
   add column if not exists resolvido_em timestamptz;
 
+-- O conteúdo enviado pelo filho permanece imutável. Somente o ciclo interno
+-- status/resolvido_em pode ser atualizado pelas regras centrais do banco.
+create or replace function public.guard_solicitacao_tarefa_filho_imutavel()
+returns trigger
+language plpgsql
+set search_path = ''
+as $function$
+begin
+  if new.id is distinct from old.id
+     or new.id_filho_tarefa is distinct from old.id_filho_tarefa
+     or new.data_referencia is distinct from old.data_referencia
+     or new.observacao is distinct from old.observacao
+     or new.created_at is distinct from old.created_at then
+    raise exception 'Conteudo da solicitacao do filho nao pode ser alterado';
+  end if;
+
+  if new.status not in ('PENDENTE', 'RESOLVIDA_FEZ', 'RESOLVIDA_NAO_FEZ') then
+    raise exception 'Status da solicitacao do filho invalido';
+  end if;
+
+  if (new.status = 'PENDENTE' and new.resolvido_em is not null)
+     or (new.status <> 'PENDENTE' and new.resolvido_em is null) then
+    raise exception 'Estado de resolucao da solicitacao do filho invalido';
+  end if;
+
+  return new;
+end;
+$function$;
+
+
 -- Solicitações que ainda possuem uma ocorrência oficial podem ser
 -- classificadas com segurança pelo estado oficial atual.
 with ocorrencias_atuais as (
@@ -126,35 +156,6 @@ comment on column public.t_solicitacao_tarefa_filho.status is
 
 comment on column public.t_solicitacao_tarefa_filho.resolvido_em is
   'Momento em que o responsavel respondeu ao aviso do filho. Desfazer a ocorrencia nao reabre o aviso.';
-
--- O conteúdo enviado pelo filho permanece imutável. Somente o ciclo interno
--- status/resolvido_em pode ser atualizado pelas regras centrais do banco.
-create or replace function public.guard_solicitacao_tarefa_filho_imutavel()
-returns trigger
-language plpgsql
-set search_path = ''
-as $function$
-begin
-  if new.id is distinct from old.id
-     or new.id_filho_tarefa is distinct from old.id_filho_tarefa
-     or new.data_referencia is distinct from old.data_referencia
-     or new.observacao is distinct from old.observacao
-     or new.created_at is distinct from old.created_at then
-    raise exception 'Conteudo da solicitacao do filho nao pode ser alterado';
-  end if;
-
-  if new.status not in ('PENDENTE', 'RESOLVIDA_FEZ', 'RESOLVIDA_NAO_FEZ') then
-    raise exception 'Status da solicitacao do filho invalido';
-  end if;
-
-  if (new.status = 'PENDENTE' and new.resolvido_em is not null)
-     or (new.status <> 'PENDENTE' and new.resolvido_em is null) then
-    raise exception 'Estado de resolucao da solicitacao do filho invalido';
-  end if;
-
-  return new;
-end;
-$function$;
 
 -- Fonte única de verdade para responder ao "Terminei".
 -- INSERT/UPDATE de Fez/Nao fez fecha ou atualiza a resposta da solicitação.
