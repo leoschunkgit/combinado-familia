@@ -17,24 +17,31 @@ alter table public.t_solicitacao_tarefa_filho
 
 -- Solicitações que ainda possuem uma ocorrência oficial podem ser
 -- classificadas com segurança pelo estado oficial atual.
+with ocorrencias_atuais as (
+  select
+    s.id,
+    (
+      select oc.tipo
+      from public.t_ocorrencia oc
+      where oc.id_filho_tarefa = s.id_filho_tarefa
+        and timezone('America/Sao_Paulo', oc.created_at)::date = s.data_referencia
+      order by oc.created_at desc, oc.id desc
+      limit 1
+    ) as tipo
+  from public.t_solicitacao_tarefa_filho s
+  where s.status is null
+)
 update public.t_solicitacao_tarefa_filho s
 set
-  status = case o.tipo
+  status = case atual.tipo
     when 'FEZ' then 'RESOLVIDA_FEZ'
     when 'NAO_FEZ' then 'RESOLVIDA_NAO_FEZ'
     else s.status
   end,
   resolvido_em = coalesce(s.resolvido_em, now())
-from lateral (
-  select oc.tipo
-  from public.t_ocorrencia oc
-  where oc.id_filho_tarefa = s.id_filho_tarefa
-    and timezone('America/Sao_Paulo', oc.created_at)::date = s.data_referencia
-  order by oc.created_at desc, oc.id desc
-  limit 1
-) o
-where s.status is null
-  and o.tipo in ('FEZ', 'NAO_FEZ');
+from ocorrencias_atuais atual
+where s.id = atual.id
+  and atual.tipo in ('FEZ', 'NAO_FEZ');
 
 -- Recupera com evidência objetiva o caso legado em que houve FEZ e depois
 -- estorno/desfazer: o movimento de estrela preserva a prova mesmo após a
