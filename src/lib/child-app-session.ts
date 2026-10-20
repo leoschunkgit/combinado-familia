@@ -24,7 +24,9 @@ export type SolicitacaoTarefaFilhoApp = {
   id_filho_tarefa: number;
   data_referencia: string;
   observacao: string | null;
+  status: "PENDENTE" | "RESOLVIDA_FEZ" | "RESOLVIDA_NAO_FEZ";
   created_at: string;
+  resolvido_em: string | null;
 };
 
 export type RevisaoTarefaFilhoApp = {
@@ -32,7 +34,7 @@ export type RevisaoTarefaFilhoApp = {
   id_filho_tarefa: number;
   data_referencia: string;
   observacao: string | null;
-  status: "PENDENTE" | "MANTEVE_NAO_FEZ" | "ALTERADO_PARA_FEZ";
+  status: "PENDENTE" | "MANTEVE_NAO_FEZ" | "ALTERADO_PARA_FEZ" | "MARCACAO_DESFEITA";
   created_at: string;
   resolvido_em: string | null;
 };

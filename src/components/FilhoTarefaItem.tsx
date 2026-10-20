@@ -23,6 +23,11 @@ export function FilhoTarefaItem({
   onAvisar: () => void;
   onPedirRevisao: () => void;
 }) {
+  const solicitacaoPendente = solicitacaoHoje?.status === "PENDENTE";
+  const solicitacaoResolvida = Boolean(
+    solicitacaoHoje && solicitacaoHoje.status !== "PENDENTE",
+  );
+
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 sm:px-5">
       <div className="flex min-w-0 items-center gap-2.5">
@@ -78,10 +83,15 @@ export function FilhoTarefaItem({
           <BellRing className="h-3.5 w-3.5" />
           Revisão encerrada
         </span>
-      ) : solicitacaoHoje ? (
+      ) : solicitacaoPendente ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
           <BellRing className="h-3.5 w-3.5" />
           Aguardando
+        </span>
+      ) : solicitacaoResolvida ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+          <BellRing className="h-3.5 w-3.5" />
+          Pedido encerrado
         </span>
       ) : (
         <Button
