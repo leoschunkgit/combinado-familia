@@ -596,20 +596,33 @@ export function PainelFilhoApp({
                     <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">Em andamento</Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 border-t text-sm">
-                    <div className="px-4 py-3 sm:px-5">
-                      <p className="text-xs text-muted-foreground">{painel.filho.tem_mesada ? "Valor atual" : "Não fez"}</p>
-                      <p className="mt-0.5 font-semibold">
-                        {painel.filho.tem_mesada ? dinheiro(mesadaFinal ?? 0) : `${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia}`}
-                      </p>
+                  {painel.filho.tem_mesada ? (
+                    <div className="grid grid-cols-3 border-t text-sm">
+                      <div className="min-w-0 px-2 py-3 text-center sm:px-4">
+                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Valor da mesada</p>
+                        <p className="mt-1 break-words font-semibold">{dinheiro(painel.filho.valor_mesada ?? 0)}</p>
+                      </div>
+                      <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
+                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Desconto por Não fez</p>
+                        <p className="mt-1 break-words font-semibold">{dinheiro(descontoUnitario)}</p>
+                      </div>
+                      <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
+                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Valor atual</p>
+                        <p className="mt-1 break-words font-semibold">{dinheiro(mesadaFinal ?? 0)}</p>
+                      </div>
                     </div>
-                    <div className="border-l px-4 py-3 sm:px-5">
-                      <p className="text-xs text-muted-foreground">{painel.filho.tem_mesada ? "Desconto por Não fez" : "Penalidade"}</p>
-                      <p className="mt-0.5 break-words font-semibold">
-                        {painel.filho.tem_mesada ? dinheiro(descontoUnitario) : (vigenciaAtual.penalidade || "—")}
-                      </p>
+                  ) : (
+                    <div className="grid grid-cols-2 border-t text-sm">
+                      <div className="px-4 py-3 sm:px-5">
+                        <p className="text-xs text-muted-foreground">Não fez</p>
+                        <p className="mt-0.5 font-semibold">{`${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia}`}</p>
+                      </div>
+                      <div className="border-l px-4 py-3 sm:px-5">
+                        <p className="text-xs text-muted-foreground">Penalidade</p>
+                        <p className="mt-0.5 break-words font-semibold">{vigenciaAtual.penalidade || "—"}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </section>
               </>
             ) : (
