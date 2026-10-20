@@ -124,7 +124,7 @@ export function PainelFilhoApp({
   const [revisaoTarefa, setRevisaoTarefa] = useState<TarefaFilho | null>(null);
   const [observacaoAviso, setObservacaoAviso] = useState("");
   const [enviandoAviso, setEnviandoAviso] = useState(false);
-  const abrirInicioPeloPush = useCallback(() => setAba("inicio"), []);
+  const abrirTarefasPeloPush = useCallback(() => setAba("tarefas"), []);
 
   useEffect(() => {
     let ativo = true;
@@ -411,7 +411,7 @@ export function PainelFilhoApp({
 
   return (
     <div className="min-h-screen bg-muted/10">
-      <AppFilhoPushNotifications onAbrir={abrirInicioPeloPush} />
+      <AppFilhoPushNotifications onAbrir={abrirTarefasPeloPush} />
 
       <header className="native-sticky-safe-top sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className={`${appPageHorizontalPaddingClass} py-2.5`}>
