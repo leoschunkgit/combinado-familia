@@ -102,7 +102,7 @@ export const useSolicitacoesTarefaFilho = () =>
           .select("*")
           .order("created_at", { ascending: false }),
       ),
-    refetchInterval: 30_000,
+    refetchInterval: 5_000,
   });
 
 export const useRevisoesTarefaFilho = () =>
@@ -115,7 +115,7 @@ export const useRevisoesTarefaFilho = () =>
           .select("*")
           .order("created_at", { ascending: false }),
       ),
-    refetchInterval: 30_000,
+    refetchInterval: 5_000,
   });
 
 export async function resolverRevisaoTarefaFilho(idRevisao: number) {
