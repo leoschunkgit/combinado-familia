@@ -1491,7 +1491,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           </div>
 
                                           {!registro && solicitacao?.status === "PENDENTE" && (
-                                            <div className="animate-subtle-shake ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
+                                            <div className="animate-soft-attention ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
                                               <p className="flex min-w-0 items-center gap-1 font-medium text-foreground">
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
                                                 <span className="min-w-0 break-words">
@@ -1502,7 +1502,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           )}
 
                                           {registro?.tipo === "NAO_FEZ" && revisao?.status === "PENDENTE" && (
-                                            <div className="animate-subtle-shake ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
+                                            <div className="animate-soft-attention ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
                                               <p className="flex min-w-0 items-center gap-1 font-semibold text-foreground">
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
                                                 <span className="min-w-0 break-words">
