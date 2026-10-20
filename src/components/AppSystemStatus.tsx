@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Megaphone, RefreshCw, Wrench } from "lucide-react";
+import { AlertTriangle, RefreshCw, Wrench } from "lucide-react";
 import { obterIdentificacaoApp, type IdentificacaoApp } from "@/lib/app-telemetry";
 import { supabase } from "@/integrations/supabase/client";
 import { obterAppConfigPublico, type AppConfigPublico } from "@/lib/app-system-config";
+import { AppGlobalMessage } from "@/components/AppGlobalMessage";
 
 export function AppSystemStatus({ ehAdmin }: { ehAdmin: boolean }) {
   const [config, setConfig] = useState<AppConfigPublico | null>(null);
@@ -104,12 +105,10 @@ export function AppSystemStatus({ ehAdmin }: { ehAdmin: boolean }) {
       )}
 
       <div className="mb-5 space-y-2">
-        {config.mensagem_global_ativa && config.mensagem_global && (
-          <div className="flex items-start gap-3 rounded-xl border bg-accent/40 p-3 text-sm">
-            <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="min-w-0 leading-relaxed">{config.mensagem_global}</p>
-          </div>
-        )}
+        <AppGlobalMessage
+          ativa={config.mensagem_global_ativa}
+          mensagem={config.mensagem_global}
+        />
 
         {ehAdmin && config.manutencao_ativa && (
           <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-card p-3 text-sm">

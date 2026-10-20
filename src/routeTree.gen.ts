@@ -26,7 +26,6 @@ import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedLinkFilhosRouteImport } from './routes/_authenticated/link-filhos'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedOcorrenciasRouteImport } from './routes/_authenticated/ocorrencias'
-import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedVigenciasRouteImport } from './routes/_authenticated/vigencias'
 import { Route as AcompanharTokenRouteImport } from './routes/acompanhar.$token'
@@ -121,11 +120,6 @@ const AuthenticatedOcorrenciasRoute =
     path: '/ocorrencias',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedRelatorioRoute = AuthenticatedRelatorioRouteImport.update({
-  id: '/relatorio',
-  path: '/relatorio',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   id: '/tarefas',
   path: '/tarefas',
@@ -159,7 +153,6 @@ export interface FileRoutesByFullPath {
   '/link-filhos': typeof AuthenticatedLinkFilhosRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/ocorrencias': typeof AuthenticatedOcorrenciasRoute
-  '/relatorio': typeof AuthenticatedRelatorioRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vigencias': typeof AuthenticatedVigenciasRoute
   '/acompanhar/$token': typeof AcompanharTokenRoute
@@ -181,7 +174,6 @@ export interface FileRoutesByTo {
   '/link-filhos': typeof AuthenticatedLinkFilhosRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/ocorrencias': typeof AuthenticatedOcorrenciasRoute
-  '/relatorio': typeof AuthenticatedRelatorioRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vigencias': typeof AuthenticatedVigenciasRoute
   '/acompanhar/$token': typeof AcompanharTokenRoute
@@ -205,7 +197,6 @@ export interface FileRoutesById {
   '/_authenticated/link-filhos': typeof AuthenticatedLinkFilhosRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/ocorrencias': typeof AuthenticatedOcorrenciasRoute
-  '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/vigencias': typeof AuthenticatedVigenciasRoute
   '/acompanhar/$token': typeof AcompanharTokenRoute
@@ -229,7 +220,6 @@ export interface FileRouteTypes {
     | '/link-filhos'
     | '/notificacoes'
     | '/ocorrencias'
-    | '/relatorio'
     | '/tarefas'
     | '/vigencias'
     | '/acompanhar/$token'
@@ -251,7 +241,6 @@ export interface FileRouteTypes {
     | '/link-filhos'
     | '/notificacoes'
     | '/ocorrencias'
-    | '/relatorio'
     | '/tarefas'
     | '/vigencias'
     | '/acompanhar/$token'
@@ -274,7 +263,6 @@ export interface FileRouteTypes {
     | '/_authenticated/link-filhos'
     | '/_authenticated/notificacoes'
     | '/_authenticated/ocorrencias'
-    | '/_authenticated/relatorio'
     | '/_authenticated/tarefas'
     | '/_authenticated/vigencias'
     | '/acompanhar/$token'
@@ -410,13 +398,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOcorrenciasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/relatorio': {
-      id: '/_authenticated/relatorio'
-      path: '/relatorio'
-      fullPath: '/relatorio'
-      preLoaderRoute: typeof AuthenticatedRelatorioRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/tarefas': {
       id: '/_authenticated/tarefas'
       path: '/tarefas'
@@ -454,7 +435,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLinkFilhosRoute: typeof AuthenticatedLinkFilhosRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedOcorrenciasRoute: typeof AuthenticatedOcorrenciasRoute
-  AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedVigenciasRoute: typeof AuthenticatedVigenciasRoute
 }
@@ -472,7 +452,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLinkFilhosRoute: AuthenticatedLinkFilhosRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedOcorrenciasRoute: AuthenticatedOcorrenciasRoute,
-  AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedVigenciasRoute: AuthenticatedVigenciasRoute,
 }

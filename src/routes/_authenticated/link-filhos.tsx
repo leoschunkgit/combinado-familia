@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Copy, ExternalLink, Link2, PowerOff, RefreshCw, Share2, Users } from "lucide-react";
@@ -15,6 +15,9 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 
 export const Route = createFileRoute("/_authenticated/link-filhos")({
+  beforeLoad: () => {
+    throw redirect({ to: "/acesso-filhos" });
+  },
   head: () => ({ meta: [
     { title: "Gerar Link / Filho — Combinado" },
     { name: "description", content: "Gerencie os links de acompanhamento dos filhos." },

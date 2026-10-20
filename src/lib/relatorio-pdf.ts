@@ -161,7 +161,7 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(19);
   doc.setTextColor(35, 70, 55);
-  doc.text("Histórico", MARGIN + 6, y + 9);
+  doc.text("Relatório da vigência", MARGIN + 6, y + 9);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(90, 100, 95);

@@ -8,13 +8,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  EllipsisVertical,
   Info,
   Pencil,
   Star,
   ThumbsDown,
   ThumbsUp,
   Trash2,
-  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
@@ -86,6 +92,7 @@ import {
   datasDaVigenciaAteHoje,
   useDataBrasilAtual,
 } from "@/lib/notificacoes";
+import { notificarRespostaFilho } from "@/lib/child-response-notifications";
 
 type ModoPagina = "todos" | "pendentes";
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
@@ -196,7 +203,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [bonificacaoInfo, setBonificacaoInfo] = useState<BonificacaoInfo | null>(null);
   const [troca, setTroca] = useState<Troca | null>(null);
   const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set());
-  const [acoesAbertas, setAcoesAbertas] = useState<Set<string>>(new Set());
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
     useState<ExcluirSelecionadasDraft | null>(null);
   const [penalidadePendente, setPenalidadePendente] =
@@ -670,6 +676,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     const vigenciaCompleta = vigencias.find(
       (item) => item.id === tarefa.id_vigencia,
     );
+    const solicitacaoPendente = solicitacaoNaData(tarefa, data);
 
     setBusy(true);
     try {
@@ -702,6 +709,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
         qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
+        solicitacaoPendente
+          ? notificarRespostaFilho("SOLICITACAO", solicitacaoPendente.id)
+          : Promise.resolve(null),
       ]);
       setTroca(null);
       setPenalidadePendente(null);
@@ -880,6 +890,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     const gerouEstrela = !existente || existente.tipo !== "FEZ";
+    const revisaoPendente = revisaoNaData(tarefa, draft.data);
+    const solicitacaoPendente = solicitacaoNaData(tarefa, draft.data);
+    const interacaoPendente =
+      revisaoPendente?.status === "PENDENTE"
+        ? { tipo: "REVISAO" as const, id: revisaoPendente.id }
+        : solicitacaoPendente
+          ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
+          : null;
 
     setBusy(true);
     try {
@@ -915,6 +933,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
         qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
+        interacaoPendente
+          ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
+          : Promise.resolve(null),
       ]);
       setFez(null);
       setTroca(null);
@@ -1047,7 +1068,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     setBusy(true);
     try {
       await resolverRevisaoTarefaFilho(idRevisao);
-      await qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
+        notificarRespostaFilho("REVISAO", idRevisao),
+      ]);
       toast.success("Revisão encerrada · Não fez mantido");
     } catch (error) {
       toast.error(
@@ -1570,13 +1594,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           )}
                                         </div>
                                         {registro && (
-                                          <>
+                                          <div className="grid shrink-0 grid-cols-[1rem_1.75rem_2rem] items-center gap-1">
                                             <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
                                               <span
                                                 className={
                                                   registro.tipo === "FEZ"
-                                                    ? "inline-flex shrink-0 items-center justify-center text-green-600 dark:text-green-400"
-                                                    : "inline-flex shrink-0 items-center justify-center text-red-600 dark:text-red-400"
+                                                    ? "inline-flex h-4 w-4 items-center justify-center text-green-600 dark:text-green-400"
+                                                    : "inline-flex h-4 w-4 items-center justify-center text-red-600 dark:text-red-400"
                                                 }
                                               >
                                                 {registro.tipo === "FEZ" ? (
@@ -1589,47 +1613,66 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 </span>
                                               </span>
                                             </Hint>
-                                            {registro.tipo === "FEZ" && (
-                                              <Hint content="+1 estrela">
-                                                <span className="inline-flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-amber-600">
-                                                  <Star className="h-3.5 w-3.5" />
-                                                  +1
-                                                </span>
-                                              </Hint>
-                                            )}
-                                            <button
-                                              type="button"
-                                              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                              aria-label={
-                                                acoesAbertas.has(`${tarefa.id}:${dataSelecionada}`)
-                                                  ? "Ocultar ações da tarefa"
-                                                  : "Mostrar ações da tarefa"
-                                              }
-                                              aria-expanded={acoesAbertas.has(
-                                                `${tarefa.id}:${dataSelecionada}`,
+
+                                            <span className="inline-flex h-5 w-7 items-center justify-center">
+                                              {registro.tipo === "FEZ" && (
+                                                <Hint content="+1 estrela">
+                                                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                                                    <Star className="h-3.5 w-3.5" />
+                                                    +1
+                                                  </span>
+                                                </Hint>
                                               )}
-                                              onClick={() => {
-                                                const chave = `${tarefa.id}:${dataSelecionada}`;
-                                                setAcoesAbertas((atual) => {
-                                                  const proximo = new Set(atual);
-                                                  if (proximo.has(chave)) {
-                                                    proximo.delete(chave);
-                                                  } else {
-                                                    proximo.add(chave);
-                                                  }
-                                                  return proximo;
-                                                });
-                                              }}
-                                            >
-                                              {acoesAbertas.has(
-                                                `${tarefa.id}:${dataSelecionada}`,
-                                              ) ? (
-                                                <X className="h-4 w-4" />
-                                              ) : (
-                                                <ChevronRight className="h-4 w-4" />
-                                              )}
-                                            </button>
-                                          </>
+                                            </span>
+
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button
+                                                  type="button"
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  disabled={busy}
+                                                  aria-label={`Mais ações para ${tarefa.t_tarefa?.nome ?? "tarefa"}`}
+                                                >
+                                                  <EllipsisVertical className="h-4 w-4" />
+                                                </Button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent align="end" className="w-48">
+                                                {!bloqueada && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      abrirTrocaMarcacao(
+                                                        tarefa,
+                                                        totalNaoFez,
+                                                        dataSelecionada,
+                                                        registro,
+                                                      )
+                                                    }
+                                                  >
+                                                    <Pencil className="h-4 w-4" />
+                                                    {registro.tipo === "FEZ"
+                                                      ? "Alterar para Não fez"
+                                                      : "Alterar para Fez"}
+                                                  </DropdownMenuItem>
+                                                )}
+                                                {registro.tipo === "FEZ" && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      setBonificacaoInfo({
+                                                        tarefa,
+                                                        total: totalNaoFez,
+                                                        ocorrencia: registro,
+                                                      })
+                                                    }
+                                                  >
+                                                    <Info className="h-4 w-4" />
+                                                    Ver bonificação
+                                                  </DropdownMenuItem>
+                                                )}
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          </div>
                                         )}
                                         {registro &&
                                           registro.tipo !== "FEZ" &&
@@ -1645,16 +1688,21 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           )}
                                       </div>
 
-                                      <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-2">
+                                      <div className="flex shrink-0 items-center justify-end gap-2">
                                         {registro?.tipo === "NAO_FEZ" &&
                                           revisao?.status === "PENDENTE" &&
                                           !bloqueada && (
-                                            <>
+                                            <div
+                                              className="inline-flex shrink-0 items-center gap-1 self-center"
+                                              role="group"
+                                              aria-label="Ações da revisão solicitada"
+                                            >
                                               <Hint content="Aceitar revisão e alterar para Fez">
                                                 <Button
+                                                  type="button"
                                                   size="icon"
                                                   variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
                                                   disabled={busy}
                                                   aria-label="Aceitar revisão e alterar para Fez"
                                                   onClick={() =>
@@ -1671,9 +1719,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Hint>
                                               <Hint content="Manter Não fez">
                                                 <Button
+                                                  type="button"
                                                   size="icon"
                                                   variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
                                                   disabled={busy}
                                                   aria-label="Manter Não fez"
                                                   onClick={() => void manterNaoFezRevisao(revisao.id)}
@@ -1681,7 +1730,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                   <ThumbsDown className="h-4 w-4 text-red-600" />
                                                 </Button>
                                               </Hint>
-                                            </>
+                                            </div>
                                           )}
 
                                         {!registro && !bloqueada && (
@@ -1723,74 +1772,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                                         {registro && (
                                           <>
-                                            <div
-                                              className={`flex w-[76px] shrink-0 items-center justify-end gap-3 overflow-hidden transition-all duration-300 ease-out sm:w-[72px] sm:gap-2 ${
-                                                acoesAbertas.has(
-                                                  `${tarefa.id}:${dataSelecionada}`,
-                                                )
-                                                  ? "translate-x-0 opacity-100"
-                                                  : "pointer-events-none translate-x-2 opacity-0"
-                                              }`}
-                                              aria-hidden={
-                                                !acoesAbertas.has(
-                                                  `${tarefa.id}:${dataSelecionada}`,
-                                                )
-                                              }
-                                            >
-                                              {!bloqueada && (
-                                                <Hint
-                                                  content={
-                                                    registro.tipo === "FEZ"
-                                                      ? "Alterar para Não fez"
-                                                      : "Alterar para Fez"
-                                                  }
-                                                >
-                                                  <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-8 w-8 shrink-0 rounded-md"
-                                                    disabled={busy}
-                                                    aria-label={
-                                                      registro.tipo === "FEZ"
-                                                        ? "Alterar marcação para Não fez"
-                                                        : "Alterar marcação para Fez"
-                                                    }
-                                                    onClick={() =>
-                                                      abrirTrocaMarcacao(
-                                                        tarefa,
-                                                        totalNaoFez,
-                                                        dataSelecionada,
-                                                        registro,
-                                                      )
-                                                    }
-                                                  >
-                                                    <Pencil className="h-4 w-4" />
-                                                  </Button>
-                                                </Hint>
-                                              )}
-
-                                              {registro.tipo === "FEZ" && (
-                                                <Hint content="Ver bonificação">
-                                                  <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-8 w-8 shrink-0 rounded-md"
-                                                    disabled={busy}
-                                                    aria-label="Ver bonificação"
-                                                    onClick={() =>
-                                                      setBonificacaoInfo({
-                                                        tarefa,
-                                                        total: totalNaoFez,
-                                                        ocorrencia: registro,
-                                                      })
-                                                    }
-                                                  >
-                                                    <Info className="h-4 w-4" />
-                                                  </Button>
-                                                </Hint>
-                                              )}
-                                            </div>
-
                                             {!bloqueada && (
                                               <Checkbox
                                                 className={checkboxExclusaoClass}

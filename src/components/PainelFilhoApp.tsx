@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Clock3,
   House,
+  Info,
   Loader2,
   LogOut,
   Send,
@@ -22,6 +23,7 @@ import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
+import { AppGlobalMessage } from "@/components/AppGlobalMessage";
 import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
 import { AppPageContent, appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -156,7 +158,7 @@ export function PainelFilhoApp({
     };
 
     document.addEventListener("visibilitychange", atualizarAoVoltar);
-    const timer = window.setInterval(() => void atualizar(), 10000);
+    const timer = window.setInterval(() => void atualizar(), 5000);
 
     return () => {
       ativo = false;
@@ -486,6 +488,12 @@ export function PainelFilhoApp({
       </Dialog>
 
       <AppPageContent className="pb-24 md:pb-28">
+        <AppGlobalMessage
+          ativa={painel.comunicacao?.mensagem_global_ativa === true}
+          mensagem={painel.comunicacao?.mensagem_global ?? null}
+          className="mb-4"
+        />
+
         {aba === "inicio" && (
           <div className="space-y-4">
             <div className="pt-1">
@@ -676,6 +684,13 @@ export function PainelFilhoApp({
                       <span className="text-lg font-bold leading-none tabular-nums">{tarefasResolvidasPainelHoje}</span>
                       <span className="text-[11px] font-medium leading-tight text-muted-foreground">Resolvidas</span>
                     </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 border-b bg-muted/20 px-4 py-2.5 sm:px-5">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Cada tarefa pode ter apenas 1 pedido de revisão por dia.
+                    </p>
                   </div>
 
                   <div className="divide-y">
