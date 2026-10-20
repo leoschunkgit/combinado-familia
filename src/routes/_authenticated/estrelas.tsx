@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Loader2, Star } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2, Star } from "lucide-react";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { FilhoEstrelasPainel } from "@/components/FilhoEstrelasPainel";
-import { Pick } from "@/components/Pick";
+import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { useFilhos } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/estrelas")({
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/estrelas")({
 
 function EstrelasPage() {
   const { data: filhos = [], isLoading } = useFilhos();
+  const filhosScrollRef = useRef<HTMLDivElement | null>(null);
   const [filhoId, setFilhoId] = useState("");
 
   useEffect(() => {
@@ -28,6 +29,35 @@ function EstrelasPage() {
       setFilhoId(String(filhos[0].id));
     }
   }, [filhos, filhoId]);
+
+  useEffect(() => {
+    const area = filhosScrollRef.current;
+    if (!area || !filhoId) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const alvo = area.querySelector<HTMLElement>(`[data-filho="${filhoId}"]`);
+      if (!alvo) return;
+
+      const destino = alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
+      area.scrollTo({
+        left: Math.max(0, destino),
+        behavior: "smooth",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [filhoId]);
+
+  function rolarFilhos(direcao: "esquerda" | "direita") {
+    const area = filhosScrollRef.current;
+    if (!area) return;
+
+    const distancia = Math.max(area.clientWidth * 0.75, 220);
+    area.scrollBy({
+      left: direcao === "direita" ? distancia : -distancia,
+      behavior: "smooth",
+    });
+  }
 
   const filhoSelecionado = filhos.find((filho) => String(filho.id) === filhoId) ?? null;
 
@@ -48,21 +78,68 @@ function EstrelasPage() {
       ) : (
         <div className="space-y-5">
           <section className="border-b pb-4">
-            <div className="max-w-sm">
-              <Pick
-                label="Filho"
-                childIcons
-                value={filhoId}
-                onChange={setFilhoId}
-                placeholder="Selecione o filho"
-                options={filhos.map((filho) => ({
-                  value: String(filho.id),
-                  label: filho.nome,
-                  cor: filho.cor,
-                  avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null,
-                }))}
-              />
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => rolarFilhos("esquerda")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                aria-label="Ver filhos anteriores"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <div
+                ref={filhosScrollRef}
+                className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                role="tablist"
+                aria-label="Selecionar filho para estrelas e recompensas"
+              >
+                {filhos.map((filho) => {
+                  const selecionado = String(filho.id) === filhoId;
+
+                  return (
+                    <button
+                      key={filho.id}
+                      data-filho={filho.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selecionado}
+                      onClick={() => setFilhoId(String(filho.id))}
+                      className={`shrink-0 snap-start rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                        selecionado
+                          ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
+                          : "border-b-2 border-transparent bg-transparent text-foreground hover:bg-transparent"
+                      }`}
+                      style={
+                        selecionado && filho.cor?.trim()
+                          ? { borderBottomColor: filho.cor.trim() }
+                          : undefined
+                      }
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <FilhoAvatar
+                          nome={filho.nome}
+                          cor={filho.cor}
+                          avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
+                          className="h-5 w-5"
+                        />
+                        <span>{filho.nome}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => rolarFilhos("direita")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                aria-label="Ver próximos filhos"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
+
             <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
               Cada tarefa marcada como “Fez” vale 1 estrela. O saldo continua acumulado mesmo quando uma vigência termina.
             </p>
