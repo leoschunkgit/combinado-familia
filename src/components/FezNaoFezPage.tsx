@@ -8,13 +8,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
+  EllipsisVertical,
   Info,
   Pencil,
   Star,
   ThumbsDown,
   ThumbsUp,
   Trash2,
-  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
@@ -196,7 +202,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [bonificacaoInfo, setBonificacaoInfo] = useState<BonificacaoInfo | null>(null);
   const [troca, setTroca] = useState<Troca | null>(null);
   const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set());
-  const [acoesAbertas, setAcoesAbertas] = useState<Set<string>>(new Set());
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
     useState<ExcluirSelecionadasDraft | null>(null);
   const [penalidadePendente, setPenalidadePendente] =
@@ -1597,38 +1602,53 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 </span>
                                               </Hint>
                                             )}
-                                            <button
-                                              type="button"
-                                              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                              aria-label={
-                                                acoesAbertas.has(`${tarefa.id}:${dataSelecionada}`)
-                                                  ? "Ocultar ações da tarefa"
-                                                  : "Mostrar ações da tarefa"
-                                              }
-                                              aria-expanded={acoesAbertas.has(
-                                                `${tarefa.id}:${dataSelecionada}`,
-                                              )}
-                                              onClick={() => {
-                                                const chave = `${tarefa.id}:${dataSelecionada}`;
-                                                setAcoesAbertas((atual) => {
-                                                  const proximo = new Set(atual);
-                                                  if (proximo.has(chave)) {
-                                                    proximo.delete(chave);
-                                                  } else {
-                                                    proximo.add(chave);
-                                                  }
-                                                  return proximo;
-                                                });
-                                              }}
-                                            >
-                                              {acoesAbertas.has(
-                                                `${tarefa.id}:${dataSelecionada}`,
-                                              ) ? (
-                                                <X className="h-4 w-4" />
-                                              ) : (
-                                                <ChevronRight className="h-4 w-4" />
-                                              )}
-                                            </button>
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button
+                                                  type="button"
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  disabled={busy}
+                                                  aria-label={`Mais ações para ${tarefa.t_tarefa?.nome ?? "tarefa"}`}
+                                                >
+                                                  <EllipsisVertical className="h-4 w-4" />
+                                                </Button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent align="end" className="w-48">
+                                                {!bloqueada && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      abrirTrocaMarcacao(
+                                                        tarefa,
+                                                        totalNaoFez,
+                                                        dataSelecionada,
+                                                        registro,
+                                                      )
+                                                    }
+                                                  >
+                                                    <Pencil className="h-4 w-4" />
+                                                    {registro.tipo === "FEZ"
+                                                      ? "Alterar para Não fez"
+                                                      : "Alterar para Fez"}
+                                                  </DropdownMenuItem>
+                                                )}
+                                                {registro.tipo === "FEZ" && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      setBonificacaoInfo({
+                                                        tarefa,
+                                                        total: totalNaoFez,
+                                                        ocorrencia: registro,
+                                                      })
+                                                    }
+                                                  >
+                                                    <Info className="h-4 w-4" />
+                                                    Ver bonificação
+                                                  </DropdownMenuItem>
+                                                )}
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
                                           </>
                                         )}
                                         {registro &&
@@ -1723,74 +1743,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                                         {registro && (
                                           <>
-                                            <div
-                                              className={`flex w-[76px] shrink-0 items-center justify-end gap-3 overflow-hidden transition-all duration-300 ease-out sm:w-[72px] sm:gap-2 ${
-                                                acoesAbertas.has(
-                                                  `${tarefa.id}:${dataSelecionada}`,
-                                                )
-                                                  ? "translate-x-0 opacity-100"
-                                                  : "pointer-events-none translate-x-2 opacity-0"
-                                              }`}
-                                              aria-hidden={
-                                                !acoesAbertas.has(
-                                                  `${tarefa.id}:${dataSelecionada}`,
-                                                )
-                                              }
-                                            >
-                                              {!bloqueada && (
-                                                <Hint
-                                                  content={
-                                                    registro.tipo === "FEZ"
-                                                      ? "Alterar para Não fez"
-                                                      : "Alterar para Fez"
-                                                  }
-                                                >
-                                                  <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-8 w-8 shrink-0 rounded-md"
-                                                    disabled={busy}
-                                                    aria-label={
-                                                      registro.tipo === "FEZ"
-                                                        ? "Alterar marcação para Não fez"
-                                                        : "Alterar marcação para Fez"
-                                                    }
-                                                    onClick={() =>
-                                                      abrirTrocaMarcacao(
-                                                        tarefa,
-                                                        totalNaoFez,
-                                                        dataSelecionada,
-                                                        registro,
-                                                      )
-                                                    }
-                                                  >
-                                                    <Pencil className="h-4 w-4" />
-                                                  </Button>
-                                                </Hint>
-                                              )}
-
-                                              {registro.tipo === "FEZ" && (
-                                                <Hint content="Ver bonificação">
-                                                  <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-8 w-8 shrink-0 rounded-md"
-                                                    disabled={busy}
-                                                    aria-label="Ver bonificação"
-                                                    onClick={() =>
-                                                      setBonificacaoInfo({
-                                                        tarefa,
-                                                        total: totalNaoFez,
-                                                        ocorrencia: registro,
-                                                      })
-                                                    }
-                                                  >
-                                                    <Info className="h-4 w-4" />
-                                                  </Button>
-                                                </Hint>
-                                              )}
-                                            </div>
-
                                             {!bloqueada && (
                                               <Checkbox
                                                 className={checkboxExclusaoClass}
