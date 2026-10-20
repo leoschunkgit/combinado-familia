@@ -130,7 +130,8 @@ export function PainelFilhoApp({
     async function atualizar() {
       const token = await lerSessaoFilhoLocal();
       if (!token) {
-        if (ativo) onSessaoInvalida();
+        // Uma falha transitória de leitura do cofre local não é logout.
+        // A sessão só é encerrada quando o backend confirma que foi revogada.
         return;
       }
 

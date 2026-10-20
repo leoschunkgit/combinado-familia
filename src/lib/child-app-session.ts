@@ -2,8 +2,17 @@ import { Capacitor } from "@capacitor/core";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
 
 const TOKEN_KEY = "combinado-familia.child-app-session";
+const TOKEN_CREDENTIAL_SERVER = "combinado-familia.child-app-session";
 const TOKEN_WEB_KEY = "combinado_familia_child_app_session";
 const CLIENTE_ID_KEY = "combinado_familia_child_client_id";
+
+let tokenFilhoEmMemoria: string | null = null;
+
+const tokenFilhoValido = (token: unknown): token is string =>
+  typeof token === "string" && /^[0-9a-f]{64}$/.test(token);
+
+const aguardar = (ms: number) =>
+  new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 export type OcorrenciaFilho = {
   tipo: "FEZ" | "NAO_FEZ";
@@ -208,47 +217,101 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
   return data;
 }
 
-export async function lerSessaoFilhoLocal(): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-
-  if (Capacitor.isNativePlatform()) {
-    try {
-      const { value } = await NativeBiometric.getData({ key: TOKEN_KEY });
-      return value || null;
-    } catch {
-      return null;
-    }
+async function lerSessaoFilhoNativaUmaVez(): Promise<string | null> {
+  try {
+    const { value } = await NativeBiometric.getData({ key: TOKEN_KEY });
+    if (tokenFilhoValido(value)) return value;
+  } catch {
+    // Tenta o cofre alternativo abaixo. Falha de leitura não significa logout.
   }
 
   try {
-    return window.localStorage.getItem(TOKEN_WEB_KEY);
+    const credenciais = await NativeBiometric.getCredentials({
+      server: TOKEN_CREDENTIAL_SERVER,
+    });
+    if (tokenFilhoValido(credenciais.password)) return credenciais.password;
+  } catch {
+    // O token pode ainda estar temporariamente indisponível no Keystore.
+  }
+
+  return null;
+}
+
+async function persistirSessaoFilhoNativa(token: string) {
+  const resultados = await Promise.allSettled([
+    NativeBiometric.setData({ key: TOKEN_KEY, value: token }),
+    NativeBiometric.setCredentials({
+      server: TOKEN_CREDENTIAL_SERVER,
+      username: "filho",
+      password: token,
+    }),
+  ]);
+
+  if (resultados.every((resultado) => resultado.status === "rejected")) {
+    throw new Error("Não foi possível salvar o acesso do filho neste aparelho.");
+  }
+}
+
+export async function lerSessaoFilhoLocal(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  if (tokenFilhoValido(tokenFilhoEmMemoria)) return tokenFilhoEmMemoria;
+
+  if (Capacitor.isNativePlatform()) {
+    // Depois de reiniciar o aparelho, o Keystore pode levar um instante para
+    // responder. Não trate uma leitura transitória como se o filho tivesse saído.
+    for (let tentativa = 0; tentativa < 3; tentativa += 1) {
+      const token = await lerSessaoFilhoNativaUmaVez();
+      if (token) {
+        tokenFilhoEmMemoria = token;
+
+        // Migra silenciosamente sessões antigas para os dois cofres seguros.
+        void persistirSessaoFilhoNativa(token).catch(() => {
+          // A sessão já foi recuperada; uma falha de redundância não encerra o acesso.
+        });
+
+        return token;
+      }
+
+      if (tentativa < 2) await aguardar(200 * (tentativa + 1));
+    }
+
+    return null;
+  }
+
+  try {
+    const token = window.localStorage.getItem(TOKEN_WEB_KEY);
+    if (!tokenFilhoValido(token)) return null;
+    tokenFilhoEmMemoria = token;
+    return token;
   } catch {
     return null;
   }
 }
 
 export async function salvarSessaoFilhoLocal(token: string) {
-  if (!/^[0-9a-f]{64}$/.test(token)) {
+  if (!tokenFilhoValido(token)) {
     throw new Error("Sessão do filho inválida.");
   }
 
   if (Capacitor.isNativePlatform()) {
-    await NativeBiometric.setData({ key: TOKEN_KEY, value: token });
+    await persistirSessaoFilhoNativa(token);
+    tokenFilhoEmMemoria = token;
     return;
   }
 
   window.localStorage.setItem(TOKEN_WEB_KEY, token);
+  tokenFilhoEmMemoria = token;
 }
 
 export async function limparSessaoFilhoLocal() {
+  tokenFilhoEmMemoria = null;
   if (typeof window === "undefined") return;
 
   if (Capacitor.isNativePlatform()) {
-    try {
-      await NativeBiometric.deleteData({ key: TOKEN_KEY });
-    } catch {
-      // A sessão já pode não existir neste aparelho.
-    }
+    await Promise.allSettled([
+      NativeBiometric.deleteData({ key: TOKEN_KEY }),
+      NativeBiometric.deleteCredentials({ server: TOKEN_CREDENTIAL_SERVER }),
+    ]);
     return;
   }
 
