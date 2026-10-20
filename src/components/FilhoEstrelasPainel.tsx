@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Check, EllipsisVertical, Gift, Loader2, Pencil, Plus, Star, Trash2, Trophy, X } from "lucide-react";
+import { Check, EllipsisVertical, Gift, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -315,47 +315,20 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   return (
     <>
       <div className="space-y-5">
-        <section>
-          <div className="mb-2.5 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Resumo</p>
-              <h2 className="mt-0.5 text-base font-semibold">{filho.nome}</h2>
+        <section className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl border bg-card px-3 py-3.5">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
+              <span className="text-[11px] font-medium">Hoje</span>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-md border bg-card px-2.5 py-1 text-xs font-semibold">
-              <Estrela />
-              {resumo.saldo} disponíveis
-            </span>
+            <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.hoje}</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="rounded-xl border bg-card px-3 py-3.5">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
-                <span className="text-[11px] font-medium">Hoje</span>
-              </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.hoje}</p>
+          <div className="rounded-xl border bg-card px-3 py-3.5">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
+              <span className="text-[11px] font-medium">Nesta vigência</span>
             </div>
-            <div className="rounded-xl border bg-card px-3 py-3.5">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
-                <span className="text-[11px] font-medium">Nesta vigência</span>
-              </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.vigencia_atual}</p>
-            </div>
-            <div className="rounded-xl border bg-card px-3 py-3.5">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Gift className="h-3.5 w-3.5" /></span>
-                <span className="text-[11px] font-medium">Saldo disponível</span>
-              </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.saldo}</p>
-            </div>
-            <div className="rounded-xl border bg-card px-3 py-3.5">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Trophy className="h-3.5 w-3.5" /></span>
-                <span className="text-[11px] font-medium">Total conquistado</span>
-              </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.total_conquistado}</p>
-            </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.vigencia_atual}</p>
           </div>
         </section>
 
