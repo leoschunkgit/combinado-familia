@@ -151,6 +151,10 @@ function formatarData(data: string) {
   return data.split("-").reverse().join("/");
 }
 
+function primeiroNomeFilho(nome?: string | null) {
+  return nome?.trim().split(/\s+/)[0] || "Filho";
+}
+
 function formatarDataCurta(data: string) {
   const [ano, mes, dia] = data.split("-");
   return `${dia}/${mes}/${ano.slice(-2)}`;
@@ -1495,7 +1499,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               <p className="flex min-w-0 items-center gap-1 font-medium text-amber-700 dark:text-amber-300">
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
                                                 <span className="min-w-0 break-words">
-                                                  {filho?.nome ?? "Filho"} avisou que terminou às {formatarHora(solicitacao.created_at)}
+                                                  {primeiroNomeFilho(filho?.nome)} avisou que terminou às {formatarHora(solicitacao.created_at)}
                                                 </span>
                                               </p>
                                             </div>
@@ -1506,7 +1510,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               <p className="flex min-w-0 items-center gap-1 font-semibold text-amber-700 dark:text-amber-300">
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
                                                 <span className="min-w-0 break-words">
-                                                  {filho?.nome ?? "Filho"} pediu revisão às {formatarHora(revisao.created_at)}
+                                                  {primeiroNomeFilho(filho?.nome)} pediu revisão às {formatarHora(revisao.created_at)}
                                                 </span>
                                               </p>
                                             </div>
