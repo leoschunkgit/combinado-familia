@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CalendarRange, CircleStop, Copy, Info, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarRange, CircleStop, Copy, EllipsisVertical, Info, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,11 +11,10 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
-import { BlockedAction } from "@/components/BlockedAction";
-import { Hint } from "@/components/Hint";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type Vigencia } from "@/lib/db";
 import { reais } from "@/lib/mesada";
@@ -310,32 +309,51 @@ function VigenciasPage() {
             open={aberto}
             onOpenChange={(open) => setVigenciasAbertas((atuais) => ({ ...atuais, [v.id]: open }))}
             action={
-              <>
-                <Hint content="Ver filhos vinculados">
-                  <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setVigenciaInfoId(v.id)} aria-label="Ver filhos vinculados à vigência">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 rounded-md"
+                    aria-label="Abrir ações da vigência"
+                  >
+                    <EllipsisVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onSelect={() => setVigenciaInfoId(v.id)}>
                     <Info className="h-4 w-4" />
-                  </Button>
-                </Hint>
-                {emAndamento && <Hint content="Finalizar vigência"><Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarFinalizacao(v.id)} aria-label="Finalizar vigência"><CircleStop className="h-4 w-4" /></Button></Hint>}
-                {finalizada ? (
-                  <BlockedAction reason="Vigências finalizadas não podem ser editadas.">
-                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" disabled aria-label="Editar vigência">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </BlockedAction>
-                ) : (
-                  <Hint content="Editar vigência">
-                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => abrirEdicao(v)} aria-label="Editar vigência">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </Hint>
-                )}
-                <Hint content="Excluir vigência">
-                  <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(v.id)} aria-label="Excluir vigência">
+                    Ver filhos vinculados
+                  </DropdownMenuItem>
+
+                  {emAndamento && (
+                    <DropdownMenuItem onSelect={() => setConfirmarFinalizacao(v.id)}>
+                      <CircleStop className="h-4 w-4" />
+                      Finalizar vigência
+                    </DropdownMenuItem>
+                  )}
+
+                  <DropdownMenuItem
+                    disabled={finalizada}
+                    onSelect={() => {
+                      if (!finalizada) abrirEdicao(v);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Editar vigência
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={() => setConfirmarExclusao(v.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
-                </Hint>
-              </>
+                    Excluir vigência
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             }
             contentClassName="p-4"
           >
