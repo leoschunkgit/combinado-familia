@@ -92,6 +92,7 @@ import {
   datasDaVigenciaAteHoje,
   useDataBrasilAtual,
 } from "@/lib/notificacoes";
+import { notificarRespostaFilho } from "@/lib/child-response-notifications";
 
 type ModoPagina = "todos" | "pendentes";
 type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
@@ -675,6 +676,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     const vigenciaCompleta = vigencias.find(
       (item) => item.id === tarefa.id_vigencia,
     );
+    const solicitacaoPendente = solicitacaoNaData(tarefa, data);
 
     setBusy(true);
     try {
@@ -707,6 +709,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
         qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
+        solicitacaoPendente
+          ? notificarRespostaFilho("SOLICITACAO", solicitacaoPendente.id)
+          : Promise.resolve(null),
       ]);
       setTroca(null);
       setPenalidadePendente(null);
@@ -885,6 +890,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     const gerouEstrela = !existente || existente.tipo !== "FEZ";
+    const revisaoPendente = revisaoNaData(tarefa, draft.data);
+    const solicitacaoPendente = solicitacaoNaData(tarefa, draft.data);
+    const interacaoPendente =
+      revisaoPendente?.status === "PENDENTE"
+        ? { tipo: "REVISAO" as const, id: revisaoPendente.id }
+        : solicitacaoPendente
+          ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
+          : null;
 
     setBusy(true);
     try {
@@ -920,6 +933,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
         qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
+        interacaoPendente
+          ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
+          : Promise.resolve(null),
       ]);
       setFez(null);
       setTroca(null);
@@ -1052,7 +1068,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     setBusy(true);
     try {
       await resolverRevisaoTarefaFilho(idRevisao);
-      await qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
+        notificarRespostaFilho("REVISAO", idRevisao),
+      ]);
       toast.success("Revisão encerrada · Não fez mantido");
     } catch (error) {
       toast.error(
