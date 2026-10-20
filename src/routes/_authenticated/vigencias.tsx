@@ -11,7 +11,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
@@ -329,9 +329,9 @@ function VigenciasPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0 rounded-md"
+                    className="h-8 w-8 shrink-0 rounded-full"
                     aria-label="Abrir ações da vigência"
                   >
                     <EllipsisVertical className="h-4 w-4" />
@@ -373,8 +373,6 @@ function VigenciasPage() {
                       Extrair PDF
                     </DropdownMenuItem>
                   )}
-
-                  <DropdownMenuSeparator />
 
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
