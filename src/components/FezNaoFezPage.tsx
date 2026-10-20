@@ -1665,16 +1665,21 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           )}
                                       </div>
 
-                                      <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-2">
+                                      <div className="flex shrink-0 items-center justify-end gap-2">
                                         {registro?.tipo === "NAO_FEZ" &&
                                           revisao?.status === "PENDENTE" &&
                                           !bloqueada && (
-                                            <>
+                                            <div
+                                              className="inline-flex shrink-0 items-center gap-1 self-center"
+                                              role="group"
+                                              aria-label="Ações da revisão solicitada"
+                                            >
                                               <Hint content="Aceitar revisão e alterar para Fez">
                                                 <Button
+                                                  type="button"
                                                   size="icon"
                                                   variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
                                                   disabled={busy}
                                                   aria-label="Aceitar revisão e alterar para Fez"
                                                   onClick={() =>
@@ -1691,9 +1696,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Hint>
                                               <Hint content="Manter Não fez">
                                                 <Button
+                                                  type="button"
                                                   size="icon"
                                                   variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full"
+                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
                                                   disabled={busy}
                                                   aria-label="Manter Não fez"
                                                   onClick={() => void manterNaoFezRevisao(revisao.id)}
@@ -1701,7 +1707,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                   <ThumbsDown className="h-4 w-4 text-red-600" />
                                                 </Button>
                                               </Hint>
-                                            </>
+                                            </div>
                                           )}
 
                                         {!registro && !bloqueada && (
