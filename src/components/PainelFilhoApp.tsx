@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Clock3,
   House,
+  Info,
   Loader2,
   LogOut,
   Send,
@@ -683,6 +684,13 @@ export function PainelFilhoApp({
                       <span className="text-lg font-bold leading-none tabular-nums">{tarefasResolvidasPainelHoje}</span>
                       <span className="text-[11px] font-medium leading-tight text-muted-foreground">Resolvidas</span>
                     </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 border-b bg-muted/20 px-4 py-2.5 sm:px-5">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Cada tarefa pode ter apenas 1 pedido de revisão por dia.
+                    </p>
                   </div>
 
                   <div className="divide-y">
