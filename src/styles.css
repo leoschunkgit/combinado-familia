@@ -236,10 +236,10 @@ button[role="combobox"] {
 
 @keyframes soft-attention-shake {
   0%, 82%, 100% { transform: translateX(0); }
-  86% { transform: translateX(0.6px); }
-  90% { transform: translateX(-0.6px); }
-  94% { transform: translateX(0.35px); }
-  97% { transform: translateX(-0.25px); }
+  86% { transform: translateX(1px); }
+  90% { transform: translateX(-1px); }
+  94% { transform: translateX(0.6px); }
+  97% { transform: translateX(-0.4px); }
 }
 
 .animate-soft-attention {
