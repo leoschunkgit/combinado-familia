@@ -24,9 +24,6 @@ export function FilhoTarefaItem({
   onPedirRevisao: () => void;
 }) {
   const solicitacaoPendente = solicitacaoHoje?.status === "PENDENTE";
-  const solicitacaoResolvida = Boolean(
-    solicitacaoHoje && solicitacaoHoje.status !== "PENDENTE",
-  );
 
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 sm:px-5">
@@ -52,7 +49,7 @@ export function FilhoTarefaItem({
           <ThumbsDown className="h-3.5 w-3.5" />
           Não fez mantido
         </span>
-      ) : registroHoje?.tipo === "NAO_FEZ" && !revisaoHoje && !solicitacaoHoje ? (
+      ) : registroHoje?.tipo === "NAO_FEZ" && !revisaoHoje ? (
         <Button
           type="button"
           variant="outline"
@@ -73,25 +70,10 @@ export function FilhoTarefaItem({
           <BellRing className="h-3.5 w-3.5" />
           Revisão enviada
         </span>
-      ) : !registroHoje && revisaoHoje?.status === "MANTEVE_NAO_FEZ" ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
-          <ThumbsDown className="h-3.5 w-3.5" />
-          Não fez mantido
-        </span>
-      ) : !registroHoje && revisaoHoje ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-          <BellRing className="h-3.5 w-3.5" />
-          Revisão encerrada
-        </span>
       ) : solicitacaoPendente ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
           <BellRing className="h-3.5 w-3.5" />
           Aguardando
-        </span>
-      ) : solicitacaoResolvida ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-          <BellRing className="h-3.5 w-3.5" />
-          Pedido encerrado
         </span>
       ) : (
         <Button

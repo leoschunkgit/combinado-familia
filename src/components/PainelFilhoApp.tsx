@@ -186,10 +186,12 @@ export function PainelFilhoApp({
   const registroHoje = (tarefa: TarefaFilho) =>
     tarefa.ocorrencias.find((o) => dataSaoPaulo(new Date(o.data)) === hoje);
 
-  const solicitacaoHoje = (tarefa: TarefaFilho) =>
-    (painel.solicitacoes_hoje ?? []).find(
+  const solicitacaoHoje = (tarefa: TarefaFilho) => {
+    const solicitacoes = (painel.solicitacoes_hoje ?? []).filter(
       (s) => s.id_filho_tarefa === tarefa.id && s.data_referencia === hoje,
     );
+    return solicitacoes.find((s) => s.status === "PENDENTE") ?? solicitacoes[0];
+  };
 
   const revisaoHoje = (tarefa: TarefaFilho) =>
     (painel.revisoes_hoje ?? []).find(
@@ -210,11 +212,15 @@ export function PainelFilhoApp({
     ? Math.round((tarefasResolvidasHoje / tarefasAtual.length) * 100)
     : 0;
 
-  const tarefasParaFazerHoje = tarefasAtual.filter((tarefa) =>
-    !registroHoje(tarefa) &&
-    !solicitacaoHoje(tarefa) &&
-    !revisaoHoje(tarefa)
-  ).length;
+  const tarefasParaFazerHoje = tarefasAtual.filter((tarefa) => {
+    const solicitacao = solicitacaoHoje(tarefa);
+    const revisao = revisaoHoje(tarefa);
+    return (
+      !registroHoje(tarefa) &&
+      solicitacao?.status !== "PENDENTE" &&
+      revisao?.status !== "PENDENTE"
+    );
+  }).length;
   const tarefasResolvidasPainelHoje = Math.max(
     0,
     tarefasAtual.length - tarefasParaFazerHoje - tarefasAguardandoHoje,
