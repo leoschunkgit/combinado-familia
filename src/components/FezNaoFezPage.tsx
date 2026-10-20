@@ -1649,15 +1649,18 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                         {registro?.tipo === "NAO_FEZ" &&
                                           revisao?.status === "PENDENTE" &&
                                           !bloqueada && (
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="h-8 shrink-0 px-2 text-xs"
-                                              disabled={busy}
-                                              onClick={() => void manterNaoFezRevisao(revisao.id)}
-                                            >
-                                              Manter Não fez
-                                            </Button>
+                                            <Hint content="Manter Não fez">
+                                              <Button
+                                                size="icon"
+                                                variant="outline"
+                                                className="h-8 w-8 shrink-0 rounded-full"
+                                                disabled={busy}
+                                                aria-label="Manter Não fez"
+                                                onClick={() => void manterNaoFezRevisao(revisao.id)}
+                                              >
+                                                <ThumbsDown className="h-4 w-4 text-red-600" />
+                                              </Button>
+                                            </Hint>
                                           )}
 
                                         {!registro && !bloqueada && (
