@@ -9,7 +9,10 @@ import {
 } from "@/lib/db";
 import { reais, usaDesconto, valorDebitado } from "@/lib/mesada";
 import { ocorrenciasPenalizadas } from "@/lib/penalidade";
-import { gerarRelatorioPdf } from "@/lib/relatorio-pdf";
+import {
+  gerarRelatorioPdf,
+  type RelatorioPdfDados,
+} from "@/lib/relatorio-pdf";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
 
 function naoFez(ocorrencia: Ocorrencia) {
@@ -18,10 +21,16 @@ function naoFez(ocorrencia: Ocorrencia) {
 
 function bonus(ocorrencia: Ocorrencia) {
   if (ocorrencia.tipo !== "FEZ") return "";
-  if (ocorrencia.bonificacao_tipo === "TEXTO" && ocorrencia.bonificacao_descricao) {
+  if (
+    ocorrencia.bonificacao_tipo === "TEXTO" &&
+    ocorrencia.bonificacao_descricao
+  ) {
     return ocorrencia.bonificacao_descricao;
   }
-  if (ocorrencia.bonificacao_tipo === "VALOR" && ocorrencia.bonificacao_valor != null) {
+  if (
+    ocorrencia.bonificacao_tipo === "VALOR" &&
+    ocorrencia.bonificacao_valor != null
+  ) {
     return reais(ocorrencia.bonificacao_valor);
   }
   return "Nenhuma";
@@ -59,7 +68,9 @@ export async function extrairPdfVigencia(args: {
   const { vigencia, filhos, atribuicoes, ocorrencias } = args;
 
   if (situacaoVigencia(vigencia) === "futura") {
-    throw new Error("Vigências que ainda não começaram não possuem PDF disponível.");
+    throw new Error(
+      "Vigências que ainda não começaram não possuem PDF disponível.",
+    );
   }
 
   const tarefasDaVigencia = atribuicoes.filter(
@@ -87,7 +98,7 @@ export async function extrairPdfVigencia(args: {
     })
     .filter(({ tarefas }) => tarefas.length > 0);
 
-  const dadosPdf = {
+  const dadosPdf: RelatorioPdfDados = {
     geradoEm: fmtDataHora(new Date().toISOString()),
     filtros: {
       vigencia: fmtVigencia(vigencia),
@@ -138,43 +149,28 @@ export async function extrairPdfVigencia(args: {
                 .filter(
                   (ocorrencia) => ocorrencia.id_filho_tarefa === tarefa.id,
                 )
-                .sort(compararOcorrenciasPorData),
+                .sort(compararOcorrenciasPorData)
+                .map((registro) => ({
+                  data: fmtData(registro.created_at),
+                  resultado:
+                    registro.tipo === "FEZ"
+                      ? ("Fez" as const)
+                      : ("Não fez" as const),
+                  detalhe:
+                    registro.tipo === "FEZ" && bonus(registro)
+                      ? `Bonificação: ${bonus(registro)}`
+                      : undefined,
+                  penalidadeAtingida:
+                    registro.tipo !== "FEZ" &&
+                    !comDesconto &&
+                    penalizadas.has(registro.id),
+                })),
             })),
           };
         }),
       },
     ],
   };
-
-  dadosPdf.vigencias[0]!.filhos.forEach((filho, filhoIndex) => {
-    filho.tarefas.forEach((tarefa, tarefaIndex) => {
-      const origemTarefa =
-        gruposFilhos[filhoIndex]?.tarefas[tarefaIndex] ?? null;
-
-      if (!origemTarefa) {
-        tarefa.registros = [];
-        return;
-      }
-
-      tarefa.registros = ocorrencias
-        .filter(
-          (ocorrencia) => ocorrencia.id_filho_tarefa === origemTarefa.id,
-        )
-        .sort(compararOcorrenciasPorData)
-        .map((registro) => ({
-          data: fmtData(registro.created_at),
-          resultado: registro.tipo === "FEZ" ? ("Fez" as const) : ("Não fez" as const),
-          detalhe:
-            registro.tipo === "FEZ" && bonus(registro)
-              ? `Bonificação: ${bonus(registro)}`
-              : undefined,
-          penalidadeAtingida:
-            registro.tipo !== "FEZ" &&
-            !usaDesconto(gruposFilhos[filhoIndex]!.filho, vigencia) &&
-            penalizadas.has(registro.id),
-        }));
-    });
-  });
 
   await gerarRelatorioPdf(dadosPdf);
 }
