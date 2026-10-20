@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus, MessageSquareText, ShieldCheck, Star } from "lucide-react";
+import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, FileText, ListPlus, MessageSquareText, ShieldCheck, Smartphone, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -70,7 +70,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 type NavItem = {
-  to: "/inicio" | "/ocorrencias" | "/filhos" | "/estrelas" | "/tarefas" | "/vigencias" | "/atribuicoes" | "/link-filhos" | "/relatorio";
+  to: "/inicio" | "/ocorrencias" | "/filhos" | "/acesso-filhos" | "/estrelas" | "/tarefas" | "/vigencias" | "/atribuicoes" | "/link-filhos" | "/relatorio";
   label: string;
   icon: typeof Home;
 };
@@ -79,6 +79,7 @@ const NAV_ITENS: NavItem[] = [
   { to: "/inicio", label: "Início", icon: Home },
   { to: "/ocorrencias", label: "Fez / Não fez", icon: ClipboardCheck },
   { to: "/filhos", label: "Filhos", icon: Users },
+  { to: "/acesso-filhos", label: "Acesso dos filhos", icon: Smartphone },
   { to: "/estrelas", label: "Estrelas e recompensas", icon: Star },
   { to: "/tarefas", label: "Tarefas", icon: ListTodo },
   { to: "/vigencias", label: "Vigências", icon: CalendarRange },
