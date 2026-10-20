@@ -31,8 +31,6 @@ import { EmptyState } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   avisarTarefaConcluida,
   pedirRevisaoTarefa,
@@ -122,7 +120,6 @@ export function PainelFilhoApp({
   const [saindo, setSaindo] = useState(false);
   const [avisoTarefa, setAvisoTarefa] = useState<TarefaFilho | null>(null);
   const [revisaoTarefa, setRevisaoTarefa] = useState<TarefaFilho | null>(null);
-  const [observacaoAviso, setObservacaoAviso] = useState("");
   const [enviandoAviso, setEnviandoAviso] = useState(false);
   const abrirTarefasPeloPush = useCallback(() => setAba("tarefas"), []);
 
@@ -306,7 +303,7 @@ export function PainelFilhoApp({
 
     setEnviandoAviso(true);
     try {
-      const resposta = await avisarTarefaConcluida(avisoTarefa.id, observacaoAviso);
+      const resposta = await avisarTarefaConcluida(avisoTarefa.id, "");
       const token = await lerSessaoFilhoLocal();
 
       if (token) {
@@ -315,7 +312,6 @@ export function PainelFilhoApp({
       }
 
       setAvisoTarefa(null);
-      setObservacaoAviso("");
 
       toast.success(
         resposta.ja_existia
@@ -338,7 +334,7 @@ export function PainelFilhoApp({
 
     setEnviandoAviso(true);
     try {
-      const resposta = await pedirRevisaoTarefa(revisaoTarefa.id, observacaoAviso);
+      const resposta = await pedirRevisaoTarefa(revisaoTarefa.id, "");
       const token = await lerSessaoFilhoLocal();
 
       if (token) {
@@ -347,7 +343,6 @@ export function PainelFilhoApp({
       }
 
       setRevisaoTarefa(null);
-      setObservacaoAviso("");
 
       toast.success(
         resposta.ja_existia
@@ -378,13 +373,11 @@ export function PainelFilhoApp({
   }
 
   const abrirAviso = (tarefa: TarefaFilho) => {
-    setObservacaoAviso("");
     setRevisaoTarefa(null);
     setAvisoTarefa(tarefa);
   };
 
   const abrirRevisao = (tarefa: TarefaFilho) => {
-    setObservacaoAviso("");
     setAvisoTarefa(null);
     setRevisaoTarefa(tarefa);
   };
@@ -803,7 +796,6 @@ export function PainelFilhoApp({
           if (!open && !enviandoAviso) {
             setAvisoTarefa(null);
             setRevisaoTarefa(null);
-            setObservacaoAviso("");
           }
         }}
       >
@@ -819,20 +811,6 @@ export function PainelFilhoApp({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2">
-            <Label htmlFor="observacao-aviso-filho">Observação opcional</Label>
-            <Textarea
-              id="observacao-aviso-filho"
-              value={observacaoAviso}
-              onChange={(event) => setObservacaoAviso(event.target.value.slice(0, 120))}
-              maxLength={120}
-              placeholder="Ex.: Pode conferir meu quarto."
-              disabled={enviandoAviso}
-              className="min-h-24 resize-none"
-            />
-            <p className="text-right text-[11px] text-muted-foreground">{observacaoAviso.length}/120</p>
-          </div>
-
           <DialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:space-x-0">
             <Button
               type="button"
@@ -840,7 +818,6 @@ export function PainelFilhoApp({
               onClick={() => {
                 setAvisoTarefa(null);
                 setRevisaoTarefa(null);
-                setObservacaoAviso("");
               }}
               disabled={enviandoAviso}
             >
