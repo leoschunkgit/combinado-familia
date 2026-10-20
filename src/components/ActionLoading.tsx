@@ -46,10 +46,10 @@ export function ActionLoadingProvider({ children }: { children: ReactNode }) {
     <ActionLoadingContext.Provider value={{ runAction }}>
       {children}
       {mostrar && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/60 backdrop-blur-[2px]" role="status" aria-live="polite" aria-label="Carregando">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/60 backdrop-blur-[2px]" role="status" aria-live="polite" aria-label="Aguarde">
           <div className="flex items-center gap-3 rounded-xl border bg-card px-5 py-4 shadow-lg">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="font-medium">{loading || mutating > 0 ? "Processando..." : "Carregando..."}</span>
+            <span className="font-medium">Aguarde...</span>
           </div>
         </div>
       )}
