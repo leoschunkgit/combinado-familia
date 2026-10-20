@@ -1491,30 +1491,24 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           </div>
 
                                           {!registro && solicitacao?.status === "PENDENTE" && (
-                                            <div className="ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
+                                            <div className="animate-subtle-shake ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
                                               <p className="flex min-w-0 items-center gap-1 font-medium text-foreground">
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
                                                 <span className="min-w-0 break-words">
                                                   {filho?.nome ?? "Filho"} avisou que terminou às {formatarHora(solicitacao.created_at)}
                                                 </span>
                                               </p>
-                                              {solicitacao.observacao && (
-                                                <p className="mt-0.5 break-words">“{solicitacao.observacao}”</p>
-                                              )}
                                             </div>
                                           )}
 
                                           {registro?.tipo === "NAO_FEZ" && revisao?.status === "PENDENTE" && (
-                                            <div className="ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
+                                            <div className="animate-subtle-shake ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-muted-foreground">
                                               <p className="flex min-w-0 items-center gap-1 font-semibold text-foreground">
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
                                                 <span className="min-w-0 break-words">
                                                   {filho?.nome ?? "Filho"} pediu revisão às {formatarHora(revisao.created_at)}
                                                 </span>
                                               </p>
-                                              {revisao.observacao && (
-                                                <p className="mt-0.5 break-words">“{revisao.observacao}”</p>
-                                              )}
                                             </div>
                                           )}
                                         </div>
