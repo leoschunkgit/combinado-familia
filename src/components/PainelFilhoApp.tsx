@@ -155,7 +155,7 @@ export function PainelFilhoApp({
     };
 
     document.addEventListener("visibilitychange", atualizarAoVoltar);
-    const timer = window.setInterval(() => void atualizar(), 15000);
+    const timer = window.setInterval(() => void atualizar(), 10000);
 
     return () => {
       ativo = false;
