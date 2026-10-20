@@ -3,7 +3,6 @@ import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { registrarPushToken } from "@/lib/push-notifications";
 
 export function AppPushNotifications() {
@@ -37,8 +36,6 @@ export function AppPushNotifications() {
           void queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
           void queryClient.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] });
           void queryClient.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] });
-          const mensagem = notification.body?.trim();
-          if (mensagem) toast.info(mensagem);
         });
         removerListeners.push(() => received.remove());
 
