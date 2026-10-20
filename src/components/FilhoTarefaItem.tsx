@@ -35,7 +35,7 @@ export function FilhoTarefaItem({
       </div>
 
       {registroHoje?.tipo === "FEZ" ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/35 dark:text-green-300">
           <ThumbsUp className="h-3.5 w-3.5" />
           Fez
         </span>
@@ -45,7 +45,7 @@ export function FilhoTarefaItem({
           Revisão enviada
         </span>
       ) : registroHoje?.tipo === "NAO_FEZ" && revisaoHoje?.status === "MANTEVE_NAO_FEZ" ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/35 dark:text-red-300">
           <ThumbsDown className="h-3.5 w-3.5" />
           Não fez mantido
         </span>
@@ -61,7 +61,7 @@ export function FilhoTarefaItem({
           Pedir revisão
         </Button>
       ) : registroHoje?.tipo === "NAO_FEZ" ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/35 dark:text-red-300">
           <ThumbsDown className="h-3.5 w-3.5" />
           Não fez
         </span>
