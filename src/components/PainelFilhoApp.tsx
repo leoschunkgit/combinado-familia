@@ -20,6 +20,7 @@ import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { FilhoTarefaItem } from "@/components/FilhoTarefaItem";
 import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
+import { FilhoThemeToggle } from "@/components/FilhoThemeToggle";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
@@ -30,6 +31,7 @@ import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EmptyState } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   avisarTarefaConcluida,
@@ -45,6 +47,8 @@ import {
 } from "@/lib/child-app-session";
 
 type AbaFilho = "inicio" | "tarefas" | "registros" | "estrelas";
+
+const CHAVE_TEMA_FILHO = "combinado-familia:filho:tema";
 
 const ABAS: Array<{ id: AbaFilho; label: string; icon: typeof House }> = [
   { id: "inicio", label: "Início", icon: House },
@@ -116,12 +120,48 @@ export function PainelFilhoApp({
   const [painel, setPainel] = useState(painelInicial);
   const [aba, setAba] = useState<AbaFilho>("inicio");
   const [menuAberto, setMenuAberto] = useState(false);
+  const [modoEscuro, setModoEscuro] = useState(false);
   const [registroAberto, setRegistroAberto] = useState<string | null>(null);
   const [saindo, setSaindo] = useState(false);
   const [avisoTarefa, setAvisoTarefa] = useState<TarefaFilho | null>(null);
   const [revisaoTarefa, setRevisaoTarefa] = useState<TarefaFilho | null>(null);
   const [enviandoAviso, setEnviandoAviso] = useState(false);
   const abrirTarefasPeloPush = useCallback(() => setAba("tarefas"), []);
+
+  const alterarModoEscuro = useCallback((escuro: boolean) => {
+    setModoEscuro(escuro);
+
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", escuro);
+    }
+
+    try {
+      window.localStorage.setItem(CHAVE_TEMA_FILHO, escuro ? "dark" : "light");
+    } catch {
+      // Preferência visual não deve bloquear o uso do app.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const raiz = document.documentElement;
+    const temaAnterior = raiz.classList.contains("dark");
+    let escuro = false;
+
+    try {
+      escuro = window.localStorage.getItem(CHAVE_TEMA_FILHO) === "dark";
+    } catch {
+      escuro = false;
+    }
+
+    raiz.classList.toggle("dark", escuro);
+    setModoEscuro(escuro);
+
+    return () => {
+      raiz.classList.toggle("dark", temaAnterior);
+    };
+  }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -447,38 +487,64 @@ export function PainelFilhoApp({
         </div>
       </header>
 
-      <Dialog open={menuAberto} onOpenChange={setMenuAberto}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Meu perfil</DialogTitle>
-            <DialogDescription>Seu acesso ao Combinado Família.</DialogDescription>
-          </DialogHeader>
+      {menuAberto && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-black/20"
+            aria-label="Fechar menu do filho"
+            onClick={() => setMenuAberto(false)}
+          />
+          <div
+            role="menu"
+            aria-label="Menu do filho"
+            className="fixed z-50 w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-2xl"
+            style={{
+              top: "calc(env(safe-area-inset-top) + 4.25rem)",
+              right: "calc(env(safe-area-inset-right) + .75rem)",
+            }}
+          >
+            <div className="flex items-start gap-3 border-b px-4 py-4">
+              <FilhoAvatar
+                nome={painel.filho.nome}
+                cor={painel.filho.cor}
+                avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
+                className="h-10 w-10"
+              />
+              <div className="min-w-0 flex-1 pt-0.5">
+                <p className="truncate text-sm font-semibold">{painel.filho.nome}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  Filho · Responsável: {painel.responsavel?.nome}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={modalCloseInlineButtonClass}
+                onClick={() => setMenuAberto(false)}
+                aria-label="Fechar menu do filho"
+              >
+                <ModalCloseIcon />
+              </button>
+            </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border p-4">
-            <FilhoAvatar
-              nome={painel.filho.nome}
-              cor={painel.filho.cor}
-              avatar={painel.filho.avatar === "menino" || painel.filho.avatar === "menina" ? painel.filho.avatar : null}
-              className="h-12 w-12"
-            />
-            <div className="min-w-0">
-              <p className="truncate font-semibold">{painel.filho.nome}</p>
-              <p className="truncate text-xs text-muted-foreground">Responsável: {painel.responsavel?.nome}</p>
+            <div className="p-2">
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                onClick={() => {
+                  setMenuAberto(false);
+                  void sair();
+                }}
+                disabled={saindo}
+              >
+                {saindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                Sair
+              </button>
             </div>
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full justify-center"
-            onClick={() => void sair()}
-            disabled={saindo}
-          >
-            {saindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-            Sair
-          </Button>
-        </DialogContent>
-      </Dialog>
+        </>
+      )}
 
       <AppPageContent className="pb-24 md:pb-28">
         <AppGlobalMessage
@@ -489,9 +555,16 @@ export function PainelFilhoApp({
 
         {aba === "inicio" && (
           <div className="space-y-4">
-            <div className="pt-1">
-              <h1 className="text-2xl font-bold leading-tight">Oi, {painel.filho.nome}!</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Seu foco é o combinado de hoje.</p>
+            <div className="flex items-start justify-between gap-3 pt-1">
+              <div className="min-w-0">
+                <h1 className="break-words text-2xl font-bold leading-tight">Oi, {painel.filho.nome}!</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Seu foco é o combinado de hoje.</p>
+              </div>
+              <FilhoThemeToggle
+                modoEscuro={modoEscuro}
+                onChange={alterarModoEscuro}
+                className="mt-0.5 shrink-0"
+              />
             </div>
 
             {vigenciaAtual ? (
@@ -544,11 +617,11 @@ export function PainelFilhoApp({
                   >
                     {recompensaDestaque.disponivel ? (
                       <div className="flex items-center gap-3">
-                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-amber-50">
+                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
                           <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-green-700">Conquistado!</p>
+                          <p className="text-sm font-bold text-green-700 dark:text-green-300">Conquistado!</p>
                           <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">Veja sua recompensa.</p>
                         </div>
@@ -594,7 +667,7 @@ export function PainelFilhoApp({
                       <p className="text-xs font-medium text-muted-foreground">Combinado atual</p>
                       <p className="mt-0.5 text-sm font-semibold">{data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}</p>
                     </div>
-                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">Em andamento</Badge>
+                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/45 dark:text-green-300">Em andamento</Badge>
                   </div>
 
                   {painel.filho.tem_mesada ? (
@@ -668,12 +741,12 @@ export function PainelFilhoApp({
                       <span className="text-[11px] font-medium leading-tight text-muted-foreground">Pra fazer</span>
                     </div>
                     <div className="flex min-w-0 flex-col items-center justify-center gap-1 border-x px-2 py-3 text-center">
-                      <BellRing className="h-4 w-4 text-amber-600" />
+                      <BellRing className="h-4 w-4 text-amber-600 dark:text-amber-300" />
                       <span className="text-lg font-bold leading-none tabular-nums">{tarefasAguardandoHoje}</span>
                       <span className="text-[11px] font-medium leading-tight text-muted-foreground">Aguardando</span>
                     </div>
                     <div className="flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-3 text-center">
-                      <ClipboardCheck className="h-4 w-4 text-green-600" />
+                      <ClipboardCheck className="h-4 w-4 text-green-600 dark:text-green-300" />
                       <span className="text-lg font-bold leading-none tabular-nums">{tarefasResolvidasPainelHoje}</span>
                       <span className="text-[11px] font-medium leading-tight text-muted-foreground">Resolvidas</span>
                     </div>
@@ -723,7 +796,7 @@ export function PainelFilhoApp({
                           const b = bonus(ocorrencia);
                           return (
                             <div key={`${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
-                              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700 dark:bg-green-950/35 dark:text-green-300" : "bg-red-50 text-red-600 dark:bg-red-950/35 dark:text-red-300"}`}>
                                 {ocorrencia.tipo === "FEZ" ? <ThumbsUp className="h-4 w-4" /> : <ThumbsDown className="h-4 w-4" />}
                               </span>
                               <div className="min-w-0 flex-1">
@@ -731,7 +804,7 @@ export function PainelFilhoApp({
                                   <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
                                   <p className="min-w-0 break-words text-sm font-semibold">{tarefa.nome}</p>
                                 </div>
-                                <p className={`mt-1 text-xs font-medium ${ocorrencia.tipo === "FEZ" ? "text-green-700" : "text-red-600"}`}>
+                                <p className={`mt-1 text-xs font-medium ${ocorrencia.tipo === "FEZ" ? "text-green-700 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>
                                   {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
                                 </p>
                                 {b && <p className="mt-1 break-words text-xs text-muted-foreground">Extra: {b}</p>}

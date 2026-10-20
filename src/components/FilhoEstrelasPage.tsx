@@ -27,12 +27,12 @@ function Estrela({ className = "" }: { className?: string }) {
 
 function ResgateStatus({ status }: { status: "PENDENTE" | "ENTREGUE" | "CANCELADO" }) {
   if (status === "PENDENTE") {
-    return <Badge className="h-5 border-amber-200 bg-amber-100 px-1.5 py-0 text-[10px] font-semibold text-amber-700">Pendente</Badge>;
+    return <Badge className="h-5 border-amber-200 bg-amber-100 px-1.5 py-0 text-[10px] font-semibold text-amber-700 dark:border-amber-800 dark:bg-amber-950/45 dark:text-amber-300">Pendente</Badge>;
   }
   if (status === "ENTREGUE") {
-    return <Badge className="h-5 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">Entregue</Badge>;
+    return <Badge className="h-5 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/45 dark:text-green-300">Entregue</Badge>;
   }
-  return <Badge className="h-5 border-gray-200 bg-gray-100 px-1.5 py-0 text-[10px] font-semibold text-gray-600">Cancelado</Badge>;
+  return <Badge className="h-5 border-gray-200 bg-gray-100 px-1.5 py-0 text-[10px] font-semibold text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">Cancelado</Badge>;
 }
 
 export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
@@ -64,7 +64,7 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
       <div className="space-y-4">
         <section className="rounded-2xl border bg-card p-4 sm:p-5">
           <div className="flex items-center gap-4">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border bg-amber-50">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
               <Estrela className="animate-subtle-shake h-9 w-9" />
             </span>
             <div className="min-w-0">
@@ -80,9 +80,9 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
             <div className="mt-4 border-t pt-4">
               {alvo.disponivel ? (
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-6 w-6 shrink-0 text-green-700" />
+                  <CheckCircle2 className="h-6 w-6 shrink-0 text-green-700 dark:text-green-300" />
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-green-700">Conquistado!</p>
+                    <p className="text-sm font-bold text-green-700 dark:text-green-300">Conquistado!</p>
                     <p className="mt-0.5 break-words text-sm font-semibold">{alvo.nome}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">Você atingiu a quantidade necessária de estrelas.</p>
                   </div>
@@ -133,7 +133,7 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                     </div>
 
                     {recompensa.disponivel ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[10px] font-bold text-green-700">
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[10px] font-bold text-green-700 dark:border-green-800 dark:bg-green-950/35 dark:text-green-300 dark:text-green-300">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Conquistado
                       </span>
