@@ -19,7 +19,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -148,9 +147,6 @@ type FezNaoFezPageProps = {
   focoSolicitacao?: FocoSolicitacaoTarefa;
 };
 
-const checkboxExclusaoClass =
-  "h-5 w-5 rounded-[4px] border-2 border-muted-foreground/40 bg-background shadow-sm transition-colors hover:border-muted-foreground/70 focus-visible:ring-muted-foreground/30 data-[state=checked]:border-muted-foreground data-[state=checked]:bg-muted-foreground data-[state=checked]:text-background";
-
 function formatarData(data: string) {
   return data.split("-").reverse().join("/");
 }
@@ -202,7 +198,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [fez, setFez] = useState<FezDraft | null>(null);
   const [bonificacaoInfo, setBonificacaoInfo] = useState<BonificacaoInfo | null>(null);
   const [troca, setTroca] = useState<Troca | null>(null);
-  const [selecionadas, setSelecionadas] = useState<Set<number>>(new Set());
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
     useState<ExcluirSelecionadasDraft | null>(null);
   const [penalidadePendente, setPenalidadePendente] =
@@ -1053,7 +1048,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       toast.success(
         (ids.length === 1
           ? "Marcação desfeita"
-          : "Marcações selecionadas desfeitas") + sufixoEstorno,
+          : "Marcações desfeitas") + sufixoEstorno,
       );
     } catch (error) {
       toast.error(
@@ -1379,10 +1374,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                         (item): item is { tarefa: FilhoTarefa; registro: Ocorrencia } =>
                           Boolean(item.registro),
                       );
-                    const selecionadasDoFilho = registrosDoDia.filter(({ registro }) =>
-                      selecionadas.has(registro.id),
-                    );
-
                     return (
                       <article
                         key={filho.id}
@@ -1464,62 +1455,24 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   </div>
 
                                   {!bloqueada && registrosDoDia.length > 0 && (
-                                    <label className="inline-flex shrink-0 cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
-                                      <span>Desfazer marcação</span>
-                                      <Checkbox
-                                        className={checkboxExclusaoClass}
-                                        checked={
-                                          registrosDoDia.every(({ registro }) =>
-                                            selecionadas.has(registro.id),
-                                          )
-                                            ? true
-                                            : registrosDoDia.some(({ registro }) =>
-                                                  selecionadas.has(registro.id),
-                                                )
-                                              ? "indeterminate"
-                                              : false
-                                        }
-                                        onCheckedChange={(checked) =>
-                                          setSelecionadas((atual) => {
-                                            const proximo = new Set(atual);
-                                            if (checked === true) {
-                                              registrosDoDia.forEach(({ registro }) =>
-                                                proximo.add(registro.id),
-                                              );
-                                            } else {
-                                              registrosDoDia.forEach(({ registro }) =>
-                                                proximo.delete(registro.id),
-                                              );
-                                            }
-                                            return proximo;
-                                          })
-                                        }
-                                        aria-label={`Selecionar todas as marcações para desfazer de ${formatarData(dataSelecionada)}`}
-                                      />
-                                    </label>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-8 shrink-0 gap-1.5 px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                                      disabled={busy}
+                                      onClick={() =>
+                                        setConfirmarExcluirSelecionadas({
+                                          tarefa: registrosDoDia[0].tarefa,
+                                          ids: registrosDoDia.map(({ registro }) => registro.id),
+                                        })
+                                      }
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                      Desfazer todos
+                                    </Button>
                                   )}
                                 </div>
-
-                                {!bloqueada &&
-                                  selecionadasDoFilho.length > 0 && (
-                                    <div className="mt-2 flex justify-end">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-muted-foreground hover:text-foreground"
-                                        disabled={busy}
-                                        onClick={() =>
-                                          setConfirmarExcluirSelecionadas({
-                                            tarefa: selecionadasDoFilho[0].tarefa,
-                                            ids: selecionadasDoFilho.map(({ registro }) => registro.id),
-                                          })
-                                        }
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                        Desfazer marcação ({selecionadasDoFilho.length})
-                                      </Button>
-                                    </div>
-                                  )}
                               </div>
 
                               <div className="divide-y divide-border/60">
@@ -1535,11 +1488,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
                                         <div
-                                          className={`min-w-0 ${
-                                            registro
-                                              ? "w-36 shrink-0 sm:w-48 md:w-56 lg:w-64"
-                                              : "flex-1"
-                                          }`}
+                                          className="min-w-0 flex-1"
                                         >
                                           <div className="flex min-w-0 items-start gap-2">
                                             <TarefaIcone
@@ -1593,20 +1542,23 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             </div>
                                           )}
                                         </div>
+                                      </div>
+
+                                      <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
                                         {registro && (
-                                          <div className="grid shrink-0 grid-cols-[1rem_1.75rem_2rem] items-center gap-1">
+                                          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
                                             <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
                                               <span
                                                 className={
                                                   registro.tipo === "FEZ"
-                                                    ? "inline-flex h-4 w-4 items-center justify-center text-green-600 dark:text-green-400"
-                                                    : "inline-flex h-4 w-4 items-center justify-center text-red-600 dark:text-red-400"
+                                                    ? "inline-flex h-5 w-5 items-center justify-center text-green-600 dark:text-green-400"
+                                                    : "inline-flex h-5 w-5 items-center justify-center text-red-600 dark:text-red-400"
                                                 }
                                               >
                                                 {registro.tipo === "FEZ" ? (
-                                                  <ThumbsUp className="h-3.5 w-3.5" />
+                                                  <ThumbsUp className="h-4 w-4" />
                                                 ) : (
-                                                  <ThumbsDown className="h-3.5 w-3.5" />
+                                                  <ThumbsDown className="h-4 w-4" />
                                                 )}
                                                 <span className="sr-only">
                                                   {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
@@ -1614,81 +1566,28 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </span>
                                             </Hint>
 
-                                            <span className="inline-flex h-5 w-7 items-center justify-center">
-                                              {registro.tipo === "FEZ" && (
-                                                <Hint content="+1 estrela">
-                                                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
-                                                    <Star className="h-3.5 w-3.5" />
-                                                    +1
-                                                  </span>
-                                                </Hint>
-                                              )}
-                                            </span>
+                                            {registro.tipo === "FEZ" && (
+                                              <Hint content="+1 estrela">
+                                                <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                                                  <Star className="h-3.5 w-3.5" />
+                                                  +1
+                                                </span>
+                                              </Hint>
+                                            )}
 
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <Button
-                                                  type="button"
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  className="h-8 w-8 shrink-0 rounded-full"
-                                                  disabled={busy}
-                                                  aria-label={`Mais ações para ${tarefa.t_tarefa?.nome ?? "tarefa"}`}
+                                            {registro.tipo !== "FEZ" &&
+                                              !comDesconto &&
+                                              penalizadas.has(registro.id) && (
+                                                <span
+                                                  className="inline-flex shrink-0 text-destructive"
+                                                  role="img"
+                                                  aria-label="Limite de penalidade atingido"
                                                 >
-                                                  <EllipsisVertical className="h-4 w-4" />
-                                                </Button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end" className="w-48">
-                                                {!bloqueada && (
-                                                  <DropdownMenuItem
-                                                    onSelect={() =>
-                                                      abrirTrocaMarcacao(
-                                                        tarefa,
-                                                        totalNaoFez,
-                                                        dataSelecionada,
-                                                        registro,
-                                                      )
-                                                    }
-                                                  >
-                                                    <Pencil className="h-4 w-4" />
-                                                    {registro.tipo === "FEZ"
-                                                      ? "Alterar para Não fez"
-                                                      : "Alterar para Fez"}
-                                                  </DropdownMenuItem>
-                                                )}
-                                                {registro.tipo === "FEZ" && (
-                                                  <DropdownMenuItem
-                                                    onSelect={() =>
-                                                      setBonificacaoInfo({
-                                                        tarefa,
-                                                        total: totalNaoFez,
-                                                        ocorrencia: registro,
-                                                      })
-                                                    }
-                                                  >
-                                                    <Info className="h-4 w-4" />
-                                                    Ver bonificação
-                                                  </DropdownMenuItem>
-                                                )}
-                                              </DropdownMenuContent>
-                                            </DropdownMenu>
+                                                  <AlertTriangle className="h-4 w-4" />
+                                                </span>
+                                              )}
                                           </div>
                                         )}
-                                        {registro &&
-                                          registro.tipo !== "FEZ" &&
-                                          !comDesconto &&
-                                          penalizadas.has(registro.id) && (
-                                            <span
-                                              className="inline-flex shrink-0 text-destructive"
-                                              role="img"
-                                              aria-label="Limite de penalidade atingido"
-                                            >
-                                              <AlertTriangle className="h-4 w-4" />
-                                            </span>
-                                          )}
-                                      </div>
-
-                                      <div className="flex shrink-0 items-center justify-end gap-2">
                                         {registro?.tipo === "NAO_FEZ" &&
                                           revisao?.status === "PENDENTE" &&
                                           !bloqueada && (
@@ -1771,26 +1670,67 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                         )}
 
                                         {registro && (
-                                          <>
-                                            {!bloqueada && (
-                                              <Checkbox
-                                                className={checkboxExclusaoClass}
-                                                checked={selecionadas.has(registro.id)}
-                                                onCheckedChange={(checked) =>
-                                                  setSelecionadas((atual) => {
-                                                    const proximo = new Set(atual);
-                                                    if (checked === true) {
-                                                      proximo.add(registro.id);
-                                                    } else {
-                                                      proximo.delete(registro.id);
-                                                    }
-                                                    return proximo;
-                                                  })
-                                                }
-                                                aria-label={`Selecionar ${registro.tipo === "FEZ" ? "Fez" : "Não fez"} de ${formatarData(dataSelecionada)}`}
-                                              />
-                                            )}
-                                          </>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 shrink-0 rounded-full"
+                                                disabled={busy}
+                                                aria-label={`Mais ações para ${tarefa.t_tarefa?.nome ?? "tarefa"}`}
+                                              >
+                                                <EllipsisVertical className="h-4 w-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                              {!bloqueada && (
+                                                <DropdownMenuItem
+                                                  onSelect={() =>
+                                                    abrirTrocaMarcacao(
+                                                      tarefa,
+                                                      totalNaoFez,
+                                                      dataSelecionada,
+                                                      registro,
+                                                    )
+                                                  }
+                                                >
+                                                  <Pencil className="h-4 w-4" />
+                                                  {registro.tipo === "FEZ"
+                                                    ? "Alterar para Não fez"
+                                                    : "Alterar para Fez"}
+                                                </DropdownMenuItem>
+                                              )}
+                                              {registro.tipo === "FEZ" && (
+                                                <DropdownMenuItem
+                                                  onSelect={() =>
+                                                    setBonificacaoInfo({
+                                                      tarefa,
+                                                      total: totalNaoFez,
+                                                      ocorrencia: registro,
+                                                    })
+                                                  }
+                                                >
+                                                  <Info className="h-4 w-4" />
+                                                  Ver bonificação
+                                                </DropdownMenuItem>
+                                              )}
+                                              {!bloqueada && (
+                                                <DropdownMenuItem
+                                                  className="text-destructive focus:text-destructive"
+                                                  onSelect={() =>
+                                                    setConfirmarExcluirSelecionadas({
+                                                      tarefa,
+                                                      ids: [registro.id],
+                                                    })
+                                                  }
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                  Desfazer marcação
+                                                </DropdownMenuItem>
+                                              )}
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
                                         )}
                                       </div>
                                     </div>
@@ -2172,7 +2112,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Desfazer marcações selecionadas?</DialogTitle>
+            <DialogTitle>
+              {confirmarExcluirSelecionadas?.ids.length === 1
+                ? "Desfazer marcação?"
+                : "Desfazer todas as marcações?"}
+            </DialogTitle>
             <DialogDescription className="pt-1">
               {confirmarExcluirSelecionadas && (() => {
                 const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
@@ -2195,7 +2139,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                     <span className="block">
                       <span className="block font-medium text-foreground">
-                        {quantidade} {quantidade === 1 ? "marcação selecionada será desfeita" : "marcações selecionadas serão desfeitas"}.
+                        {quantidade} {quantidade === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
                       </span>
                       <span className="mt-1.5 block leading-relaxed">
                         As datas que ficarem sem uma marcação de “Fez” ou “Não fez” voltarão para as pendências.
