@@ -22,6 +22,7 @@ import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
+import { AppGlobalMessage } from "@/components/AppGlobalMessage";
 import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
 import { AppPageContent, appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -486,6 +487,12 @@ export function PainelFilhoApp({
       </Dialog>
 
       <AppPageContent className="pb-24 md:pb-28">
+        <AppGlobalMessage
+          ativa={painel.comunicacao?.mensagem_global_ativa === true}
+          mensagem={painel.comunicacao?.mensagem_global ?? null}
+          className="mb-4"
+        />
+
         {aba === "inicio" && (
           <div className="space-y-4">
             <div className="pt-1">
