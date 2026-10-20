@@ -70,7 +70,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 type NavItem = {
-  to: "/inicio" | "/ocorrencias" | "/filhos" | "/acesso-filhos" | "/estrelas" | "/tarefas" | "/vigencias" | "/atribuicoes" | "/link-filhos" | "/relatorio";
+  to: "/inicio" | "/ocorrencias" | "/filhos" | "/acesso-filhos" | "/estrelas" | "/tarefas" | "/vigencias" | "/atribuicoes" | "/relatorio";
   label: string;
   icon: typeof Home;
 };
@@ -84,7 +84,6 @@ const NAV_ITENS: NavItem[] = [
   { to: "/tarefas", label: "Tarefas", icon: ListTodo },
   { to: "/vigencias", label: "Vigências", icon: CalendarRange },
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
-  { to: "/link-filhos", label: "Gerar Link / Filho", icon: Link2 },
   { to: "/relatorio", label: "Histórico", icon: FileText },
 ];
 
@@ -193,7 +192,6 @@ function AuthenticatedLayout() {
 
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
   const configuracaoInicialConcluida = filhos.length > 0 && tarefas.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
-  const mostrarAtalhoLinkFilho = configuracaoInicialConcluida && pathname !== "/filhos" && pathname !== "/link-filhos";
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
   const pendenciasHoje = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
   const pendenciasPassadas = configuracaoInicialConcluida ? pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
@@ -473,9 +471,7 @@ function AuthenticatedLayout() {
             onClick={() => navigate({ to: "/ocorrencias" })}
             style={{
               right: "calc(1rem + env(safe-area-inset-right))",
-              bottom: mostrarAtalhoLinkFilho
-                ? "calc(4.75rem + env(safe-area-inset-bottom))"
-                : "calc(1rem + env(safe-area-inset-bottom))",
+              bottom: "calc(1rem + env(safe-area-inset-bottom))",
             }}
             className="fixed z-30 h-12 w-12 rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 md:hidden"
             aria-label="Ir para Fez / Não fez"
@@ -483,19 +479,6 @@ function AuthenticatedLayout() {
             <Bell className="animate-notification-bell h-5 w-5" />
             <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-red-600 ring-2 ring-white" aria-hidden="true" />
           </Button>
-          </Hint>
-        )}
-
-        {mostrarAtalhoLinkFilho && (
-          <Hint content="Gerar Link / Filho">
-          <Link
-            to="/link-filhos"
-            style={{ right: "calc(1rem + env(safe-area-inset-right))", bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
-            className="fixed z-30 inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg transition hover:bg-primary/90 active:scale-95 md:hidden"
-            aria-label="Ir para Gerar Link / Filho"
-          >
-            <Link2 className="h-5 w-5" />
-          </Link>
           </Hint>
         )}
 
