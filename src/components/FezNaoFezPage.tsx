@@ -1011,11 +1011,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
       const projetadas = ocorrencias.filter((o) => !ids.includes(o.id));
       qc.setQueryData<Ocorrencia[]>(["ocorrencias"], projetadas);
-      setSelecionadas((atual) => {
-        const proximo = new Set(atual);
-        ids.forEach((id) => proximo.delete(id));
-        return proximo;
-      });
 
       await Promise.all([
         qc.invalidateQueries({
