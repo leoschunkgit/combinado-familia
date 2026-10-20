@@ -1563,7 +1563,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                                             {registro.tipo === "FEZ" && (
                                               <Hint content="+1 estrela">
-                                                <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                                                <span className="ml-1.5 inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
                                                   <Star className="h-3.5 w-3.5" />
                                                   +1
                                                 </span>
