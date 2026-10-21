@@ -207,7 +207,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [penalidadePendente, setPenalidadePendente] =
     useState<PenalidadeDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
-  const [saldosEstrelas, setSaldosEstrelas] = useState<Record<number, number>>({});
+  const [totaisEstrelas, setTotaisEstrelas] = useState<Record<number, number>>({});
   const [agora, setAgora] = useState(() => Date.now());
   const aberturaInicialAplicada = useRef(false);
   const ultimoFocoAplicado = useRef<string | null>(null);
@@ -220,29 +220,32 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   useEffect(() => {
     let ativo = true;
 
-    async function carregarSaldosEstrelas() {
+    async function carregarTotaisEstrelas() {
       const idsFilhos = filhos.map((filho) => filho.id);
       if (idsFilhos.length === 0) {
-        setSaldosEstrelas({});
+        setTotaisEstrelas({});
         return;
       }
 
-      const { data, error } = await supabase
-        .from("t_estrela_movimento")
-        .select("id_filho, quantidade")
-        .in("id_filho", idsFilhos);
+      const totais: Record<number, number> = {};
 
-      if (!ativo || error) return;
+      await Promise.all(
+        idsFilhos.map(async (idFilho) => {
+          const { data, error } = await supabase.rpc("resumo_estrelas_filho", {
+            p_id_filho: idFilho,
+          });
 
-      const saldos = (data ?? []).reduce<Record<number, number>>((acc, movimento) => {
-        acc[movimento.id_filho] = (acc[movimento.id_filho] ?? 0) + Number(movimento.quantidade);
-        return acc;
-      }, {});
+          if (error) return;
 
-      setSaldosEstrelas(saldos);
+          const resumo = data as { total_conquistado?: number } | null;
+          totais[idFilho] = Number(resumo?.total_conquistado ?? 0);
+        }),
+      );
+
+      if (ativo) setTotaisEstrelas(totais);
     }
 
-    void carregarSaldosEstrelas();
+    void carregarTotaisEstrelas();
     return () => {
       ativo = false;
     };
@@ -651,8 +654,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     const filho = filhos.find((item) => item.id === tarefa.id_filho);
-    const estornouEstrela = existente?.tipo === "FEZ";
-    const sufixoEstrela = estornouEstrela ? " · 1 estrela estornada" : "";
     const vigenciaCompleta = vigencias.find(
       (item) => item.id === tarefa.id_vigencia,
     );
@@ -700,13 +701,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         toast.success(
           `“Não fez” registrado · Desconto acumulado: ${reais(
             valorDebitado(filho, vigencia, resultado.novoTotal),
-          )}${sufixoEstrela}`,
+          )}`,
         );
       } else if (resultado.penalizado) {
-        toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}${sufixoEstrela}`);
+        toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
       } else {
         toast.success(
-          `“Não fez” registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})${sufixoEstrela}`,
+          `“Não fez” registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})`,
         );
       }
     } catch (error) {
@@ -979,10 +980,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
     if (ids.length === 0) return;
 
-    const estrelasEstornadas = ocorrencias.filter(
-      (o) => ids.includes(o.id) && o.tipo === "FEZ",
-    ).length;
-
     setBusy(true);
     try {
       const { error } = await supabase
@@ -1021,14 +1018,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       ]);
 
       setConfirmarExcluirSelecionadas(null);
-      const sufixoEstorno =
-        estrelasEstornadas > 0
-          ? ` · ${estrelasEstornadas} estrela${estrelasEstornadas === 1 ? "" : "s"} estornada${estrelasEstornadas === 1 ? "" : "s"}`
-          : "";
       toast.success(
-        (ids.length === 1
-          ? "Marcação desfeita"
-          : "Marcações desfeitas") + sufixoEstorno,
+        ids.length === 1
+          ? "Marcação desfeita · estrelas conquistadas permanecem"
+          : "Marcações desfeitas · estrelas conquistadas permanecem",
       );
     } catch (error) {
       toast.error(
@@ -1293,10 +1286,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               <span>{filho.nome}</span>
                               <span
                                 className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold leading-none text-foreground dark:border-amber-800 dark:bg-amber-950/35"
-                                aria-label={`${saldosEstrelas[filho.id] ?? 0} estrelas disponíveis`}
+                                aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
                               >
                                 <Star className="animate-notification-bell h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />
-                                <span>{saldosEstrelas[filho.id] ?? 0}</span>
+                                <span>{totaisEstrelas[filho.id] ?? 0}</span>
                               </span>
                             </span>
                           </button>
@@ -2037,11 +2030,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     <span className="font-medium text-foreground">
                       {formatarData(dataBrasil(troca.ocorrencia.created_at))}
                     </span>
-                    . Ao continuar, o resultado será substituído
-                    {troca.direcao === "PARA_NAO_FEZ"
-                      ? ", qualquer recompensa extra será removida e 1 estrela será estornada"
-                      : " e 1 estrela será adicionada"}
-                    .
+                    . Ao continuar, o resultado será substituído. Estrelas já conquistadas
+                    não são removidas nem duplicadas.
                   </span>
                 </>
               )}
