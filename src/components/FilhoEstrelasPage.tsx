@@ -1,4 +1,4 @@
-import { Gift, Star } from "lucide-react";
+import { Gift, PartyPopper, Star } from "lucide-react";
 import { EmptyState } from "@/components/PageHeader";
 import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
 import type { EstrelasFilho } from "@/lib/child-app-session";
@@ -82,17 +82,29 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
 
                   </div>
 
-                  <p
-                    className={`mt-2 text-[11px] font-medium ${
-                      conquistada
-                        ? "font-bold text-amber-700 dark:text-amber-300"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {conquistada
-                      ? "Parabéns! Você conseguiu!"
-                      : `Faltam ${recompensa.faltam} estrela${recompensa.faltam === 1 ? "" : "s"} para conquistar`}
-                  </p>
+                  <div className="mt-2 min-h-[58px]">
+                    {conquistada ? (
+                      <div className="flex min-h-[58px] items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950/35">
+                        <PartyPopper className="h-4.5 w-4.5 shrink-0 text-amber-700 dark:text-amber-300" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200">
+                            Parabéns! Você conseguiu!
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">
+                            {recompensa.pendente
+                              ? "Sua recompensa está aguardando entrega."
+                              : "Sua recompensa já está disponível."}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex min-h-[58px] items-start pt-1">
+                        <p className="text-[11px] font-medium text-muted-foreground">
+                          Faltam {recompensa.faltam} estrela{recompensa.faltam === 1 ? "" : "s"} para conquistar
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
