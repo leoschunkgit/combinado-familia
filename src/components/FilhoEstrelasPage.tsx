@@ -34,8 +34,11 @@ export function FilhoEstrelasPage({
 }) {
   const recompensasOrdenadas = [...estrelas.recompensas].sort((a, b) => a.id - b.id);
   const recompensasAproveitadas = estrelas.resgates
-    .filter((resgate) => resgate.status === "ENTREGUE" && resgate.entregue_em)
-    .sort((a, b) => new Date(b.entregue_em ?? b.created_at).getTime() - new Date(a.entregue_em ?? a.created_at).getTime());
+    .filter((resgate) => resgate.status === "ENTREGUE" && resgate.aproveitou_em)
+    .sort((a, b) =>
+      new Date(b.aproveitou_em ?? b.conquistou_em).getTime()
+      - new Date(a.aproveitou_em ?? a.conquistou_em).getTime()
+    );
   const [recompensaConfirmacao, setRecompensaConfirmacao] = useState<RecompensaEstrelaFilho | null>(null);
   const [confirmando, setConfirmando] = useState(false);
 
@@ -89,15 +92,11 @@ export function FilhoEstrelasPage({
 
         <div className="space-y-3">
         {recompensasOrdenadas.map((recompensa) => {
-          const conquistada = recompensa.disponivel || recompensa.pendente;
-          const nomeExibido = recompensa.nome;
-          const descricaoExibida = recompensa.descricao;
-          const metaExibida = recompensa.pendente && recompensa.conquista_meta
-            ? recompensa.conquista_meta
-            : recompensa.estrelas_necessarias;
-          const progressoExibido = conquistada
-            ? metaExibida
-            : Math.min(recompensa.progresso, metaExibida);
+          const conquistada = recompensa.conquistada;
+          const nomeExibido = recompensa.nome_exibicao;
+          const descricaoExibida = recompensa.descricao_exibicao;
+          const metaExibida = recompensa.meta_exibicao;
+          const progressoExibido = recompensa.progresso_exibicao;
           const itemProgresso = Math.min(
             100,
             Math.max(0, (progressoExibido / metaExibida) * 100),
@@ -155,7 +154,7 @@ export function FilhoEstrelasPage({
                     ) : (
                       <div className="flex min-h-[58px] items-start pt-1">
                         <p className="text-[11px] font-medium text-muted-foreground">
-                          Faltam {recompensa.faltam} estrela{recompensa.faltam === 1 ? "" : "s"} para conquistar
+                          Faltam {recompensa.faltam_exibicao} estrela{recompensa.faltam_exibicao === 1 ? "" : "s"} para conquistar
                         </p>
                       </div>
                     )}
@@ -231,30 +230,30 @@ export function FilhoEstrelasPage({
 
                     <div className="min-w-0 flex-1 space-y-1.5 text-xs leading-relaxed">
                       <p className="min-w-0 break-words text-sm font-bold text-foreground">
-                        {resgate.recompensa_nome}
+                        {resgate.nome_exibicao}
                       </p>
                       <p className="text-muted-foreground">
                         Quantidade de estrelas atingidas para conquista:{" "}
                         <span className="font-semibold text-foreground tabular-nums">
-                          {resgate.meta_estrelas_no_resgate}
+                          {resgate.quantidade_estrelas_conquista}
                         </span>
                       </p>
                       <p className="text-muted-foreground">
                         Conquistou em:{" "}
                         <span className="font-semibold text-foreground">
-                          {dataHora(resgate.created_at)}
+                          {dataHora(resgate.conquistou_em)}
                         </span>
                       </p>
                       <p className="text-muted-foreground">
                         Aproveitou em:{" "}
                         <span className="font-semibold text-foreground">
-                          {dataHora(resgate.entregue_em!)}
+                          {dataHora(resgate.aproveitou_em!)}
                         </span>
                       </p>
                       <p className="text-muted-foreground">
                         Contagem recomeçou em:{" "}
                         <span className="font-semibold text-foreground">
-                          {dataHora(resgate.entregue_em!)}
+                          {dataHora(resgate.contagem_recomecou_em!)}
                         </span>
                       </p>
                     </div>
@@ -277,7 +276,7 @@ export function FilhoEstrelasPage({
             <DialogTitle>Já aproveitou?</DialogTitle>
             <DialogDescription>
               {recompensaConfirmacao
-                ? `Confirme que você já recebeu ou aproveitou “${recompensaConfirmacao.nome}”. Depois disso, uma nova contagem começa a partir das próximas estrelas.`
+                ? `Confirme que você já recebeu ou aproveitou “${recompensaConfirmacao.nome_exibicao}”. Depois disso, uma nova contagem começa a partir das próximas estrelas.`
                 : ""}
             </DialogDescription>
           </DialogHeader>
