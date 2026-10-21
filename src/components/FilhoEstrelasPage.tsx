@@ -1,4 +1,4 @@
-import { Gift, PartyPopper, Star } from "lucide-react";
+import { Gift, Star } from "lucide-react";
 import { EmptyState } from "@/components/PageHeader";
 import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
 import type { EstrelasFilho } from "@/lib/child-app-session";
@@ -63,8 +63,8 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
               className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5"
             >
               <div className="flex items-start gap-4">
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35">
-                  <Estrela className={`h-9 w-9 ${conquistada ? "animate-subtle-shake" : ""}`} />
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
+                  <Estrela className="h-8 w-8" />
                 </span>
 
                 <div className="min-w-0 flex-1">
@@ -82,27 +82,17 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
 
                   </div>
 
-                  <div className="mt-2 flex min-h-[46px] items-start">
-                    {conquistada ? (
-                      <div className="flex items-start gap-2">
-                        <PartyPopper className="mt-0.5 h-4.5 w-4.5 shrink-0 text-amber-600 dark:text-amber-300" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300">
-                            Parabéns! Você conseguiu!
-                          </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
-                            {recompensa.pendente
-                              ? "Sua recompensa está aguardando entrega."
-                              : "Sua recompensa já está disponível."}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] font-medium text-muted-foreground">
-                        Faltam {recompensa.faltam} estrela{recompensa.faltam === 1 ? "" : "s"} para conquistar
-                      </p>
-                    )}
-                  </div>
+                  <p
+                    className={`mt-2 text-[11px] font-medium ${
+                      conquistada
+                        ? "font-bold text-amber-700 dark:text-amber-300"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {conquistada
+                      ? "Parabéns! Você conseguiu!"
+                      : `Faltam ${recompensa.faltam} estrela${recompensa.faltam === 1 ? "" : "s"} para conquistar`}
+                  </p>
                 </div>
               </div>
 
@@ -125,16 +115,10 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                   </div>
 
                   <span
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 transition-all dark:border-amber-800 dark:bg-amber-950/35"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-muted-foreground/20 bg-background"
                     aria-label={conquistada ? "Meta conquistada" : "Meta"}
                   >
-                    <Estrela
-                      className={
-                        conquistada
-                          ? "animate-subtle-shake h-6 w-6"
-                          : "h-4 w-4 opacity-55"
-                      }
-                    />
+                    <Estrela className="h-3.5 w-3.5 opacity-60" />
                   </span>
                 </div>
 
