@@ -202,7 +202,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         >
           <div className="space-y-2.5">
             {recompensasOrdenadas.map((recompensa) => {
-              const conquistada = recompensa.conquistada;
               const metaExibida = recompensa.meta_exibicao;
               const progressoExibido = recompensa.progresso_exibicao;
               const progresso = Math.min(
@@ -234,7 +233,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                   <div className="mt-3 flex items-center justify-end gap-2 border-t pt-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome}`}>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome_exibicao}`}>
                           <EllipsisVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -296,7 +295,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
             {recompensaEditandoTemPendente && (
               <p className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-                Esta recompensa já foi conquistada. As alterações valerão para o próximo ciclo; a conquista atual mantém o que estava definido quando foi alcançada.
+                Nome e descrição são atualizados agora. Se a quantidade de estrelas mudar, a conquista atual mantém a meta que já foi alcançada; a nova quantidade vale para o próximo ciclo.
               </p>
             )}
 
