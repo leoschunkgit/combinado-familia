@@ -20,6 +20,7 @@ type Recompensa = {
   disponivel: boolean;
   pendente: boolean;
   marco_estrelas: number;
+  conquista_meta?: number | null;
 };
 
 type Resgate = {
@@ -253,9 +254,16 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         >
           <div className="space-y-2.5">
             {recompensasOrdenadas.map((recompensa) => {
+              const conquistada = recompensa.pendente || recompensa.disponivel;
+              const metaExibida = recompensa.pendente && recompensa.conquista_meta
+                ? recompensa.conquista_meta
+                : recompensa.estrelas_necessarias;
+              const progressoExibido = conquistada
+                ? metaExibida
+                : Math.min(recompensa.progresso, metaExibida);
               const progresso = Math.min(
                 100,
-                Math.max(0, (recompensa.progresso / recompensa.estrelas_necessarias) * 100),
+                Math.max(0, (progressoExibido / metaExibida) * 100),
               );
               return (
                 <article key={recompensa.id} className="rounded-xl border bg-background p-3 shadow-sm sm:p-4">
@@ -264,14 +272,14 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                       <p className="break-words text-sm font-semibold">{recompensa.nome}</p>
                       {recompensa.descricao && <p className="mt-0.5 break-words text-xs text-muted-foreground">{recompensa.descricao}</p>}
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{recompensa.estrelas_necessarias}</span>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{metaExibida}</span>
                   </div>
 
                   <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progresso}%` }} />
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
-                    <span className="inline-flex items-center gap-1 text-muted-foreground">{recompensa.progresso} de {recompensa.estrelas_necessarias}<Estrela className="h-3 w-3" /></span>
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">{progressoExibido} de {metaExibida}<Estrela className="h-3 w-3" /></span>
                     <span className={recompensa.pendente || recompensa.disponivel ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
                       {recompensa.pendente || recompensa.disponivel
                         ? "Conquistada"
@@ -288,7 +296,13 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
                         <DropdownMenuItem onSelect={() => editarRecompensa(recompensa)}><Pencil className="h-4 w-4" />Editar</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}><X className="h-4 w-4" />Desativar</DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={recompensa.pendente}
+                          title={recompensa.pendente ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
+                          onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}
+                        >
+                          <X className="h-4 w-4" />Desativar
+                        </DropdownMenuItem>
                         {!recompensasComResgate.has(recompensa.id) && (
                           <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
                             <Trash2 className="h-4 w-4" />Excluir
