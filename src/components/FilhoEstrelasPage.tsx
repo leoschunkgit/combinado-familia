@@ -19,11 +19,37 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
     <div>
       <FilhoAppPageHeader
         title="Estrelas"
-        description="Acompanhe suas estrelas e recompensas."
+        description="Cada estrela mostra uma conquista sua."
         icon={<Star className="h-4.5 w-4.5" />}
       />
 
-      <div className="space-y-3">
+      <div className="space-y-4">
+        <section className="rounded-2xl border bg-card p-4 sm:p-5">
+          <div className="flex items-center gap-4">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35">
+              <Estrela className="animate-subtle-shake h-9 w-9" />
+            </span>
+
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Saldo de estrelas</p>
+              <p className="mt-0.5 text-3xl font-bold leading-none tabular-nums">
+                {estrelas.total_conquistado}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Suas estrelas ficam acumuladas e mostram tudo o que você já conquistou.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div>
+          <h2 className="text-base font-bold">Recompensas</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Acompanhe seu progresso em todas as recompensas.
+          </p>
+        </div>
+
+        <div className="space-y-3">
         {recompensasOrdenadas.map((recompensa) => {
           const itemProgresso = Math.min(
             100,
@@ -143,16 +169,17 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
           );
         })}
 
-        {estrelas.recompensas.length === 0 && (
-          <div className="rounded-2xl border border-dashed bg-card p-5">
-            <EmptyState>
-              <span className="flex flex-col items-center gap-2">
-                <Gift className="h-5 w-5" />
-                Nenhuma recompensa por enquanto.
-              </span>
-            </EmptyState>
-          </div>
-        )}
+          {estrelas.recompensas.length === 0 && (
+            <div className="rounded-2xl border border-dashed bg-card p-5">
+              <EmptyState>
+                <span className="flex flex-col items-center gap-2">
+                  <Gift className="h-5 w-5" />
+                  Nenhuma recompensa por enquanto.
+                </span>
+              </EmptyState>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
