@@ -1,20 +1,11 @@
 import { useState } from "react";
-import { CheckCircle2, Gift, Loader2, PartyPopper, Sparkles, Star } from "lucide-react";
+import { CheckCircle2, Gift, Loader2, PartyPopper, Star } from "lucide-react";
 import { EmptyState } from "@/components/PageHeader";
 import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
-import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EstrelasFilho, RecompensaEstrelaFilho } from "@/lib/child-app-session";
-
-const dataHora = (valor: string) => new Intl.DateTimeFormat("pt-BR", {
-  timeZone: "America/Sao_Paulo",
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-}).format(new Date(valor));
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -33,12 +24,6 @@ export function FilhoEstrelasPage({
   onConfirmarAproveitada: (idRecompensa: number) => Promise<void>;
 }) {
   const recompensasOrdenadas = [...estrelas.recompensas].sort((a, b) => a.id - b.id);
-  const recompensasAproveitadas = estrelas.resgates
-    .filter((resgate) => resgate.status === "ENTREGUE" && resgate.aproveitou_em)
-    .sort((a, b) =>
-      new Date(b.aproveitou_em ?? b.conquistou_em).getTime()
-      - new Date(a.aproveitou_em ?? a.conquistou_em).getTime()
-    );
   const [recompensaConfirmacao, setRecompensaConfirmacao] = useState<RecompensaEstrelaFilho | null>(null);
   const [confirmando, setConfirmando] = useState(false);
 
@@ -205,64 +190,7 @@ export function FilhoEstrelasPage({
           )}
         </div>
 
-        {recompensasAproveitadas.length > 0 && (
-          <CollapsibleSection
-            title={
-              <span className="inline-flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                Já aproveitei
-              </span>
-            }
-            description="Recompensas que já viraram bons momentos."
-            count={recompensasAproveitadas.length}
-            contentClassName="bg-muted/10 p-2.5 sm:p-3"
-          >
-            <div className="space-y-2.5">
-              {recompensasAproveitadas.map((resgate) => (
-                <article
-                  key={resgate.id}
-                  className="group rounded-xl border bg-background p-3 transition-transform duration-200 motion-safe:active:scale-[0.99] sm:p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35">
-                      <CheckCircle2 className="h-5 w-5 text-amber-600 dark:text-amber-300" />
-                    </span>
-
-                    <div className="min-w-0 flex-1 space-y-1.5 text-xs leading-relaxed">
-                      <p className="min-w-0 break-words text-sm font-bold text-foreground">
-                        {resgate.nome_exibicao}
-                      </p>
-                      <p className="text-muted-foreground">
-                        Quantidade de estrelas atingidas para conquista:{" "}
-                        <span className="font-semibold text-foreground tabular-nums">
-                          {resgate.quantidade_estrelas_conquista}
-                        </span>
-                      </p>
-                      <p className="text-muted-foreground">
-                        Conquistou em:{" "}
-                        <span className="font-semibold text-foreground">
-                          {dataHora(resgate.conquistou_em)}
-                        </span>
-                      </p>
-                      <p className="text-muted-foreground">
-                        Aproveitou em:{" "}
-                        <span className="font-semibold text-foreground">
-                          {dataHora(resgate.aproveitou_em!)}
-                        </span>
-                      </p>
-                      <p className="text-muted-foreground">
-                        Contagem recomeçou em:{" "}
-                        <span className="font-semibold text-foreground">
-                          {dataHora(resgate.contagem_recomecou_em!)}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </CollapsibleSection>
-        )}
+        <RecompensasAproveitadasSection resgates={estrelas.resgates} />
       </div>
 
       <Dialog
