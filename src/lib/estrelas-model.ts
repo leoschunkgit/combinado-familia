@@ -25,7 +25,7 @@ export type RecompensaEstrelaResumo = {
 
 export type CicloRecompensaResumo = {
   id: number;
-  id_recompensa: number;
+  id_recompensa: number | null;
   status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
 
   // Contrato semantico para apresentacao.
