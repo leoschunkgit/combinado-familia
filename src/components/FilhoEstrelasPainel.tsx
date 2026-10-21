@@ -154,10 +154,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   }
 
   const recompensasOrdenadas = [...resumo.recompensas].sort((a, b) => a.id - b.id);
-  const resgatesPendentes = resumo.resgates.filter((resgate) => resgate.status === "PENDENTE");
-  const recompensaEditandoTemPendente = editando
-    ? resgatesPendentes.some((resgate) => resgate.id_recompensa === editando.id)
-    : false;
+  const recompensaEditandoTemPendente = editando?.pendente === true;
 
   if (carregando) {
     return (
