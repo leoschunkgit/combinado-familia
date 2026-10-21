@@ -239,13 +239,44 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                 Math.max(0, (progressoExibido / metaExibida) * 100),
               );
               return (
-                <article key={recompensa.id} className="rounded-xl border bg-clean-surface p-3 shadow-sm sm:p-4">
+                <article key={recompensa.id} className="rounded-xl border bg-clean-surface p-3 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-semibold">{recompensa.nome_exibicao}</p>
                       {recompensa.descricao_exibicao && <p className="mt-0.5 break-words text-xs text-muted-foreground">{recompensa.descricao_exibicao}</p>}
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{metaExibida}</span>
+
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span className="inline-flex items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{metaExibida}</span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome_exibicao}`}>
+                            <EllipsisVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem
+                            disabled={!recompensa.pode_editar}
+                            title={!recompensa.pode_editar ? "Aguarde a recompensa ser marcada como aproveitada." : undefined}
+                            onSelect={() => editarRecompensa(recompensa)}
+                          >
+                            <Pencil className="h-4 w-4" />Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!recompensa.pode_desativar}
+                            title={!recompensa.pode_desativar ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
+                            onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}
+                          >
+                            <X className="h-4 w-4" />Desativar
+                          </DropdownMenuItem>
+                          {recompensa.pode_excluir && (
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
+                              <Trash2 className="h-4 w-4" />Excluir
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
                   <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -275,36 +306,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-end gap-2 border-t pt-3">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome_exibicao}`}>
-                          <EllipsisVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem
-                          disabled={!recompensa.pode_editar}
-                          title={!recompensa.pode_editar ? "Aguarde a recompensa ser marcada como aproveitada." : undefined}
-                          onSelect={() => editarRecompensa(recompensa)}
-                        >
-                          <Pencil className="h-4 w-4" />Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={!recompensa.pode_desativar}
-                          title={!recompensa.pode_desativar ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
-                          onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}
-                        >
-                          <X className="h-4 w-4" />Desativar
-                        </DropdownMenuItem>
-                        {recompensa.pode_excluir && (
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
-                            <Trash2 className="h-4 w-4" />Excluir
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
                 </article>
               );
             })}
