@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
+import type { CicloRecompensaResumo, RecompensaEstrelaResumo, ResumoEstrelas } from "@/lib/estrelas-model";
 
 const TOKEN_KEY = "combinado-familia.child-app-session";
 const TOKEN_CREDENTIAL_SERVER = "combinado-familia.child-app-session";
@@ -58,42 +59,9 @@ export type VigenciaFilho = {
   tarefas: TarefaFilho[];
 };
 
-export type RecompensaEstrelaFilho = {
-  id: number;
-  nome: string;
-  descricao: string | null;
-  estrelas_necessarias: number;
-  progresso: number;
-  faltam: number;
-  disponivel: boolean;
-  pendente: boolean;
-  marco_estrelas: number;
-  conquista_id?: number | null;
-  conquista_nome?: string | null;
-  conquista_descricao?: string | null;
-  conquista_meta?: number | null;
-};
-
-export type ResgateEstrelaFilho = {
-  id: number;
-  id_recompensa: number;
-  recompensa_nome: string;
-  recompensa_descricao_no_resgate: string | null;
-  meta_estrelas_no_resgate: number;
-  total_estrelas_no_resgate: number | null;
-  status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
-  created_at: string;
-  entregue_em: string | null;
-  cancelado_em: string | null;
-};
-
-export type EstrelasFilho = {
-  hoje: number;
-  vigencia_atual: number;
-  total_conquistado: number;
-  recompensas: RecompensaEstrelaFilho[];
-  resgates: ResgateEstrelaFilho[];
-};
+export type RecompensaEstrelaFilho = RecompensaEstrelaResumo;
+export type ResgateEstrelaFilho = CicloRecompensaResumo;
+export type EstrelasFilho = ResumoEstrelas;
 
 export type PainelFilho = {
   filho: {
