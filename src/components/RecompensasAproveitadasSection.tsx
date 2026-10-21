@@ -1,0 +1,85 @@
+import { CheckCircle2, Gift, RefreshCcw, Sparkles, Star, Trophy } from "lucide-react";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { InfoTile } from "@/components/InfoTile";
+import type { CicloRecompensaResumo } from "@/lib/estrelas-model";
+
+const dataHora = (valor: string) => new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+}).format(new Date(valor));
+
+export function RecompensasAproveitadasSection({
+  resgates,
+}: {
+  resgates: CicloRecompensaResumo[];
+}) {
+  const aproveitadas = resgates
+    .filter((resgate) => resgate.status === "ENTREGUE" && resgate.aproveitou_em)
+    .sort((a, b) =>
+      new Date(b.aproveitou_em ?? b.conquistou_em).getTime()
+      - new Date(a.aproveitou_em ?? a.conquistou_em).getTime()
+    );
+
+  if (aproveitadas.length === 0) return null;
+
+  return (
+    <CollapsibleSection
+      title={
+        <span className="inline-flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-amber-500" />
+          Já aproveitei
+        </span>
+      }
+      description="Recompensas que já viraram bons momentos."
+      count={aproveitadas.length}
+      contentClassName="bg-muted/10 p-2.5 sm:p-3"
+    >
+      <div className="space-y-2.5">
+        {aproveitadas.map((resgate) => (
+          <article key={resgate.id} className="rounded-xl border bg-background p-2.5 sm:p-3">
+            <div className="space-y-1.5">
+              <InfoTile
+                compact
+                label="Recompensa"
+                icon={<Gift className="h-3.5 w-3.5" />}
+                value={resgate.nome_exibicao}
+              />
+              <InfoTile
+                compact
+                label="Quantidade de estrelas atingidas para conquista"
+                icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />}
+                value={resgate.quantidade_estrelas_conquista}
+                valueClassName="tabular-nums"
+              />
+              <InfoTile
+                compact
+                label="Conquistou em"
+                icon={<Trophy className="h-3.5 w-3.5" />}
+                value={dataHora(resgate.conquistou_em)}
+                valueClassName="tabular-nums"
+              />
+              <InfoTile
+                compact
+                label="Aproveitou em"
+                icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                value={dataHora(resgate.aproveitou_em!)}
+                valueClassName="tabular-nums"
+              />
+              <InfoTile
+                compact
+                label="Contagem recomeçou em"
+                icon={<RefreshCcw className="h-3.5 w-3.5" />}
+                value={dataHora(resgate.contagem_recomecou_em!)}
+                valueClassName="tabular-nums"
+              />
+            </div>
+          </article>
+        ))}
+      </div>
+    </CollapsibleSection>
+  );
+}
