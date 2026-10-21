@@ -233,9 +233,9 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           <div className="rounded-xl border bg-card px-3 py-3.5">
             <div className="flex items-center gap-2 text-muted-foreground">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
-              <span className="text-[11px] font-medium">Nesta vigência</span>
+              <span className="text-[11px] font-medium">Total de estrelas</span>
             </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.vigencia_atual}</p>
+            <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.total_conquistado}</p>
           </div>
         </section>
 
