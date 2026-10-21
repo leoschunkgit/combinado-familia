@@ -43,19 +43,19 @@ jobs:
       - name: Verify Capacitor web output
         shell: bash
         run: |
-          test -f .output/public/index.html || {
-            echo "::error::.output/public/index.html was not generated"
-            find .output -maxdepth 3 -type f 2>/dev/null | sort || true
+          test -f dist/client/index.html || {
+            echo "::error::dist/client/index.html was not generated"
+            find dist/client -maxdepth 3 -type f 2>/dev/null | sort || true
             exit 1
           }
           echo "Native app web bundle generated successfully:"
-          ls -lh .output/public/index.html
+          ls -lh dist/client/index.html
 
       - name: Upload native web bundle
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: native-web-bundle
-          path: .output/public
+          path: dist/client
           if-no-files-found: error
           retention-days: 7
