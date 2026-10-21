@@ -38,10 +38,7 @@ function ResgateStatus({ status }: { status: "PENDENTE" | "ENTREGUE" | "CANCELAD
 export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
   const [resgatesAbertos, setResgatesAbertos] = useState(false);
 
-  const recompensasOrdenadas = useMemo(
-    () => [...estrelas.recompensas].sort((a, b) => a.estrelas_necessarias - b.estrelas_necessarias),
-    [estrelas.recompensas],
-  );
+  const recompensasOrdenadas = [...estrelas.recompensas].sort((a, b) => a.id - b.id);
 
   const resgatesAtivos = estrelas.resgates.filter((item) => item.status === "PENDENTE");
 
@@ -49,7 +46,7 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
     <div>
       <FilhoAppPageHeader
         title="Estrelas"
-        description="Acompanhe sua próxima conquista."
+        description="Acompanhe suas estrelas e recompensas."
         icon={<Star className="h-4.5 w-4.5" />}
       />
 
@@ -153,6 +150,11 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                       <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
                       <ResgateStatus status={resgate.status} />
                     </div>
+                    {resgate.recompensa_descricao_no_resgate && (
+                      <p className="mt-0.5 break-words text-xs text-muted-foreground">
+                        {resgate.recompensa_descricao_no_resgate}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
                   </div>
                   <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">

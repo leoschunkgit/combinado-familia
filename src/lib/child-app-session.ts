@@ -74,7 +74,7 @@ export type ResgateEstrelaFilho = {
   id: number;
   id_recompensa: number;
   recompensa_nome: string;
-  estrelas_utilizadas: number;
+  recompensa_descricao_no_resgate: string | null;
   meta_estrelas_no_resgate: number;
   total_estrelas_no_resgate: number | null;
   status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
@@ -86,7 +86,6 @@ export type ResgateEstrelaFilho = {
 export type EstrelasFilho = {
   hoje: number;
   vigencia_atual: number;
-  saldo: number;
   total_conquistado: number;
   recompensas: RecompensaEstrelaFilho[];
   resgates: ResgateEstrelaFilho[];

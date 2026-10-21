@@ -27,7 +27,7 @@ type Resgate = {
   id: number;
   id_recompensa: number;
   recompensa_nome: string;
-  estrelas_utilizadas: number;
+  recompensa_descricao_no_resgate: string | null;
   meta_estrelas_no_resgate: number;
   total_estrelas_no_resgate: number | null;
   status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
@@ -39,7 +39,6 @@ type Resgate = {
 type Resumo = {
   hoje: number;
   vigencia_atual: number;
-  saldo: number;
   total_conquistado: number;
   recompensas: Recompensa[];
   resgates: Resgate[];
@@ -49,7 +48,6 @@ type Resumo = {
 const resumoVazio: Resumo = {
   hoje: 0,
   vigencia_atual: 0,
-  saldo: 0,
   total_conquistado: 0,
   recompensas: [],
   resgates: [],
@@ -287,6 +285,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     }
   }
 
+  const recompensasOrdenadas = [...resumo.recompensas].sort((a, b) => a.id - b.id);
   const resgatesPendentes = resumo.resgates.filter((resgate) => resgate.status === "PENDENTE");
   const recompensaEditandoTemPendente = editando
     ? resgatesPendentes.some((resgate) => resgate.id_recompensa === editando.id)
@@ -334,7 +333,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           }
         >
           <div className="space-y-2.5">
-            {resumo.recompensas.map((recompensa) => {
+            {recompensasOrdenadas.map((recompensa) => {
               const progresso = Math.min(
                 100,
                 Math.max(0, (recompensa.progresso / recompensa.estrelas_necessarias) * 100),
@@ -408,6 +407,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                         <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
                         <ResgateStatus status={resgate.status} />
                       </div>
+                      {resgate.recompensa_descricao_no_resgate && (
+                        <p className="mt-0.5 break-words text-xs text-muted-foreground">
+                          {resgate.recompensa_descricao_no_resgate}
+                        </p>
+                      )}
                       <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
                     </div>
                     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{resgate.meta_estrelas_no_resgate}</span>
