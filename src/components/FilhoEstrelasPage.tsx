@@ -63,20 +63,8 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
               className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5"
             >
               <div className="flex items-start gap-4">
-                <span
-                  className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border ${
-                    conquistada
-                      ? "border-amber-300 bg-amber-100 dark:border-amber-700 dark:bg-amber-950/45"
-                      : "bg-amber-50 dark:bg-amber-950/35"
-                  }`}
-                >
-                  <Estrela
-                    className={
-                      conquistada
-                        ? "animate-subtle-shake h-9 w-9"
-                        : "h-8 w-8"
-                    }
-                  />
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35">
+                  <Estrela className={`h-9 w-9 ${conquistada ? "animate-subtle-shake" : ""}`} />
                 </span>
 
                 <div className="min-w-0 flex-1">
@@ -94,27 +82,27 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
 
                   </div>
 
-                  {conquistada ? (
-                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-800 dark:bg-amber-950/35">
-                      <div className="flex items-center gap-2">
-                        <PartyPopper className="h-4.5 w-4.5 shrink-0 text-amber-700 dark:text-amber-300" />
+                  <div className="mt-2 flex min-h-[46px] items-start">
+                    {conquistada ? (
+                      <div className="flex items-start gap-2">
+                        <PartyPopper className="mt-0.5 h-4.5 w-4.5 shrink-0 text-amber-600 dark:text-amber-300" />
                         <div className="min-w-0">
-                          <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200">
+                          <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300">
                             Parabéns! Você conseguiu!
                           </p>
-                          <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
                             {recompensa.pendente
                               ? "Sua recompensa está aguardando entrega."
                               : "Sua recompensa já está disponível."}
                           </p>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-[11px] font-medium text-muted-foreground">
-                      Faltam {recompensa.faltam} estrela{recompensa.faltam === 1 ? "" : "s"} para conquistar
-                    </p>
-                  )}
+                    ) : (
+                      <p className="text-[11px] font-medium text-muted-foreground">
+                        Faltam {recompensa.faltam} estrela{recompensa.faltam === 1 ? "" : "s"} para conquistar
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -137,18 +125,14 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                   </div>
 
                   <span
-                    className={`flex shrink-0 items-center justify-center rounded-full border transition-all ${
-                      conquistada
-                        ? "h-10 w-10 border-amber-300 bg-amber-100 shadow-sm dark:border-amber-700 dark:bg-amber-950/45"
-                        : "h-7 w-7 border-muted-foreground/20 bg-background"
-                    }`}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 transition-all dark:border-amber-800 dark:bg-amber-950/35"
                     aria-label={conquistada ? "Meta conquistada" : "Meta"}
                   >
                     <Estrela
                       className={
                         conquistada
                           ? "animate-subtle-shake h-6 w-6"
-                          : "h-3.5 w-3.5 opacity-60"
+                          : "h-4 w-4 opacity-55"
                       }
                     />
                   </span>
