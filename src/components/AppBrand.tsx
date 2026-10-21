@@ -7,12 +7,12 @@ type AppBrandProps = {
 
 export function AppBrand({ className = "", inverse = false }: AppBrandProps) {
   const imageClass = [
-    "block h-10 w-auto max-w-none shrink-0 object-contain md:h-11",
+    "block h-11 w-auto max-w-none shrink-0 object-contain md:h-12",
     inverse ? "brightness-0 invert" : "dark:brightness-0 dark:invert",
   ].join(" ");
 
   return (
-    <span className={`flex h-10 items-center md:h-11 ${className}`.trim()}>
+    <span className={`flex h-11 items-center md:h-12 ${className}`.trim()}>
       <img
         src={BRAND_LOGO_URI}
         alt="Combinado Família"
