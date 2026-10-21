@@ -1,9 +1,6 @@
 name: Build Android APK
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -43,8 +40,8 @@ jobs:
       - name: Build app bundle
         run: npm run build:app
 
-      - name: Add Android platform
-        run: npx cap add android
+      - name: Verify tracked Android project
+        run: test -f android/settings.gradle || test -f android/settings.gradle.kts
 
       - name: Generate native assets
         run: npm run app:assets
