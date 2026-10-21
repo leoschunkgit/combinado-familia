@@ -112,6 +112,7 @@ type RespostaRecompensaConcluida = {
     nome: string;
     id_ciclo: number;
   };
+  estrelas?: EstrelasFilho;
   notificacoes_enviadas?: number;
 };
 
