@@ -90,7 +90,7 @@ export function FilhoEstrelasPage({
           return (
             <article
               key={recompensa.id}
-              className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5"
+              className="rounded-2xl border bg-clean-surface p-4 shadow-sm sm:p-5"
             >
               <div className="flex items-start gap-4">
                 <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
@@ -126,15 +126,17 @@ export function FilhoEstrelasPage({
                             </p>
                           </div>
                         </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="mt-2 h-8 w-full rounded-lg text-xs font-bold"
-                          onClick={() => setRecompensaConfirmacao(recompensa)}
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Já aproveitei!
-                        </Button>
+                        {recompensa.pode_confirmar_aproveitada && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="mt-2 h-8 w-full rounded-lg text-xs font-bold"
+                            onClick={() => setRecompensaConfirmacao(recompensa)}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Já aproveitei!
+                          </Button>
+                        )}
                       </div>
                     ) : (
                       <div className="flex min-h-[58px] items-start pt-1">
