@@ -956,7 +956,7 @@ export type Database = {
           estrelas_utilizadas: number
           id: number
           id_filho: number
-          id_recompensa: number
+          id_recompensa: number | null
           id_usuario_pai: number
           meta_estrelas_no_resgate: number | null
           recompensa_descricao_no_resgate: string | null
@@ -973,7 +973,7 @@ export type Database = {
           estrelas_utilizadas: number
           id?: number
           id_filho: number
-          id_recompensa: number
+          id_recompensa?: number | null
           id_usuario_pai: number
           meta_estrelas_no_resgate?: number | null
           recompensa_descricao_no_resgate?: string | null
@@ -990,7 +990,7 @@ export type Database = {
           estrelas_utilizadas?: number
           id?: number
           id_filho?: number
-          id_recompensa?: number
+          id_recompensa?: number | null
           id_usuario_pai?: number
           meta_estrelas_no_resgate?: number | null
           recompensa_descricao_no_resgate?: string | null
