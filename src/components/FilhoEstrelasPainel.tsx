@@ -22,7 +22,7 @@ function Estrela({ className = "" }: { className?: string }) {
 
 export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [resumo, setResumo] = useState<ResumoEstrelas>(resumoEstrelasVazio);
-  const [recompensasComResgate, setRecompensasComResgate] =   const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
   const [editando, setEditando] = useState<RecompensaEstrelaResumo | null>(null);
