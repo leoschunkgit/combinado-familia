@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { EllipsisVertical, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
+import { CheckCircle2, EllipsisVertical, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Filho } from "@/lib/db";
@@ -32,6 +32,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [estrelas, setEstrelas] = useState("");
   const [recompensasAbertas, setRecompensasAbertas] = useState(false);
   const [confirmacao, setConfirmacao] = useState<
+    | { tipo: "APROVEITOU"; recompensa: RecompensaEstrelaResumo }
     | { tipo: "DESATIVAR"; recompensa: RecompensaEstrelaResumo }
     | { tipo: "EXCLUIR"; recompensa: RecompensaEstrelaResumo }
     | null
@@ -131,7 +132,22 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
     setSalvando(true);
     try {
-      if (confirmacao.tipo === "DESATIVAR") {
+      if (confirmacao.tipo === "APROVEITOU") {
+        const { data, error } = await supabase.rpc("confirmar_recompensa_aproveitada", {
+          p_id_recompensa: confirmacao.recompensa.id,
+        });
+        if (error) throw error;
+
+        const retorno = data as unknown as { ok?: boolean; codigo?: string } | null;
+        if (!retorno?.ok) {
+          if (retorno?.codigo === "RECOMPENSA_INDISPONIVEL") {
+            throw new Error("Esta recompensa já foi concluída ou não está mais disponível.");
+          }
+          throw new Error("Não foi possível confirmar a recompensa.");
+        }
+
+        toast.success("Recompensa marcada como aproveitada");
+      } else if (confirmacao.tipo === "DESATIVAR") {
         const { error } = await supabase.rpc("desativar_recompensa_estrelas", {
           p_id_recompensa: confirmacao.recompensa.id,
         });
@@ -186,12 +202,13 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         </section>
 
         <CollapsibleSection
+          className="bg-clean-surface"
           title="Recompensas"
           description="Cadastre o prêmio e defina quantas estrelas são necessárias."
           count={resumo.recompensas.length}
           open={recompensasAbertas}
           onOpenChange={setRecompensasAbertas}
-          contentClassName="bg-muted/10 p-2.5 sm:p-3"
+          contentClassName="bg-clean-surface p-2.5 sm:p-3"
           action={
             <Button type="button" size="sm" className="h-8 shrink-0 px-2.5 text-xs" onClick={novaRecompensa}>
               <Plus className="h-3.5 w-3.5" /> Nova
@@ -207,7 +224,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                 Math.max(0, (progressoExibido / metaExibida) * 100),
               );
               return (
-                <article key={recompensa.id} className="rounded-xl border bg-card p-3 shadow-sm sm:p-4">
+                <article key={recompensa.id} className="rounded-xl border bg-clean-surface p-3 shadow-sm sm:p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-semibold">{recompensa.nome_exibicao}</p>
@@ -219,13 +236,28 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                   <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progresso}%` }} />
                   </div>
-                  <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
+                  <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className="inline-flex items-center gap-1 text-muted-foreground">{progressoExibido} de {metaExibida}<Estrela className="h-3 w-3" /></span>
-                    <span className={recompensa.conquistada ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
-                      {recompensa.conquistada
-                        ? "Conquistada"
-                        : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam_exibicao}<Estrela className="h-3 w-3" /></span>}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={recompensa.conquistada ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
+                        {recompensa.conquistada
+                          ? "Conquistada"
+                          : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam_exibicao}<Estrela className="h-3 w-3" /></span>}
+                      </span>
+                      {recompensa.pode_confirmar_aproveitada && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-[11px] font-semibold"
+                          onClick={() => setConfirmacao({ tipo: "APROVEITOU", recompensa })}
+                          disabled={salvando}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Já aproveitou
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-3 flex items-center justify-end gap-2 border-t pt-3">
@@ -314,15 +346,19 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {confirmacao?.tipo === "DESATIVAR"
-                ? "Desativar recompensa?"
-                : "Excluir recompensa?"}
+              {confirmacao?.tipo === "APROVEITOU"
+                ? "Já aproveitou?"
+                : confirmacao?.tipo === "DESATIVAR"
+                  ? "Desativar recompensa?"
+                  : "Excluir recompensa?"}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            {confirmacao?.tipo === "DESATIVAR"
-              ? "A recompensa deixa de aparecer nos próximos ciclos. O histórico já existente permanece."
-              : "Esta recompensa nunca foi conquistada e será excluída definitivamente."}
+            {confirmacao?.tipo === "APROVEITOU"
+              ? `Confirme que ${filho.nome} já aproveitou “${confirmacao.recompensa.nome_exibicao}”. A nova contagem começa a partir das próximas estrelas.`
+              : confirmacao?.tipo === "DESATIVAR"
+                ? "A recompensa deixa de aparecer nos próximos ciclos. O histórico já existente permanece."
+                : "Esta recompensa nunca foi conquistada e será excluída definitivamente."}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmacao(null)}>Voltar</Button>
@@ -333,7 +369,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
               disabled={salvando}
             >
               {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
-              {confirmacao?.tipo === "EXCLUIR" ? "Excluir" : "Confirmar"}
+              {confirmacao?.tipo === "APROVEITOU"
+                ? "Sim, já aproveitou"
+                : confirmacao?.tipo === "EXCLUIR"
+                  ? "Excluir"
+                  : "Confirmar"}
             </Button>
           </DialogFooter>
         </DialogContent>
