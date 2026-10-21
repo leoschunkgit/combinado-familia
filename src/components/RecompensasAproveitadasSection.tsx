@@ -36,7 +36,7 @@ export function RecompensasAproveitadasSection({
       }
       description="Recompensas que já viraram bons momentos."
       count={aproveitadas.length}
-      contentClassName="bg-muted/10 p-2.5 sm:p-3"
+      contentClassName="bg-muted/5 p-2.5 sm:p-3"
     >
       <div className="space-y-2.5">
         {aproveitadas.map((resgate) => (
@@ -47,34 +47,44 @@ export function RecompensasAproveitadasSection({
                 label="Recompensa"
                 icon={<Gift className="h-3.5 w-3.5" />}
                 value={resgate.nome_exibicao}
+                className="bg-background"
+                valueClassName="text-sm font-bold leading-tight sm:text-base"
               />
               <InfoTile
                 compact
+                inline
                 label="Quantidade de estrelas atingidas para conquista"
                 icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />}
                 value={resgate.quantidade_estrelas_conquista}
-                valueClassName="tabular-nums"
+                className="bg-background"
+                valueClassName="font-semibold tabular-nums"
               />
               <InfoTile
                 compact
+                inline
                 label="Conquistou em"
                 icon={<Trophy className="h-3.5 w-3.5" />}
                 value={dataHora(resgate.conquistou_em)}
-                valueClassName="tabular-nums"
+                className="bg-background"
+                valueClassName="font-semibold tabular-nums"
               />
               <InfoTile
                 compact
+                inline
                 label="Aproveitou em"
                 icon={<CheckCircle2 className="h-3.5 w-3.5" />}
                 value={dataHora(resgate.aproveitou_em!)}
-                valueClassName="tabular-nums"
+                className="bg-background"
+                valueClassName="font-semibold tabular-nums"
               />
               <InfoTile
                 compact
+                inline
                 label="Contagem recomeçou em"
                 icon={<RefreshCcw className="h-3.5 w-3.5" />}
                 value={dataHora(resgate.contagem_recomecou_em!)}
-                valueClassName="tabular-nums"
+                className="bg-background"
+                valueClassName="font-semibold tabular-nums"
               />
             </div>
           </article>
