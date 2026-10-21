@@ -950,6 +950,7 @@ export type Database = {
       t_recompensa_resgate: {
         Row: {
           cancelado_em: string | null
+          confirmado_por: string | null
           created_at: string
           entregue_em: string | null
           estrelas_utilizadas: number
@@ -957,12 +958,16 @@ export type Database = {
           id_filho: number
           id_recompensa: number
           id_usuario_pai: number
+          meta_estrelas_no_resgate: number | null
+          recompensa_descricao_no_resgate: string | null
           recompensa_nome: string
           status: string
+          total_estrelas_no_resgate: number | null
           updated_at: string
         }
         Insert: {
           cancelado_em?: string | null
+          confirmado_por?: string | null
           created_at?: string
           entregue_em?: string | null
           estrelas_utilizadas: number
@@ -970,12 +975,16 @@ export type Database = {
           id_filho: number
           id_recompensa: number
           id_usuario_pai: number
+          meta_estrelas_no_resgate?: number | null
+          recompensa_descricao_no_resgate?: string | null
           recompensa_nome: string
           status?: string
+          total_estrelas_no_resgate?: number | null
           updated_at?: string
         }
         Update: {
           cancelado_em?: string | null
+          confirmado_por?: string | null
           created_at?: string
           entregue_em?: string | null
           estrelas_utilizadas?: number
@@ -983,8 +992,11 @@ export type Database = {
           id_filho?: number
           id_recompensa?: number
           id_usuario_pai?: number
+          meta_estrelas_no_resgate?: number | null
+          recompensa_descricao_no_resgate?: string | null
           recompensa_nome?: string
           status?: string
+          total_estrelas_no_resgate?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1240,6 +1252,10 @@ export type Database = {
           p_ios_min_version_code: number
           p_ios_min_version_name: string
         }
+        Returns: Json
+      }
+      confirmar_recompensa_aproveitada: {
+        Args: { p_id_recompensa: number }
         Returns: Json
       }
       alterar_status_resgate_estrelas: {
