@@ -207,7 +207,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                 Math.max(0, (progressoExibido / metaExibida) * 100),
               );
               return (
-                <article key={recompensa.id} className="rounded-xl border bg-background p-3 shadow-sm sm:p-4">
+                <article key={recompensa.id} className="rounded-xl border bg-card p-3 shadow-sm sm:p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-semibold">{recompensa.nome_exibicao}</p>
