@@ -1,3 +1,5 @@
+import { BRAND_LOGO_URI } from "@/assets/brand-assets";
+
 type AppBrandProps = {
   className?: string;
   inverse?: boolean;
@@ -12,7 +14,7 @@ export function AppBrand({ className = "", inverse = false }: AppBrandProps) {
   return (
     <span className={`flex h-10 items-center md:h-11 ${className}`.trim()}>
       <img
-        src="/logo-combinado-familia.svg"
+        src={BRAND_LOGO_URI}
         alt="Combinado Família"
         className={imageClass}
         draggable={false}
