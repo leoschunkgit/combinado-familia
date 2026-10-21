@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, ListPlus, MessageSquareText, ShieldCheck, Smartphone, Star } from "lucide-react";
+import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, ListPlus, MessageSquareText, ShieldCheck, Smartphone, Star, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -456,7 +456,10 @@ function AuthenticatedLayout() {
                     </Link>
                   )}
                   <div className="flex items-center justify-between gap-2 rounded-md px-2.5 py-2">
-                    <span className="text-sm text-muted-foreground">Aparência</span>
+                    <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Palette className="h-4 w-4" />
+                      Aparência
+                    </span>
                     <FilhoThemeToggle
                       modoEscuro={modoEscuro}
                       onChange={alterarModoEscuro}
@@ -591,7 +594,10 @@ function AuthenticatedLayout() {
                 )}
 
                 <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
-                  <span className="text-sm font-medium text-muted-foreground">Aparência</span>
+                  <span className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+                    <Palette className="h-4 w-4" />
+                    Aparência
+                  </span>
                   <FilhoThemeToggle
                     modoEscuro={modoEscuro}
                     onChange={alterarModoEscuro}
