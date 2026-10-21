@@ -278,22 +278,20 @@ export function PainelFilhoApp({
   const estrelas = painel.estrelas ?? {
     hoje: 0,
     vigencia_atual: qtdFez,
-    saldo: qtdFez,
     total_conquistado: qtdFez,
     recompensas: [],
     resgates: [],
   };
 
-  const recompensaDestaque = useMemo(
-    () => [...estrelas.recompensas]
-      .sort((a, b) => {
-        if (a.disponivel !== b.disponivel) return a.disponivel ? -1 : 1;
-        if (a.pendente !== b.pendente) return a.pendente ? -1 : 1;
-        if (a.faltam !== b.faltam) return a.faltam - b.faltam;
-        return a.estrelas_necessarias - b.estrelas_necessarias;
-      })[0] ?? null,
-    [estrelas.recompensas],
-  );
+  const recompensaDestaque = useMemo(() => {
+    const recompensasConfiguradas = [...estrelas.recompensas].sort((a, b) => a.id - b.id);
+    return (
+      recompensasConfiguradas.find((item) => item.pendente)
+      ?? recompensasConfiguradas.find((item) => item.disponivel)
+      ?? recompensasConfiguradas[0]
+      ?? null
+    );
+  }, [estrelas.recompensas]);
   const progressoRecompensa = recompensaDestaque
     ? Math.min(
         100,
@@ -472,7 +470,7 @@ export function PainelFilhoApp({
                 aria-label="Abrir estrelas"
               >
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                {estrelas.saldo}
+                {estrelas.total_conquistado}
               </button>
 
               <button
@@ -638,9 +636,9 @@ export function PainelFilhoApp({
                           <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-green-700 dark:text-green-300">Conquistado!</p>
+                          <p className="text-sm font-bold text-green-700 dark:text-green-300">Disponível!</p>
                           <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">Veja sua recompensa.</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">Disponível para resgate.</p>
                         </div>
                       </div>
                     ) : (
