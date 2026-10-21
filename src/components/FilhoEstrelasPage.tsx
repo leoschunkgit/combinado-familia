@@ -119,20 +119,21 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
               </div>
 
               <div className="mt-4">
-                <div className="flex items-center justify-between gap-3 text-[11px]">
-                  <span className="font-medium text-muted-foreground">Progresso</span>
-                  <span className="inline-flex items-center gap-1 font-semibold tabular-nums">
-                    {recompensa.progresso} de {recompensa.estrelas_necessarias}
-                    <Estrela className="h-3 w-3" />
-                  </span>
-                </div>
+                <div className="flex items-end gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3 text-[11px] leading-none">
+                      <span className="font-medium text-muted-foreground">Progresso</span>
+                      <span className="font-semibold tabular-nums">
+                        {recompensa.progresso} de {recompensa.estrelas_necessarias}
+                      </span>
+                    </div>
 
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary transition-[width]"
-                      style={{ width: `${itemProgresso}%` }}
-                    />
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-[width]"
+                        style={{ width: `${itemProgresso}%` }}
+                      />
+                    </div>
                   </div>
 
                   <span
