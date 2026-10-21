@@ -43,14 +43,6 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
     [estrelas.recompensas],
   );
 
-  const proxima = recompensasOrdenadas.find((item) => !item.disponivel) ?? null;
-  const conquistadas = recompensasOrdenadas.filter((item) => item.disponivel);
-  const ultimaConquistada = conquistadas.at(-1) ?? null;
-  const alvo = proxima ?? ultimaConquistada;
-  const progresso = alvo
-    ? Math.min(100, Math.max(0, (estrelas.saldo / alvo.estrelas_necessarias) * 100))
-    : 0;
-
   const resgatesAtivos = estrelas.resgates.filter((item) => item.status === "PENDENTE");
 
   return (
@@ -68,47 +60,13 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
               <Estrela className="animate-subtle-shake h-9 w-9" />
             </span>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-muted-foreground">Seu saldo</p>
-              <p className="mt-0.5 text-3xl font-bold leading-none tabular-nums">{estrelas.saldo}</p>
+              <p className="text-xs font-medium text-muted-foreground">Estrelas conquistadas</p>
+              <p className="mt-0.5 text-3xl font-bold leading-none tabular-nums">{estrelas.total_conquistado}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {estrelas.hoje > 0 ? `+${estrelas.hoje} hoje` : "Continue cumprindo seus combinados"}
               </p>
             </div>
           </div>
-
-          {alvo && (
-            <div className="mt-4 border-t pt-4">
-              {alvo.disponivel ? (
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-6 w-6 shrink-0 text-green-700 dark:text-green-300" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-green-700 dark:text-green-300">Conquistado!</p>
-                    <p className="mt-0.5 break-words text-sm font-semibold">{alvo.nome}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">Você atingiu a quantidade necessária de estrelas.</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-muted-foreground">Próxima recompensa</p>
-                      <p className="mt-0.5 break-words text-sm font-semibold">{alvo.nome}</p>
-                    </div>
-                    <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
-                      <Estrela className="h-3.5 w-3.5" />
-                      {alvo.estrelas_necessarias}
-                    </span>
-                  </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progresso}%` }} />
-                  </div>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Faltam {Math.max(0, alvo.estrelas_necessarias - estrelas.saldo)} para conquistar
-                  </p>
-                </>
-              )}
-            </div>
-          )}
         </section>
 
         <section className="overflow-hidden rounded-2xl border bg-card">
@@ -119,8 +77,10 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
 
           <div className="divide-y border-t">
             {recompensasOrdenadas.map((recompensa) => {
-              const faltam = Math.max(0, recompensa.estrelas_necessarias - estrelas.saldo);
-              const itemProgresso = Math.min(100, Math.max(0, (estrelas.saldo / recompensa.estrelas_necessarias) * 100));
+              const itemProgresso = Math.min(
+                100,
+                Math.max(0, (recompensa.progresso / recompensa.estrelas_necessarias) * 100),
+              );
 
               return (
                 <article key={recompensa.id} className="px-4 py-3.5 sm:px-5">
@@ -132,10 +92,14 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                       )}
                     </div>
 
-                    {recompensa.disponivel ? (
+                    {recompensa.pendente ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-300">
+                        Aguardando entrega
+                      </span>
+                    ) : recompensa.disponivel ? (
                       <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-[10px] font-bold text-green-700 dark:border-green-800 dark:bg-green-950/35 dark:text-green-300">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        Conquistado
+                        Disponível
                       </span>
                     ) : (
                       <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
@@ -145,12 +109,16 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                     )}
                   </div>
 
-                  {!recompensa.disponivel && (
+                  {!recompensa.pendente && (
                     <>
                       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                         <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${itemProgresso}%` }} />
                       </div>
-                      <p className="mt-1.5 text-[11px] text-muted-foreground">Faltam {faltam}</p>
+                      <p className="mt-1.5 text-[11px] text-muted-foreground">
+                        {recompensa.disponivel
+                          ? `${recompensa.progresso} de ${recompensa.estrelas_necessarias} estrelas`
+                          : `Faltam ${recompensa.faltam}`}
+                      </p>
                     </>
                   )}
                 </article>
@@ -189,7 +157,7 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                   </div>
                   <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
                     <Estrela className="h-3.5 w-3.5" />
-                    {resgate.estrelas_utilizadas}
+                    {resgate.meta_estrelas_no_resgate}
                   </span>
                 </div>
               ))}

@@ -284,15 +284,21 @@ export function PainelFilhoApp({
     resgates: [],
   };
 
-  const recompensasOrdenadas = useMemo(
-    () => [...estrelas.recompensas].sort((a, b) => a.estrelas_necessarias - b.estrelas_necessarias),
+  const recompensaDestaque = useMemo(
+    () => [...estrelas.recompensas]
+      .sort((a, b) => {
+        if (a.disponivel !== b.disponivel) return a.disponivel ? -1 : 1;
+        if (a.pendente !== b.pendente) return a.pendente ? -1 : 1;
+        if (a.faltam !== b.faltam) return a.faltam - b.faltam;
+        return a.estrelas_necessarias - b.estrelas_necessarias;
+      })[0] ?? null,
     [estrelas.recompensas],
   );
-  const proximaRecompensa = recompensasOrdenadas.find((item) => !item.disponivel) ?? null;
-  const ultimaConquistada = recompensasOrdenadas.filter((item) => item.disponivel).at(-1) ?? null;
-  const recompensaDestaque = proximaRecompensa ?? ultimaConquistada;
   const progressoRecompensa = recompensaDestaque
-    ? Math.min(100, Math.max(0, (estrelas.saldo / recompensaDestaque.estrelas_necessarias) * 100))
+    ? Math.min(
+        100,
+        Math.max(0, (recompensaDestaque.progresso / recompensaDestaque.estrelas_necessarias) * 100),
+      )
     : 0;
 
   const registrosAtuais = useMemo(
@@ -615,7 +621,18 @@ export function PainelFilhoApp({
                     onClick={() => setAba("estrelas")}
                     className="w-full rounded-2xl border bg-card p-4 text-left transition-colors active:bg-muted/30"
                   >
-                    {recompensaDestaque.disponivel ? (
+                    {recompensaDestaque.pendente ? (
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
+                          <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Aguardando entrega</p>
+                          <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">Seu resgate já foi registrado.</p>
+                        </div>
+                      </div>
+                    ) : recompensaDestaque.disponivel ? (
                       <div className="flex items-center gap-3">
                         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
                           <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
@@ -630,7 +647,7 @@ export function PainelFilhoApp({
                       <>
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground">Próxima recompensa</p>
+                            <p className="text-xs font-medium text-muted-foreground">Recompensa em destaque</p>
                             <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
                           </div>
                           <span className="animate-subtle-shake inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
@@ -642,7 +659,7 @@ export function PainelFilhoApp({
                           <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoRecompensa}%` }} />
                         </div>
                         <p className="mt-1.5 text-xs text-muted-foreground">
-                          Faltam {Math.max(0, recompensaDestaque.estrelas_necessarias - estrelas.saldo)} para conquistar
+                          Faltam {recompensaDestaque.faltam} para conquistar
                         </p>
                       </>
                     )}
