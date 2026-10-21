@@ -65,7 +65,7 @@ function EstrelasPage() {
     <>
       <PageHeader
         title="Estrelas e recompensas"
-        description="Acompanhe o saldo de cada filho, cadastre recompensas e controle os resgates."
+        description="Acompanhe o mérito de cada filho, cadastre recompensas e controle os resgates."
         icon={<Star className="h-6 w-6" />}
       />
 
@@ -141,7 +141,7 @@ function EstrelasPage() {
             </div>
 
             <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-              Cada tarefa marcada como “Fez” vale 1 estrela. O saldo continua acumulado mesmo quando uma vigência termina.
+              O primeiro “Fez” de cada tarefa em cada dia concede 1 estrela. As estrelas conquistadas são permanentes e continuam com o filho mesmo quando a vigência termina.
             </p>
           </section>
 
