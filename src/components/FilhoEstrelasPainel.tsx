@@ -9,49 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
-
-type Recompensa = {
-  id: number;
-  nome: string;
-  descricao: string | null;
-  estrelas_necessarias: number;
-  progresso: number;
-  faltam: number;
-  disponivel: boolean;
-  pendente: boolean;
-  marco_estrelas: number;
-  conquista_meta?: number | null;
-};
-
-type Resgate = {
-  id: number;
-  id_recompensa: number;
-  recompensa_nome: string;
-  recompensa_descricao_no_resgate: string | null;
-  meta_estrelas_no_resgate: number;
-  total_estrelas_no_resgate: number | null;
-  status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
-  created_at: string;
-  entregue_em: string | null;
-  cancelado_em: string | null;
-};
-
-type Resumo = {
-  hoje: number;
-  vigencia_atual: number;
-  total_conquistado: number;
-  recompensas: Recompensa[];
-  resgates: Resgate[];
-};
-
-
-const resumoVazio: Resumo = {
-  hoje: 0,
-  vigencia_atual: 0,
-  total_conquistado: 0,
-  recompensas: [],
-  resgates: [],
-};
+import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas } from "@/lib/estrelas-model";
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -63,41 +21,32 @@ function Estrela({ className = "" }: { className?: string }) {
 }
 
 export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
-  const [resumo, setResumo] = useState<Resumo>(resumoVazio);
-  const [recompensasComResgate, setRecompensasComResgate] = useState<Set<number>>(new Set());
-  const [carregando, setCarregando] = useState(false);
+  const [resumo, setResumo] = useState<ResumoEstrelas>(resumoEstrelasVazio);
+  const [recompensasComResgate, setRecompensasComResgate] =   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
-  const [editando, setEditando] = useState<Recompensa | null>(null);
+  const [editando, setEditando] = useState<RecompensaEstrelaResumo | null>(null);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [estrelas, setEstrelas] = useState("");
   const [recompensasAbertas, setRecompensasAbertas] = useState(false);
   const [confirmacao, setConfirmacao] = useState<
-    | { tipo: "DESATIVAR"; recompensa: Recompensa }
-    | { tipo: "EXCLUIR"; recompensa: Recompensa }
+    | { tipo: "DESATIVAR"; recompensa: RecompensaEstrelaResumo }
+    | { tipo: "EXCLUIR"; recompensa: RecompensaEstrelaResumo }
     | null
   >(null);
 
   async function carregar() {
     setCarregando(true);
     try {
-      const [resumoResp, resgatesResp] = await Promise.all([
-        supabase.rpc("resumo_estrelas_filho", { p_id_filho: filho.id }),
-        supabase
-          .from("t_recompensa_resgate")
-          .select("id_recompensa")
-          .eq("id_filho", filho.id),
-      ]);
+      const { data, error } = await supabase.rpc("resumo_estrelas_filho", {
+        p_id_filho: filho.id,
+      });
 
-      if (resumoResp.error) throw resumoResp.error;
-      if (resgatesResp.error) throw resgatesResp.error;
+      if (error) throw error;
 
-      const proximoResumo = (resumoResp.data as unknown as Resumo | null) ?? resumoVazio;
+      const proximoResumo = (data as unknown as ResumoEstrelas | null) ?? resumoEstrelasVazio;
       setResumo(proximoResumo);
-      setRecompensasComResgate(
-        new Set((resgatesResp.data ?? []).map((resgate) => resgate.id_recompensa)),
-      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível carregar as estrelas.");
     } finally {
@@ -106,8 +55,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   }
 
   useEffect(() => {
-    setResumo(resumoVazio);
-    setRecompensasComResgate(new Set());
+    setResumo(resumoEstrelasVazio);
     setEditando(null);
     setNome("");
     setDescricao("");
@@ -134,7 +82,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     setFormAberto(true);
   }
 
-  function editarRecompensa(recompensa: Recompensa) {
+  function editarRecompensa(recompensa: RecompensaEstrelaResumo) {
     setEditando(recompensa);
     setNome(recompensa.nome);
     setDescricao(recompensa.descricao ?? "");
@@ -254,13 +202,9 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         >
           <div className="space-y-2.5">
             {recompensasOrdenadas.map((recompensa) => {
-              const conquistada = recompensa.pendente || recompensa.disponivel;
-              const metaExibida = recompensa.pendente && recompensa.conquista_meta
-                ? recompensa.conquista_meta
-                : recompensa.estrelas_necessarias;
-              const progressoExibido = conquistada
-                ? metaExibida
-                : Math.min(recompensa.progresso, metaExibida);
+              const conquistada = recompensa.conquistada;
+              const metaExibida = recompensa.meta_exibicao;
+              const progressoExibido = recompensa.progresso_exibicao;
               const progresso = Math.min(
                 100,
                 Math.max(0, (progressoExibido / metaExibida) * 100),
@@ -269,8 +213,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                 <article key={recompensa.id} className="rounded-xl border bg-background p-3 shadow-sm sm:p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="break-words text-sm font-semibold">{recompensa.nome}</p>
-                      {recompensa.descricao && <p className="mt-0.5 break-words text-xs text-muted-foreground">{recompensa.descricao}</p>}
+                      <p className="break-words text-sm font-semibold">{recompensa.nome_exibicao}</p>
+                      {recompensa.descricao_exibicao && <p className="mt-0.5 break-words text-xs text-muted-foreground">{recompensa.descricao_exibicao}</p>}
                     </div>
                     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{metaExibida}</span>
                   </div>
@@ -280,10 +224,10 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
                     <span className="inline-flex items-center gap-1 text-muted-foreground">{progressoExibido} de {metaExibida}<Estrela className="h-3 w-3" /></span>
-                    <span className={recompensa.pendente || recompensa.disponivel ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
-                      {recompensa.pendente || recompensa.disponivel
+                    <span className={recompensa.conquistada ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
+                      {recompensa.conquistada
                         ? "Conquistada"
-                        : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam}<Estrela className="h-3 w-3" /></span>}
+                        : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam_exibicao}<Estrela className="h-3 w-3" /></span>}
                     </span>
                   </div>
 
@@ -297,13 +241,13 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                       <DropdownMenuContent align="end" className="w-44">
                         <DropdownMenuItem onSelect={() => editarRecompensa(recompensa)}><Pencil className="h-4 w-4" />Editar</DropdownMenuItem>
                         <DropdownMenuItem
-                          disabled={recompensa.pendente}
-                          title={recompensa.pendente ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
+                          disabled={!recompensa.pode_desativar}
+                          title={!recompensa.pode_desativar ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
                           onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}
                         >
                           <X className="h-4 w-4" />Desativar
                         </DropdownMenuItem>
-                        {!recompensasComResgate.has(recompensa.id) && (
+                        {recompensa.pode_excluir && (
                           <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
                             <Trash2 className="h-4 w-4" />Excluir
                           </DropdownMenuItem>
