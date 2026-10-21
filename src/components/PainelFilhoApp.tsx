@@ -566,6 +566,11 @@ export function PainelFilhoApp({
                 Sair
               </button>
             </div>
+
+            <div className="border-t px-4 py-3 text-center text-[10px] leading-relaxed text-muted-foreground">
+              <p>Versão 1.2.17</p>
+              <p>© 2026 Combinado Família. Todos os direitos reservados.</p>
+            </div>
           </div>
         </>
       )}
