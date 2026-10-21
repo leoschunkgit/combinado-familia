@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
 import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas } from "@/lib/estrelas-model";
 
 function Estrela({ className = "" }: { className?: string }) {
@@ -257,6 +258,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
             {resumo.recompensas.length === 0 && <p className="rounded-xl border border-dashed bg-background px-4 py-5 text-center text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
           </div>
         </CollapsibleSection>
+
+        <RecompensasAproveitadasSection resgates={resumo.resgates} />
 
       </div>
 
