@@ -444,14 +444,6 @@ function AuthenticatedLayout() {
                     <UserCog className="h-4 w-4" />
                     Minha conta
                   </Link>
-                  <div className="flex items-center justify-between gap-2 rounded-md px-2.5 py-2">
-                    <span className="text-sm text-muted-foreground">Aparência</span>
-                    <FilhoThemeToggle
-                      modoEscuro={modoEscuro}
-                      onChange={alterarModoEscuro}
-                      comEstrela={false}
-                    />
-                  </div>
                   {ehAdmin && (
                     <Link
                       to="/administracao"
@@ -463,6 +455,14 @@ function AuthenticatedLayout() {
                       Administração
                     </Link>
                   )}
+                  <div className="flex items-center justify-between gap-2 rounded-md px-2.5 py-2">
+                    <span className="text-sm text-muted-foreground">Aparência</span>
+                    <FilhoThemeToggle
+                      modoEscuro={modoEscuro}
+                      onChange={alterarModoEscuro}
+                      comEstrela={false}
+                    />
+                  </div>
                   <div className="my-1 h-px bg-muted" />
                   <button
                     type="button"
@@ -578,15 +578,6 @@ function AuthenticatedLayout() {
                   Feedback
                 </button>
 
-                <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
-                  <span className="text-sm font-medium text-muted-foreground">Aparência</span>
-                  <FilhoThemeToggle
-                    modoEscuro={modoEscuro}
-                    onChange={alterarModoEscuro}
-                    comEstrela={false}
-                  />
-                </div>
-
                 {ehAdmin && (
                   <Link
                     to="/administracao"
@@ -598,6 +589,15 @@ function AuthenticatedLayout() {
                     Administração
                   </Link>
                 )}
+
+                <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
+                  <span className="text-sm font-medium text-muted-foreground">Aparência</span>
+                  <FilhoThemeToggle
+                    modoEscuro={modoEscuro}
+                    onChange={alterarModoEscuro}
+                    comEstrela={false}
+                  />
+                </div>
 
                 <div className="my-2 h-px bg-border" />
 
