@@ -358,7 +358,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
               ? `Confirme que ${filho.nome} já aproveitou “${confirmacao.recompensa.nome_exibicao}”. A nova contagem começa a partir das próximas estrelas.`
               : confirmacao?.tipo === "DESATIVAR"
                 ? "A recompensa deixa de aparecer nos próximos ciclos. O histórico já existente permanece."
-                : "Esta recompensa nunca foi conquistada e será excluída definitivamente."}
+                : "Esta recompensa será excluída. As estrelas já conquistadas e o histórico existente serão preservados."}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmacao(null)}>Voltar</Button>
