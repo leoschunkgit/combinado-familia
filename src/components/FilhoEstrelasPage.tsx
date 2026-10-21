@@ -233,29 +233,34 @@ export function FilhoEstrelasPage({
                       <CheckCircle2 className="h-5 w-5 text-amber-600 dark:text-amber-300" />
                     </span>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <p className="min-w-0 break-words text-sm font-bold">
-                          {resgate.recompensa_nome}
-                        </p>
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/20 px-2 py-1 text-[10px] font-bold tabular-nums">
-                          <Estrela className="h-3 w-3" />
+                    <div className="min-w-0 flex-1 space-y-1.5 text-xs leading-relaxed">
+                      <p className="min-w-0 break-words text-sm font-bold text-foreground">
+                        {resgate.recompensa_nome}
+                      </p>
+                      <p className="text-muted-foreground">
+                        Quantidade de estrelas atingidas para conquista:{" "}
+                        <span className="font-semibold text-foreground tabular-nums">
                           {resgate.meta_estrelas_no_resgate}
                         </span>
-                      </div>
-
-                      <div className="mt-2 space-y-1.5 text-xs leading-relaxed">
-                        <p className="text-muted-foreground">
-                          Conquistou em <span className="font-semibold text-foreground">{dataHora(resgate.created_at)}</span>
-                        </p>
-                        <p className="text-muted-foreground">
-                          Aproveitou em <span className="font-semibold text-foreground">{dataHora(resgate.entregue_em!)}</span>
-                        </p>
-                        <p className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700 dark:bg-green-950/35 dark:text-green-300">
-                          <Sparkles className="h-3 w-3" />
-                          Nova contagem começou aqui
-                        </p>
-                      </div>
+                      </p>
+                      <p className="text-muted-foreground">
+                        Conquistou em:{" "}
+                        <span className="font-semibold text-foreground">
+                          {dataHora(resgate.created_at)}
+                        </span>
+                      </p>
+                      <p className="text-muted-foreground">
+                        Aproveitou em:{" "}
+                        <span className="font-semibold text-foreground">
+                          {dataHora(resgate.entregue_em!)}
+                        </span>
+                      </p>
+                      <p className="text-muted-foreground">
+                        Contagem recomeçou em:{" "}
+                        <span className="font-semibold text-foreground">
+                          {dataHora(resgate.entregue_em!)}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 </article>
