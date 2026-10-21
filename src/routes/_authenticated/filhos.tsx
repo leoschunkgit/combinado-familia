@@ -20,6 +20,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { InfoTile } from "@/components/InfoTile";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -275,24 +276,31 @@ function FilhosPage() {
           contentClassName="p-4"
         >
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="col-span-2 min-w-0 rounded-lg border bg-muted/20 px-3 py-2 sm:col-span-1">
-              <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Mail className="h-3.5 w-3.5" />Email</div>
-              <Hint content={f.email ?? undefined}>
-                <p className="truncate font-medium text-foreground">{f.email || "Não informado"}</p>
-              </Hint>
-            </div>
-            <div className="rounded-lg border bg-muted/20 px-3 py-2">
-              <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Phone className="h-3.5 w-3.5" />Celular</div>
-              <p className="whitespace-nowrap font-medium text-foreground">{f.celular ? maskCelular(f.celular) : "Não informado"}</p>
-            </div>
-            <div className="rounded-lg border bg-muted/20 px-3 py-2">
-              <p className="mb-0.5 text-xs font-medium text-muted-foreground">Idade</p>
-              <p className="font-medium text-foreground">{f.idade !== null ? `${f.idade} anos` : "Não informada"}</p>
-            </div>
-            <div className="col-span-2 rounded-lg border bg-muted/20 px-3 py-2 sm:col-span-1">
-              <div className="mb-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><WalletCards className="h-3.5 w-3.5" />Mesada</div>
-              <p className="font-medium text-foreground">{f.tem_mesada_opcional === true && f.valor_mesada !== null ? dinheiro(f.valor_mesada) : "Não"}</p>
-            </div>
+            <InfoTile
+              label="Email"
+              icon={<Mail className="h-3.5 w-3.5" />}
+              className="col-span-2 sm:col-span-1"
+              value={
+                <Hint content={f.email ?? undefined}>
+                  <p className="truncate">{f.email || "Não informado"}</p>
+                </Hint>
+              }
+            />
+            <InfoTile
+              label="Celular"
+              icon={<Phone className="h-3.5 w-3.5" />}
+              value={<p className="whitespace-nowrap">{f.celular ? maskCelular(f.celular) : "Não informado"}</p>}
+            />
+            <InfoTile
+              label="Idade"
+              value={f.idade !== null ? `${f.idade} anos` : "Não informada"}
+            />
+            <InfoTile
+              label="Mesada"
+              icon={<WalletCards className="h-3.5 w-3.5" />}
+              className="col-span-2 sm:col-span-1"
+              value={f.tem_mesada_opcional === true && f.valor_mesada !== null ? dinheiro(f.valor_mesada) : "Não"}
+            />
           </div>
 
           <div className="mt-3 border-t pt-3">
