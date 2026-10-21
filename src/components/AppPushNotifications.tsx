@@ -48,6 +48,11 @@ export function AppPushNotifications() {
           void queryClient.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] });
 
           const dados = event.notification.data ?? {};
+          if (dados["target"] === "recompensa_concluida_filho") {
+            navigate({ to: "/estrelas" });
+            return;
+          }
+
           if (
             dados["target"] === "solicitacao_tarefa_filho" ||
             dados["target"] === "revisao_tarefa_filho"

@@ -9,7 +9,7 @@ import { useFilhos } from "@/lib/db";
 export const Route = createFileRoute("/_authenticated/estrelas")({
   head: () => ({ meta: [
     { title: "Estrelas e recompensas — Combinado" },
-    { name: "description", content: "Gerencie estrelas, recompensas e resgates dos filhos." },
+    { name: "description", content: "Gerencie estrelas e recompensas dos filhos." },
   ] }),
   component: EstrelasPage,
 });
@@ -65,7 +65,7 @@ function EstrelasPage() {
     <>
       <PageHeader
         title="Estrelas e recompensas"
-        description="Acompanhe o mérito de cada filho, cadastre recompensas e controle os resgates."
+        description="Acompanhe o mérito de cada filho e configure suas recompensas."
         icon={<Star className="h-6 w-6" />}
       />
 

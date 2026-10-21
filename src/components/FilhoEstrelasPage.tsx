@@ -1,7 +1,10 @@
-import { Gift, PartyPopper, Star } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Gift, Loader2, PartyPopper, Star } from "lucide-react";
 import { EmptyState } from "@/components/PageHeader";
 import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
-import type { EstrelasFilho } from "@/lib/child-app-session";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { EstrelasFilho, RecompensaEstrelaFilho } from "@/lib/child-app-session";
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -12,8 +15,28 @@ function Estrela({ className = "" }: { className?: string }) {
   );
 }
 
-export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
+export function FilhoEstrelasPage({
+  estrelas,
+  onConfirmarAproveitada,
+}: {
+  estrelas: EstrelasFilho;
+  onConfirmarAproveitada: (idRecompensa: number) => Promise<void>;
+}) {
   const recompensasOrdenadas = [...estrelas.recompensas].sort((a, b) => a.id - b.id);
+  const [recompensaConfirmacao, setRecompensaConfirmacao] = useState<RecompensaEstrelaFilho | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
+
+  async function confirmarAproveitada() {
+    if (!recompensaConfirmacao || confirmando) return;
+
+    setConfirmando(true);
+    try {
+      await onConfirmarAproveitada(recompensaConfirmacao.id);
+      setRecompensaConfirmacao(null);
+    } finally {
+      setConfirmando(false);
+    }
+  }
 
   return (
     <div>
@@ -51,11 +74,23 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
 
         <div className="space-y-3">
         {recompensasOrdenadas.map((recompensa) => {
+          const conquistada = recompensa.disponivel || recompensa.pendente;
+          const nomeExibido = recompensa.pendente && recompensa.conquista_nome
+            ? recompensa.conquista_nome
+            : recompensa.nome;
+          const descricaoExibida = recompensa.pendente
+            ? (recompensa.conquista_descricao ?? recompensa.descricao)
+            : recompensa.descricao;
+          const metaExibida = recompensa.pendente && recompensa.conquista_meta
+            ? recompensa.conquista_meta
+            : recompensa.estrelas_necessarias;
+          const progressoExibido = conquistada
+            ? metaExibida
+            : Math.min(recompensa.progresso, metaExibida);
           const itemProgresso = Math.min(
             100,
-            Math.max(0, (recompensa.progresso / recompensa.estrelas_necessarias) * 100),
+            Math.max(0, (progressoExibido / metaExibida) * 100),
           );
-          const conquistada = recompensa.disponivel || recompensa.pendente;
 
           return (
             <article
@@ -71,11 +106,11 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="break-words text-base font-bold leading-tight">
-                        {recompensa.nome}
+                        {nomeExibido}
                       </p>
-                      {recompensa.descricao && (
+                      {descricaoExibida && (
                         <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
-                          {recompensa.descricao}
+                          {descricaoExibida}
                         </p>
                       )}
                     </div>
@@ -84,18 +119,27 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
 
                   <div className="mt-2 min-h-[58px]">
                     {conquistada ? (
-                      <div className="flex min-h-[58px] items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-800 dark:bg-amber-950/35">
-                        <PartyPopper className="h-4.5 w-4.5 shrink-0 text-amber-700 dark:text-amber-300" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200">
-                            Parabéns! Você conseguiu!
-                          </p>
-                          <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">
-                            {recompensa.pendente
-                              ? "Sua recompensa está aguardando entrega."
-                              : "Sua recompensa já está disponível."}
-                          </p>
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-800 dark:bg-amber-950/35">
+                        <div className="flex items-start gap-2">
+                          <PartyPopper className="mt-0.5 h-4.5 w-4.5 shrink-0 text-amber-700 dark:text-amber-300" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-extrabold text-amber-800 dark:text-amber-200">
+                              Parabéns! Você conseguiu!
+                            </p>
+                            <p className="mt-0.5 text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
+                              Quando aproveitar, confirme aqui para começar uma nova contagem.
+                            </p>
+                          </div>
                         </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="mt-2 h-8 w-full rounded-lg text-xs font-bold"
+                          onClick={() => setRecompensaConfirmacao(recompensa)}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Já aproveitei!
+                        </Button>
                       </div>
                     ) : (
                       <div className="flex min-h-[58px] items-start pt-1">
@@ -114,7 +158,7 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                     <div className="flex items-center justify-between gap-3 text-[11px] leading-none">
                       <span className="font-medium text-muted-foreground">Progresso</span>
                       <span className="font-semibold tabular-nums">
-                        {recompensa.progresso} de {recompensa.estrelas_necessarias}
+                        {progressoExibido} de {metaExibida}
                       </span>
                     </div>
 
@@ -151,6 +195,44 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
           )}
         </div>
       </div>
+
+      <Dialog
+        open={recompensaConfirmacao !== null}
+        onOpenChange={(open) => {
+          if (!open && !confirmando) setRecompensaConfirmacao(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Já aproveitou?</DialogTitle>
+            <DialogDescription>
+              {recompensaConfirmacao
+                ? `Confirme que você já recebeu ou aproveitou “${recompensaConfirmacao.conquista_nome ?? recompensaConfirmacao.nome}”. Depois disso, uma nova contagem começa a partir das próximas estrelas.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:space-x-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRecompensaConfirmacao(null)}
+              disabled={confirmando}
+            >
+              Ainda não
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void confirmarAproveitada()}
+              disabled={confirmando}
+            >
+              {confirmando
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <CheckCircle2 className="h-4 w-4" />}
+              Já aproveitei!
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

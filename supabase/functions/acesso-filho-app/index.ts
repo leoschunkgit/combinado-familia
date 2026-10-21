@@ -122,6 +122,7 @@ serve(async (req) => {
       push_token?: unknown;
       plataforma?: unknown;
       id_filho_tarefa?: unknown;
+      id_recompensa?: unknown;
       observacao?: unknown;
     } | null;
 
@@ -342,6 +343,91 @@ serve(async (req) => {
         ok: true,
         ja_existia: false,
         revisao,
+        notificacoes_enviadas: notificacoesEnviadas,
+      });
+    }
+
+    if (acao === "concluir_recompensa") {
+      const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
+      const idRecompensa = typeof body?.id_recompensa === "number"
+        ? body.id_recompensa
+        : Number(body?.id_recompensa);
+
+      if (
+        !/^[0-9a-f]{64}$/.test(token) ||
+        !Number.isInteger(idRecompensa) ||
+        idRecompensa <= 0
+      ) {
+        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+      }
+
+      const { data, error } = await admin.rpc("concluir_recompensa_filho_interno", {
+        p_token: token,
+        p_id_recompensa: idRecompensa,
+      });
+
+      if (error) {
+        console.error("Erro ao concluir recompensa pelo filho:", error);
+        return json({ error: "Não foi possível concluir a recompensa" }, 500);
+      }
+
+      const retorno = data as Record<string, unknown> | null;
+      if (!retorno?.ok) {
+        const codigo = typeof retorno?.codigo === "string"
+          ? retorno.codigo
+          : "REQUISICAO_INVALIDA";
+        const status =
+          codigo === "SESSAO_INVALIDA" ? 401 :
+          codigo === "RECOMPENSA_INVALIDA" ? 403 :
+          codigo === "RECOMPENSA_INDISPONIVEL" ? 409 :
+          400;
+        return json(retorno ?? { ok: false, codigo }, status);
+      }
+
+      const recompensa =
+        retorno.recompensa && typeof retorno.recompensa === "object"
+          ? retorno.recompensa as Record<string, unknown>
+          : null;
+
+      if (!recompensa) {
+        return json({ error: "Não foi possível concluir a recompensa" }, 500);
+      }
+
+      if (retorno.concluida !== true) {
+        return json({
+          ok: true,
+          ja_concluida: true,
+          recompensa,
+          notificacoes_enviadas: 0,
+        });
+      }
+
+      const idUsuarioPai = Number(retorno.id_usuario_pai);
+      const idFilho = Number(retorno.id_filho);
+      const nomeFilho = typeof retorno.nome_filho === "string"
+        ? retorno.nome_filho
+        : "Seu filho";
+      const nomeRecompensa = typeof recompensa.nome === "string"
+        ? recompensa.nome
+        : "uma recompensa";
+
+      const notificacoesEnviadas = await enviarPushAoResponsavel(admin, {
+        idUsuarioPai,
+        body: nomeFilho + " marcou que já aproveitou a recompensa “" + nomeRecompensa + "”.",
+        data: {
+          target: "recompensa_concluida_filho",
+          route: "/estrelas",
+          id_filho: String(idFilho),
+          id_recompensa: String(idRecompensa),
+          id_ciclo: String(recompensa.id_ciclo ?? ""),
+        },
+        contexto: "recompensa concluída pelo filho",
+      });
+
+      return json({
+        ok: true,
+        ja_concluida: false,
+        recompensa,
         notificacoes_enviadas: notificacoesEnviadas,
       });
     }

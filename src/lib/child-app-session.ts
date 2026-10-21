@@ -68,6 +68,10 @@ export type RecompensaEstrelaFilho = {
   disponivel: boolean;
   pendente: boolean;
   marco_estrelas: number;
+  conquista_id?: number | null;
+  conquista_nome?: string | null;
+  conquista_descricao?: string | null;
+  conquista_meta?: number | null;
 };
 
 export type ResgateEstrelaFilho = {
@@ -132,6 +136,17 @@ type RespostaRevisao = {
   notificacoes_enviadas?: number;
 };
 
+type RespostaRecompensaConcluida = {
+  ok: true;
+  ja_concluida: boolean;
+  recompensa: {
+    id: number;
+    nome: string;
+    id_ciclo: number;
+  };
+  notificacoes_enviadas?: number;
+};
+
 type RespostaErro = {
   ok?: false;
   codigo?: string;
@@ -188,7 +203,7 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     body: JSON.stringify(body),
   });
 
-  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRevisao | RespostaErro;
+  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRevisao | RespostaRecompensaConcluida | RespostaErro;
 
   if (!response.ok) {
     const codigo = "codigo" in data ? data.codigo : undefined;
@@ -219,6 +234,12 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     }
     if (codigo === "OBSERVACAO_INVALIDA") {
       throw new Error("A observação deve ter no máximo 120 caracteres.");
+    }
+    if (codigo === "RECOMPENSA_INVALIDA") {
+      throw new Error("Esta recompensa não está disponível neste acesso.");
+    }
+    if (codigo === "RECOMPENSA_INDISPONIVEL") {
+      throw new Error("Esta recompensa ainda não está pronta para ser concluída.");
     }
 
     throw new Error(("error" in data && data.error) || "Não foi possível acessar o painel do filho.");
@@ -400,6 +421,25 @@ export async function pedirRevisaoTarefa(
   }
 
   return data as RespostaRevisao;
+}
+
+export async function confirmarRecompensaAproveitada(
+  idRecompensa: number,
+): Promise<RespostaRecompensaConcluida> {
+  const token = await lerSessaoFilhoLocal();
+  if (!token) throw new Error("Este acesso não está mais ativo.");
+
+  const data = await chamarAcessoFilho({
+    acao: "concluir_recompensa",
+    token,
+    id_recompensa: idRecompensa,
+  });
+
+  if (!("ok" in data) || data.ok !== true || !("recompensa" in data)) {
+    throw new Error("Não foi possível concluir a recompensa.");
+  }
+
+  return data as RespostaRecompensaConcluida;
 }
 
 export async function revogarTokenFilho(token: string) {
