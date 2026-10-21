@@ -19,6 +19,7 @@ import { AppResumeRefresh } from "@/components/AppResumeRefresh";
 import { AndroidBackButton } from "@/components/AndroidBackButton";
 import { ActionLoadingProvider } from "@/components/ActionLoading";
 import { applyTheme, getThemePreference, THEME_CHANGE_EVENT } from "@/lib/theme";
+import { BRAND_FAVICON_URI } from "@/assets/brand-assets";
 
 function NotFoundComponent() {
   return (
@@ -93,7 +94,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: BRAND_FAVICON_URI, type: "image/webp" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
