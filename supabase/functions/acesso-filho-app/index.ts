@@ -398,6 +398,7 @@ serve(async (req) => {
           ok: true,
           ja_concluida: true,
           recompensa,
+          estrelas: retorno.estrelas,
           notificacoes_enviadas: 0,
         });
       }
@@ -428,6 +429,7 @@ serve(async (req) => {
         ok: true,
         ja_concluida: false,
         recompensa,
+        estrelas: retorno.estrelas,
         notificacoes_enviadas: notificacoesEnviadas,
       });
     }
