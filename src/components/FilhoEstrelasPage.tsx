@@ -1,10 +1,20 @@
 import { useState } from "react";
-import { CheckCircle2, Gift, Loader2, PartyPopper, Star } from "lucide-react";
+import { CheckCircle2, Gift, Loader2, PartyPopper, Sparkles, Star } from "lucide-react";
 import { EmptyState } from "@/components/PageHeader";
 import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EstrelasFilho, RecompensaEstrelaFilho } from "@/lib/child-app-session";
+
+const dataHora = (valor: string) => new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+}).format(new Date(valor));
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -23,6 +33,9 @@ export function FilhoEstrelasPage({
   onConfirmarAproveitada: (idRecompensa: number) => Promise<void>;
 }) {
   const recompensasOrdenadas = [...estrelas.recompensas].sort((a, b) => a.id - b.id);
+  const recompensasAproveitadas = estrelas.resgates
+    .filter((resgate) => resgate.status === "ENTREGUE" && resgate.entregue_em)
+    .sort((a, b) => new Date(b.entregue_em ?? b.created_at).getTime() - new Date(a.entregue_em ?? a.created_at).getTime());
   const [recompensaConfirmacao, setRecompensaConfirmacao] = useState<RecompensaEstrelaFilho | null>(null);
   const [confirmando, setConfirmando] = useState(false);
 
@@ -196,6 +209,60 @@ export function FilhoEstrelasPage({
             </div>
           )}
         </div>
+
+        {recompensasAproveitadas.length > 0 && (
+          <CollapsibleSection
+            title={
+              <span className="inline-flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                Já aproveitei
+              </span>
+            }
+            description="Recompensas que já viraram bons momentos."
+            count={recompensasAproveitadas.length}
+            contentClassName="bg-muted/10 p-2.5 sm:p-3"
+          >
+            <div className="space-y-2.5">
+              {recompensasAproveitadas.map((resgate) => (
+                <article
+                  key={resgate.id}
+                  className="group rounded-xl border bg-background p-3 transition-transform duration-200 motion-safe:active:scale-[0.99] sm:p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35">
+                      <CheckCircle2 className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+                    </span>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <p className="min-w-0 break-words text-sm font-bold">
+                          {resgate.recompensa_nome}
+                        </p>
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/20 px-2 py-1 text-[10px] font-bold tabular-nums">
+                          <Estrela className="h-3 w-3" />
+                          {resgate.meta_estrelas_no_resgate}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 space-y-1.5 text-xs leading-relaxed">
+                        <p className="text-muted-foreground">
+                          Conquistou em <span className="font-semibold text-foreground">{dataHora(resgate.created_at)}</span>
+                        </p>
+                        <p className="text-muted-foreground">
+                          Aproveitou em <span className="font-semibold text-foreground">{dataHora(resgate.entregue_em!)}</span>
+                        </p>
+                        <p className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-1 text-[11px] font-semibold text-green-700 dark:bg-green-950/35 dark:text-green-300">
+                          <Sparkles className="h-3 w-3" />
+                          Nova contagem começou aqui
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
       </div>
 
       <Dialog
