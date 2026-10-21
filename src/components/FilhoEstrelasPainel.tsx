@@ -38,8 +38,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     | null
   >(null);
 
-  async function carregar() {
-    setCarregando(true);
+  async function carregar(silencioso = false) {
+    if (!silencioso) setCarregando(true);
     try {
       const { data, error } = await supabase.rpc("resumo_estrelas_filho", {
         p_id_filho: filho.id,
@@ -50,9 +50,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       const proximoResumo = (data as unknown as ResumoEstrelas | null) ?? resumoEstrelasVazio;
       setResumo(proximoResumo);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível carregar as estrelas.");
+      if (!silencioso) {
+        toast.error(error instanceof Error ? error.message : "Não foi possível carregar as estrelas.");
+      }
     } finally {
-      setCarregando(false);
+      if (!silencioso) setCarregando(false);
     }
   }
 
@@ -66,6 +68,12 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     setRecompensasAbertas(false);
     setConfirmacao(null);
     void carregar();
+
+    const intervalo = window.setInterval(() => {
+      void carregar(true);
+    }, 5_000);
+
+    return () => window.clearInterval(intervalo);
   }, [filho.id]);
 
   function limparForm() {
