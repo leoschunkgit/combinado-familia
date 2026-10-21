@@ -16,13 +16,20 @@ type Recompensa = {
   nome: string;
   descricao: string | null;
   estrelas_necessarias: number;
+  progresso: number;
+  faltam: number;
   disponivel: boolean;
+  pendente: boolean;
+  marco_estrelas: number;
 };
 
 type Resgate = {
   id: number;
+  id_recompensa: number;
   recompensa_nome: string;
   estrelas_utilizadas: number;
+  meta_estrelas_no_resgate: number;
+  total_estrelas_no_resgate: number | null;
   status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
   created_at: string;
   entregue_em: string | null;
@@ -268,7 +275,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           p_status: "CANCELADO",
         });
         if (error) throw error;
-        toast.success("Resgate cancelado e estrelas devolvidas");
+        toast.success("Resgate cancelado");
       }
 
       setConfirmacao(null);
@@ -281,6 +288,9 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   }
 
   const resgatesPendentes = resumo.resgates.filter((resgate) => resgate.status === "PENDENTE");
+  const recompensaEditandoTemPendente = editando
+    ? resgatesPendentes.some((resgate) => resgate.id_recompensa === editando.id)
+    : false;
 
   if (carregando) {
     return (
@@ -325,8 +335,10 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         >
           <div className="space-y-2.5">
             {resumo.recompensas.map((recompensa) => {
-              const faltam = Math.max(0, recompensa.estrelas_necessarias - resumo.saldo);
-              const progresso = Math.min(100, Math.max(0, (resumo.saldo / recompensa.estrelas_necessarias) * 100));
+              const progresso = Math.min(
+                100,
+                Math.max(0, (recompensa.progresso / recompensa.estrelas_necessarias) * 100),
+              );
               return (
                 <article key={recompensa.id} className="rounded-xl border bg-background p-3 shadow-sm sm:p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -341,9 +353,13 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                     <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progresso}%` }} />
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
-                    <span className="inline-flex items-center gap-1 text-muted-foreground">{resumo.saldo} de {recompensa.estrelas_necessarias}<Estrela className="h-3 w-3" /></span>
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">{recompensa.progresso} de {recompensa.estrelas_necessarias}<Estrela className="h-3 w-3" /></span>
                     <span className={recompensa.disponivel ? "font-semibold text-green-700" : "text-muted-foreground"}>
-                      {recompensa.disponivel ? "Disponível para resgate" : <span className="inline-flex items-center gap-1">Faltam {faltam}<Estrela className="h-3 w-3" /></span>}
+                      {recompensa.pendente
+                        ? "Aguardando entrega"
+                        : recompensa.disponivel
+                          ? "Disponível para resgate"
+                          : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam}<Estrela className="h-3 w-3" /></span>}
                     </span>
                   </div>
 
@@ -394,7 +410,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{resgate.estrelas_utilizadas}</span>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{resgate.meta_estrelas_no_resgate}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button type="button" size="sm" className="h-8 px-2.5 text-xs" onClick={() => void marcarEntregue(resgate)} disabled={salvando}>
@@ -442,6 +458,12 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
               </div>
             </div>
 
+            {recompensaEditandoTemPendente && (
+              <p className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                Há um resgate aguardando entrega. A nova meta valerá para os próximos resgates; o pedido atual mantém a meta que tinha quando foi feito.
+              </p>
+            )}
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
               <Button type="submit" disabled={salvando}>
@@ -469,7 +491,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
               ? "A recompensa deixa de aparecer para novos resgates. O histórico já existente permanece."
               : confirmacao?.tipo === "EXCLUIR"
                 ? "Esta recompensa nunca foi resgatada e será excluída definitivamente."
-                : "As estrelas usadas neste resgate serão devolvidas ao saldo e o histórico permanecerá registrado."}
+                : "O resgate será cancelado. Nenhuma estrela é retirada ou devolvida; o progresso desta recompensa permanece como estava."}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmacao(null)}>Voltar</Button>

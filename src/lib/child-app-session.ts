@@ -63,13 +63,20 @@ export type RecompensaEstrelaFilho = {
   nome: string;
   descricao: string | null;
   estrelas_necessarias: number;
+  progresso: number;
+  faltam: number;
   disponivel: boolean;
+  pendente: boolean;
+  marco_estrelas: number;
 };
 
 export type ResgateEstrelaFilho = {
   id: number;
+  id_recompensa: number;
   recompensa_nome: string;
   estrelas_utilizadas: number;
+  meta_estrelas_no_resgate: number;
+  total_estrelas_no_resgate: number | null;
   status: "PENDENTE" | "ENTREGUE" | "CANCELADO";
   created_at: string;
   entregue_em: string | null;
