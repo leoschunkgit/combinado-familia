@@ -283,21 +283,7 @@ export function PainelFilhoApp({
     resgates: [],
   };
 
-  const recompensaDestaque = useMemo(() => {
-    const recompensasConfiguradas = [...estrelas.recompensas].sort((a, b) => a.id - b.id);
-    return (
-      recompensasConfiguradas.find((item) => item.pendente)
-      ?? recompensasConfiguradas.find((item) => item.disponivel)
-      ?? recompensasConfiguradas[0]
-      ?? null
-    );
-  }, [estrelas.recompensas]);
-  const progressoRecompensa = recompensaDestaque
-    ? Math.min(
-        100,
-        Math.max(0, (recompensaDestaque.progresso / recompensaDestaque.estrelas_necessarias) * 100),
-      )
-    : 0;
+
 
   const registrosAtuais = useMemo(
     () => tarefasAtual
@@ -613,68 +599,7 @@ export function PainelFilhoApp({
                   </div>
                 </button>
 
-                {recompensaDestaque && (
-                  <button
-                    type="button"
-                    onClick={() => setAba("estrelas")}
-                    className="w-full rounded-2xl border bg-card p-4 text-left transition-colors active:bg-muted/30"
-                  >
-                    {recompensaDestaque.pendente ? (
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
-                          <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Aguardando entrega</p>
-                          <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">Seu resgate já foi registrado.</p>
-                        </div>
-                      </div>
-                    ) : recompensaDestaque.disponivel ? (
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
-                          <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-green-700 dark:text-green-300">Disponível!</p>
-                          <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">Disponível para resgate.</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground">Recompensa em destaque</p>
-                            <p className="mt-0.5 break-words text-sm font-semibold">{recompensaDestaque.nome}</p>
-                          </div>
-                          <span className="animate-subtle-shake inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
-                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                            {recompensaDestaque.estrelas_necessarias}
-                          </span>
-                        </div>
-                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                          <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoRecompensa}%` }} />
-                        </div>
-                        <p className="mt-1.5 text-xs text-muted-foreground">
-                          Faltam {recompensaDestaque.faltam} para conquistar
-                        </p>
-                      </>
-                    )}
-                    <div
-                      className="mt-3 flex items-center justify-end gap-1.5 text-xs font-bold"
-                      style={{ color: painel.filho.cor?.trim() || "var(--primary)" }}
-                    >
-                      <span>Ver minhas estrelas</span>
-                      <span
-                        className="flex h-6 w-6 items-center justify-center rounded-full border"
-                        style={{ borderColor: painel.filho.cor?.trim() || "var(--primary)" }}
-                      >
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
-                    </div>
-                  </button>
-                )}
+
 
                 <section className="overflow-hidden rounded-2xl border bg-card">
                   <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
