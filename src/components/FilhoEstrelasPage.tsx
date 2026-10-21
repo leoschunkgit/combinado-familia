@@ -154,13 +154,6 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                   </span>
                 </div>
 
-                {conquistada && (
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">
-                    {recompensa.pendente
-                      ? "Meta atingida · aguardando entrega"
-                      : "Meta atingida · recompensa disponível"}
-                  </p>
-                )}
               </div>
             </article>
           );
