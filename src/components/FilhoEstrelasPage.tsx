@@ -92,10 +92,6 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                       )}
                     </div>
 
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border bg-muted/20 px-2 py-1 text-xs font-bold">
-                      <Estrela className="h-3.5 w-3.5" />
-                      {recompensa.estrelas_necessarias}
-                    </span>
                   </div>
 
                   {conquistada ? (
@@ -157,13 +153,13 @@ export function FilhoEstrelasPage({ estrelas }: { estrelas: EstrelasFilho }) {
                   </span>
                 </div>
 
-                <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  {conquistada
-                    ? recompensa.pendente
+                {conquistada && (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    {recompensa.pendente
                       ? "Meta atingida · aguardando entrega"
-                      : "Meta atingida · recompensa disponível"
-                    : `${Math.round(itemProgresso)}% da meta concluída`}
-                </p>
+                      : "Meta atingida · recompensa disponível"}
+                  </p>
+                )}
               </div>
             </article>
           );
