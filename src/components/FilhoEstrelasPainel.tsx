@@ -1,9 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Check, EllipsisVertical, Gift, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
+import { EllipsisVertical, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Filho } from "@/lib/db";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -53,46 +52,12 @@ const resumoVazio: Resumo = {
   resgates: [],
 };
 
-const dataHora = (valor: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(valor));
-
 function Estrela({ className = "" }: { className?: string }) {
   return (
     <Star
       aria-hidden="true"
       className={`h-3.5 w-3.5 fill-amber-400 text-amber-500 ${className}`}
     />
-  );
-}
-
-function ResgateStatus({ status }: { status: Resgate["status"] }) {
-  if (status === "PENDENTE") {
-    return (
-      <Badge className="h-5 whitespace-nowrap border-amber-200 bg-amber-100 px-1.5 py-0 text-[10px] font-semibold text-amber-700">
-        Pendente
-      </Badge>
-    );
-  }
-
-  if (status === "ENTREGUE") {
-    return (
-      <Badge className="h-5 whitespace-nowrap border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700">
-        Entregue
-      </Badge>
-    );
-  }
-
-  return (
-    <Badge className="h-5 whitespace-nowrap border-gray-200 bg-gray-100 px-1.5 py-0 text-[10px] font-semibold text-gray-600">
-      Cancelado
-    </Badge>
   );
 }
 
@@ -107,11 +72,9 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   const [descricao, setDescricao] = useState("");
   const [estrelas, setEstrelas] = useState("");
   const [recompensasAbertas, setRecompensasAbertas] = useState(false);
-  const [entregasAbertas, setEntregasAbertas] = useState(false);
   const [confirmacao, setConfirmacao] = useState<
     | { tipo: "DESATIVAR"; recompensa: Recompensa }
     | { tipo: "EXCLUIR"; recompensa: Recompensa }
-    | { tipo: "CANCELAR"; resgate: Resgate }
     | null
   >(null);
 
@@ -131,7 +94,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
       const proximoResumo = (resumoResp.data as unknown as Resumo | null) ?? resumoVazio;
       setResumo(proximoResumo);
-      setEntregasAbertas(proximoResumo.resgates.some((resgate) => resgate.status === "PENDENTE"));
       setRecompensasComResgate(
         new Set((resgatesResp.data ?? []).map((resgate) => resgate.id_recompensa)),
       );
@@ -151,7 +113,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     setEstrelas("");
     setFormAberto(false);
     setRecompensasAbertas(false);
-    setEntregasAbertas(false);
     setConfirmacao(null);
     void carregar();
   }, [filho.id]);
@@ -215,41 +176,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     }
   }
 
-  async function resgatar(recompensa: Recompensa) {
-    setSalvando(true);
-    try {
-      const { error } = await supabase.rpc("resgatar_recompensa_estrelas", {
-        p_id_recompensa: recompensa.id,
-      });
-      if (error) throw error;
-
-      toast.success("Recompensa resgatada. Aguardando entrega.");
-      await carregar();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível resgatar a recompensa.");
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  async function marcarEntregue(resgate: Resgate) {
-    setSalvando(true);
-    try {
-      const { error } = await supabase.rpc("alterar_status_resgate_estrelas", {
-        p_id_resgate: resgate.id,
-        p_status: "ENTREGUE",
-      });
-      if (error) throw error;
-
-      toast.success("Recompensa marcada como entregue");
-      await carregar();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o resgate.");
-    } finally {
-      setSalvando(false);
-    }
-  }
-
   async function confirmarAcao() {
     if (!confirmacao) return;
 
@@ -267,13 +193,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         });
         if (error) throw error;
         toast.success("Recompensa excluída");
-      } else {
-        const { error } = await supabase.rpc("alterar_status_resgate_estrelas", {
-          p_id_resgate: confirmacao.resgate.id,
-          p_status: "CANCELADO",
-        });
-        if (error) throw error;
-        toast.success("Resgate cancelado");
       }
 
       setConfirmacao(null);
@@ -353,19 +272,14 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
                     <span className="inline-flex items-center gap-1 text-muted-foreground">{recompensa.progresso} de {recompensa.estrelas_necessarias}<Estrela className="h-3 w-3" /></span>
-                    <span className={recompensa.disponivel ? "font-semibold text-green-700" : "text-muted-foreground"}>
-                      {recompensa.pendente
-                        ? "Aguardando entrega"
-                        : recompensa.disponivel
-                          ? "Disponível para resgate"
-                          : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam}<Estrela className="h-3 w-3" /></span>}
+                    <span className={recompensa.pendente || recompensa.disponivel ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
+                      {recompensa.pendente || recompensa.disponivel
+                        ? "Conquistada"
+                        : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam}<Estrela className="h-3 w-3" /></span>}
                     </span>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3">
-                    <Button type="button" size="sm" className="h-8 px-2.5 text-xs" onClick={() => void resgatar(recompensa)} disabled={salvando || !recompensa.disponivel}>
-                      <Gift className="h-3.5 w-3.5" /> Resgatar
-                    </Button>
+                  <div className="mt-3 flex items-center justify-end gap-2 border-t pt-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome}`}>
@@ -389,46 +303,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
             {resumo.recompensas.length === 0 && <p className="rounded-xl border border-dashed bg-background px-4 py-5 text-center text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
           </div>
         </CollapsibleSection>
-
-        {resgatesPendentes.length > 0 && (
-          <CollapsibleSection
-            title="Aguardando entrega"
-            description="Recompensas resgatadas que ainda precisam ser entregues."
-            count={resgatesPendentes.length}
-            open={entregasAbertas}
-            onOpenChange={setEntregasAbertas}
-          >
-            <div className="divide-y">
-              {resgatesPendentes.map((resgate) => (
-                <div key={resgate.id} className="px-4 py-3.5 sm:px-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="break-words text-sm font-semibold">{resgate.recompensa_nome}</p>
-                        <ResgateStatus status={resgate.status} />
-                      </div>
-                      {resgate.recompensa_descricao_no_resgate && (
-                        <p className="mt-0.5 break-words text-xs text-muted-foreground">
-                          {resgate.recompensa_descricao_no_resgate}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-muted-foreground">{dataHora(resgate.created_at)}</p>
-                    </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{resgate.meta_estrelas_no_resgate}</span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button type="button" size="sm" className="h-8 px-2.5 text-xs" onClick={() => void marcarEntregue(resgate)} disabled={salvando}>
-                      <Check className="h-3.5 w-3.5" />Marcar entregue
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" className="h-8 px-2.5 text-xs" onClick={() => setConfirmacao({ tipo: "CANCELAR", resgate })} disabled={salvando}>
-                      <X className="h-3.5 w-3.5" />Cancelar
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CollapsibleSection>
-        )}
 
       </div>
 
@@ -464,7 +338,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
             {recompensaEditandoTemPendente && (
               <p className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-                Há um resgate aguardando entrega. A nova meta valerá para os próximos resgates; o pedido atual mantém a meta que tinha quando foi feito.
+                Esta recompensa já foi conquistada. As alterações valerão para o próximo ciclo; a conquista atual mantém o que estava definido quando foi alcançada.
               </p>
             )}
 
@@ -485,17 +359,13 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
             <DialogTitle>
               {confirmacao?.tipo === "DESATIVAR"
                 ? "Desativar recompensa?"
-                : confirmacao?.tipo === "EXCLUIR"
-                  ? "Excluir recompensa?"
-                  : "Cancelar resgate?"}
+                : "Excluir recompensa?"}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             {confirmacao?.tipo === "DESATIVAR"
-              ? "A recompensa deixa de aparecer para novos resgates. O histórico já existente permanece."
-              : confirmacao?.tipo === "EXCLUIR"
-                ? "Esta recompensa nunca foi resgatada e será excluída definitivamente."
-                : "O resgate será cancelado. Nenhuma estrela é retirada ou devolvida; o progresso desta recompensa permanece como estava."}
+              ? "A recompensa deixa de aparecer nos próximos ciclos. O histórico já existente permanece."
+              : "Esta recompensa nunca foi conquistada e será excluída definitivamente."}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmacao(null)}>Voltar</Button>

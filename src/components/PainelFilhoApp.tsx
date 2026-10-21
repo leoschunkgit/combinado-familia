@@ -35,6 +35,7 @@ import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/mod
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   avisarTarefaConcluida,
+  confirmarRecompensaAproveitada,
   pedirRevisaoTarefa,
   encerrarSessaoFilho,
   lerSessaoFilhoLocal,
@@ -387,6 +388,31 @@ export function PainelFilhoApp({
       );
     } finally {
       setEnviandoAviso(false);
+    }
+  }
+
+  async function concluirRecompensa(idRecompensa: number) {
+    try {
+      const resposta = await confirmarRecompensaAproveitada(idRecompensa);
+      const token = await lerSessaoFilhoLocal();
+
+      if (token) {
+        const atual = await obterPainelFilhoApp(token);
+        if (atual) setPainel(atual);
+      }
+
+      toast.success(
+        resposta.ja_concluida
+          ? "Essa recompensa já estava concluída."
+          : "Boa! Agora começa uma nova contagem para essa recompensa.",
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível concluir a recompensa.",
+      );
+      throw error;
     }
   }
 
@@ -765,7 +791,12 @@ export function PainelFilhoApp({
           </div>
         )}
 
-        {aba === "estrelas" && <FilhoEstrelasPage estrelas={estrelas} />}
+        {aba === "estrelas" && (
+          <FilhoEstrelasPage
+            estrelas={estrelas}
+            onConfirmarAproveitada={concluirRecompensa}
+          />
+        )}
       </AppPageContent>
 
       <nav
