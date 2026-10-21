@@ -8,6 +8,7 @@ export function InfoTile({
   className,
   valueClassName,
   compact = false,
+  inline = false,
 }: {
   label: ReactNode;
   value: ReactNode;
@@ -15,7 +16,18 @@ export function InfoTile({
   className?: string;
   valueClassName?: string;
   compact?: boolean;
+  inline?: boolean;
 }) {
+  const labelClassName = cn(
+    "flex shrink-0 items-center gap-1.5 font-medium text-muted-foreground",
+    compact ? "text-[10px]" : "text-xs",
+  );
+  const valueClasses = cn(
+    "min-w-0 font-medium text-foreground",
+    compact ? "text-xs leading-snug" : "",
+    valueClassName,
+  );
+
   return (
     <div
       className={cn(
@@ -24,24 +36,23 @@ export function InfoTile({
         className,
       )}
     >
-      <div
-        className={cn(
-          "mb-0.5 flex items-center gap-1.5 font-medium text-muted-foreground",
-          compact ? "text-[10px]" : "text-xs",
-        )}
-      >
-        {icon}
-        <span>{label}</span>
-      </div>
-      <div
-        className={cn(
-          "min-w-0 font-medium text-foreground",
-          compact ? "text-xs leading-snug" : "",
-          valueClassName,
-        )}
-      >
-        {value}
-      </div>
+      {inline ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+          <div className={labelClassName}>
+            {icon}
+            <span>{label}</span>
+          </div>
+          <div className={valueClasses}>{value}</div>
+        </div>
+      ) : (
+        <>
+          <div className={cn("mb-0.5", labelClassName)}>
+            {icon}
+            <span>{label}</span>
+          </div>
+          <div className={valueClasses}>{value}</div>
+        </>
+      )}
     </div>
   );
 }
