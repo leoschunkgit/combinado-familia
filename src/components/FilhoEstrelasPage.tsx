@@ -33,6 +33,8 @@ export function FilhoEstrelasPage({
     try {
       await onConfirmarAproveitada(recompensaConfirmacao.id);
       setRecompensaConfirmacao(null);
+    } catch {
+      // O fluxo pai já apresenta a mensagem de erro; mantém a confirmação aberta.
     } finally {
       setConfirmando(false);
     }
