@@ -5,10 +5,12 @@ export function FilhoThemeToggle({
   modoEscuro,
   onChange,
   className = "",
+  comEstrela = true,
 }: {
   modoEscuro: boolean;
   onChange: (modoEscuro: boolean) => void;
   className?: string;
+  comEstrela?: boolean;
 }) {
   const inicioArraste = useRef<number | null>(null);
   const ignorarProximoClique = useRef(false);
@@ -63,7 +65,7 @@ export function FilhoThemeToggle({
           }`}
           aria-hidden="true"
         >
-          <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
+          {comEstrela && <Star className="h-4 w-4 fill-amber-400 text-amber-500" />}
         </span>
       </button>
 
