@@ -905,6 +905,7 @@ export type Database = {
           id: number
           id_filho: number
           id_usuario_pai: number
+          marco_inicial_estrelas: number
           nome: string
           updated_at: string
         }
@@ -916,6 +917,7 @@ export type Database = {
           id?: number
           id_filho: number
           id_usuario_pai: number
+          marco_inicial_estrelas: number
           nome: string
           updated_at?: string
         }
@@ -927,6 +929,7 @@ export type Database = {
           id?: number
           id_filho?: number
           id_usuario_pai?: number
+          marco_inicial_estrelas?: number
           nome?: string
           updated_at?: string
         }
