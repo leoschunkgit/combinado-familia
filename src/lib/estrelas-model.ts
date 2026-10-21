@@ -13,6 +13,7 @@ export type RecompensaEstrelaResumo = {
   meta_exibicao: number;
   progresso_exibicao: number;
   faltam_exibicao: number;
+  pode_editar: boolean;
   pode_excluir: boolean;
   pode_desativar: boolean;
   pode_confirmar_aproveitada: boolean;
