@@ -85,6 +85,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   }
 
   function editarRecompensa(recompensa: RecompensaEstrelaResumo) {
+    if (!recompensa.pode_editar) {
+      toast.error("Aguarde a recompensa ser marcada como aproveitada para editar.");
+      return;
+    }
+
     setEditando(recompensa);
     setNome(recompensa.nome);
     setDescricao(recompensa.descricao ?? "");
@@ -182,7 +187,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   }
 
   const recompensasOrdenadas = [...resumo.recompensas].sort((a, b) => a.id - b.id);
-  const recompensaEditandoTemPendente = editando?.pendente === true;
 
   if (carregando) {
     return (
@@ -279,7 +283,13 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onSelect={() => editarRecompensa(recompensa)}><Pencil className="h-4 w-4" />Editar</DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!recompensa.pode_editar}
+                          title={!recompensa.pode_editar ? "Aguarde a recompensa ser marcada como aproveitada." : undefined}
+                          onSelect={() => editarRecompensa(recompensa)}
+                        >
+                          <Pencil className="h-4 w-4" />Editar
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={!recompensa.pode_desativar}
                           title={!recompensa.pode_desativar ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
@@ -335,12 +345,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                 <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center"><Estrela /></span>
               </div>
             </div>
-
-            {recompensaEditandoTemPendente && (
-              <p className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-                Nome e descrição são atualizados agora. Se a quantidade de estrelas mudar, a conquista atual mantém a meta que já foi alcançada; a nova quantidade vale para o próximo ciclo.
-              </p>
-            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
