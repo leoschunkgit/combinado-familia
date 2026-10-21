@@ -130,6 +130,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   async function confirmarAcao() {
     if (!confirmacao) return;
 
+    let resumoAtualizado: ResumoEstrelas | null = null;
+
     setSalvando(true);
     try {
       if (confirmacao.tipo === "APROVEITOU") {
@@ -138,7 +140,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         });
         if (error) throw error;
 
-        const retorno = data as unknown as { ok?: boolean; codigo?: string } | null;
+        const retorno = data as unknown as {
+          ok?: boolean;
+          codigo?: string;
+          resumo?: ResumoEstrelas;
+        } | null;
         if (!retorno?.ok) {
           if (retorno?.codigo === "RECOMPENSA_INDISPONIVEL") {
             throw new Error("Esta recompensa já foi concluída ou não está mais disponível.");
@@ -146,6 +152,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           throw new Error("Não foi possível confirmar a recompensa.");
         }
 
+        resumoAtualizado = retorno.resumo ?? null;
         toast.success("Recompensa marcada como aproveitada");
       } else if (confirmacao.tipo === "DESATIVAR") {
         const { error } = await supabase.rpc("desativar_recompensa_estrelas", {
@@ -162,7 +169,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       }
 
       setConfirmacao(null);
-      await carregar();
+      if (resumoAtualizado) {
+        setResumo(resumoAtualizado);
+      } else {
+        await carregar();
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível concluir a ação.");
     } finally {
