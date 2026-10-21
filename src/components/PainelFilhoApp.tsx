@@ -394,11 +394,19 @@ export function PainelFilhoApp({
   async function concluirRecompensa(idRecompensa: number) {
     try {
       const resposta = await confirmarRecompensaAproveitada(idRecompensa);
-      const token = await lerSessaoFilhoLocal();
 
-      if (token) {
-        const atual = await obterPainelFilhoApp(token);
-        if (atual) setPainel(atual);
+      if (resposta.estrelas) {
+        setPainel((atual) => ({
+          ...atual,
+          estrelas: resposta.estrelas,
+        }));
+      } else {
+        const token = await lerSessaoFilhoLocal();
+
+        if (token) {
+          const atual = await obterPainelFilhoApp(token);
+          if (atual) setPainel(atual);
+        }
       }
 
       toast.success(
