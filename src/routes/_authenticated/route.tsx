@@ -20,6 +20,7 @@ import { AppSystemStatus } from "@/components/AppSystemStatus";
 import { AppBrand } from "@/components/AppBrand";
 import { AppPageContent } from "@/components/AppPageContent";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
+import { FilhoThemeToggle } from "@/components/FilhoThemeToggle";
 import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import { registrarTelemetriaApp } from "@/lib/app-telemetry";
@@ -31,6 +32,12 @@ import {
   encerrarSessaoResponsavelNesteAparelho,
   obterUsuarioResponsavelPersistido,
 } from "@/lib/responsavel-session";
+import {
+  getThemePreference,
+  resolveTheme,
+  saveThemePreference,
+  THEME_CHANGE_EVENT,
+} from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -118,10 +125,29 @@ function AuthenticatedLayout() {
   const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
   const [feedbackAberto, setFeedbackAberto] = useState(false);
+  const [modoEscuro, setModoEscuro] = useState(() => resolveTheme(getThemePreference()) === "dark");
 
   useEffect(() => {
     void registrarTelemetriaApp();
   }, []);
+
+  useEffect(() => {
+    const sincronizarTema = () => setModoEscuro(resolveTheme(getThemePreference()) === "dark");
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+    window.addEventListener(THEME_CHANGE_EVENT, sincronizarTema);
+    media.addEventListener("change", sincronizarTema);
+
+    return () => {
+      window.removeEventListener(THEME_CHANGE_EVENT, sincronizarTema);
+      media.removeEventListener("change", sincronizarTema);
+    };
+  }, []);
+
+  const alterarModoEscuro = (escuro: boolean) => {
+    setModoEscuro(escuro);
+    saveThemePreference(escuro ? "dark" : "light");
+  };
 
   async function clonarPeloMenu() {
     try {
@@ -418,6 +444,14 @@ function AuthenticatedLayout() {
                     <UserCog className="h-4 w-4" />
                     Minha conta
                   </Link>
+                  <div className="flex items-center justify-between gap-2 rounded-md px-2.5 py-2">
+                    <span className="text-sm text-muted-foreground">Aparência</span>
+                    <FilhoThemeToggle
+                      modoEscuro={modoEscuro}
+                      onChange={alterarModoEscuro}
+                      comEstrela={false}
+                    />
+                  </div>
                   {ehAdmin && (
                     <Link
                       to="/administracao"
@@ -543,6 +577,15 @@ function AuthenticatedLayout() {
                   <MessageSquareText className="h-4 w-4" />
                   Feedback
                 </button>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
+                  <span className="text-sm font-medium text-muted-foreground">Aparência</span>
+                  <FilhoThemeToggle
+                    modoEscuro={modoEscuro}
+                    onChange={alterarModoEscuro}
+                    comEstrela={false}
+                  />
+                </div>
 
                 {ehAdmin && (
                   <Link
