@@ -90,12 +90,8 @@ export function FilhoEstrelasPage({
         <div className="space-y-3">
         {recompensasOrdenadas.map((recompensa) => {
           const conquistada = recompensa.disponivel || recompensa.pendente;
-          const nomeExibido = recompensa.pendente && recompensa.conquista_nome
-            ? recompensa.conquista_nome
-            : recompensa.nome;
-          const descricaoExibida = recompensa.pendente
-            ? (recompensa.conquista_descricao ?? recompensa.descricao)
-            : recompensa.descricao;
+          const nomeExibido = recompensa.nome;
+          const descricaoExibida = recompensa.descricao;
           const metaExibida = recompensa.pendente && recompensa.conquista_meta
             ? recompensa.conquista_meta
             : recompensa.estrelas_necessarias;
@@ -281,7 +277,7 @@ export function FilhoEstrelasPage({
             <DialogTitle>Já aproveitou?</DialogTitle>
             <DialogDescription>
               {recompensaConfirmacao
-                ? `Confirme que você já recebeu ou aproveitou “${recompensaConfirmacao.conquista_nome ?? recompensaConfirmacao.nome}”. Depois disso, uma nova contagem começa a partir das próximas estrelas.`
+                ? `Confirme que você já recebeu ou aproveitou “${recompensaConfirmacao.nome}”. Depois disso, uma nova contagem começa a partir das próximas estrelas.`
                 : ""}
             </DialogDescription>
           </DialogHeader>
