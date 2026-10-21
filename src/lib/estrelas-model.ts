@@ -15,6 +15,7 @@ export type RecompensaEstrelaResumo = {
   faltam_exibicao: number;
   pode_excluir: boolean;
   pode_desativar: boolean;
+  pode_confirmar_aproveitada: boolean;
   marco_estrelas: number;
   conquista_id?: number | null;
   conquista_nome?: string | null;
@@ -34,6 +35,7 @@ export type CicloRecompensaResumo = {
   conquistou_em: string;
   aproveitou_em: string | null;
   contagem_recomecou_em: string | null;
+  confirmado_por: "FILHO" | "RESPONSAVEL" | null;
 
   // Snapshot tecnico preservado para auditoria e compatibilidade.
   recompensa_nome: string;
