@@ -1443,6 +1443,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                       <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
                                         {registro && (
                                           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+                                            {registro.tipo === "FEZ" && (
+                                              <Hint content="+1 estrela">
+                                                <span className="mr-1.5 inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                                                  <Star className="h-3.5 w-3.5" />
+                                                  +1
+                                                </span>
+                                              </Hint>
+                                            )}
+
                                             <Hint content={rotuloResultado(registro.tipo)}>
                                               <span
                                                 className={
@@ -1465,15 +1474,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 </span>
                                               </span>
                                             </Hint>
-
-                                            {registro.tipo === "FEZ" && (
-                                              <Hint content="+1 estrela">
-                                                <span className="ml-1.5 inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
-                                                  <Star className="h-3.5 w-3.5" />
-                                                  +1
-                                                </span>
-                                              </Hint>
-                                            )}
 
                                           </div>
                                         )}
