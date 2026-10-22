@@ -146,6 +146,13 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Vigência com resultados ou pedido pendente do filho não pode ser excluída|Vigencia com resultados ou pedido pendente do filho nao pode ser excluida/i, "Esta vigência possui resultados ou pedido pendente do filho e não pode ser excluída"],
+  [/Atribuicao com resultados nao pode ser excluida diretamente|Atribuição com resultados não pode ser excluída diretamente/i, "Esta atribuição já tem resultados e não pode ser excluída"],
+  [/Atribuicao com resultados nao pode ser editada|Atribuição com resultados não pode ser editada/i, "Esta atribuição já tem resultados e não pode ser alterada"],
+  [/Há resultados fora do novo período da vigência|Ha resultados fora do novo periodo da vigencia/i, "Há resultados fora do novo período. Corrija-os antes de salvar"],
+  [/Resultados só podem ser alterados em vigência em andamento|Resultados so podem ser alterados em vigencia em andamento/i, "Os resultados só podem ser alterados em vigência em andamento"],
+  [/A data do resultado deve estar dentro da vigência|A data do resultado deve estar dentro da vigencia/i, "A data do resultado deve estar dentro da vigência"],
+  [/Não é permitido registrar resultado em data futura|Nao e permitido registrar resultado em data futura/i, "Não é permitido registrar resultado em data futura"],
   [/Atribuicao com revisao pendente do filho nao pode ser excluida diretamente|Atribuição com revisão pendente do filho não pode ser excluída diretamente/i, "Esta atribuição possui uma revisão pendente do filho e não pode ser excluída"],
   [/Atribuicao com aviso pendente do filho nao pode ser excluida diretamente|Atribuição com aviso pendente do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso pendente do filho e não pode ser excluída"],
   [/Vigência com Fez\/Não fez ou pedido pendente do filho não pode ser excluída|Vigencia com Fez\/Nao fez ou pedido pendente do filho nao pode ser excluida/i, "Esta vigência possui “Fez”/“Não fez” ou pedido pendente do filho e não pode ser excluída"],

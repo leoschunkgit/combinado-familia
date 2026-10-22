@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   EllipsisVertical,
+  Minus,
   Pencil,
   Star,
   ThumbsDown,
@@ -63,12 +64,14 @@ import {
   desfazerOcorrencias,
   registrarFez,
   registrarNaoFez,
+  registrarNaoPrecisou,
   resolverRevisao,
   type ConsequenciaNaoFezTipo,
 } from "@/lib/ocorrencia-service";
 import {
   botaoFezClass,
   botaoNaoFezClass,
+  botaoNaoPrecisouClass,
 } from "@/lib/action-button-styles";
 import { useActionLoading } from "@/components/ActionLoading";
 import {
@@ -94,13 +97,27 @@ type FezDraft = {
   data: string;
 };
 
+type ResultadoOcorrencia = "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
+
 type Troca = {
-  direcao: "PARA_FEZ" | "PARA_NAO_FEZ";
+  alvo: ResultadoOcorrencia;
   tarefa: FilhoTarefa;
   total: number;
+  data: string;
   ocorrencia: Ocorrencia;
-  fez?: FezDraft;
 };
+
+function rotuloResultado(tipo: string) {
+  if (tipo === "FEZ") return "Fez";
+  if (tipo === "NAO_FEZ") return "Não fez";
+  return "Não precisou";
+}
+
+function classeResultadoTexto(tipo: string) {
+  if (tipo === "FEZ") return "text-green-700 dark:text-green-300";
+  if (tipo === "NAO_FEZ") return "text-red-700 dark:text-red-300";
+  return "text-muted-foreground";
+}
 
 type ExcluirSelecionadasDraft = {
   tarefa: FilhoTarefa;
@@ -443,10 +460,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     if (filtro.resultado === "NAO_FEZ") {
-      return datasFiltradas.filter((data) => {
-        const registro = registroNaData(tarefa, data);
-        return Boolean(registro && registro.tipo !== "FEZ");
-      });
+      return datasFiltradas.filter(
+        (data) => registroNaData(tarefa, data)?.tipo === "NAO_FEZ",
+      );
+    }
+
+    if (filtro.resultado === "NAO_PRECISOU") {
+      return datasFiltradas.filter(
+        (data) => registroNaData(tarefa, data)?.tipo === "NAO_PRECISOU",
+      );
     }
 
     return datasFiltradas;
@@ -814,9 +836,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
           draft.consequenciaTipo === "PENALIDADE"
             ? draft.penalidadeDescricao.trim()
             : null,
-        motivo: existente?.tipo === "FEZ"
-          ? "Alteração de Fez para Não fez"
-          : "Registro de Não fez",
+        motivo:
+          existente?.tipo === "FEZ"
+            ? "Alteração de Fez para Não fez"
+            : existente?.tipo === "NAO_PRECISOU"
+              ? "Alteração de Não precisou para Não fez"
+              : "Registro de Não fez",
       });
 
       await Promise.all([
@@ -870,13 +895,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
-    if (existente?.tipo === "FEZ") {
-      setTroca({
-        direcao: "PARA_NAO_FEZ",
-        tarefa,
-        total,
-        ocorrencia: existente,
-      });
+    if (existente && existente.tipo !== "NAO_FEZ") {
+      abrirTrocaMarcacao(tarefa, total, data, existente, "NAO_FEZ");
       return;
     }
 
@@ -895,8 +915,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
+    if (existente && existente.tipo !== "FEZ") {
+      abrirTrocaMarcacao(tarefa, total, data, existente, "FEZ");
+      return;
+    }
+    if (existente) return;
+
     const draft: FezDraft = { tarefa, total, data };
-    void runAction(() => salvarFez(draft, existente));
+    void runAction(() => salvarFez(draft));
   }
 
   function abrirTrocaMarcacao(
@@ -904,7 +930,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     total: number,
     data: string,
     registro: Ocorrencia,
+    alvo: ResultadoOcorrencia,
   ) {
+    if (registro.tipo === alvo) return;
+
     const revisaoPendente = revisoesPendentes.find(
       (revisao) => revisao.id_ocorrencia === registro.id,
     );
@@ -919,27 +948,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       return;
     }
 
-    if (registro.tipo === "FEZ") {
-      setTroca({
-        direcao: "PARA_NAO_FEZ",
-        tarefa,
-        total,
-        ocorrencia: registro,
-      });
-      return;
-    }
-
-    setTroca({
-      direcao: "PARA_FEZ",
-      tarefa,
-      total,
-      ocorrencia: registro,
-      fez: {
-        tarefa,
-        total,
-        data,
-      },
-    });
+    setTroca({ alvo, tarefa, total, data, ocorrencia: registro });
   }
 
   async function salvarFez(draft: FezDraft, existente?: Ocorrencia) {
@@ -985,7 +994,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         motivo:
           existente?.tipo === "NAO_FEZ"
             ? "Alteração de Não fez para Fez"
-            : "Registro de Fez",
+            : existente?.tipo === "NAO_PRECISOU"
+              ? "Alteração de Não precisou para Fez"
+              : "Registro de Fez",
       });
 
       await Promise.all([
@@ -1011,6 +1022,94 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function salvarNaoPrecisou(
+    tarefa: FilhoTarefa,
+    data: string,
+    existente?: Ocorrencia,
+  ) {
+    const vigencia = tarefa.t_vigencia;
+    const revisaoPendente = existente
+      ? revisoesPendentes.find(
+          (revisao) => revisao.id_ocorrencia === existente.id,
+        )
+      : undefined;
+    const podeResolverRevisao =
+      existente?.tipo === "NAO_FEZ" && Boolean(revisaoPendente);
+
+    if (!vigencia || (!vigenciaEmAndamento(vigencia) && !podeResolverRevisao)) {
+      toast.error("Ações só podem ser feitas em uma vigência em andamento");
+      return;
+    }
+    if (!dataValida(tarefa, data)) {
+      toast.error(
+        "A data do “Não precisou” deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência",
+      );
+      return;
+    }
+
+    const solicitacaoPendente = solicitacaoNaData(tarefa, data);
+    const interacaoPendente =
+      revisaoPendente
+        ? { tipo: "REVISAO" as const, id: revisaoPendente.id }
+        : solicitacaoPendente
+          ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
+          : null;
+
+    setBusy(true);
+    try {
+      await registrarNaoPrecisou({
+        idOcorrencia: existente?.id,
+        idFilhoTarefa: existente ? undefined : tarefa.id,
+        dataIso: existente
+          ? undefined
+          : new Date(data + "T12:00:00-03:00").toISOString(),
+        idRevisao:
+          existente?.tipo === "NAO_FEZ" ? revisaoPendente?.id : undefined,
+        motivo:
+          existente?.tipo === "FEZ"
+            ? "Alteração de Fez para Não precisou"
+            : existente?.tipo === "NAO_FEZ"
+              ? "Alteração de Não fez para Não precisou"
+              : "Registro de Não precisou",
+      });
+
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
+        qc.invalidateQueries({ queryKey: ["vigencias"] }),
+        qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
+        qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
+        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
+        interacaoPendente
+          ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
+          : Promise.resolve(null),
+      ]);
+
+      setTroca(null);
+      toast.success("“Não precisou” registrado");
+    } catch (error) {
+      toast.error(
+        msgErro(error instanceof Error ? { message: error.message } : null),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function solicitarNaoPrecisou(
+    tarefa: FilhoTarefa,
+    total: number,
+    data: string,
+    existente?: Ocorrencia,
+  ) {
+    if (existente && existente.tipo !== "NAO_PRECISOU") {
+      abrirTrocaMarcacao(tarefa, total, data, existente, "NAO_PRECISOU");
+      return;
+    }
+    if (existente) return;
+
+    void runAction(() => salvarNaoPrecisou(tarefa, data));
   }
 
   async function excluirSelecionadas(item: ExcluirSelecionadasDraft) {
@@ -1147,7 +1246,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     <>
       <PageHeader
         title="Fez / Não fez"
-        description="Marque as tarefas do dia"
+        description="Marque “Fez”, “Não fez” ou “Não precisou”"
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
 
@@ -1188,7 +1287,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
             />
             {modo === "todos" && (
               <Pick
-                label="Fez / Não fez"
+                label="Resultado"
                 resultIcons
                 value={f.resultado}
                 onChange={(resultado) => setF({ ...f, resultado })}
@@ -1196,6 +1295,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                 options={[
                   { value: "FEZ", label: "Fez" },
                   { value: "NAO_FEZ", label: "Não fez" },
+                  { value: "NAO_PRECISOU", label: "Não precisou" },
                 ]}
               />
             )}
@@ -1570,18 +1670,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               nome={tarefa.t_tarefa?.nome ?? "Tarefa"}
                                               className={`mt-0.5 ${
                                                 registro
-                                                  ? registro.tipo === "FEZ"
-                                                    ? "text-green-700 dark:text-green-300"
-                                                    : "text-red-700 dark:text-red-300"
+                                                  ? classeResultadoTexto(registro.tipo)
                                                   : ""
                                               }`}
                                             />
                                             <p
                                               className={`min-w-0 break-words text-sm font-medium leading-tight ${
                                                 registro
-                                                  ? registro.tipo === "FEZ"
-                                                    ? "text-green-700 dark:text-green-300"
-                                                    : "text-red-700 dark:text-red-300"
+                                                  ? classeResultadoTexto(registro.tipo)
                                                   : ""
                                               }`}
                                             >
@@ -1625,21 +1721,25 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                       <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
                                         {registro && (
                                           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-                                            <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
+                                            <Hint content={rotuloResultado(registro.tipo)}>
                                               <span
                                                 className={
                                                   registro.tipo === "FEZ"
                                                     ? "inline-flex h-5 w-5 items-center justify-center text-green-600 dark:text-green-400"
-                                                    : "inline-flex h-5 w-5 items-center justify-center text-red-600 dark:text-red-400"
+                                                    : registro.tipo === "NAO_FEZ"
+                                                      ? "inline-flex h-5 w-5 items-center justify-center text-red-600 dark:text-red-400"
+                                                      : "inline-flex h-5 w-5 items-center justify-center text-muted-foreground"
                                                 }
                                               >
                                                 {registro.tipo === "FEZ" ? (
                                                   <ThumbsUp className="h-4 w-4" />
-                                                ) : (
+                                                ) : registro.tipo === "NAO_FEZ" ? (
                                                   <ThumbsDown className="h-4 w-4" />
+                                                ) : (
+                                                  <Minus className="h-4 w-4" />
                                                 )}
                                                 <span className="sr-only">
-                                                  {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
+                                                  {rotuloResultado(registro.tipo)}
                                                 </span>
                                               </span>
                                             </Hint>
@@ -1684,10 +1784,32 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                       totalNaoFez,
                                                       dataSelecionada,
                                                       registro,
+                                                      "FEZ",
                                                     )
                                                   }
                                                 >
                                                   <ThumbsUp className="h-4 w-4 text-green-600" />
+                                                </Button>
+                                              </Hint>
+                                              <Hint content="Alterar para Não precisou">
+                                                <Button
+                                                  type="button"
+                                                  size="icon"
+                                                  variant="outline"
+                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
+                                                  disabled={busy}
+                                                  aria-label="Alterar para Não precisou"
+                                                  onClick={() =>
+                                                    abrirTrocaMarcacao(
+                                                      tarefa,
+                                                      totalNaoFez,
+                                                      dataSelecionada,
+                                                      registro,
+                                                      "NAO_PRECISOU",
+                                                    )
+                                                  }
+                                                >
+                                                  <Minus className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
                                               </Hint>
                                               <Hint content="Manter Não fez">
@@ -1727,7 +1849,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
+                                              className={`min-w-0 px-2 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
                                               disabled={busy}
                                               onClick={() =>
                                                 solicitarNaoFez(
@@ -1739,6 +1861,22 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             >
                                               <ThumbsDown className="h-4 w-4 text-red-600" />
                                               Não fez
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className={`min-w-0 px-2 sm:min-w-24 sm:px-3 ${botaoNaoPrecisouClass}`}
+                                              disabled={busy}
+                                              onClick={() =>
+                                                solicitarNaoPrecisou(
+                                                  tarefa,
+                                                  totalNaoFez,
+                                                  dataSelecionada,
+                                                )
+                                              }
+                                            >
+                                              <Minus className="h-4 w-4" />
+                                              Não precisou
                                             </Button>
                                           </>
                                         )}
@@ -1758,21 +1896,34 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
-                                              {!bloqueada && (
+                                              {!bloqueada && registro.tipo !== "FEZ" && (
                                                 <DropdownMenuItem
                                                   onSelect={() =>
-                                                    abrirTrocaMarcacao(
-                                                      tarefa,
-                                                      totalNaoFez,
-                                                      dataSelecionada,
-                                                      registro,
-                                                    )
+                                                    abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "FEZ")
                                                   }
                                                 >
                                                   <Pencil className="h-4 w-4" />
-                                                  {registro.tipo === "FEZ"
-                                                    ? "Alterar para Não fez"
-                                                    : "Alterar para Fez"}
+                                                  Alterar para Fez
+                                                </DropdownMenuItem>
+                                              )}
+                                              {!bloqueada && registro.tipo !== "NAO_FEZ" && (
+                                                <DropdownMenuItem
+                                                  onSelect={() =>
+                                                    abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "NAO_FEZ")
+                                                  }
+                                                >
+                                                  <Pencil className="h-4 w-4" />
+                                                  Alterar para Não fez
+                                                </DropdownMenuItem>
+                                              )}
+                                              {!bloqueada && registro.tipo !== "NAO_PRECISOU" && (
+                                                <DropdownMenuItem
+                                                  onSelect={() =>
+                                                    abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "NAO_PRECISOU")
+                                                  }
+                                                >
+                                                  <Minus className="h-4 w-4" />
+                                                  Alterar para Não precisou
                                                 </DropdownMenuItem>
                                               )}
                                               {registro.tipo === "NAO_FEZ" &&
@@ -1861,9 +2012,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-3">
             <DialogTitle>
-              {troca?.direcao === "PARA_FEZ"
-                ? "Alterar para “Fez”?"
-                : "Alterar para “Não fez”?"}
+              {troca ? `Alterar para “${rotuloResultado(troca.alvo)}”?` : "Alterar resultado?"}
             </DialogTitle>
             <DialogDescription className="space-y-3">
               {troca && (
@@ -1908,7 +2057,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                   <span className="block rounded-lg bg-muted/15 px-3 py-2.5 leading-relaxed">
                     Esta tarefa está marcada como{" "}
                     <span className="font-medium text-foreground">
-                      {troca.direcao === "PARA_FEZ" ? "“Não fez”" : "“Fez”"}
+                      “{rotuloResultado(troca.ocorrencia.tipo)}”
                     </span>{" "}
                     em{" "}
                     <span className="font-medium text-foreground">
@@ -1916,7 +2065,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     </span>
                     . Ao confirmar, ela será alterada para{" "}
                     <span className="font-medium text-foreground">
-                      {troca.direcao === "PARA_FEZ" ? "“Fez”" : "“Não fez”"}
+                      “{rotuloResultado(troca.alvo)}”
                     </span>.
                   </span>
                 </>
@@ -1937,19 +2086,26 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
               onClick={() => {
                 if (!troca) return;
 
-                if (troca.direcao === "PARA_FEZ" && troca.fez) {
-                  void runAction(() => salvarFez(troca.fez!, troca.ocorrencia));
+                if (troca.alvo === "FEZ") {
+                  void runAction(() =>
+                    salvarFez(
+                      { tarefa: troca.tarefa, total: troca.total, data: troca.data },
+                      troca.ocorrencia,
+                    ),
+                  );
+                  return;
+                }
+
+                if (troca.alvo === "NAO_PRECISOU") {
+                  void runAction(() =>
+                    salvarNaoPrecisou(troca.tarefa, troca.data, troca.ocorrencia),
+                  );
                   return;
                 }
 
                 const atual = troca;
                 setTroca(null);
-                abrirNaoFez(
-                  atual.tarefa,
-                  atual.total,
-                  dataBrasil(atual.ocorrencia.created_at),
-                  atual.ocorrencia,
-                );
+                abrirNaoFez(atual.tarefa, atual.total, atual.data, atual.ocorrencia);
               }}
             >
               Confirmar alteração
@@ -2004,7 +2160,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                         </span>
                       )}
                       <span className="mt-1.5 block leading-relaxed">
-                        As datas que ficarem sem uma marcação de “Fez” ou “Não fez” voltarão para as pendências.
+                        As datas que ficarem sem resultado voltarão para as pendências.
                       </span>
                     </span>
                   </span>

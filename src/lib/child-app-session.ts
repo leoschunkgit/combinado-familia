@@ -26,7 +26,7 @@ export type ConsequenciaOcorrenciaFilho = {
 
 export type OcorrenciaFilho = {
   id: number;
-  tipo: "FEZ" | "NAO_FEZ";
+  tipo: "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
   data: string;
   consequencia: ConsequenciaOcorrenciaFilho | null;
 };
@@ -42,7 +42,7 @@ export type SolicitacaoTarefaFilhoApp = {
   id_filho_tarefa: number;
   data_referencia: string;
   observacao: string | null;
-  status: "PENDENTE" | "RESOLVIDA_FEZ" | "RESOLVIDA_NAO_FEZ";
+  status: "PENDENTE" | "RESOLVIDA_FEZ" | "RESOLVIDA_NAO_FEZ" | "RESOLVIDA_NAO_PRECISOU";
   created_at: string;
   resolvido_em: string | null;
 };
@@ -53,7 +53,7 @@ export type RevisaoTarefaFilhoApp = {
   id_filho_tarefa: number;
   data_referencia: string;
   observacao: string | null;
-  status: "PENDENTE" | "MANTEVE_NAO_FEZ" | "ALTERADO_PARA_FEZ" | "MARCACAO_DESFEITA";
+  status: "PENDENTE" | "MANTEVE_NAO_FEZ" | "ALTERADO_PARA_FEZ" | "ALTERADO_PARA_NAO_PRECISOU" | "MARCACAO_DESFEITA";
   created_at: string;
   resolvido_em: string | null;
 };
@@ -63,6 +63,7 @@ export type VigenciaFilho = {
   data_inicio: string;
   data_fim: string;
   qtd_nao_fez: number;
+  qtd_nao_precisou?: number;
   tarefas: TarefaFilho[];
 };
 

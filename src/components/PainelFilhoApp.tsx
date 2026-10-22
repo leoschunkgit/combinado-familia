@@ -10,6 +10,7 @@ import {
   House,
   Info,
   Loader2,
+  Minus,
   LogOut,
   RotateCcw,
   Send,
@@ -60,7 +61,7 @@ const CHAVE_TEMA_FILHO = "combinado-familia:filho:tema";
 const ABAS: Array<{ id: AbaFilho; label: string; icon: typeof House }> = [
   { id: "inicio", label: "Início", icon: House },
   { id: "tarefas", label: "Tarefas", icon: ClipboardList },
-  { id: "registros", label: "Fez / Não", icon: ClipboardCheck },
+  { id: "registros", label: "Resultados", icon: ClipboardCheck },
   { id: "estrelas", label: "Estrelas", icon: Star },
 ];
 
@@ -298,7 +299,7 @@ export function PainelFilhoApp({
   const registrosAtuais = useMemo(
     () => tarefasAtual
       .flatMap((tarefa) => tarefa.ocorrencias
-        .filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ")
+        .filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ" || o.tipo === "NAO_PRECISOU")
         .map((ocorrencia) => ({ tarefa, ocorrencia })))
       .sort((a, b) => +new Date(b.ocorrencia.data) - +new Date(a.ocorrencia.data)),
     [tarefasAtual],
@@ -857,7 +858,7 @@ export function PainelFilhoApp({
         {aba === "registros" && (
           <div>
             <FilhoAppPageHeader
-              title="Fez / Não fez"
+              title="Resultados"
               description="Resultados do seu combinado atual."
               icon={<ClipboardCheck className="h-4.5 w-4.5" />}
             />
@@ -890,16 +891,38 @@ export function PainelFilhoApp({
 
                           return (
                             <div key={ocorrencia.id ?? `${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
-                              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700 dark:bg-green-950/35 dark:text-green-300" : "bg-red-50 text-red-600 dark:bg-red-950/35 dark:text-red-300"}`}>
-                                {ocorrencia.tipo === "FEZ" ? <ThumbsUp className="h-4 w-4" /> : <ThumbsDown className="h-4 w-4" />}
+                              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                                ocorrencia.tipo === "FEZ"
+                                  ? "bg-green-50 text-green-700 dark:bg-green-950/35 dark:text-green-300"
+                                  : ocorrencia.tipo === "NAO_FEZ"
+                                    ? "bg-red-50 text-red-600 dark:bg-red-950/35 dark:text-red-300"
+                                    : "bg-muted text-muted-foreground"
+                              }`}>
+                                {ocorrencia.tipo === "FEZ" ? (
+                                  <ThumbsUp className="h-4 w-4" />
+                                ) : ocorrencia.tipo === "NAO_FEZ" ? (
+                                  <ThumbsDown className="h-4 w-4" />
+                                ) : (
+                                  <Minus className="h-4 w-4" />
+                                )}
                               </span>
                               <div className="min-w-0 flex-1">
                                 <div className="flex min-w-0 items-start gap-2">
                                   <TarefaIcone nome={tarefa.nome} className="mt-0.5" />
                                   <p className="min-w-0 break-words text-sm font-semibold">{tarefa.nome}</p>
                                 </div>
-                                <p className={`mt-1 text-xs font-medium ${ocorrencia.tipo === "FEZ" ? "text-green-700 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>
-                                  {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
+                                <p className={`mt-1 text-xs font-medium ${
+                                  ocorrencia.tipo === "FEZ"
+                                    ? "text-green-700 dark:text-green-300"
+                                    : ocorrencia.tipo === "NAO_FEZ"
+                                      ? "text-red-600 dark:text-red-300"
+                                      : "text-muted-foreground"
+                                }`}>
+                                  {ocorrencia.tipo === "FEZ"
+                                    ? "Fez"
+                                    : ocorrencia.tipo === "NAO_FEZ"
+                                      ? "Não fez"
+                                      : "Não precisou"}
                                 </p>
                                 {detalheConsequencia && (
                                   <p className="mt-1 break-words text-xs text-muted-foreground">
@@ -931,6 +954,10 @@ export function PainelFilhoApp({
                                     ) : revisao.status === "ALTERADO_PARA_FEZ" ? (
                                       <span className="text-xs font-medium text-green-700 dark:text-green-300">
                                         Alterado para Fez
+                                      </span>
+                                    ) : revisao.status === "ALTERADO_PARA_NAO_PRECISOU" ? (
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        Alterado para Não precisou
                                       </span>
                                     ) : (
                                       <span className="text-xs font-medium text-muted-foreground">

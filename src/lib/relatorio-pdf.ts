@@ -3,7 +3,7 @@ import { savePdfDocument } from "@/lib/pdf-export";
 
 export type RelatorioPdfRegistro = {
   data: string;
-  resultado: "Fez" | "Não fez";
+  resultado: "Fez" | "Não fez" | "Não precisou";
   detalhe?: string | undefined;
 };
 
@@ -334,11 +334,15 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
           doc.text(registro.data, xData, y + 4.8);
 
           const corResultado: [number, number, number] =
-            registro.resultado === "Fez" ? [55, 125, 80] : [175, 65, 65];
+            registro.resultado === "Fez"
+              ? [55, 125, 80]
+              : registro.resultado === "Não fez"
+                ? [175, 65, 65]
+                : [95, 105, 100];
           doc.setFillColor(
-            registro.resultado === "Fez" ? 239 : 252,
-            registro.resultado === "Fez" ? 248 : 241,
-            registro.resultado === "Fez" ? 242 : 241,
+            registro.resultado === "Fez" ? 239 : registro.resultado === "Não fez" ? 252 : 245,
+            registro.resultado === "Fez" ? 248 : registro.resultado === "Não fez" ? 241 : 246,
+            registro.resultado === "Fez" ? 242 : registro.resultado === "Não fez" ? 241 : 245,
           );
           doc.roundedRect(xResultado - 1.5, y + 1.4, 24, 5.2, 2.6, 2.6, "F");
           doc.setFont("helvetica", "bold");

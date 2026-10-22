@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type ConsequenciaNaoFezTipo = "NENHUMA" | "DESCONTO" | "PENALIDADE";
-export type DecisaoRevisao = "MANTER_NAO_FEZ" | "ALTERAR_PARA_FEZ";
+export type DecisaoRevisao = "MANTER_NAO_FEZ" | "ALTERAR_PARA_FEZ" | "ALTERAR_PARA_NAO_PRECISOU";
 
 type ReconciliarBase = {
   idOcorrencia?: number;
@@ -26,7 +26,7 @@ async function reconciliar(params: {
   idOcorrencia?: number;
   idFilhoTarefa?: number;
   dataIso?: string;
-  novoTipo?: "FEZ" | "NAO_FEZ";
+  novoTipo?: "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
   consequenciaTipo?: ConsequenciaNaoFezTipo;
   descontoValor?: number | null;
   penalidadeDescricao?: string | null;
@@ -57,6 +57,18 @@ export function registrarFez(input: RegistrarFezInput) {
     idFilhoTarefa: input.idFilhoTarefa,
     dataIso: input.dataIso,
     novoTipo: "FEZ",
+    idRevisao: input.idRevisao,
+    motivo: input.motivo,
+  });
+}
+
+export function registrarNaoPrecisou(input: RegistrarFezInput) {
+  return reconciliar({
+    acao: input.idRevisao ? "RESOLVER_REVISAO" : "SALVAR",
+    idOcorrencia: input.idOcorrencia,
+    idFilhoTarefa: input.idFilhoTarefa,
+    dataIso: input.dataIso,
+    novoTipo: "NAO_PRECISOU",
     idRevisao: input.idRevisao,
     motivo: input.motivo,
   });

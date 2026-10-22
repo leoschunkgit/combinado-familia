@@ -20,7 +20,7 @@ import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { descreverConsequenciaOcorrencia } from "@/lib/ocorrencia-model";
 
 function detalheOcorrencia(ocorrencia: Ocorrencia) {
-  if (ocorrencia.tipo === "FEZ") {
+  if (ocorrencia.tipo !== "NAO_FEZ") {
     return undefined;
   }
 
@@ -107,6 +107,9 @@ export async function extrairPdfVigencia(args: {
           const totalNaoFez = registros.filter(
             (registro) => registro.tipo === "NAO_FEZ",
           ).length;
+          const totalNaoPrecisou = registros.filter(
+            (registro) => registro.tipo === "NAO_PRECISOU",
+          ).length;
           const totalPenalidadesPendentes = registros.filter(
             (registro) =>
               registro.tipo === "NAO_FEZ" &&
@@ -127,7 +130,7 @@ export async function extrairPdfVigencia(args: {
                 ? filho.avatar
                 : null,
             resumo:
-              `Não fez: ${totalNaoFez} · Penalidades pendentes: ${totalPenalidadesPendentes}`,
+              `Não fez: ${totalNaoFez} · Não precisou: ${totalNaoPrecisou} · Penalidades pendentes: ${totalPenalidadesPendentes}`,
             mesada: temMesada
               ? {
                   valor: reais(filho.valor_mesada ?? 0),
@@ -147,7 +150,9 @@ export async function extrairPdfVigencia(args: {
                   resultado:
                     registro.tipo === "FEZ"
                       ? ("Fez" as const)
-                      : ("Não fez" as const),
+                      : registro.tipo === "NAO_FEZ"
+                        ? ("Não fez" as const)
+                        : ("Não precisou" as const),
                   detalhe: detalheOcorrencia(registro),
                 })),
             })),
