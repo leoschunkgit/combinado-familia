@@ -15,12 +15,23 @@ const tokenFilhoValido = (token: unknown): token is string =>
 const aguardar = (ms: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
+export type ConsequenciaOcorrenciaFilho = {
+  tipo: "DESCONTO" | "PENALIDADE";
+  desconto_valor: number | null;
+  penalidade_descricao: string | null;
+  status: "APLICADO" | "PENDENTE" | "SUSPENSA_REVISAO" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
+  cumprida_em: string | null;
+  cancelada_em: string | null;
+};
+
 export type OcorrenciaFilho = {
+  id: number;
   tipo: "FEZ" | "NAO_FEZ";
   data: string;
   bonificacao_tipo: "TEXTO" | "VALOR" | null;
   bonificacao_descricao: string | null;
   bonificacao_valor: number | null;
+  consequencia: ConsequenciaOcorrenciaFilho | null;
 };
 
 export type TarefaFilho = {
@@ -41,6 +52,7 @@ export type SolicitacaoTarefaFilhoApp = {
 
 export type RevisaoTarefaFilhoApp = {
   id: number;
+  id_ocorrencia: number;
   id_filho_tarefa: number;
   data_referencia: string;
   observacao: string | null;
@@ -53,9 +65,7 @@ export type VigenciaFilho = {
   id: number;
   data_inicio: string;
   data_fim: string;
-  penalidade: string | null;
-  qtd_ocorrencia: number;
-  valor_debito: number | null;
+  qtd_nao_fez: number;
   tarefas: TarefaFilho[];
 };
 
@@ -360,7 +370,7 @@ export async function avisarTarefaConcluida(
   const data = await chamarAcessoFilho({
     acao: "avisar_tarefa_concluida",
     token,
-    id_filho_tarefa: idFilhoTarefa,
+    id_ocorrencia: idOcorrencia,
     observacao: observacao?.trim() || null,
   });
 
@@ -372,7 +382,7 @@ export async function avisarTarefaConcluida(
 }
 
 export async function pedirRevisaoTarefa(
-  idFilhoTarefa: number,
+  idOcorrencia: number,
   observacao?: string,
 ): Promise<RespostaRevisao> {
   const token = await lerSessaoFilhoLocal();
