@@ -1537,9 +1537,16 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 shrink-0 rounded-full"
-                                                disabled={busy}
-                                                aria-label={`Mais ações para ${tarefa.t_tarefa?.nome ?? "tarefa"}`}
+                                                className="h-8 w-8 shrink-0 rounded-full disabled:cursor-default disabled:opacity-35"
+                                                disabled={
+                                                  busy ||
+                                                  consequenciaEhPenalidadeCumprida(consequencia)
+                                                }
+                                                aria-label={
+                                                  consequenciaEhPenalidadeCumprida(consequencia)
+                                                    ? `Mais ações indisponíveis para ${tarefa.t_tarefa?.nome ?? "tarefa"}: penalidade cumprida`
+                                                    : `Mais ações para ${tarefa.t_tarefa?.nome ?? "tarefa"}`
+                                                }
                                               >
                                                 <EllipsisVertical className="h-4 w-4" />
                                               </Button>
