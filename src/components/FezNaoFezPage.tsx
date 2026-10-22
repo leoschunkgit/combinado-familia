@@ -13,7 +13,6 @@ import {
   Star,
   ThumbsDown,
   ThumbsUp,
-  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -59,7 +58,6 @@ import {
 } from "@/lib/ocorrencia-model";
 import {
   cumprirPenalidade,
-  desfazerOcorrencias,
   registrarFez,
   registrarNaoFez,
   registrarNaoPrecisou,
@@ -117,11 +115,6 @@ function classeResultadoTexto(tipo: string) {
   return "text-muted-foreground";
 }
 
-type ExcluirSelecionadasDraft = {
-  tarefa: FilhoTarefa;
-  ids: number[];
-  quantidadeProtegida?: number;
-};
 
 type NaoFezPageDraft = NaoFezDraft & {
   tarefa: FilhoTarefa;
@@ -192,8 +185,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
   const [troca, setTroca] = useState<Troca | null>(null);
-  const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
-    useState<ExcluirSelecionadasDraft | null>(null);
   const [naoFez, setNaoFez] = useState<NaoFezPageDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
   const [totaisEstrelas, setTotaisEstrelas] = useState<Record<number, number>>({});
@@ -1000,77 +991,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     void runAction(() => salvarNaoPrecisou(tarefa, data));
   }
 
-  async function excluirSelecionadas(item: ExcluirSelecionadasDraft) {
-    const { tarefa, ids } = item;
-    const vigencia = tarefa.t_vigencia;
-    if (!vigencia || !vigenciaEmAndamento(vigencia)) {
-      toast.error("Ações só podem ser feitas em uma vigência em andamento");
-      return;
-    }
-    if (ids.length === 0) return;
-
-    setBusy(true);
-    try {
-      const resultado = await desfazerOcorrencias(ids);
-      const idsDesfeitos = resultado.ids_desfeitos ?? [];
-
-      const projetadas = ocorrencias.filter(
-        (o) => !idsDesfeitos.includes(o.id),
-      );
-      qc.setQueryData<Ocorrencia[]>(["ocorrencias"], projetadas);
-
-      await Promise.all([
-        qc.invalidateQueries({
-          queryKey: ["ocorrencias"],
-          refetchType: "all",
-        }),
-        qc.invalidateQueries({
-          queryKey: ["vigencias"],
-          refetchType: "all",
-        }),
-        qc.invalidateQueries({
-          queryKey: ["filho_tarefas"],
-          refetchType: "all",
-        }),
-        qc.invalidateQueries({
-          queryKey: ["solicitacoes_tarefa_filho"],
-          refetchType: "all",
-        }),
-      ]);
-
-      setConfirmarExcluirSelecionadas(null);
-
-      if (resultado.quantidade_preservada > 0) {
-        const preservadas = resultado.quantidade_preservada;
-        const desfeitas = resultado.quantidade_desfeita;
-
-        if (desfeitas > 0) {
-          toast.success(
-            `${desfeitas} ${desfeitas === 1 ? "marcação desfeita" : "marcações desfeitas"}. ${preservadas} ${preservadas === 1 ? "foi preservada" : "foram preservadas"} por já ${preservadas === 1 ? "ter" : "terem"} penalidade cumprida.`,
-          );
-        } else {
-          toast.info(
-            preservadas === 1
-              ? "A marcação foi preservada porque a penalidade já foi cumprida."
-              : "As marcações foram preservadas porque as penalidades já foram cumpridas.",
-          );
-        }
-      } else {
-        toast.success(
-          resultado.quantidade_desfeita === 1
-            ? "Marcação desfeita"
-            : "Marcações desfeitas",
-        );
-      }
-    } catch (error) {
-      toast.error(
-        msgErro(error instanceof Error ? { message: error.message } : null),
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
   async function marcarPenalidadeCumprida(idOcorrencia: number) {
     setBusy(true);
     try {
@@ -1392,23 +1312,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     ).length;
                     const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
-                    const registrosDoDia = tarefasDoFilho
-                      .map((tarefa) => ({
-                        tarefa,
-                        registro: registroNaData(tarefa, dataSelecionada),
-                      }))
-                      .filter(
-                        (item): item is { tarefa: FilhoTarefa; registro: Ocorrencia } =>
-                          Boolean(item.registro),
-                      );
-                    const quantidadeProtegidaDesfazer = registrosDoDia.filter(
-                      ({ registro }) =>
-                        consequenciaEhPenalidadeCumprida(
-                          registro.t_ocorrencia_consequencia,
-                        ),
-                    ).length;
-                    const quantidadeDisponivelDesfazer =
-                      registrosDoDia.length - quantidadeProtegidaDesfazer;
                     return (
                       <article
                         key={filho.id}
@@ -1480,27 +1383,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                     </p>
                                   </div>
 
-                                  {!bloqueada && quantidadeDisponivelDesfazer > 0 && (
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-8 shrink-0 gap-1.5 px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-                                      disabled={busy}
-                                      onClick={() =>
-                                        setConfirmarExcluirSelecionadas({
-                                          tarefa: registrosDoDia[0].tarefa,
-                                          ids: registrosDoDia.map(({ registro }) => registro.id),
-                                          quantidadeProtegida: quantidadeProtegidaDesfazer,
-                                        })
-                                      }
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                      {quantidadeProtegidaDesfazer > 0
-                                        ? "Desfazer disponíveis"
-                                        : "Desfazer todos"}
-                                    </Button>
-                                  )}
                                 </div>
                               </div>
 
@@ -1732,21 +1614,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                     Marcar penalidade como cumprida
                                                   </DropdownMenuItem>
                                                 )}
-                                              {!bloqueada &&
-                                                !consequenciaEhPenalidadeCumprida(consequencia) && (
-                                                <DropdownMenuItem
-                                                  className="text-destructive focus:text-destructive"
-                                                  onSelect={() =>
-                                                    setConfirmarExcluirSelecionadas({
-                                                      tarefa,
-                                                      ids: [registro.id],
-                                                    })
-                                                  }
-                                                >
-                                                  <Trash2 className="h-4 w-4" />
-                                                  Desfazer marcação
-                                                </DropdownMenuItem>
-                                              )}
                                             </DropdownMenuContent>
                                           </DropdownMenu>
                                         )}
@@ -1891,83 +1758,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={Boolean(confirmarExcluirSelecionadas)}
-        onOpenChange={(open) =>
-          !open && !busy && setConfirmarExcluirSelecionadas(null)
-        }
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>
-              {confirmarExcluirSelecionadas?.ids.length === 1
-                ? "Desfazer marcação?"
-                : "Desfazer todas as marcações?"}
-            </DialogTitle>
-            <DialogDescription className="pt-1">
-              {confirmarExcluirSelecionadas && (() => {
-                const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
-                const quantidade = confirmarExcluirSelecionadas.ids.length;
-                const protegidas =
-                  confirmarExcluirSelecionadas.quantidadeProtegida ?? 0;
-                const disponiveis = Math.max(0, quantidade - protegidas);
-                return (
-                  <span className="block space-y-3">
-                    <span className="flex max-w-full min-w-0 items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5">
-                      {filho && (
-                        <FilhoAvatar
-                          nome={filho.nome}
-                          cor={filho.cor}
-                          avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                          className="h-5 w-5"
-                        />
-                      )}
-                      <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
-                        {filho?.nome ?? "Filho"}
-                      </span>
-                    </span>
-
-                    <span className="block">
-                      <span className="block font-medium text-foreground">
-                        {disponiveis} {disponiveis === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
-                      </span>
-                      {protegidas > 0 && (
-                        <span className="mt-1.5 block leading-relaxed">
-                          {protegidas} {protegidas === 1 ? "marcação será preservada" : "marcações serão preservadas"} porque {protegidas === 1 ? "a penalidade já foi cumprida" : "as penalidades já foram cumpridas"}.
-                        </span>
-                      )}
-                      <span className="mt-1.5 block leading-relaxed">
-                        As datas que ficarem sem resultado voltarão para as pendências.
-                      </span>
-                    </span>
-                  </span>
-                );
-              })()}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              disabled={busy}
-              onClick={() => setConfirmarExcluirSelecionadas(null)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={busy || !confirmarExcluirSelecionadas}
-              onClick={() =>
-                confirmarExcluirSelecionadas &&
-                void runAction(() =>
-                  excluirSelecionadas(confirmarExcluirSelecionadas),
-                )
-              }
-            >
-              <Trash2 className="h-4 w-4" /> Sim
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
