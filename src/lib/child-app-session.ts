@@ -22,6 +22,7 @@ export type ConsequenciaOcorrenciaFilho = {
   status: "APLICADO" | "PENDENTE" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
   cumprida_em: string | null;
   cancelada_em: string | null;
+  mesada_ciclo: number | null;
 };
 
 export type OcorrenciaFilho = {
@@ -67,6 +68,7 @@ export type PainelFilho = {
     avatar: string | null;
     tem_mesada: boolean;
     valor_mesada: number | null;
+    mesada_ciclo_atual: number;
   };
   responsavel: { nome: string };
   vigencias: VigenciaFilho[];
