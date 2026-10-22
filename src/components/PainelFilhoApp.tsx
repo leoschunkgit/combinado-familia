@@ -776,7 +776,7 @@ export function PainelFilhoApp({
                   <div className="flex items-start gap-2 border-b bg-muted/20 px-4 py-2.5 sm:px-5">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                     <p className="text-xs leading-relaxed text-muted-foreground">
-                      Cada tarefa pode ter apenas 1 pedido de revisão por dia.
+                      Cada registro de “Não fez” pode ter apenas 1 pedido de revisão.
                     </p>
                   </div>
 
