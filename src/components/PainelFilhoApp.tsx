@@ -11,6 +11,7 @@ import {
   Info,
   Loader2,
   LogOut,
+  RotateCcw,
   Send,
   Star,
   ThumbsDown,
@@ -125,7 +126,10 @@ export function PainelFilhoApp({
   const [registroAberto, setRegistroAberto] = useState<string | null>(null);
   const [saindo, setSaindo] = useState(false);
   const [avisoTarefa, setAvisoTarefa] = useState<TarefaFilho | null>(null);
-  const [revisaoTarefa, setRevisaoTarefa] = useState<TarefaFilho | null>(null);
+  const [revisaoTarefa, setRevisaoTarefa] = useState<{
+    tarefa: TarefaFilho;
+    ocorrencia: OcorrenciaFilho;
+  } | null>(null);
   const [enviandoAviso, setEnviandoAviso] = useState(false);
   const abrirTarefasPeloPush = useCallback(() => setAba("tarefas"), []);
 
@@ -234,13 +238,14 @@ export function PainelFilhoApp({
     return solicitacoes.find((s) => s.status === "PENDENTE") ?? solicitacoes[0];
   };
 
+  const revisaoDaOcorrencia = (idOcorrencia: number) =>
+    (painel.revisoes ?? []).find(
+      (revisao) => revisao.id_ocorrencia === idOcorrencia,
+    );
+
   const revisaoHoje = (tarefa: TarefaFilho) => {
     const registro = registroHoje(tarefa);
-    return (painel.revisoes_hoje ?? []).find(
-      (r) =>
-        (registro ? r.id_ocorrencia === registro.id : r.id_filho_tarefa === tarefa.id) &&
-        r.data_referencia === hoje,
-    );
+    return registro ? revisaoDaOcorrencia(registro.id) : undefined;
   };
 
   const tarefasResolvidasHoje = tarefasAtual.filter((tarefa) => Boolean(registroHoje(tarefa))).length;
@@ -391,8 +396,8 @@ export function PainelFilhoApp({
 
     setEnviandoAviso(true);
     try {
-      const ocorrencia = registroHoje(revisaoTarefa);
-      if (!ocorrencia || ocorrencia.tipo !== "NAO_FEZ") {
+      const { ocorrencia } = revisaoTarefa;
+      if (ocorrencia.tipo !== "NAO_FEZ") {
         throw new Error("O registro de “Não fez” não está mais disponível para revisão.");
       }
 
@@ -472,9 +477,12 @@ export function PainelFilhoApp({
     setAvisoTarefa(tarefa);
   };
 
-  const abrirRevisao = (tarefa: TarefaFilho) => {
+  const abrirRevisao = (
+    tarefa: TarefaFilho,
+    ocorrencia: OcorrenciaFilho,
+  ) => {
     setAvisoTarefa(null);
-    setRevisaoTarefa(tarefa);
+    setRevisaoTarefa({ tarefa, ocorrencia });
   };
 
   const itensTarefasHoje = tarefasAtual.map((tarefa) => (
@@ -485,7 +493,10 @@ export function PainelFilhoApp({
       solicitacaoHoje={solicitacaoHoje(tarefa)}
       revisaoHoje={revisaoHoje(tarefa)}
       onAvisar={() => abrirAviso(tarefa)}
-      onPedirRevisao={() => abrirRevisao(tarefa)}
+      onPedirRevisao={() => {
+        const ocorrencia = registroHoje(tarefa);
+        if (ocorrencia?.tipo === "NAO_FEZ") abrirRevisao(tarefa, ocorrencia);
+      }}
     />
   ));
 
@@ -804,8 +815,34 @@ export function PainelFilhoApp({
                       <div className="divide-y">
                         {grupo.itens.map(({ tarefa, ocorrencia }, i) => {
                           const b = bonus(ocorrencia);
+                          const revisao =
+                            ocorrencia.tipo === "NAO_FEZ"
+                              ? revisaoDaOcorrencia(ocorrencia.id)
+                              : undefined;
+                          const consequencia = ocorrencia.consequencia;
+                          const detalheConsequencia =
+                            ocorrencia.tipo !== "NAO_FEZ"
+                              ? null
+                              : !consequencia
+                                ? "Sem consequência"
+                                : consequencia.tipo === "DESCONTO"
+                                  ? consequencia.status === "ESTORNADO"
+                                    ? `Desconto de ${dinheiro(Number(consequencia.desconto_valor ?? 0))} — estornado`
+                                    : `Desconto: ${dinheiro(Number(consequencia.desconto_valor ?? 0))}`
+                                  : `Penalidade: ${consequencia.penalidade_descricao ?? "—"} · ${
+                                      consequencia.status === "PENDENTE"
+                                        ? "Pendente"
+                                        : consequencia.status === "SUSPENSA_REVISAO"
+                                          ? "Suspensa — em revisão"
+                                          : consequencia.status === "CUMPRIDA"
+                                            ? "Cumprida"
+                                            : consequencia.status === "CANCELADA"
+                                              ? "Cancelada"
+                                              : consequencia.status
+                                    }`;
+
                           return (
-                            <div key={`${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
+                            <div key={ocorrencia.id ?? `${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
                               <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ocorrencia.tipo === "FEZ" ? "bg-green-50 text-green-700 dark:bg-green-950/35 dark:text-green-300" : "bg-red-50 text-red-600 dark:bg-red-950/35 dark:text-red-300"}`}>
                                 {ocorrencia.tipo === "FEZ" ? <ThumbsUp className="h-4 w-4" /> : <ThumbsDown className="h-4 w-4" />}
                               </span>
@@ -818,6 +855,44 @@ export function PainelFilhoApp({
                                   {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
                                 </p>
                                 {b && <p className="mt-1 break-words text-xs text-muted-foreground">Extra: {b}</p>}
+                                {detalheConsequencia && (
+                                  <p className="mt-1 break-words text-xs text-muted-foreground">
+                                    {detalheConsequencia}
+                                  </p>
+                                )}
+                                {ocorrencia.tipo === "NAO_FEZ" && (
+                                  <div className="mt-2">
+                                    {!revisao ? (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 px-2.5 text-xs"
+                                        onClick={() => abrirRevisao(tarefa, ocorrencia)}
+                                      >
+                                        <RotateCcw className="h-3.5 w-3.5" />
+                                        Pedir revisão
+                                      </Button>
+                                    ) : revisao.status === "PENDENTE" ? (
+                                      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                                        <BellRing className="h-3.5 w-3.5" />
+                                        Revisão enviada
+                                      </span>
+                                    ) : revisao.status === "MANTEVE_NAO_FEZ" ? (
+                                      <span className="text-xs font-medium text-red-600 dark:text-red-300">
+                                        Não fez mantido
+                                      </span>
+                                    ) : revisao.status === "ALTERADO_PARA_FEZ" ? (
+                                      <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                                        Alterado para Fez
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        Marcação desfeita
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
@@ -892,7 +967,7 @@ export function PainelFilhoApp({
             <DialogTitle>{revisaoTarefa ? "Pedir revisão" : "Avisar que terminei"}</DialogTitle>
             <DialogDescription>
               {revisaoTarefa
-                ? `Você marcou que fez “${revisaoTarefa.nome}”, mas o responsável registrou Não fez. Envie uma revisão para ele conferir.`
+                ? `Você marcou que fez “${revisaoTarefa.tarefa.nome}”, mas o responsável registrou Não fez. Envie uma revisão para ele conferir.`
                 : avisoTarefa
                   ? `Avise seu responsável que você terminou “${avisoTarefa.nome}”. A confirmação continua sendo feita pelo responsável.`
                   : ""}
