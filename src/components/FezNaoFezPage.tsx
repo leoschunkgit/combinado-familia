@@ -935,6 +935,17 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   ) {
     if (registro.tipo === alvo) return;
 
+    if (
+      consequenciaEhPenalidadeCumprida(
+        registro.t_ocorrencia_consequencia,
+      )
+    ) {
+      toast.error(
+        "Não é possível alterar este resultado porque a penalidade já foi cumprida",
+      );
+      return;
+    }
+
     const revisaoPendente = revisoesPendentes.find(
       (revisao) => revisao.id_ocorrencia === registro.id,
     );
@@ -1888,7 +1899,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
-                                              {!bloqueada && registro.tipo !== "FEZ" && (
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) &&
+                                                registro.tipo !== "FEZ" && (
                                                 <DropdownMenuItem
                                                   onSelect={() =>
                                                     abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "FEZ")
@@ -1898,7 +1911,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                   Alterar para Fez
                                                 </DropdownMenuItem>
                                               )}
-                                              {!bloqueada && registro.tipo !== "NAO_FEZ" && (
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) &&
+                                                registro.tipo !== "NAO_FEZ" && (
                                                 <DropdownMenuItem
                                                   onSelect={() =>
                                                     abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "NAO_FEZ")
@@ -1908,7 +1923,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                   Alterar para Não fez
                                                 </DropdownMenuItem>
                                               )}
-                                              {!bloqueada && registro.tipo !== "NAO_PRECISOU" && (
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) &&
+                                                registro.tipo !== "NAO_PRECISOU" && (
                                                 <DropdownMenuItem
                                                   onSelect={() =>
                                                     abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "NAO_PRECISOU")

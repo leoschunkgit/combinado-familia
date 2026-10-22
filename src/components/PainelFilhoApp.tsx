@@ -29,6 +29,7 @@ import { AppBrand } from "@/components/AppBrand";
 import { AppGlobalMessage } from "@/components/AppGlobalMessage";
 import {
   consequenciaEhDescontoAplicado,
+  consequenciaEhPenalidadeCumprida,
   consequenciaEhPenalidadePendente,
 } from "@/lib/ocorrencia-model";
 import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
@@ -927,16 +928,18 @@ export function PainelFilhoApp({
                                 {ocorrencia.tipo === "NAO_FEZ" && (
                                   <div className="mt-2">
                                     {!revisao ? (
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 px-2.5 text-xs"
-                                        onClick={() => abrirRevisao(tarefa, ocorrencia)}
-                                      >
-                                        <RotateCcw className="h-3.5 w-3.5" />
-                                        Pedir revisão
-                                      </Button>
+                                      consequenciaEhPenalidadeCumprida(consequencia) ? null : (
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-8 px-2.5 text-xs"
+                                          onClick={() => abrirRevisao(tarefa, ocorrencia)}
+                                        >
+                                          <RotateCcw className="h-3.5 w-3.5" />
+                                          Pedir revisão
+                                        </Button>
+                                      )
                                     ) : revisao.status === "PENDENTE" ? (
                                       <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
                                         <BellRing className="h-3.5 w-3.5" />
