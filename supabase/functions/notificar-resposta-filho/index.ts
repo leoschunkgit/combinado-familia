@@ -24,11 +24,17 @@ function mensagemResposta(tipo: TipoInteracao, status: string, tarefa: string) {
     if (status === "RESOLVIDA_FEZ") {
       return `Seu aviso foi respondido: “${tarefa}” foi marcada como Fez.`;
     }
+    if (status === "RESOLVIDA_NAO_PRECISOU") {
+      return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não precisou.`;
+    }
     return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não fez.`;
   }
 
   if (status === "ALTERADO_PARA_FEZ") {
     return `Seu pedido de revisão de “${tarefa}” foi aceito: agora está como Fez.`;
+  }
+  if (status === "ALTERADO_PARA_NAO_PRECISOU") {
+    return `Seu pedido de revisão de “${tarefa}” foi aceito: agora está como Não precisou.`;
   }
 
   return `Seu pedido de revisão de “${tarefa}” foi respondido: o Não fez foi mantido.`;
@@ -125,8 +131,12 @@ serve(async (req) => {
 
     const statusValido =
       tipoInteracao === "SOLICITACAO"
-        ? interacao.status === "RESOLVIDA_FEZ" || interacao.status === "RESOLVIDA_NAO_FEZ"
-        : interacao.status === "MANTEVE_NAO_FEZ" || interacao.status === "ALTERADO_PARA_FEZ";
+        ? interacao.status === "RESOLVIDA_FEZ" ||
+          interacao.status === "RESOLVIDA_NAO_FEZ" ||
+          interacao.status === "RESOLVIDA_NAO_PRECISOU"
+        : interacao.status === "MANTEVE_NAO_FEZ" ||
+          interacao.status === "ALTERADO_PARA_FEZ" ||
+          interacao.status === "ALTERADO_PARA_NAO_PRECISOU";
 
     if (!statusValido) {
       return json({ error: "A interação ainda não possui uma resposta notificável" }, 409);

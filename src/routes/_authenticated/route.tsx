@@ -97,8 +97,8 @@ const ETAPAS = [
   { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se ele recebe mesada, marque essa opção e informe o valor. A consequência de cada “Não fez” será escolhida no momento da marcação." },
   { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
   { to: "/vigencias", label: "Vigências", title: "Defina o período", rule: "Escolha apenas o início e o fim do combinado. A vigência organiza o período e as atribuições; as consequências pertencem a cada ocorrência." },
-  { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Uma atribuição que já tenha registro de ‘Fez’ ou ‘Não fez’ não pode ser excluída; outras atribuições sem histórico continuam independentes." },
-  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre “Fez” ou “Não fez” na data em que aconteceu. Em cada “Não fez”, escolha de forma independente: nada, desconto da mesada (quando houver) ou penalidade." },
+  { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Uma atribuição que já tenha algum resultado não pode ser excluída; outras atribuições sem histórico continuam independentes." },
+  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre “Fez”, “Não fez” ou “Não precisou” na data em que aconteceu. “Não precisou” encerra a pendência sem estrela e sem consequência. Em cada “Não fez”, escolha de forma independente: nada, desconto da mesada (quando houver) ou penalidade." },
 ] as const;
 
 function AuthenticatedLayout() {

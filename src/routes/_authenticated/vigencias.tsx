@@ -216,7 +216,7 @@ function VigenciasPage() {
 
       const novoInicioDia = diaCampo(p.data.data_inicio); const novoFimDia = diaCampo(p.data.data_fim);
       const fora = (registros ?? []).filter((o) => { const d = diaBrasil(o.created_at); return d < novoInicioDia || d > novoFimDia; });
-      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} registro(s) de “Fez”/“Não fez” fora das novas datas. Ajuste ou remova esses registros em “Fez” / “Não fez” antes de salvar.`); return; }
+      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} resultado(s) fora das novas datas. Ajuste ou remova esses registros antes de salvar.`); return; }
     }
     const { error } = await supabase.from("t_vigencia").update({ data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
@@ -482,7 +482,7 @@ function VigenciasPage() {
             Sua vigência tem {diasDaVigencia(edicao.data_inicio, edicao.data_fim)} {diasDaVigencia(edicao.data_inicio, edicao.data_fim) === 1 ? "dia" : "dias"}.
           </p>
         )}
-        {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} registro(s) de Fez/Não fez fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Fez / Não fez</Link> antes de salvar.</p>}
+        {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} resultado(s) fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Fez / Não fez</Link> antes de salvar.</p>}
         <DialogFooter className="pt-1"><Button type="button" variant="outline" size="sm" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" size="sm">Salvar alterações</Button></DialogFooter>
       </form>
     </DialogContent></Dialog>

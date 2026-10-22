@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, CircleDollarSign, ClipboardList, Clock3, House, ThumbsDown, ThumbsUp } from "lucide-react";
+import { CalendarDays, CircleDollarSign, ClipboardList, Clock3, House, Minus, ThumbsDown, ThumbsUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,12 +40,12 @@ type Consequencia = {
 };
 type Ocorrencia = {
   id: number;
-  tipo: "FEZ" | "NAO_FEZ";
+  tipo: "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
   data: string;
   consequencia: Consequencia | null;
 };
 type Tarefa = { id: number; nome: string; ocorrencias: Ocorrencia[] };
-type Vigencia = { id: number; data_inicio: string; data_fim: string; qtd_nao_fez: number; tarefas: Tarefa[] };
+type Vigencia = { id: number; data_inicio: string; data_fim: string; qtd_nao_fez: number; qtd_nao_precisou?: number; tarefas: Tarefa[] };
 type Painel = { filho: { nome: string; cor: string | null; avatar: string | null; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
 
 const dataHora = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(v));
@@ -96,6 +96,7 @@ function PainelPublico() {
   const tarefasAtual = vigenciaAtual?.tarefas ?? [];
   const qtdNaoFez = vigenciaAtual?.qtd_nao_fez ?? tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length, 0);
   const qtdFez = tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length, 0);
+  const qtdNaoPrecisou = vigenciaAtual?.qtd_nao_precisou ?? tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_PRECISOU").length, 0);
   const desconto = painel.filho.tem_mesada
     ? tarefasAtual.reduce(
         (total, tarefa) =>
@@ -121,7 +122,7 @@ function PainelPublico() {
       ).length,
     0,
   );
-  const resultados = tarefaDatas?.ocorrencias.filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ").sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
+  const resultados = tarefaDatas?.ocorrencias.filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ" || o.tipo === "NAO_PRECISOU").sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
 
   return <main className={`native-safe-area min-h-screen bg-muted/20 ${appPageHorizontalPaddingClass} py-5 sm:py-8`}>
     <div className={`${appPageInnerClass} space-y-4`}>
@@ -144,7 +145,7 @@ function PainelPublico() {
             </CardContent>
           </Card>
 
-          <div className="grid w-full grid-cols-3 gap-2">
+          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
             <Card className="flex min-h-[88px] items-center justify-center">
               <div className="flex flex-col items-center justify-center gap-1 text-center">
                 <ClipboardList className="h-5 w-5 text-muted-foreground" />
@@ -166,6 +167,13 @@ function PainelPublico() {
                 <p className="text-[11px] leading-none text-muted-foreground">Não fez</p>
               </div>
             </Card>
+            <Card className="flex min-h-[88px] items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
+                <Minus className="h-5 w-5 text-muted-foreground" />
+                <p className="text-xl font-bold leading-none">{qtdNaoPrecisou}</p>
+                <p className="text-[11px] leading-none text-muted-foreground">Não precisou</p>
+              </div>
+            </Card>
           </div>
 
           <Card>
@@ -173,9 +181,10 @@ function PainelPublico() {
             <CardContent className="space-y-2">
               {tarefasAtual.map((t) => {
                 const fezCount=t.ocorrencias.filter((o)=>o.tipo==="FEZ").length;
-                const naoFezCount=t.ocorrencias.filter((o)=>o.tipo!=="FEZ").length;
-                const temResultado=fezCount>0||naoFezCount>0;
-                return <div key={t.id} className="flex min-w-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><span className="flex min-w-0 items-start gap-2"><TarefaIcone nome={t.nome} className="mt-0.5" /><span className="min-w-0 break-words text-sm font-medium">{t.nome}</span></span>{temResultado ? <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">{fezCount>0&&<span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">👍 {fezCount} Fez</span>}{naoFezCount>0&&<span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">👎 {naoFezCount} Não fez</span>}<Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}><CalendarDays className="h-3.5 w-3.5" /> Ver resultados</Button></div> : <span className="shrink-0 text-xs text-muted-foreground">Sem registros</span>}</div>;
+                const naoFezCount=t.ocorrencias.filter((o)=>o.tipo==="NAO_FEZ").length;
+                const naoPrecisouCount=t.ocorrencias.filter((o)=>o.tipo==="NAO_PRECISOU").length;
+                const temResultado=fezCount>0||naoFezCount>0||naoPrecisouCount>0;
+                return <div key={t.id} className="flex min-w-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between"><span className="flex min-w-0 items-start gap-2"><TarefaIcone nome={t.nome} className="mt-0.5" /><span className="min-w-0 break-words text-sm font-medium">{t.nome}</span></span>{temResultado ? <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">{fezCount>0&&<span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">👍 {fezCount} Fez</span>}{naoFezCount>0&&<span className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">👎 {naoFezCount} Não fez</span>}{naoPrecisouCount>0&&<span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">— {naoPrecisouCount} Não precisou</span>}<Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setTarefaDatas(t)}><CalendarDays className="h-3.5 w-3.5" /> Ver resultados</Button></div> : <span className="shrink-0 text-xs text-muted-foreground">Sem registros</span>}</div>;
               })}
               {tarefasAtual.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma tarefa atribuída nesta vigência.</p>}
             </CardContent>
@@ -201,12 +210,12 @@ function PainelPublico() {
             </CardContent>
           </Card>
 
-          {vigenciasOrdenadas.length > 0 && <Card><CardHeader><CardTitle className="text-base">Vigências</CardTitle></CardHeader><CardContent className="space-y-2">{vigenciasOrdenadas.map((v) => { const s = status(v), fezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="FEZ").length,0), naoFezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo!=="FEZ").length,0); return <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border p-3"><div className="min-w-0"><p className="text-sm font-medium">{dataHora(v.data_inicio)} até {dataHora(v.data_fim)}</p><p className="mt-1 text-xs text-muted-foreground">{v.tarefas.length} tarefa(s) · 👍 {fezV} Fez · 👎 {naoFezV} Não fez</p></div><span className="inline-flex shrink-0 items-center gap-1.5 text-xs"><span className={`h-2 w-2 rounded-full ${corStatus(s)}`} />{s}</span></div>; })}</CardContent></Card>}
+          {vigenciasOrdenadas.length > 0 && <Card><CardHeader><CardTitle className="text-base">Vigências</CardTitle></CardHeader><CardContent className="space-y-2">{vigenciasOrdenadas.map((v) => { const s = status(v), fezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="FEZ").length,0), naoFezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="NAO_FEZ").length,0), naoPrecisouV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="NAO_PRECISOU").length,0); return <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border p-3"><div className="min-w-0"><p className="text-sm font-medium">{dataHora(v.data_inicio)} até {dataHora(v.data_fim)}</p><p className="mt-1 text-xs text-muted-foreground">{v.tarefas.length} tarefa(s) · 👍 {fezV} Fez · 👎 {naoFezV} Não fez · — {naoPrecisouV} Não precisou</p></div><span className="inline-flex shrink-0 items-center gap-1.5 text-xs"><span className={`h-2 w-2 rounded-full ${corStatus(s)}`} />{s}</span></div>; })}</CardContent></Card>}
         </div>
       ) : (
         <>
           <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Não há uma vigência em andamento neste momento.</p></CardContent></Card>
-          {vigenciasOrdenadas.length > 0 && <Card><CardHeader><CardTitle className="text-base">Vigências</CardTitle></CardHeader><CardContent className="space-y-2">{vigenciasOrdenadas.map((v) => { const s = status(v), fezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="FEZ").length,0), naoFezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo!=="FEZ").length,0); return <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border p-3"><div className="min-w-0"><p className="text-sm font-medium">{dataHora(v.data_inicio)} até {dataHora(v.data_fim)}</p><p className="mt-1 text-xs text-muted-foreground">{v.tarefas.length} tarefa(s) · 👍 {fezV} Fez · 👎 {naoFezV} Não fez</p></div><span className="inline-flex shrink-0 items-center gap-1.5 text-xs"><span className={`h-2 w-2 rounded-full ${corStatus(s)}`} />{s}</span></div>; })}</CardContent></Card>}
+          {vigenciasOrdenadas.length > 0 && <Card><CardHeader><CardTitle className="text-base">Vigências</CardTitle></CardHeader><CardContent className="space-y-2">{vigenciasOrdenadas.map((v) => { const s = status(v), fezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="FEZ").length,0), naoFezV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="NAO_FEZ").length,0), naoPrecisouV=v.tarefas.reduce((n,t)=>n+t.ocorrencias.filter((o)=>o.tipo==="NAO_PRECISOU").length,0); return <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border p-3"><div className="min-w-0"><p className="text-sm font-medium">{dataHora(v.data_inicio)} até {dataHora(v.data_fim)}</p><p className="mt-1 text-xs text-muted-foreground">{v.tarefas.length} tarefa(s) · 👍 {fezV} Fez · 👎 {naoFezV} Não fez · — {naoPrecisouV} Não precisou</p></div><span className="inline-flex shrink-0 items-center gap-1.5 text-xs"><span className={`h-2 w-2 rounded-full ${corStatus(s)}`} />{s}</span></div>; })}</CardContent></Card>}
         </>
       )}
 
@@ -226,7 +235,7 @@ function PainelPublico() {
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const c=consequencia(o); return <div key={o.id ?? `${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>}<div className="min-w-0"><p className="text-sm font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"} · {data(o.data)}</p>{c&&<p className="mt-1 break-words text-xs text-muted-foreground">{c}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
+        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const c=consequencia(o); const rotulo=o.tipo==="FEZ"?"Fez":o.tipo==="NAO_FEZ"?"Não fez":"Não precisou"; return <div key={o.id ?? `${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:o.tipo==="NAO_FEZ"?<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>:<Minus className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"/>}<div className="min-w-0"><p className="text-sm font-medium">{rotulo} · {data(o.data)}</p>{c&&<p className="mt-1 break-words text-xs text-muted-foreground">{c}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
       </DialogContent>
     </Dialog>
   </main>;
