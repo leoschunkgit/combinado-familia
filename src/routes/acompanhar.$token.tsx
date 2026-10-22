@@ -10,6 +10,11 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { AppBrand } from "@/components/AppBrand";
 import { appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
+import {
+  consequenciaEhDescontoAplicado,
+  consequenciaEhPenalidadePendente,
+  descreverConsequenciaOcorrencia,
+} from "@/lib/ocorrencia-model";
 
 export const Route = createFileRoute("/acompanhar/$token")({
   head: () => ({ meta: [
@@ -53,21 +58,9 @@ function status(v: Vigencia) { const s = situacaoVigencia(v); return s === "anda
 const corStatus = (s: string) => s === "Em andamento" ? "bg-green-400" : s === "Finalizada" ? "bg-red-300" : "bg-gray-300";
 function bonus(o: Ocorrencia) { if (o.tipo !== "FEZ") return null; if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao; if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null) return dinheiro(Number(o.bonificacao_valor)); return "Sem bonificação"; }
 function consequencia(o: Ocorrencia) {
-  if (o.tipo !== "NAO_FEZ") return null;
-  const c = o.consequencia;
-  if (!c) return "Sem consequência";
-  if (c.tipo === "DESCONTO") {
-    return c.status === "ESTORNADO"
-      ? `Desconto de ${dinheiro(Number(c.desconto_valor ?? 0))} — estornado`
-      : `Desconto: ${dinheiro(Number(c.desconto_valor ?? 0))}`;
-  }
-  const status =
-    c.status === "PENDENTE" ? "Pendente" :
-    c.status === "SUSPENSA_REVISAO" ? "Suspensa — em revisão" :
-    c.status === "CUMPRIDA" ? "Cumprida" :
-    c.status === "CANCELADA" ? "Cancelada" :
-    c.status;
-  return `Penalidade: ${c.penalidade_descricao ?? "—"} · ${status}`;
+  return o.tipo === "NAO_FEZ"
+    ? descreverConsequenciaOcorrencia(o.consequencia, dinheiro)
+    : null;
 }
 
 function PainelPublico() {
