@@ -19,18 +19,14 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
 }
 
-function mensagemResposta(tipo: TipoInteracao, status: string, tarefa: string) {
-  if (tipo === "SOLICITACAO") {
-    if (status === "RESOLVIDA_FEZ") {
-      return `Seu aviso foi respondido: “${tarefa}” foi marcada como Fez.`;
-    }
-    if (status === "RESOLVIDA_NAO_PRECISOU") {
-      return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não precisou.`;
-    }
-    return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não fez.`;
+function mensagemResposta(status: string, tarefa: string): string {
+  if (status === "RESOLVIDA_FEZ") {
+    return `Seu aviso foi respondido: “${tarefa}” foi marcada como Fez.`;
   }
-
-
+  if (status === "RESOLVIDA_NAO_PRECISOU") {
+    return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não precisou.`;
+  }
+  return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não fez.`;
 }
 
 serve(async (req) => {
@@ -192,7 +188,7 @@ serve(async (req) => {
     }
 
     const accessToken = await obterFirebaseAccessToken(serviceAccount);
-    const texto = mensagemResposta(tipoInteracao, interacao.status, nomeTarefa);
+    const texto = mensagemResposta(interacao.status, nomeTarefa);
     let enviados = 0;
 
     for (const dispositivo of dispositivosAtivos) {
