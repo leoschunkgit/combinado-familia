@@ -261,31 +261,86 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       ),
     [agora, vigenciasOrdenadas],
   );
+  const revisoesPendentes = useMemo(
+    () => revisoesTarefaFilho.filter((revisao) => revisao.status === "PENDENTE"),
+    [revisoesTarefaFilho],
+  );
+  const revisoesPendentesPorVigencia = useMemo(() => {
+    const atribuicaoPorId = new Map(
+      atribuicoes.map((atribuicao) => [atribuicao.id, atribuicao]),
+    );
+    const mapa = new Map<number, typeof revisoesPendentes>();
+
+    for (const revisao of revisoesPendentes) {
+      const atribuicao = atribuicaoPorId.get(revisao.id_filho_tarefa);
+      if (!atribuicao) continue;
+      const atuais = mapa.get(atribuicao.id_vigencia) ?? [];
+      atuais.push(revisao);
+      mapa.set(atribuicao.id_vigencia, atuais);
+    }
+
+    return mapa;
+  }, [atribuicoes, revisoesPendentes]);
+  const idsVigenciasComRevisaoPendente = useMemo(
+    () => new Set(revisoesPendentesPorVigencia.keys()),
+    [revisoesPendentesPorVigencia],
+  );
+  const vigenciasOperacionais = useMemo(
+    () =>
+      vigenciasOrdenadas.filter(
+        (vigencia) =>
+          situacaoVigencia(vigencia, agora) === "andamento" ||
+          idsVigenciasComRevisaoPendente.has(vigencia.id),
+      ),
+    [agora, idsVigenciasComRevisaoPendente, vigenciasOrdenadas],
+  );
   useEffect(() => {
     setDiasSelecionados((atual) => {
       const proximo = { ...atual };
-      const idsAtivos = new Set(vigenciasEmAndamento.map((vigencia) => vigencia.id));
+      const idsOperacionais = new Set(
+        vigenciasOperacionais.map((vigencia) => vigencia.id),
+      );
       let mudou = false;
 
       for (const id of Object.keys(proximo)) {
-        if (!idsAtivos.has(Number(id))) {
+        if (!idsOperacionais.has(Number(id))) {
           delete proximo[Number(id)];
           mudou = true;
         }
       }
 
-      for (const vigencia of vigenciasEmAndamento) {
+      for (const vigencia of vigenciasOperacionais) {
+        const revisoesDaVigencia =
+          revisoesPendentesPorVigencia.get(vigencia.id) ?? [];
+        const dataRevisao = [...revisoesDaVigencia]
+          .map((revisao) => revisao.data_referencia)
+          .sort((a, b) => b.localeCompare(a))[0];
+        const emAndamento = vigenciaEmAndamento(vigencia);
+
         if (!(vigencia.id in proximo)) {
-          proximo[vigencia.id] = hoje;
+          proximo[vigencia.id] = dataRevisao ?? hoje;
+          mudou = true;
+        } else if (!emAndamento && dataRevisao && proximo[vigencia.id] !== dataRevisao) {
+          proximo[vigencia.id] = dataRevisao;
           mudou = true;
         }
       }
 
       return mudou ? proximo : atual;
     });
-  }, [hoje, vigenciasEmAndamento]);
+  }, [hoje, revisoesPendentesPorVigencia, vigenciasOperacionais]);
 
   function datasDoPeriodoDaVigencia(vigencia: Vigencia) {
+    if (!vigenciaEmAndamento(vigencia)) {
+      return [
+        ...new Set(
+          (revisoesPendentesPorVigencia.get(vigencia.id) ?? []).map(
+            (revisao) => revisao.data_referencia,
+          ),
+        ),
+      ].sort((a, b) => a.localeCompare(b));
+    }
+
     const inicio = dataBrasil(vigencia.data_inicio);
     const fim = dataBrasil(vigencia.data_fim);
     const datas: string[] = [];
@@ -325,7 +380,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      for (const vigencia of vigenciasEmAndamento) {
+      for (const vigencia of vigenciasOperacionais) {
         const dataSelecionada = diasSelecionados[vigencia.id];
         const area = diasScrollRefs.current[vigencia.id];
         if (!dataSelecionada || !area) continue;
@@ -343,7 +398,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [diasSelecionados, vigenciasEmAndamento]);
+  }, [diasSelecionados, vigenciasOperacionais]);
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -425,6 +480,16 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
         return false;
       }
+
+      if (!vigenciaEmAndamento(vigencia)) {
+        const dataSelecionada = diasSelecionados[vigencia.id];
+        const temRevisaoPendente = revisoesPendentes.some(
+          (revisao) =>
+            revisao.id_filho_tarefa === tarefa.id &&
+            revisao.data_referencia === dataSelecionada,
+        );
+        if (!temRevisaoPendente) return false;
+      }
       if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
         return false;
       }
@@ -454,12 +519,30 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     if (!atribuicao) return;
 
     const vigencia = vigencias.find((item) => item.id === atribuicao.id_vigencia);
-    if (!vigencia || !vigenciaEmAndamento(vigencia)) return;
+    if (!vigencia) return;
+
+    const revisaoFoco = focoSolicitacao.idRevisao
+      ? revisoesPendentes.find(
+          (revisao) =>
+            revisao.id === focoSolicitacao.idRevisao &&
+            revisao.id_filho_tarefa === atribuicao.id,
+        )
+      : undefined;
+    const podeExibirFinalizada =
+      vigenciaEmAndamento(vigencia) ||
+      idsVigenciasComRevisaoPendente.has(vigencia.id);
+
+    if (!podeExibirFinalizada) return;
+
+    const dataPreferida =
+      focoSolicitacao.data ??
+      revisaoFoco?.data_referencia ??
+      revisoesPendentesPorVigencia.get(vigencia.id)?.[0]?.data_referencia;
 
     const dataFoco =
-      focoSolicitacao.data &&
-      dataPertenceAVigenciaAteHoje(vigencia, focoSolicitacao.data, hoje)
-        ? focoSolicitacao.data
+      dataPreferida &&
+      dataPertenceAVigenciaAteHoje(vigencia, dataPreferida, hoje)
+        ? dataPreferida
         : hoje;
 
     const proximoFiltro = {
@@ -481,10 +564,19 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }));
 
     ultimoFocoAplicado.current = chaveFoco;
-  }, [atribuicoes, focoSolicitacao, hoje, isLoading, vigencias]);
+  }, [
+    atribuicoes,
+    focoSolicitacao,
+    hoje,
+    idsVigenciasComRevisaoPendente,
+    isLoading,
+    revisoesPendentes,
+    revisoesPendentesPorVigencia,
+    vigencias,
+  ]);
 
   const idsVigenciasRascunho = new Set(
-    vigenciasEmAndamento.map((vigencia) => vigencia.id),
+    vigenciasOperacionais.map((vigencia) => vigencia.id),
   );
   const atribuicoesRascunho = atribuicoes.filter((item) =>
     idsVigenciasRascunho.has(item.id_vigencia),
@@ -534,7 +626,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       );
     });
 
-  const vigenciasParaExibir = vigenciasEmAndamento
+  const vigenciasParaExibir = vigenciasOperacionais
     .filter((vigencia) =>
       filhosEstruturais.some(
         (filho) => tarefasEstruturais(vigencia, filho.id).length > 0,
@@ -588,7 +680,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      for (const vigencia of vigenciasEmAndamento) {
+      for (const vigencia of vigenciasOperacionais) {
         const filhoSelecionado = filhosSelecionados[vigencia.id];
         const area = filhosScrollRefs.current[vigencia.id];
         if (!filhoSelecionado || !area) continue;
@@ -608,7 +700,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [filhosSelecionados, vigenciasEmAndamento]);
+  }, [filhosSelecionados, vigenciasOperacionais]);
 
   useEffect(() => {
     if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
@@ -874,7 +966,16 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     registro: Ocorrencia,
   ) {
-    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
+    const revisaoPendente = revisoesPendentes.find(
+      (revisao) => revisao.id_ocorrencia === registro.id,
+    );
+    const podeResolverRevisao =
+      registro.tipo === "NAO_FEZ" && Boolean(revisaoPendente);
+
+    if (
+      !tarefa.t_vigencia ||
+      (!vigenciaEmAndamento(tarefa.t_vigencia) && !podeResolverRevisao)
+    ) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
     }
@@ -910,7 +1011,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   async function salvarFez(draft: FezDraft, existente?: Ocorrencia) {
     const tarefa = draft.tarefa;
     const vigencia = tarefa.t_vigencia;
-    if (!vigencia || !vigenciaEmAndamento(vigencia)) {
+    const revisaoPendente = existente
+      ? revisoesPendentes.find(
+          (revisao) => revisao.id_ocorrencia === existente.id,
+        )
+      : undefined;
+    const podeResolverRevisao =
+      existente?.tipo === "NAO_FEZ" && Boolean(revisaoPendente);
+
+    if (!vigencia || (!vigenciaEmAndamento(vigencia) && !podeResolverRevisao)) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
     }
@@ -938,13 +1047,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     const gerouEstrela = !existente || existente.tipo !== "FEZ";
-    const revisaoPendente = existente
-      ? revisoesTarefaFilho.find(
-          (revisao) =>
-            revisao.id_ocorrencia === existente.id &&
-            revisao.status === "PENDENTE",
-        )
-      : undefined;
     const solicitacaoPendente = solicitacaoNaData(tarefa, draft.data);
     const interacaoPendente =
       revisaoPendente
@@ -1231,6 +1333,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     <h2 className={uiTypography.secondaryTitleStrongLargeDesktop}>
                       {fmtVigencia(vigencia)}
                     </h2>
+                    {!vigenciaEmAndamento(vigencia) &&
+                      idsVigenciasComRevisaoPendente.has(vigencia.id) && (
+                        <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                          Finalizada · revisão pendente
+                        </span>
+                      )}
                   </div>
                 </div>
               </div>
@@ -1257,7 +1365,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     {datasDoPeriodoDaVigencia(vigencia).map((data) => {
                       const selecionada = diasSelecionados[vigencia.id] === data;
                       const futura = data > hoje;
-                      const comPendencia = !futura && diaTemPendencia(vigencia.id, data);
+                      const comPendencia =
+                        vigenciaEmAndamento(vigencia) &&
+                        !futura &&
+                        diaTemPendencia(vigencia.id, data);
                       return (
                         <button
                           key={data}
@@ -1648,8 +1759,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           </div>
                                         )}
                                         {registro?.tipo === "NAO_FEZ" &&
-                                          revisao?.status === "PENDENTE" &&
-                                          !bloqueada && (
+                                          revisao?.status === "PENDENTE" && (
                                             <div
                                               className="inline-flex shrink-0 items-center gap-1 self-center"
                                               role="group"
