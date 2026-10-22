@@ -45,19 +45,12 @@ export async function clonarUltimaVigencia(
   const origem = obterUltimaVigencia(vigencias);
   if (!origem) throw new Error("Não há vigência para clonar");
 
-  if (origem.valor_debito === null || Number(origem.valor_debito) <= 0) {
-    throw new Error("A última vigência não possui um desconto válido para clonagem");
-  }
-
   const { dataInicio, dataFim } = montarPeriodoClone(vigencias, origem);
 
   const { data, error } = await supabase.rpc("duplicar_vigencia_com_atribuicoes", {
     p_modelo_id: origem.id,
     p_data_inicio: paraIsoDataHoraBrasil(dataInicio),
     p_data_fim: paraIsoDataHoraBrasil(dataFim),
-    p_penalidade: null,
-    p_qtd_ocorrencia: Number(origem.qtd_ocorrencia),
-    p_valor_debito: Number(origem.valor_debito),
   });
 
   if (error) throw error;
