@@ -377,12 +377,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         s.status === "PENDENTE",
     );
 
-  const revisaoNaData = (tarefa: FilhoTarefa, data: string) =>
-    revisoesTarefaFilho.find(
-      (r) =>
-        r.id_filho_tarefa === tarefa.id &&
-        r.data_referencia === data,
-    );
+  const revisaoNaData = (tarefa: FilhoTarefa, data: string) => {
+    const registro = registroNaData(tarefa, data);
+    return registro
+      ? revisoesTarefaFilho.find(
+          (revisao) => revisao.id_ocorrencia === registro.id,
+        )
+      : undefined;
+  };
 
   const diaTemPendencia = (vigenciaId: number, data: string) => {
     if (data > hoje) return false;
