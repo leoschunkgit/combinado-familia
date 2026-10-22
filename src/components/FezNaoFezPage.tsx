@@ -765,6 +765,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       total,
       data,
       existente,
+      quantidadeNaoFezAtual: total,
       filhoNome: filho.nome,
       filhoCor: filho.cor,
       filhoAvatar: filho.avatar,
@@ -1753,14 +1754,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Hint>
                                             )}
 
-                                            {registro.tipo === "NAO_FEZ" &&
-                                              consequenciaEhPenalidadePendente(consequencia) && (
-                                                <span
-                                                  className="inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500"
-                                                  role="img"
-                                                  aria-label="Penalidade pendente"
-                                                />
-                                              )}
                                           </div>
                                         )}
                                         {registro?.tipo === "NAO_FEZ" &&
@@ -2020,34 +2013,42 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                   {(() => {
                     const filho = filhoDaTarefa(troca.tarefa);
                     return (
-                      <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
-                        <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
+                      <span className="grid min-w-0 grid-cols-[0.9fr_1.5fr_auto] divide-x overflow-hidden rounded-lg border">
+                        <span className="flex min-w-0 items-center gap-1.5 px-2.5 py-2">
                           {filho && (
                             <FilhoAvatar
                               nome={filho.nome}
                               cor={filho.cor}
                               avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                              className="h-5 w-5"
+                              className="h-4 w-4"
                             />
                           )}
                           <span className="min-w-0">
-                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                               Filho
                             </span>
-                            <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">
+                            <span className="block truncate text-xs font-medium text-foreground">
                               {filho?.nome ?? "Filho"}
                             </span>
                           </span>
                         </span>
-                        <span className="block border-t px-3 py-2.5">
-                          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <span className="min-w-0 px-2.5 py-2">
+                          <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                             Tarefa
                           </span>
-                          <span className="mt-0.5 flex min-w-0 items-start gap-2">
-                            <TarefaIcone nome={troca.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                            <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
+                          <span className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                            <TarefaIcone nome={troca.tarefa.t_tarefa?.nome ?? "Tarefa"} className="h-3.5 w-3.5 shrink-0" />
+                            <span className="min-w-0 truncate text-xs font-medium text-foreground">
                               {troca.tarefa.t_tarefa?.nome}
                             </span>
+                          </span>
+                        </span>
+                        <span className="px-2.5 py-2">
+                          <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Data
+                          </span>
+                          <span className="mt-0.5 block whitespace-nowrap text-xs font-medium text-foreground">
+                            {formatarData(dataBrasil(troca.ocorrencia.created_at))}
                           </span>
                         </span>
                       </span>
@@ -2058,12 +2059,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     Esta tarefa está marcada como{" "}
                     <span className="font-medium text-foreground">
                       “{rotuloResultado(troca.ocorrencia.tipo)}”
-                    </span>{" "}
-                    em{" "}
-                    <span className="font-medium text-foreground">
-                      {formatarData(dataBrasil(troca.ocorrencia.created_at))}
-                    </span>
-                    . Ao confirmar, ela será alterada para{" "}
+                    </span>. Ao confirmar, ela será alterada para{" "}
                     <span className="font-medium text-foreground">
                       “{rotuloResultado(troca.alvo)}”
                     </span>.

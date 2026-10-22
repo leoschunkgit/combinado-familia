@@ -27,6 +27,7 @@ export type NaoFezDraft = {
   filhoAvatar?: string | null;
   tarefaNome: string;
   data: string;
+  quantidadeNaoFezAtual: number;
   temMesada: boolean;
   consequenciaTipo: ConsequenciaNaoFezTipo;
   descontoValor: string;
@@ -61,8 +62,8 @@ export function NaoFezDialog({
           <DialogTitle>Registrar “Não fez”</DialogTitle>
           <DialogDescription>
             {value ? (
-              <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
-                <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
+              <span className="grid min-w-0 grid-cols-[0.9fr_1.5fr_auto] divide-x overflow-hidden rounded-lg border">
+                <span className="flex min-w-0 items-center gap-1.5 px-2.5 py-2">
                   <FilhoAvatar
                     nome={value.filhoNome}
                     cor={value.filhoCor}
@@ -71,33 +72,33 @@ export function NaoFezDialog({
                         ? value.filhoAvatar
                         : null
                     }
-                    className="h-5 w-5"
+                    className="h-4 w-4"
                   />
                   <span className="min-w-0">
-                    <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                       Filho
                     </span>
-                    <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">
+                    <span className="block truncate text-xs font-medium text-foreground">
                       {value.filhoNome}
                     </span>
                   </span>
                 </span>
-                <span className="block border-t px-3 py-2.5">
-                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="min-w-0 px-2.5 py-2">
+                  <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Tarefa
                   </span>
-                  <span className="mt-0.5 flex min-w-0 items-start gap-2">
-                    <TarefaIcone nome={value.tarefaNome} className="mt-0.5" />
-                    <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
+                  <span className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                    <TarefaIcone nome={value.tarefaNome} className="h-3.5 w-3.5 shrink-0" />
+                    <span className="min-w-0 truncate text-xs font-medium text-foreground">
                       {value.tarefaNome}
                     </span>
                   </span>
                 </span>
-                <span className="block border-t px-3 py-2.5">
-                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="px-2.5 py-2">
+                  <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Data
                   </span>
-                  <span className="mt-0.5 block font-medium text-foreground">
+                  <span className="mt-0.5 block whitespace-nowrap text-xs font-medium text-foreground">
                     {formatarData(value.data)}
                   </span>
                 </span>
@@ -110,6 +111,11 @@ export function NaoFezDialog({
 
         {value && (
           <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
+              <span className="text-muted-foreground">“Não fez” na vigência</span>
+              <strong className="shrink-0 text-foreground">{value.quantidadeNaoFezAtual}</strong>
+            </div>
+
             <div className="space-y-2">
               <Label>O que deseja fazer?</Label>
               <Select
