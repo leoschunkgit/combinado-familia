@@ -18,7 +18,7 @@ type RegistrarNaoFezInput = ReconciliarBase & {
 };
 
 async function reconciliar(params: {
-  acao: "SALVAR" | "DESFAZER" | "CUMPRIR_PENALIDADE";
+  acao: "SALVAR" | "CUMPRIR_PENALIDADE";
   idOcorrencia?: number;
   idFilhoTarefa?: number;
   dataIso?: string;
@@ -80,33 +80,6 @@ export function registrarNaoFez(input: RegistrarNaoFezInput) {
   });
 }
 
-export function desfazerOcorrencia(idOcorrencia: number, motivo?: string) {
-  return reconciliar({
-    acao: "DESFAZER",
-    idOcorrencia,
-    motivo,
-  });
-}
-
-export type DesfazerOcorrenciasResultado = {
-  ok: boolean;
-  quantidade_solicitada: number;
-  quantidade_desfeita: number;
-  quantidade_preservada: number;
-  ids_desfeitos: number[];
-  ids_preservados: number[];
-};
-
-export async function desfazerOcorrencias(
-  ids: number[],
-): Promise<DesfazerOcorrenciasResultado> {
-  const { data, error } = await supabase.rpc("desfazer_ocorrencias", {
-    p_ids: ids,
-  });
-
-  if (error) throw error;
-  return data as unknown as DesfazerOcorrenciasResultado;
-}
 
 export function cumprirPenalidade(idOcorrencia: number) {
   return reconciliar({
