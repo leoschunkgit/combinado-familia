@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   BellRing,
-  CalendarRange,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
@@ -1099,18 +1098,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
             grupoFilhoSelecionado?.filho.cor?.trim() || null;
           return (
             <section key={vigencia.id} className="space-y-3">
-              <div className="flex min-w-0 items-start gap-2">
-                <CalendarRange className="mt-1 h-5 w-5 shrink-0 text-primary" />
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className={uiTypography.secondaryTitleStrongLargeDesktop}>
-                      {fmtVigencia(vigencia)}
-                    </h2>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t pt-3 pb-1">
+              <div className="pb-1">
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
