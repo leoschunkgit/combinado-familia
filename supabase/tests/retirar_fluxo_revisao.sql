@@ -1,4 +1,17 @@
 begin;
+do $schema_test$
+begin
+  if to_regclass('public.t_revisao_tarefa_filho') is not null then
+    raise exception 'Tabela obsoleta ainda existe';
+  end if;
+  if exists(select 1 from information_schema.columns where table_schema='public' and column_name='id_revisao') then
+    raise exception 'Coluna obsoleta ainda existe';
+  end if;
+  if to_regnamespace('arquivo_interno') is not null then
+    raise exception 'Arquivo histórico de revisão ainda existe';
+  end if;
+end;
+$schema_test$;
 -- Execute após a migration, dentro de BEGIN/ROLLBACK. Nenhum dado de teste persiste.
 do $test$
 declare
@@ -30,11 +43,11 @@ begin
 
   bloqueou:=false;
   begin perform public.criar_revisao_ocorrencia_filho_interno(token,ocorrencia,null);
-  exception when feature_not_supported then bloqueou:=true; end;
+  exception when undefined_function then bloqueou:=true; end;
   if not bloqueou then raise exception 'Criação de revisão liberada'; end if;
   bloqueou:=false;
   begin perform public.resolver_revisao_tarefa_filho(1,'MANTER_NAO_FEZ');
-  exception when feature_not_supported then bloqueou:=true; end;
+  exception when undefined_function then bloqueou:=true; end;
   if not bloqueou then raise exception 'Resolução liberada'; end if;
   bloqueou:=false;
   begin perform public.reconciliar_ocorrencia(p_acao=>'SOLICITAR_REVISAO',p_id_ocorrencia=>ocorrencia);
@@ -42,13 +55,13 @@ begin
   if not bloqueou then raise exception 'Ação antiga liberada'; end if;
   bloqueou:=false;
   begin perform public.reconciliar_ocorrencia(p_acao=>'SALVAR',p_id_ocorrencia=>ocorrencia,p_novo_tipo=>'FEZ',p_id_revisao=>1);
-  exception when feature_not_supported then bloqueou:=true; end;
+  exception when undefined_function then bloqueou:=true; end;
   if not bloqueou then raise exception 'Parâmetro antigo liberado'; end if;
 
   perform public.reconciliar_ocorrencia(p_acao=>'SALVAR',p_id_ocorrencia=>ocorrencia,p_novo_tipo=>'FEZ');
   if not exists(select 1 from public.t_ocorrencia_consequencia where id_ocorrencia=ocorrencia and status='CANCELADA') then raise exception 'Consequência não cancelada'; end if;
   perform public.reconciliar_ocorrencia(p_acao=>'SALVAR',p_id_ocorrencia=>ocorrencia,p_novo_tipo=>'NAO_PRECISOU');
-  perform public.reconciliar_ocorrencia(p_acao=>'DESFAZER',p_id_ocorrencia=>ocorrencia);
+  perform public.desfazer_ocorrencias(array[ocorrencia]);
   resposta := public.reconciliar_ocorrencia(p_acao=>'SALVAR',p_id_filho_tarefa=>atribuicao,p_novo_tipo=>'NAO_FEZ',p_consequencia_tipo=>'PENALIDADE',p_penalidade_descricao=>'Organizar o quarto');
   ocorrencia := (resposta->>'id_ocorrencia')::bigint;
   perform public.reconciliar_ocorrencia(p_acao=>'CUMPRIR_PENALIDADE',p_id_ocorrencia=>ocorrencia);
