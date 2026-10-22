@@ -1305,17 +1305,39 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     return (
                       <div key={filho.id} className="space-y-2">
-                        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 px-1 text-xs font-semibold text-muted-foreground">
-                          <span
-                            className="inline-flex items-center gap-1 tabular-nums"
-                            aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
-                          >
-                            <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
-                            <span>{totaisEstrelas[filho.id] ?? 0} estrelas</span>
-                          </span>
-                          <span className="tabular-nums">
-                            Não fez na vigência: {totalNaoFez}
-                          </span>
+                        <div className="rounded-lg border bg-muted/20 px-2.5 py-2">
+                          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
+                              <span
+                                className="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
+                                aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
+                              >
+                                <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
+                                <span>{totaisEstrelas[filho.id] ?? 0} estrelas</span>
+                              </span>
+                              <span className="inline-flex items-center gap-1 tabular-nums text-muted-foreground">
+                                <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
+                                <span>Não fez na vigência: {totalNaoFez}</span>
+                              </span>
+                            </div>
+
+                            {temMesada && (
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tabular-nums">
+                                <span className="whitespace-nowrap">
+                                  <span className="text-muted-foreground">Mesada</span>{" "}
+                                  <strong className="font-semibold">{reais(filho.valor_mesada ?? 0)}</strong>
+                                </span>
+                                <span className="whitespace-nowrap">
+                                  <span className="text-muted-foreground">Descontos</span>{" "}
+                                  <strong className="font-semibold text-destructive">-{reais(totalDescontado)}</strong>
+                                </span>
+                                <span className="whitespace-nowrap">
+                                  <span className="text-muted-foreground">Saldo</span>{" "}
+                                  <strong className="font-semibold text-primary">{reais(saldoMesada)}</strong>
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <article
@@ -1355,22 +1377,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                         {filhoAberto && (
                           <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
-                            {temMesada && (
-                              <div className="mb-4 grid grid-cols-3 overflow-hidden rounded-lg border bg-muted/20 text-sm tabular-nums">
-                                <div className="px-3 py-2.5">
-                                  <p className="text-[11px] font-medium text-muted-foreground">Mesada</p>
-                                  <p className="mt-0.5 font-semibold">{reais(filho.valor_mesada ?? 0)}</p>
-                                </div>
-                                <div className="border-l px-3 py-2.5">
-                                  <p className="text-[11px] font-medium text-muted-foreground">Descontos</p>
-                                  <p className="mt-0.5 font-semibold text-destructive">-{reais(totalDescontado)}</p>
-                                </div>
-                                <div className="border-l px-3 py-2.5">
-                                  <p className="text-[11px] font-medium text-muted-foreground">Saldo atual</p>
-                                  <p className="mt-0.5 font-semibold text-primary">{reais(saldoMesada)}</p>
-                                </div>
-                              </div>
-                            )}
                             {penalidadesPendentes > 0 && (
                               <div className="mb-4 rounded-lg border bg-muted/20 px-3 py-2 text-sm font-medium">
                                 {penalidadesPendentes} {penalidadesPendentes === 1 ? "penalidade pendente" : "penalidades pendentes"}
