@@ -625,12 +625,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     );
   }
 
-  async function salvarNaoFez(
+  function abrirNaoFez(
     tarefa: FilhoTarefa,
     total: number,
     data: string,
     existente?: Ocorrencia,
-    penalidadeTexto?: string,
   ) {
     const vigencia = tarefa.t_vigencia;
     if (!vigencia || !vigenciaEmAndamento(vigencia)) {
@@ -645,36 +644,102 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       return;
     }
 
-    const filho = filhos.find((item) => item.id === tarefa.id_filho);
-    const vigenciaCompleta = vigencias.find(
-      (item) => item.id === tarefa.id_vigencia,
-    );
+    const filho = filhoDaTarefa(tarefa);
+    if (!filho) {
+      toast.error("Filho não encontrado");
+      return;
+    }
+
+    const consequenciaAtual = existente?.t_ocorrencia_consequencia;
+    const temMesada =
+      filho.tem_mesada_opcional === true && filho.valor_mesada !== null;
+    const tipoAtual: ConsequenciaNaoFezTipo =
+      consequenciaAtual?.tipo === "DESCONTO" && temMesada
+        ? "DESCONTO"
+        : consequenciaAtual?.tipo === "PENALIDADE"
+          ? "PENALIDADE"
+          : "NENHUMA";
+
+    setNaoFez({
+      tarefa,
+      total,
+      data,
+      existente,
+      filhoNome: filho.nome,
+      filhoCor: filho.cor,
+      filhoAvatar: filho.avatar,
+      tarefaNome: tarefa.t_tarefa?.nome ?? "Tarefa",
+      temMesada,
+      consequenciaTipo: tipoAtual,
+      descontoValor:
+        tipoAtual === "DESCONTO" && consequenciaAtual?.desconto_valor != null
+          ? String(consequenciaAtual.desconto_valor).replace(".", ",")
+          : "",
+      penalidadeDescricao:
+        tipoAtual === "PENALIDADE"
+          ? consequenciaAtual?.penalidade_descricao ?? ""
+          : "",
+    });
+  }
+
+  async function salvarNaoFez(draft: NaoFezPageDraft) {
+    const { tarefa, data, existente } = draft;
+    const vigencia = tarefa.t_vigencia;
+
+    if (!vigencia || !vigenciaEmAndamento(vigencia)) {
+      toast.error("Ações só podem ser feitas em uma vigência em andamento");
+      return;
+    }
+
+    if (!dataValida(tarefa, data)) {
+      toast.error(
+        "A data do “Não fez” deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência",
+      );
+      return;
+    }
+
+    const descontoValor =
+      draft.consequenciaTipo === "DESCONTO"
+        ? valorBonificacaoNumero(draft.descontoValor)
+        : null;
+
+    if (
+      draft.consequenciaTipo === "DESCONTO" &&
+      (descontoValor === null || descontoValor <= 0)
+    ) {
+      toast.error("Informe um valor de desconto maior que zero");
+      return;
+    }
+
+    if (
+      draft.consequenciaTipo === "PENALIDADE" &&
+      (draft.penalidadeDescricao.trim().length < 2 ||
+        draft.penalidadeDescricao.trim().length > 200)
+    ) {
+      toast.error("Informe uma penalidade entre 2 e 200 caracteres");
+      return;
+    }
+
     const solicitacaoPendente = solicitacaoNaData(tarefa, data);
 
     setBusy(true);
     try {
-      const resultado = await registrarNaoFezComPenalidade({
-        tarefa,
-        filho,
-        vigenciaCompleta,
-        filhos,
-        ocorrencias,
-        dataIso: new Date(data + "T12:00:00-03:00").toISOString(),
-        existente,
-        penalidadeTexto,
+      const resultado = await registrarNaoFez({
+        idOcorrencia: existente?.id,
+        idFilhoTarefa: existente ? undefined : tarefa.id,
+        dataIso: existente
+          ? undefined
+          : new Date(data + "T12:00:00-03:00").toISOString(),
+        consequenciaTipo: draft.consequenciaTipo,
+        descontoValor,
+        penalidadeDescricao:
+          draft.consequenciaTipo === "PENALIDADE"
+            ? draft.penalidadeDescricao.trim()
+            : null,
+        motivo: existente?.tipo === "FEZ"
+          ? "Alteração de Fez para Não fez"
+          : "Registro de Não fez",
       });
-
-      if (resultado.status === "PRECISA_PENALIDADE") {
-        setTroca(null);
-        setPenalidadePendente({
-          tarefa,
-          total: resultado.totalAtual,
-          data,
-          existente,
-          descricao: "",
-        });
-        return;
-      }
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
@@ -686,20 +751,26 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
           ? notificarRespostaFilho("SOLICITACAO", solicitacaoPendente.id)
           : Promise.resolve(null),
       ]);
-      setTroca(null);
-      setPenalidadePendente(null);
 
-      if (resultado.comDesconto && filho) {
+      setNaoFez(null);
+      setTroca(null);
+
+      const resposta = resultado as {
+        contador_nao_fez_vigencia?: number;
+      } | null;
+      const contador = Number(resposta?.contador_nao_fez_vigencia ?? 0);
+
+      if (draft.consequenciaTipo === "DESCONTO" && descontoValor !== null) {
         toast.success(
-          `“Não fez” registrado · Desconto acumulado: ${reais(
-            valorDebitado(filho, vigencia, resultado.novoTotal),
-          )}`,
+          `“Não fez” registrado · Desconto: ${reais(descontoValor)} · Total na vigência: ${contador}`,
         );
-      } else if (resultado.penalizado) {
-        toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
+      } else if (draft.consequenciaTipo === "PENALIDADE") {
+        toast.success(
+          `“Não fez” registrado · Penalidade pendente · Total na vigência: ${contador}`,
+        );
       } else {
         toast.success(
-          `“Não fez” registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})`,
+          `“Não fez” registrado · Total na vigência: ${contador}`,
         );
       }
     } catch (error) {
@@ -730,19 +801,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       });
       return;
     }
+
     if (existente) return;
-    void runAction(() => salvarNaoFez(tarefa, total, data));
+    abrirNaoFez(tarefa, total, data);
   }
 
-  async function confirmarPenalidade() {
-    if (!penalidadePendente) return;
-    await salvarNaoFez(
-      penalidadePendente.tarefa,
-      penalidadePendente.total,
-      penalidadePendente.data,
-      penalidadePendente.existente,
-      penalidadePendente.descricao.trim(),
-    );
+  async function confirmarNaoFez() {
+    if (!naoFez) return;
+    await salvarNaoFez(naoFez);
   }
 
   function abrirFez(
@@ -863,10 +929,16 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     const gerouEstrela = !existente || existente.tipo !== "FEZ";
-    const revisaoPendente = revisaoNaData(tarefa, draft.data);
+    const revisaoPendente = existente
+      ? revisoesTarefaFilho.find(
+          (revisao) =>
+            revisao.id_ocorrencia === existente.id &&
+            revisao.status === "PENDENTE",
+        )
+      : undefined;
     const solicitacaoPendente = solicitacaoNaData(tarefa, draft.data);
     const interacaoPendente =
-      revisaoPendente?.status === "PENDENTE"
+      revisaoPendente
         ? { tipo: "REVISAO" as const, id: revisaoPendente.id }
         : solicitacaoPendente
           ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
@@ -874,31 +946,25 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
     setBusy(true);
     try {
-      const payload = {
-        tipo: "FEZ",
-        bonificacao_tipo:
-          draft.bonusTipo === "NENHUMA" ? null : draft.bonusTipo,
-        bonificacao_descricao:
+      await registrarFez({
+        idOcorrencia: existente?.id,
+        idFilhoTarefa: existente ? undefined : tarefa.id,
+        dataIso: existente
+          ? undefined
+          : new Date(draft.data + "T12:00:00-03:00").toISOString(),
+        bonusTipo: draft.bonusTipo,
+        bonusDescricao:
           draft.bonusTipo === "TEXTO" ? draft.descricao.trim() : null,
-        bonificacao_valor: draft.bonusTipo === "VALOR" ? valor : null,
-      };
-      const resposta = existente
-        ? await supabase
-            .from("t_ocorrencia")
-            .update(payload)
-            .eq("id", existente.id)
-        : await supabase.from("t_ocorrencia").insert({
-            ...payload,
-            id_filho_tarefa: tarefa.id,
-            created_at: new Date(
-              draft.data + "T12:00:00-03:00",
-            ).toISOString(),
-          });
-
-      if (resposta.error) {
-        toast.error(msgErro(resposta.error));
-        return;
-      }
+        bonusValor: draft.bonusTipo === "VALOR" ? valor : null,
+        idRevisao:
+          existente?.tipo === "NAO_FEZ" ? revisaoPendente?.id : undefined,
+        motivo:
+          existente?.tipo === "NAO_FEZ"
+            ? "Alteração de Não fez para Fez"
+            : draft.modo === "EDITAR"
+              ? "Edição de recompensa extra do Fez"
+              : "Registro de Fez",
+      });
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
@@ -974,14 +1040,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("t_ocorrencia")
-        .delete()
-        .in("id", ids);
-      if (error) {
-        toast.error(msgErro(error));
-        return;
-      }
+      await desfazerOcorrencias(ids);
 
       const projetadas = ocorrencias.filter((o) => !ids.includes(o.id));
       qc.setQueryData<Ocorrencia[]>(["ocorrencias"], projetadas);
@@ -1012,8 +1071,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       setConfirmarExcluirSelecionadas(null);
       toast.success(
         ids.length === 1
-          ? "Marcação desfeita · estrelas conquistadas permanecem"
-          : "Marcações desfeitas · estrelas conquistadas permanecem",
+          ? "Marcação desfeita"
+          : "Marcações desfeitas",
       );
     } catch (error) {
       toast.error(
@@ -1027,8 +1086,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   async function manterNaoFezRevisao(idRevisao: number) {
     setBusy(true);
     try {
-      await resolverRevisaoTarefaFilho(idRevisao);
+      await resolverRevisao(idRevisao, "MANTER_NAO_FEZ");
       await Promise.all([
+        qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
         qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
         notificarRespostaFilho("REVISAO", idRevisao),
       ]);
