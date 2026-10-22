@@ -1423,7 +1423,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   return (
                                     <div
                                       key={tarefa.id}
-                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 px-1 py-3 sm:gap-3"
+                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_10.5rem] items-center gap-1 px-1 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
                                         <div
@@ -1470,7 +1470,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                         </div>
                                       </div>
 
-                                      <div className="-mr-1 flex shrink-0 items-center justify-end gap-1 sm:mr-0 sm:gap-3">
+                                      <div className="-mr-1 flex w-full min-w-0 items-center justify-end gap-1 sm:mr-0 sm:w-auto sm:shrink-0 sm:gap-3">
                                         {registro && (
                                           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
                                             {registro.tipo === "FEZ" && (
