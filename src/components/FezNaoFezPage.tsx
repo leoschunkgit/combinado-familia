@@ -127,6 +127,7 @@ type BonificacaoInfo = {
 type ExcluirSelecionadasDraft = {
   tarefa: FilhoTarefa;
   ids: number[];
+  quantidadeProtegida?: number;
 };
 
 type NaoFezPageDraft = NaoFezDraft & {
@@ -1151,9 +1152,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
     setBusy(true);
     try {
-      await desfazerOcorrencias(ids);
+      const resultado = await desfazerOcorrencias(ids);
+      const idsDesfeitos = resultado.ids_desfeitos ?? [];
 
-      const projetadas = ocorrencias.filter((o) => !ids.includes(o.id));
+      const projetadas = ocorrencias.filter(
+        (o) => !idsDesfeitos.includes(o.id),
+      );
       qc.setQueryData<Ocorrencia[]>(["ocorrencias"], projetadas);
 
       await Promise.all([
@@ -1180,11 +1184,29 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       ]);
 
       setConfirmarExcluirSelecionadas(null);
-      toast.success(
-        ids.length === 1
-          ? "Marcação desfeita"
-          : "Marcações desfeitas",
-      );
+
+      if (resultado.quantidade_preservada > 0) {
+        const preservadas = resultado.quantidade_preservada;
+        const desfeitas = resultado.quantidade_desfeita;
+
+        if (desfeitas > 0) {
+          toast.success(
+            `${desfeitas} ${desfeitas === 1 ? "marcação desfeita" : "marcações desfeitas"}. ${preservadas} ${preservadas === 1 ? "foi preservada" : "foram preservadas"} por já ${preservadas === 1 ? "ter" : "terem"} penalidade cumprida.`,
+          );
+        } else {
+          toast.info(
+            preservadas === 1
+              ? "A marcação foi preservada porque a penalidade já foi cumprida."
+              : "As marcações foram preservadas porque as penalidades já foram cumpridas.",
+          );
+        }
+      } else {
+        toast.success(
+          resultado.quantidade_desfeita === 1
+            ? "Marcação desfeita"
+            : "Marcações desfeitas",
+        );
+      }
     } catch (error) {
       toast.error(
         msgErro(error instanceof Error ? { message: error.message } : null),
@@ -1552,6 +1574,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                         (item): item is { tarefa: FilhoTarefa; registro: Ocorrencia } =>
                           Boolean(item.registro),
                       );
+                    const quantidadeProtegidaDesfazer = registrosDoDia.filter(
+                      ({ registro }) =>
+                        consequenciaEhPenalidadeCumprida(
+                          registro.t_ocorrencia_consequencia,
+                        ),
+                    ).length;
+                    const quantidadeDisponivelDesfazer =
+                      registrosDoDia.length - quantidadeProtegidaDesfazer;
                     return (
                       <article
                         key={filho.id}
@@ -1623,7 +1653,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                     </p>
                                   </div>
 
-                                  {!bloqueada && registrosDoDia.length > 0 && (
+                                  {!bloqueada && quantidadeDisponivelDesfazer > 0 && (
                                     <Button
                                       type="button"
                                       size="sm"
@@ -1634,11 +1664,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                         setConfirmarExcluirSelecionadas({
                                           tarefa: registrosDoDia[0].tarefa,
                                           ids: registrosDoDia.map(({ registro }) => registro.id),
+                                          quantidadeProtegida: quantidadeProtegidaDesfazer,
                                         })
                                       }
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
-                                      Desfazer todos
+                                      {quantidadeProtegidaDesfazer > 0
+                                        ? "Desfazer disponíveis"
+                                        : "Desfazer todos"}
                                     </Button>
                                   )}
                                 </div>
@@ -2311,6 +2344,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
               {confirmarExcluirSelecionadas && (() => {
                 const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
                 const quantidade = confirmarExcluirSelecionadas.ids.length;
+                const protegidas =
+                  confirmarExcluirSelecionadas.quantidadeProtegida ?? 0;
+                const disponiveis = Math.max(0, quantidade - protegidas);
                 return (
                   <span className="block space-y-3">
                     <span className="flex max-w-full min-w-0 items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5">
@@ -2329,8 +2365,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                     <span className="block">
                       <span className="block font-medium text-foreground">
-                        {quantidade} {quantidade === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
+                        {disponiveis} {disponiveis === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
                       </span>
+                      {protegidas > 0 && (
+                        <span className="mt-1.5 block leading-relaxed">
+                          {protegidas} {protegidas === 1 ? "marcação será preservada" : "marcações serão preservadas"} porque {protegidas === 1 ? "a penalidade já foi cumprida" : "as penalidades já foram cumpridas"}.
+                        </span>
+                      )}
                       <span className="mt-1.5 block leading-relaxed">
                         As datas que ficarem sem uma marcação de “Fez” ou “Não fez” voltarão para as pendências.
                       </span>
