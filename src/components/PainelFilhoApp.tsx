@@ -581,26 +581,22 @@ export function PainelFilhoApp({
                   onClick={() => setAba("tarefas")}
                   className="w-full rounded-2xl border bg-card p-4 text-left transition-colors active:bg-muted/30 sm:p-5"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-muted-foreground">Progresso de hoje</p>
-                      <p className="mt-1 text-lg font-bold">
-                        {tarefasResolvidasHoje} de {tarefasAtual.length} tarefas
-                      </p>
-                      {tarefasAguardandoHoje > 0 ? (
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {tarefasAguardandoHoje} aguardando confirmação
-                        </p>
-                      ) : (
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Ver tarefas de hoje
-                        </p>
-                      )}
-                    </div>
-                    <span className="shrink-0 text-2xl font-bold tabular-nums">{progressoHoje}%</span>
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="min-w-0 text-2xl font-bold leading-none">Progresso de hoje</p>
+                    <span className="shrink-0 text-2xl font-bold leading-none tabular-nums">{progressoHoje}%</span>
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progressoHoje}%` }} />
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-xs font-bold">
+                      {tarefasResolvidasHoje} de {tarefasAtual.length} tarefas
+                    </p>
+                    {tarefasAguardandoHoje > 0 && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {tarefasAguardandoHoje} aguardando confirmação
+                      </p>
+                    )}
                   </div>
                   <div
                     className="mt-3 flex items-center justify-end gap-1.5 text-xs font-bold"
