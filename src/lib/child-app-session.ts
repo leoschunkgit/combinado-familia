@@ -85,7 +85,7 @@ export type PainelFilho = {
   vigencias: VigenciaFilho[];
   estrelas?: EstrelasFilho;
   solicitacoes_hoje?: SolicitacaoTarefaFilhoApp[];
-  revisoes_hoje?: RevisaoTarefaFilhoApp[];
+  revisoes?: RevisaoTarefaFilhoApp[];
   comunicacao?: {
     mensagem_global_ativa: boolean;
     mensagem_global: string | null;
