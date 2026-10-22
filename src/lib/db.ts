@@ -40,7 +40,7 @@ export type Tarefa = Tables<"t_tarefa">;
 export type FilhoTarefa = Tables<"t_filho_tarefa"> & {
   t_filho: Pick<Filho, "nome"> | null;
   t_tarefa: Pick<Tarefa, "nome"> | null;
-  t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade" | "qtd_ocorrencia" | "tipo_penalidade" | "valor_debito"> | null;
+  t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim"> | null;
 };
 
 async function unwrap<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>) {
@@ -78,7 +78,7 @@ export const useTarefas = () =>
   });
 
 export const FT_SELECT =
-  "*, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim, penalidade, qtd_ocorrencia, tipo_penalidade, valor_debito)";
+  "*, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim)";
 
 export const useFilhoTarefas = () =>
   useQuery({
@@ -118,23 +118,17 @@ export const useRevisoesTarefaFilho = () =>
     refetchInterval: 5_000,
   });
 
-export async function resolverRevisaoTarefaFilho(idRevisao: number) {
-  const { data, error } = await supabase.rpc("resolver_revisao_tarefa_filho", {
-    p_id_revisao: idRevisao,
-    p_decisao: "MANTER_NAO_FEZ",
-  });
-  if (error) throw error;
-  return data;
-}
+export type OcorrenciaConsequencia = Tables<"t_ocorrencia_consequencia">;
 
 export type Ocorrencia = Tables<"t_ocorrencia"> & {
   t_filho_tarefa:
     | (Pick<Tables<"t_filho_tarefa">, "id_filho" | "id_vigencia" | "id_tarefa"> & {
         t_filho: Pick<Filho, "nome"> | null;
         t_tarefa: Pick<Tarefa, "nome"> | null;
-        t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim" | "penalidade" | "tipo_penalidade" | "valor_debito"> | null;
+        t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim"> | null;
       })
     | null;
+  t_ocorrencia_consequencia: OcorrenciaConsequencia | null;
 };
 
 export const useOcorrencias = () =>
@@ -145,7 +139,7 @@ export const useOcorrencias = () =>
         supabase
           .from("t_ocorrencia")
           .select(
-             "*, t_filho_tarefa:t_filho_tarefa!t_ocorrencia_id_filho_tarefa_fkey(id_filho, id_vigencia, id_tarefa, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim, penalidade, tipo_penalidade, valor_debito))",
+            "*, t_ocorrencia_consequencia:t_ocorrencia_consequencia!t_ocorrencia_consequencia_id_ocorrencia_fkey(*), t_filho_tarefa:t_filho_tarefa!t_ocorrencia_id_filho_tarefa_fkey(id_filho, id_vigencia, id_tarefa, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim))",
           )
           .order("created_at", { ascending: false }),
       ),
@@ -161,8 +155,6 @@ const ERROS: [RegExp, string][] = [
   [/Atribuicao com aviso do filho nao pode ser editada|Atribuição com aviso do filho não pode ser editada/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser alterada"],
   [/Há avisos do filho fora do novo período da vigência|Ha avisos do filho fora do novo periodo da vigencia/i, "Há avisos enviados pelo filho fora do novo período. Corrija o período antes de salvar"],
   [/Vigência com histórico de Fez\/Não fez ou aviso do filho não pode ser excluída|Vigencia com historico de Fez\/Nao fez ou aviso do filho nao pode ser excluida/i, "Esta vigência possui histórico de “Fez”/“Não fez” ou aviso do filho e não pode ser excluída"],
-  [/Informe a penalidade para registrar o Não fez que atingiu o limite|Informe a penalidade para registrar o Nao fez que atingiu o limite/i, "Informe a penalidade para registrar o “Não fez” que atingiu o limite"],
-  [/O limite de Não fez desta vigência já foi atingido|O limite de Nao fez desta vigencia ja foi atingido/i, "O limite de “Não fez” desta vigência já foi atingido"],
   [/Atribuicao com Fez\/Nao fez nao pode ser excluida diretamente|Atribuição com Fez\/Não fez não pode ser excluída diretamente/i, "Esta atribuição já tem registros de “Fez”/“Não fez” e não pode ser excluída"],
   [/Atribuicao com Fez\/Nao fez nao pode ser editada|Atribuição com Fez\/Não fez não pode ser editada/i, "Esta atribuição já tem registros de “Fez”/“Não fez” e não pode ser alterada"],
   [/Vigência com registros de Fez\/Não fez não pode ser excluída|Vigencia com registros de Fez\/Nao fez nao pode ser excluida/i, "Esta vigência possui registros de “Fez”/“Não fez” e não pode ser excluída"],
