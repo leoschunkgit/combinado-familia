@@ -112,7 +112,7 @@ export function NaoFezDialog({
         {value && (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
-              <span className="text-muted-foreground">“Não fez” na vigência</span>
+              <span className="text-muted-foreground">Quantidade atual de “Não fez”</span>
               <strong className="shrink-0 text-foreground">{value.quantidadeNaoFezAtual}</strong>
             </div>
 
