@@ -846,7 +846,6 @@ export type Database = {
           id: number
           id_filho_tarefa: number
           id_ocorrencia: number | null
-          id_revisao: number | null
           id_usuario_pai: number
           motivo: string | null
           origem: string
@@ -859,7 +858,6 @@ export type Database = {
           id?: number
           id_filho_tarefa: number
           id_ocorrencia?: number | null
-          id_revisao?: number | null
           id_usuario_pai: number
           motivo?: string | null
           origem?: string
@@ -872,7 +870,6 @@ export type Database = {
           id?: number
           id_filho_tarefa?: number
           id_ocorrencia?: number | null
-          id_revisao?: number | null
           id_usuario_pai?: number
           motivo?: string | null
           origem?: string
@@ -1285,47 +1282,6 @@ export type Database = {
           },
         ]
       }
-      t_revisao_tarefa_filho: {
-        Row: {
-          created_at: string
-          data_referencia: string
-          id: number
-          id_filho_tarefa: number
-          id_ocorrencia: number
-          observacao: string | null
-          resolvido_em: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          data_referencia: string
-          id?: number
-          id_filho_tarefa: number
-          id_ocorrencia: number
-          observacao?: string | null
-          resolvido_em?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          data_referencia?: string
-          id?: number
-          id_filho_tarefa?: number
-          id_ocorrencia?: number
-          observacao?: string | null
-          resolvido_em?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "t_revisao_tarefa_filho_id_filho_tarefa_fkey"
-            columns: ["id_filho_tarefa"]
-            isOneToOne: false
-            referencedRelation: "t_filho_tarefa"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       t_solicitacao_tarefa_filho: {
         Row: {
           created_at: string
@@ -1609,14 +1565,6 @@ export type Database = {
         Args: { p_id_filho: number; p_id_vigencia: number }
         Returns: number
       }
-      criar_revisao_ocorrencia_filho_interno: {
-        Args: {
-          p_id_ocorrencia: number
-          p_observacao?: string
-          p_token: string
-        }
-        Returns: Json
-      }
       criar_solicitacao_tarefa_filho_interno: {
         Args: {
           p_id_filho_tarefa: number
@@ -1755,7 +1703,6 @@ export type Database = {
           p_desconto_valor?: number
           p_id_filho_tarefa?: number
           p_id_ocorrencia?: number
-          p_id_revisao?: number
           p_motivo?: string
           p_novo_tipo?: string
           p_penalidade_descricao?: string
@@ -1784,10 +1731,6 @@ export type Database = {
       resgatar_recompensa_estrelas: {
         Args: { p_id_recompensa: number }
         Returns: number
-      }
-      resolver_revisao_tarefa_filho: {
-        Args: { p_decisao: string; p_id_revisao: number }
-        Returns: boolean
       }
       resumo_estrelas_filho: { Args: { p_id_filho: number }; Returns: Json }
       resumo_estrelas_filho_interno: {
