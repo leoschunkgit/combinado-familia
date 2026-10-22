@@ -1534,7 +1534,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )
                                               }
                                             >
-                                              <ThumbsUp className="h-4 w-4 text-green-600" />
                                               Fez
                                             </Button>
                                             <Button
@@ -1550,7 +1549,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )
                                               }
                                             >
-                                              <ThumbsDown className="h-4 w-4 text-red-600" />
                                               Não fez
                                             </Button>
                                             <Button
@@ -1567,7 +1565,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               }
                                             >
                                               <Minus className="h-4 w-4" />
-                                              Não precisou
+                                              Dispensar
                                             </Button>
                                           </>
                                         )}
