@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  AlertTriangle,
   BellRing,
   CalendarRange,
   ChevronLeft,
@@ -18,7 +17,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -55,7 +53,6 @@ import {
   useFilhos,
   useFilhoTarefas,
   useOcorrencias,
-  resolverRevisaoTarefaFilho,
   useRevisoesTarefaFilho,
   useSolicitacoesTarefaFilho,
   useVigencias,
@@ -64,15 +61,14 @@ import {
   type Ocorrencia,
   type Vigencia,
 } from "@/lib/db";
+import { reais } from "@/lib/mesada";
 import {
-  ocorrenciasPenalizadas,
-  registrarNaoFezComPenalidade,
-} from "@/lib/penalidade";
-import {
-  reais,
-  usaDesconto,
-  valorDebitado,
-} from "@/lib/mesada";
+  desfazerOcorrencias,
+  registrarFez,
+  registrarNaoFez,
+  resolverRevisao,
+  type ConsequenciaNaoFezTipo,
+} from "@/lib/ocorrencia-service";
 import {
   botaoFezClass,
   botaoNaoFezClass,
@@ -84,7 +80,7 @@ import {
   vigenciaEmAndamento,
 } from "@/components/VigenciaStatus";
 import { uiTypography } from "@/lib/ui-typography";
-import { PenalidadeDialog } from "@/components/PenalidadeDialog";
+import { NaoFezDialog, type NaoFezDraft } from "@/components/NaoFezDialog";
 import {
   dataBrasil,
   dataPertenceAVigenciaAteHoje,
@@ -126,12 +122,10 @@ type ExcluirSelecionadasDraft = {
   ids: number[];
 };
 
-type PenalidadeDraft = {
+type NaoFezPageDraft = NaoFezDraft & {
   tarefa: FilhoTarefa;
   total: number;
-  data: string;
   existente?: Ocorrencia;
-  descricao: string;
 };
 
 export type FocoSolicitacaoTarefa = {
@@ -189,7 +183,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const hoje = useDataBrasilAtual();
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
-  const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const filhoDaTarefa = (tarefa?: FilhoTarefa | null) =>
     tarefa ? filhos.find((filho) => filho.id === tarefa.id_filho) : undefined;
   const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -204,8 +197,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [troca, setTroca] = useState<Troca | null>(null);
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
     useState<ExcluirSelecionadasDraft | null>(null);
-  const [penalidadePendente, setPenalidadePendente] =
-    useState<PenalidadeDraft | null>(null);
+  const [naoFez, setNaoFez] = useState<NaoFezPageDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
   const [totaisEstrelas, setTotaisEstrelas] = useState<Record<number, number>>({});
   const [agora, setAgora] = useState(() => Date.now());
