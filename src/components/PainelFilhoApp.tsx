@@ -234,10 +234,14 @@ export function PainelFilhoApp({
     return solicitacoes.find((s) => s.status === "PENDENTE") ?? solicitacoes[0];
   };
 
-  const revisaoHoje = (tarefa: TarefaFilho) =>
-    (painel.revisoes_hoje ?? []).find(
-      (r) => r.id_filho_tarefa === tarefa.id && r.data_referencia === hoje,
+  const revisaoHoje = (tarefa: TarefaFilho) => {
+    const registro = registroHoje(tarefa);
+    return (painel.revisoes_hoje ?? []).find(
+      (r) =>
+        (registro ? r.id_ocorrencia === registro.id : r.id_filho_tarefa === tarefa.id) &&
+        r.data_referencia === hoje,
     );
+  };
 
   const tarefasResolvidasHoje = tarefasAtual.filter((tarefa) => Boolean(registroHoje(tarefa))).length;
   const tarefasAguardandoHoje = tarefasAtual.filter((tarefa) => {
@@ -267,10 +271,12 @@ export function PainelFilhoApp({
     tarefasAtual.length - tarefasParaFazerHoje - tarefasAguardandoHoje,
   );
 
-  const qtdNaoFez = tarefasAtual.reduce(
-    (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length,
-    0,
-  );
+  const qtdNaoFez =
+    vigenciaAtual?.qtd_nao_fez ??
+    tarefasAtual.reduce(
+      (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length,
+      0,
+    );
   const qtdFez = tarefasAtual.reduce(
     (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length,
     0,
@@ -321,13 +327,33 @@ export function PainelFilhoApp({
     }
   }, [registrosPorData, registroAberto]);
 
-  const descontoUnitario = Number(vigenciaAtual?.valor_debito ?? 0);
   const desconto = painel.filho.tem_mesada
-    ? Math.min(painel.filho.valor_mesada ?? 0, qtdNaoFez * descontoUnitario)
+    ? tarefasAtual.reduce(
+        (total, tarefa) =>
+          total +
+          tarefa.ocorrencias.reduce((subtotal, ocorrencia) => {
+            const consequencia = ocorrencia.consequencia;
+            return consequencia?.tipo === "DESCONTO" &&
+              consequencia.status === "APLICADO"
+              ? subtotal + Number(consequencia.desconto_valor ?? 0)
+              : subtotal;
+          }, 0),
+        0,
+      )
     : 0;
   const mesadaFinal = painel.filho.valor_mesada === null
     ? null
     : Math.max(0, painel.filho.valor_mesada - desconto);
+  const penalidadesPendentes = tarefasAtual.reduce(
+    (total, tarefa) =>
+      total +
+      tarefa.ocorrencias.filter(
+        (ocorrencia) =>
+          ocorrencia.consequencia?.tipo === "PENALIDADE" &&
+          ocorrencia.consequencia.status === "PENDENTE",
+      ).length,
+    0,
+  );
 
   async function enviarAvisoTarefa() {
     if (!avisoTarefa || enviandoAviso) return;
@@ -365,7 +391,12 @@ export function PainelFilhoApp({
 
     setEnviandoAviso(true);
     try {
-      const resposta = await pedirRevisaoTarefa(revisaoTarefa.id, "");
+      const ocorrencia = registroHoje(revisaoTarefa);
+      if (!ocorrencia || ocorrencia.tipo !== "NAO_FEZ") {
+        throw new Error("O registro de “Não fez” não está mais disponível para revisão.");
+      }
+
+      const resposta = await pedirRevisaoTarefa(ocorrencia.id, "");
       const token = await lerSessaoFilhoLocal();
 
       if (token) {
@@ -656,8 +687,8 @@ export function PainelFilhoApp({
                         <p className="mt-1 break-words font-semibold">{dinheiro(painel.filho.valor_mesada ?? 0)}</p>
                       </div>
                       <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
-                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Desconto por Não fez</p>
-                        <p className="mt-1 break-words font-semibold">{dinheiro(descontoUnitario)}</p>
+                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Descontos</p>
+                        <p className="mt-1 break-words font-semibold">{dinheiro(desconto)}</p>
                       </div>
                       <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
                         <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Valor atual</p>
@@ -667,12 +698,12 @@ export function PainelFilhoApp({
                   ) : (
                     <div className="grid grid-cols-2 border-t text-sm">
                       <div className="px-4 py-3 sm:px-5">
-                        <p className="text-xs text-muted-foreground">Não fez</p>
-                        <p className="mt-0.5 font-semibold">{`${qtdNaoFez} de ${vigenciaAtual.qtd_ocorrencia}`}</p>
+                        <p className="text-xs text-muted-foreground">Não fez nesta vigência</p>
+                        <p className="mt-0.5 font-semibold">{qtdNaoFez}</p>
                       </div>
                       <div className="border-l px-4 py-3 sm:px-5">
-                        <p className="text-xs text-muted-foreground">Penalidade</p>
-                        <p className="mt-0.5 break-words font-semibold">{vigenciaAtual.penalidade || "—"}</p>
+                        <p className="text-xs text-muted-foreground">Penalidades pendentes</p>
+                        <p className="mt-0.5 break-words font-semibold">{penalidadesPendentes}</p>
                       </div>
                     </div>
                   )}
