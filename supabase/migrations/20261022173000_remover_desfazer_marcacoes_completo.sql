@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.reconciliar_ocorrencia(p_acao text, p_id_ocorr
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_pai_id bigint;
   v_id_ocorrencia bigint;
@@ -432,7 +432,7 @@ begin
     'estrelas', public.resumo_estrelas_filho_interno(v_pai_id, v_id_filho)
   );
 end;
-$function$
+$function$;
 
 
 drop function if exists public.desfazer_ocorrencias(bigint[]);
