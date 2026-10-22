@@ -57,7 +57,6 @@ import {
   consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadeCumprida,
   consequenciaEhPenalidadePendente,
-  descreverConsequenciaOcorrencia,
 } from "@/lib/ocorrencia-model";
 import {
   cumprirPenalidade,
@@ -81,6 +80,7 @@ import {
 } from "@/components/VigenciaStatus";
 import { uiTypography } from "@/lib/ui-typography";
 import { NaoFezDialog, type NaoFezDraft } from "@/components/NaoFezDialog";
+import { ConsequenciaOcorrenciaResumo } from "@/components/ConsequenciaOcorrenciaResumo";
 import {
   dataBrasil,
   dataPertenceAVigenciaAteHoje,
@@ -1709,12 +1709,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                           )}
 
                                           {registro?.tipo === "NAO_FEZ" && (
-                                            <p className="ml-6 mt-1.5 text-[11px] leading-snug text-muted-foreground">
-                                              {descreverConsequenciaOcorrencia(
-                                                consequencia,
-                                                reais,
-                                              )}
-                                            </p>
+                                            <ConsequenciaOcorrenciaResumo
+                                              consequencia={consequencia}
+                                              formatarMoeda={reais}
+                                              className="ml-6 mt-1.5 text-[11px] leading-snug text-muted-foreground"
+                                            />
                                           )}
                                         </div>
                                       </div>

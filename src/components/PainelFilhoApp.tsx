@@ -30,12 +30,12 @@ import { AppGlobalMessage } from "@/components/AppGlobalMessage";
 import {
   consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadePendente,
-  descreverConsequenciaOcorrencia,
 } from "@/lib/ocorrencia-model";
 import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
 import { AppPageContent, appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EmptyState } from "@/components/PageHeader";
+import { ConsequenciaOcorrenciaResumo } from "@/components/ConsequenciaOcorrenciaResumo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
@@ -881,13 +881,6 @@ export function PainelFilhoApp({
                               ? revisaoDaOcorrencia(ocorrencia.id)
                               : undefined;
                           const consequencia = ocorrencia.consequencia;
-                          const detalheConsequencia =
-                            ocorrencia.tipo === "NAO_FEZ"
-                              ? descreverConsequenciaOcorrencia(
-                                  consequencia,
-                                  dinheiro,
-                                )
-                              : null;
 
                           return (
                             <div key={ocorrencia.id ?? `${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
@@ -924,10 +917,12 @@ export function PainelFilhoApp({
                                       ? "Não fez"
                                       : "Não precisou"}
                                 </p>
-                                {detalheConsequencia && (
-                                  <p className="mt-1 break-words text-xs text-muted-foreground">
-                                    {detalheConsequencia}
-                                  </p>
+                                {ocorrencia.tipo === "NAO_FEZ" && (
+                                  <ConsequenciaOcorrenciaResumo
+                                    consequencia={consequencia}
+                                    formatarMoeda={dinheiro}
+                                    className="mt-1 text-xs text-muted-foreground"
+                                  />
                                 )}
                                 {ocorrencia.tipo === "NAO_FEZ" && (
                                   <div className="mt-2">

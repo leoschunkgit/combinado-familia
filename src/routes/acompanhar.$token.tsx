@@ -10,10 +10,10 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { AppBrand } from "@/components/AppBrand";
 import { appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
+import { ConsequenciaOcorrenciaResumo } from "@/components/ConsequenciaOcorrenciaResumo";
 import {
   consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadePendente,
-  descreverConsequenciaOcorrencia,
 } from "@/lib/ocorrencia-model";
 
 export const Route = createFileRoute("/acompanhar/$token")({
@@ -53,12 +53,6 @@ const data = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "Americ
 const dinheiro = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 function status(v: Vigencia) { const s = situacaoVigencia(v); return s === "andamento" ? "Em andamento" : s === "futura" ? "Irá começar" : "Finalizada"; }
 const corStatus = (s: string) => s === "Em andamento" ? "bg-green-400" : s === "Finalizada" ? "bg-red-300" : "bg-gray-300";
-function consequencia(o: Ocorrencia) {
-  return o.tipo === "NAO_FEZ"
-    ? descreverConsequenciaOcorrencia(o.consequencia, dinheiro)
-    : null;
-}
-
 function PainelPublico() {
   const { token } = Route.useParams();
   const [painel, setPainel] = useState<Painel | null>(null);
@@ -235,7 +229,7 @@ function PainelPublico() {
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const c=consequencia(o); const rotulo=o.tipo==="FEZ"?"Fez":o.tipo==="NAO_FEZ"?"Não fez":"Não precisou"; return <div key={o.id ?? `${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:o.tipo==="NAO_FEZ"?<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>:<Minus className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"/>}<div className="min-w-0"><p className="text-sm font-medium">{rotulo} · {data(o.data)}</p>{c&&<p className="mt-1 break-words text-xs text-muted-foreground">{c}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
+        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const rotulo=o.tipo==="FEZ"?"Fez":o.tipo==="NAO_FEZ"?"Não fez":"Não precisou"; return <div key={o.id ?? `${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:o.tipo==="NAO_FEZ"?<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>:<Minus className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"/>}<div className="min-w-0"><p className="text-sm font-medium">{rotulo} · {data(o.data)}</p>{o.tipo==="NAO_FEZ"&&<ConsequenciaOcorrenciaResumo consequencia={o.consequencia} formatarMoeda={dinheiro} className="mt-1 text-xs text-muted-foreground" />}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
       </DialogContent>
     </Dialog>
   </main>;

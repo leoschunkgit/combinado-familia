@@ -5,19 +5,27 @@ export type ConsequenciaOcorrenciaLike = {
   status: string;
 };
 
-export function rotuloStatusPenalidade(status: string) {
+export function rotuloStatusConsequencia(status: string) {
   switch (status) {
+    case "APLICADO":
+      return "Aplicado";
     case "PENDENTE":
       return "Pendente";
     case "SUSPENSA_REVISAO":
-      return "Suspensa — em revisão";
+      return "Em revisão";
     case "CUMPRIDA":
       return "Cumprida";
     case "CANCELADA":
       return "Cancelada";
+    case "ESTORNADO":
+      return "Estornado";
     default:
       return status;
   }
+}
+
+export function rotuloStatusPenalidade(status: string) {
+  return rotuloStatusConsequencia(status);
 }
 
 export function consequenciaEhDescontoAplicado(
@@ -38,7 +46,7 @@ export function consequenciaEhPenalidadeCumprida(
   return consequencia?.tipo === "PENALIDADE" && consequencia.status === "CUMPRIDA";
 }
 
-export function descreverConsequenciaOcorrencia(
+export function descreverConsequenciaOcorrenciaSemStatus(
   consequencia: ConsequenciaOcorrenciaLike | null | undefined,
   formatarMoeda: (valor: number) => string,
 ) {
@@ -46,10 +54,20 @@ export function descreverConsequenciaOcorrencia(
 
   if (consequencia.tipo === "DESCONTO") {
     const valor = formatarMoeda(Number(consequencia.desconto_valor ?? 0));
-    return consequencia.status === "ESTORNADO"
-      ? `Desconto: ${valor} — estornado`
-      : `Desconto: ${valor}`;
+    return `Desconto: ${valor}`;
   }
 
-  return `Penalidade: ${consequencia.penalidade_descricao ?? "—"} · ${rotuloStatusPenalidade(consequencia.status)}`;
+  return `Penalidade: ${consequencia.penalidade_descricao ?? "—"}`;
+}
+
+export function descreverConsequenciaOcorrencia(
+  consequencia: ConsequenciaOcorrenciaLike | null | undefined,
+  formatarMoeda: (valor: number) => string,
+) {
+  const descricao = descreverConsequenciaOcorrenciaSemStatus(
+    consequencia,
+    formatarMoeda,
+  );
+  if (!consequencia) return descricao;
+  return `${descricao} · ${rotuloStatusConsequencia(consequencia.status)}`;
 }
