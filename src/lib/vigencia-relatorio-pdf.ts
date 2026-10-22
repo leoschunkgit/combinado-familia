@@ -17,6 +17,7 @@ import {
   type RelatorioPdfDados,
 } from "@/lib/relatorio-pdf";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
+import { descreverConsequenciaOcorrencia } from "@/lib/ocorrencia-model";
 
 function bonus(ocorrencia: Ocorrencia) {
   if (ocorrencia.tipo !== "FEZ") return "";
@@ -35,38 +36,16 @@ function bonus(ocorrencia: Ocorrencia) {
   return "Nenhuma";
 }
 
-function statusPenalidade(status: string) {
-  switch (status) {
-    case "PENDENTE":
-      return "pendente";
-    case "SUSPENSA_REVISAO":
-      return "suspensa — em revisão";
-    case "CUMPRIDA":
-      return "cumprida";
-    case "CANCELADA":
-      return "cancelada";
-    default:
-      return status.toLowerCase();
-  }
-}
-
 function detalheOcorrencia(ocorrencia: Ocorrencia) {
   if (ocorrencia.tipo === "FEZ") {
     const valor = bonus(ocorrencia);
     return valor ? `Bonificação: ${valor}` : undefined;
   }
 
-  const consequencia = ocorrencia.t_ocorrencia_consequencia;
-  if (!consequencia) return "Sem consequência";
-
-  if (consequencia.tipo === "DESCONTO") {
-    const valor = reais(Number(consequencia.desconto_valor ?? 0));
-    return consequencia.status === "ESTORNADO"
-      ? `Desconto: ${valor} — estornado`
-      : `Desconto: ${valor}`;
-  }
-
-  return `Penalidade: ${consequencia.penalidade_descricao || "—"} · ${statusPenalidade(consequencia.status)}`;
+  return descreverConsequenciaOcorrencia(
+    ocorrencia.t_ocorrencia_consequencia,
+    reais,
+  );
 }
 
 function compararOcorrenciasPorData(a: Ocorrencia, b: Ocorrencia) {
