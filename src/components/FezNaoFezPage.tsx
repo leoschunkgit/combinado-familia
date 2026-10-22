@@ -63,6 +63,11 @@ import {
 } from "@/lib/db";
 import { reais } from "@/lib/mesada";
 import {
+  consequenciaEhDescontoAplicado,
+  consequenciaEhPenalidadePendente,
+  descreverConsequenciaOcorrencia,
+} from "@/lib/ocorrencia-model";
+import {
   cumprirPenalidade,
   desfazerOcorrencias,
   registrarFez,
@@ -169,21 +174,6 @@ function valorBonificacaoNumero(valor: string) {
   const numero = Number(valor.replace(",", "."));
   if (!Number.isFinite(numero)) return null;
   return Math.round(numero * 100) / 100;
-}
-
-function rotuloStatusPenalidade(status: string) {
-  switch (status) {
-    case "PENDENTE":
-      return "Pendente";
-    case "SUSPENSA_REVISAO":
-      return "Suspensa — em revisão";
-    case "CUMPRIDA":
-      return "Cumprida";
-    case "CANCELADA":
-      return "Cancelada";
-    default:
-      return status;
-  }
 }
 
 export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
@@ -1422,9 +1412,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     const totalDescontado = ocorrenciasFilhoVigencia.reduce(
                       (total, ocorrencia) => {
                         const consequencia = ocorrencia.t_ocorrencia_consequencia;
-                        return consequencia?.tipo === "DESCONTO" &&
-                          consequencia.status === "APLICADO"
-                          ? total + Number(consequencia.desconto_valor ?? 0)
+                        return consequenciaEhDescontoAplicado(consequencia)
+                          ? total + Number(consequencia?.desconto_valor ?? 0)
                           : total;
                       },
                       0,
@@ -1436,8 +1425,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     const penalidadesPendentes = ocorrenciasFilhoVigencia.filter(
                       (ocorrencia) =>
                         ocorrencia.tipo === "NAO_FEZ" &&
-                        ocorrencia.t_ocorrencia_consequencia?.tipo === "PENALIDADE" &&
-                        ocorrencia.t_ocorrencia_consequencia.status === "PENDENTE",
+                        consequenciaEhPenalidadePendente(
+                          ocorrencia.t_ocorrencia_consequencia,
+                        ),
                     ).length;
                     const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
@@ -1606,13 +1596,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                                           {registro?.tipo === "NAO_FEZ" && (
                                             <p className="ml-6 mt-1.5 text-[11px] leading-snug text-muted-foreground">
-                                              {!consequencia
-                                                ? "Sem consequência"
-                                                : consequencia.tipo === "DESCONTO"
-                                                  ? consequencia.status === "ESTORNADO"
-                                                    ? `Desconto de ${reais(Number(consequencia.desconto_valor ?? 0))} — estornado`
-                                                    : `Desconto: ${reais(Number(consequencia.desconto_valor ?? 0))}`
-                                                  : `Penalidade: ${consequencia.penalidade_descricao ?? "—"} · ${rotuloStatusPenalidade(consequencia.status)}`}
+                                              {descreverConsequenciaOcorrencia(
+                                                consequencia,
+                                                reais,
+                                              )}
                                             </p>
                                           )}
                                         </div>
@@ -1650,8 +1637,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             )}
 
                                             {registro.tipo === "NAO_FEZ" &&
-                                              consequencia?.tipo === "PENALIDADE" &&
-                                              consequencia.status === "PENDENTE" && (
+                                              consequenciaEhPenalidadePendente(consequencia) && (
                                                 <span
                                                   className="inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500"
                                                   role="img"
@@ -1806,8 +1792,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )}
                                               {registro.tipo === "NAO_FEZ" &&
                                                 !bloqueada &&
-                                                consequencia?.tipo === "PENALIDADE" &&
-                                                consequencia.status === "PENDENTE" && (
+                                                consequenciaEhPenalidadePendente(consequencia) && (
                                                   <DropdownMenuItem
                                                     onSelect={() =>
                                                       void runAction(() =>
