@@ -1,4 +1,7 @@
 import type { Ocorrencia } from "@/lib/db";
+import {
+  consequenciaEhPenalidadePendente,
+} from "@/lib/ocorrencia-model";
 
 export function contarNaoFezPorFilhoVigencia(
   ocorrencias: Ocorrencia[],
@@ -17,8 +20,9 @@ export function penalidadesPendentes(ocorrencias: Ocorrencia[]) {
   return ocorrencias.filter(
     (ocorrencia) =>
       ocorrencia.tipo === "NAO_FEZ" &&
-      ocorrencia.t_ocorrencia_consequencia?.tipo === "PENALIDADE" &&
-      ocorrencia.t_ocorrencia_consequencia.status === "PENDENTE",
+      consequenciaEhPenalidadePendente(
+        ocorrencia.t_ocorrencia_consequencia,
+      ),
   );
 }
 
