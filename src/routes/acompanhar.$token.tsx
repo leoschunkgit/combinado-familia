@@ -12,7 +12,7 @@ import { AppBrand } from "@/components/AppBrand";
 import { appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
 import { ConsequenciaOcorrenciaResumo } from "@/components/ConsequenciaOcorrenciaResumo";
 import {
-  consequenciaEhDescontoAplicadoNoCiclo,
+  consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadePendente,
 } from "@/lib/ocorrencia-model";
 
@@ -37,7 +37,6 @@ type Consequencia = {
   status: "APLICADO" | "PENDENTE" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
   cumprida_em: string | null;
   cancelada_em: string | null;
-  mesada_ciclo: number | null;
 };
 type Ocorrencia = {
   id: number;
@@ -47,7 +46,7 @@ type Ocorrencia = {
 };
 type Tarefa = { id: number; nome: string; ocorrencias: Ocorrencia[] };
 type Vigencia = { id: number; data_inicio: string; data_fim: string; qtd_nao_fez: number; qtd_nao_precisou?: number; tarefas: Tarefa[] };
-type Painel = { filho: { nome: string; cor: string | null; avatar: string | null; tem_mesada: boolean; valor_mesada: number | null; mesada_ciclo_atual: number }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
+type Painel = { filho: { nome: string; cor: string | null; avatar: string | null; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
 
 const dataHora = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(v));
 const data = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(v));
@@ -98,10 +97,7 @@ function PainelPublico() {
           total +
           tarefa.ocorrencias.reduce((subtotal, ocorrencia) => {
             const c = ocorrencia.consequencia;
-            return consequenciaEhDescontoAplicadoNoCiclo(
-              c,
-              painel.filho.mesada_ciclo_atual,
-            )
+            return consequenciaEhDescontoAplicado(c)
               ? subtotal + Number(c?.desconto_valor ?? 0)
               : subtotal;
           }, 0),
