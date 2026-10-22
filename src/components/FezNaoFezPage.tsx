@@ -1242,13 +1242,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             <span className="flex items-center gap-1.5">
                               <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />
                               <span>{filho.nome}</span>
-                              <span
-                                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold leading-none text-foreground dark:border-amber-800 dark:bg-amber-950/35"
-                                aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
-                              >
-                                <Star className="animate-notification-bell h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />
-                                <span>{totaisEstrelas[filho.id] ?? 0}</span>
-                              </span>
                             </span>
                           </button>
                         );
@@ -1333,7 +1326,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               {formatarData(dataSelecionada)}
                             </h3>
                           </div>
-                          <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-sm">
+                          <div className="flex shrink-0 flex-col items-end justify-center gap-1 text-sm">
+                            <span
+                              className="inline-flex items-center gap-1 font-semibold tabular-nums"
+                              aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
+                            >
+                              <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
+                              <span>{totaisEstrelas[filho.id] ?? 0}</span>
+                            </span>
                             {modo === "pendentes" && (
                               <span className="font-semibold text-primary tabular-nums">
                                 {totalPendencias}{" "}
