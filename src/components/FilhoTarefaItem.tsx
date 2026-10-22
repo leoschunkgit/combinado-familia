@@ -1,9 +1,8 @@
-import { BellRing, RotateCcw, Send, ThumbsDown, ThumbsUp } from "lucide-react";
+import { BellRing, Minus, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { Button } from "@/components/ui/button";
 import type {
   OcorrenciaFilho,
-  RevisaoTarefaFilhoApp,
   SolicitacaoTarefaFilhoApp,
   TarefaFilho,
 } from "@/lib/child-app-session";
@@ -12,16 +11,12 @@ export function FilhoTarefaItem({
   tarefa,
   registroHoje,
   solicitacaoHoje,
-  revisaoHoje,
   onAvisar,
-  onPedirRevisao,
 }: {
   tarefa: TarefaFilho;
   registroHoje?: OcorrenciaFilho;
   solicitacaoHoje?: SolicitacaoTarefaFilhoApp;
-  revisaoHoje?: RevisaoTarefaFilhoApp;
   onAvisar: () => void;
-  onPedirRevisao: () => void;
 }) {
   const solicitacaoPendente = solicitacaoHoje?.status === "PENDENTE";
 
@@ -39,36 +34,15 @@ export function FilhoTarefaItem({
           <ThumbsUp className="h-3.5 w-3.5" />
           Fez
         </span>
-      ) : registroHoje?.tipo === "NAO_FEZ" && revisaoHoje?.status === "PENDENTE" ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-          <BellRing className="h-3.5 w-3.5" />
-          Revisão enviada
-        </span>
-      ) : registroHoje?.tipo === "NAO_FEZ" && revisaoHoje?.status === "MANTEVE_NAO_FEZ" ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/35 dark:text-red-300">
-          <ThumbsDown className="h-3.5 w-3.5" />
-          Não fez mantido
-        </span>
-      ) : registroHoje?.tipo === "NAO_FEZ" && !revisaoHoje ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 shrink-0 px-2.5 text-xs"
-          onClick={onPedirRevisao}
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Pedir revisão
-        </Button>
       ) : registroHoje?.tipo === "NAO_FEZ" ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:border-red-800 dark:bg-red-950/35 dark:text-red-300">
           <ThumbsDown className="h-3.5 w-3.5" />
           Não fez
         </span>
-      ) : !registroHoje && revisaoHoje?.status === "PENDENTE" ? (
+      ) : registroHoje?.tipo === "NAO_PRECISOU" ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-          <BellRing className="h-3.5 w-3.5" />
-          Revisão enviada
+          <Minus className="h-3.5 w-3.5" />
+          Não precisou
         </span>
       ) : solicitacaoPendente ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-muted-foreground">

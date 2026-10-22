@@ -6,7 +6,6 @@ type OcorrenciasSearch = {
   atribuicao?: number;
   data?: string;
   aviso?: number;
-  revisao?: number;
 };
 
 function inteiroPositivo(valor: unknown) {
@@ -26,7 +25,6 @@ export const Route = createFileRoute("/_authenticated/ocorrencias")({
     atribuicao: inteiroPositivo(search["atribuicao"]),
     data: dataValida(search["data"]),
     aviso: inteiroPositivo(search["aviso"]),
-    revisao: inteiroPositivo(search["revisao"]),
   }),
   head: () => ({
     meta: [
@@ -50,7 +48,6 @@ function OcorrenciasPage() {
         idFilhoTarefa: search.atribuicao,
         data: search.data,
         idSolicitacao: search.aviso,
-        idRevisao: search.revisao,
       }
     : undefined;
 

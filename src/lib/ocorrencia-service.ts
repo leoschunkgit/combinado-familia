@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type ConsequenciaNaoFezTipo = "NENHUMA" | "DESCONTO" | "PENALIDADE";
-export type DecisaoRevisao = "MANTER_NAO_FEZ" | "ALTERAR_PARA_FEZ" | "ALTERAR_PARA_NAO_PRECISOU";
 
 type ReconciliarBase = {
   idOcorrencia?: number;
@@ -10,19 +9,16 @@ type ReconciliarBase = {
   motivo?: string;
 };
 
-type RegistrarFezInput = ReconciliarBase & {
-  idRevisao?: number;
-};
+type RegistrarFezInput = ReconciliarBase;
 
 type RegistrarNaoFezInput = ReconciliarBase & {
   consequenciaTipo: ConsequenciaNaoFezTipo;
   descontoValor?: number | null;
   penalidadeDescricao?: string | null;
-  idRevisao?: number;
 };
 
 async function reconciliar(params: {
-  acao: "SALVAR" | "DESFAZER" | "CUMPRIR_PENALIDADE" | "RESOLVER_REVISAO";
+  acao: "SALVAR" | "DESFAZER" | "CUMPRIR_PENALIDADE";
   idOcorrencia?: number;
   idFilhoTarefa?: number;
   dataIso?: string;
@@ -30,7 +26,6 @@ async function reconciliar(params: {
   consequenciaTipo?: ConsequenciaNaoFezTipo;
   descontoValor?: number | null;
   penalidadeDescricao?: string | null;
-  idRevisao?: number;
   motivo?: string;
 }) {
   const { data, error } = await supabase.rpc("reconciliar_ocorrencia", {
@@ -42,7 +37,6 @@ async function reconciliar(params: {
     p_consequencia_tipo: params.consequenciaTipo ?? null,
     p_desconto_valor: params.descontoValor ?? null,
     p_penalidade_descricao: params.penalidadeDescricao?.trim() || null,
-    p_id_revisao: params.idRevisao ?? null,
     p_motivo: params.motivo?.trim() || null,
   });
 
@@ -52,31 +46,29 @@ async function reconciliar(params: {
 
 export function registrarFez(input: RegistrarFezInput) {
   return reconciliar({
-    acao: input.idRevisao ? "RESOLVER_REVISAO" : "SALVAR",
+    acao: "SALVAR",
     idOcorrencia: input.idOcorrencia,
     idFilhoTarefa: input.idFilhoTarefa,
     dataIso: input.dataIso,
     novoTipo: "FEZ",
-    idRevisao: input.idRevisao,
     motivo: input.motivo,
   });
 }
 
 export function registrarNaoPrecisou(input: RegistrarFezInput) {
   return reconciliar({
-    acao: input.idRevisao ? "RESOLVER_REVISAO" : "SALVAR",
+    acao: "SALVAR",
     idOcorrencia: input.idOcorrencia,
     idFilhoTarefa: input.idFilhoTarefa,
     dataIso: input.dataIso,
     novoTipo: "NAO_PRECISOU",
-    idRevisao: input.idRevisao,
     motivo: input.motivo,
   });
 }
 
 export function registrarNaoFez(input: RegistrarNaoFezInput) {
   return reconciliar({
-    acao: input.idRevisao ? "RESOLVER_REVISAO" : "SALVAR",
+    acao: "SALVAR",
     idOcorrencia: input.idOcorrencia,
     idFilhoTarefa: input.idFilhoTarefa,
     dataIso: input.dataIso,
@@ -84,7 +76,6 @@ export function registrarNaoFez(input: RegistrarNaoFezInput) {
     consequenciaTipo: input.consequenciaTipo,
     descontoValor: input.descontoValor,
     penalidadeDescricao: input.penalidadeDescricao,
-    idRevisao: input.idRevisao,
     motivo: input.motivo,
   });
 }
@@ -122,17 +113,4 @@ export function cumprirPenalidade(idOcorrencia: number) {
     acao: "CUMPRIR_PENALIDADE",
     idOcorrencia,
   });
-}
-
-export async function resolverRevisao(
-  idRevisao: number,
-  decisao: DecisaoRevisao,
-) {
-  const { data, error } = await supabase.rpc("resolver_revisao_tarefa_filho", {
-    p_id_revisao: idRevisao,
-    p_decisao: decisao,
-  });
-
-  if (error) throw error;
-  return data;
 }

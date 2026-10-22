@@ -36,7 +36,6 @@ export function AppPushNotifications() {
         const received = await PushNotifications.addListener("pushNotificationReceived", (notification) => {
           void queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
           void queryClient.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] });
-          void queryClient.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] });
           const mensagem = notification.body?.trim();
           if (mensagem) toast.info(mensagem);
         });
@@ -45,7 +44,6 @@ export function AppPushNotifications() {
         const action = await PushNotifications.addListener("pushNotificationActionPerformed", (event) => {
           void queryClient.invalidateQueries({ queryKey: ["ocorrencias"] });
           void queryClient.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] });
-          void queryClient.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] });
 
           const dados = event.notification.data ?? {};
           if (dados["target"] === "recompensa_concluida_filho") {
@@ -54,13 +52,11 @@ export function AppPushNotifications() {
           }
 
           if (
-            dados["target"] === "solicitacao_tarefa_filho" ||
-            dados["target"] === "revisao_tarefa_filho"
+            dados["target"] === "solicitacao_tarefa_filho"
           ) {
             const filho = Number(dados["id_filho"]);
             const atribuicao = Number(dados["id_filho_tarefa"]);
             const aviso = Number(dados["id_solicitacao"]);
-            const revisao = Number(dados["id_revisao"]);
             const data = typeof dados["data_referencia"] === "string"
               ? dados["data_referencia"]
               : undefined;
@@ -72,7 +68,6 @@ export function AppPushNotifications() {
                 atribuicao: Number.isInteger(atribuicao) && atribuicao > 0 ? atribuicao : undefined,
                 data,
                 aviso: Number.isInteger(aviso) && aviso > 0 ? aviso : undefined,
-                revisao: Number.isInteger(revisao) && revisao > 0 ? revisao : undefined,
               },
             });
             return;

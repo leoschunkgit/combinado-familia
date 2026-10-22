@@ -44,7 +44,6 @@ import {
   useFilhos,
   useFilhoTarefas,
   useOcorrencias,
-  useRevisoesTarefaFilho,
   useSolicitacoesTarefaFilho,
   useVigencias,
   useTarefas,
@@ -64,7 +63,6 @@ import {
   registrarFez,
   registrarNaoFez,
   registrarNaoPrecisou,
-  resolverRevisao,
   type ConsequenciaNaoFezTipo,
 } from "@/lib/ocorrencia-service";
 import {
@@ -136,7 +134,6 @@ export type FocoSolicitacaoTarefa = {
   idFilhoTarefa?: number;
   data?: string;
   idSolicitacao?: number;
-  idRevisao?: number;
 };
 
 type FezNaoFezPageProps = {
@@ -182,7 +179,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const { data: solicitacoesTarefaFilho = [] } = useSolicitacoesTarefaFilho();
-  const { data: revisoesTarefaFilho = [] } = useRevisoesTarefaFilho();
   const hoje = useDataBrasilAtual();
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
@@ -255,39 +251,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       ),
     [agora, vigenciasOrdenadas],
   );
-  const revisoesPendentes = useMemo(
-    () => revisoesTarefaFilho.filter((revisao) => revisao.status === "PENDENTE"),
-    [revisoesTarefaFilho],
-  );
-  const revisoesPendentesPorVigencia = useMemo(() => {
-    const atribuicaoPorId = new Map(
-      atribuicoes.map((atribuicao) => [atribuicao.id, atribuicao]),
-    );
-    const mapa = new Map<number, typeof revisoesPendentes>();
-
-    for (const revisao of revisoesPendentes) {
-      const atribuicao = atribuicaoPorId.get(revisao.id_filho_tarefa);
-      if (!atribuicao) continue;
-      const atuais = mapa.get(atribuicao.id_vigencia) ?? [];
-      atuais.push(revisao);
-      mapa.set(atribuicao.id_vigencia, atuais);
-    }
-
-    return mapa;
-  }, [atribuicoes, revisoesPendentes]);
-  const idsVigenciasComRevisaoPendente = useMemo(
-    () => new Set(revisoesPendentesPorVigencia.keys()),
-    [revisoesPendentesPorVigencia],
-  );
-  const vigenciasOperacionais = useMemo(
-    () =>
-      vigenciasOrdenadas.filter(
-        (vigencia) =>
-          situacaoVigencia(vigencia, agora) === "andamento" ||
-          idsVigenciasComRevisaoPendente.has(vigencia.id),
-      ),
-    [agora, idsVigenciasComRevisaoPendente, vigenciasOrdenadas],
-  );
+  const vigenciasOperacionais = vigenciasEmAndamento;
   useEffect(() => {
     setDiasSelecionados((atual) => {
       const proximo = { ...atual };
@@ -304,37 +268,17 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       }
 
       for (const vigencia of vigenciasOperacionais) {
-        const revisoesDaVigencia =
-          revisoesPendentesPorVigencia.get(vigencia.id) ?? [];
-        const dataRevisao = [...revisoesDaVigencia]
-          .map((revisao) => revisao.data_referencia)
-          .sort((a, b) => b.localeCompare(a))[0];
-        const emAndamento = vigenciaEmAndamento(vigencia);
-
         if (!(vigencia.id in proximo)) {
-          proximo[vigencia.id] = dataRevisao ?? hoje;
-          mudou = true;
-        } else if (!emAndamento && dataRevisao && proximo[vigencia.id] !== dataRevisao) {
-          proximo[vigencia.id] = dataRevisao;
+          proximo[vigencia.id] = hoje;
           mudou = true;
         }
       }
 
       return mudou ? proximo : atual;
     });
-  }, [hoje, revisoesPendentesPorVigencia, vigenciasOperacionais]);
+  }, [hoje, vigenciasOperacionais]);
 
   function datasDoPeriodoDaVigencia(vigencia: Vigencia) {
-    if (!vigenciaEmAndamento(vigencia)) {
-      return [
-        ...new Set(
-          (revisoesPendentesPorVigencia.get(vigencia.id) ?? []).map(
-            (revisao) => revisao.data_referencia,
-          ),
-        ),
-      ].sort((a, b) => a.localeCompare(b));
-    }
-
     const inicio = dataBrasil(vigencia.data_inicio);
     const fim = dataBrasil(vigencia.data_fim);
     const datas: string[] = [];
@@ -417,15 +361,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         s.status === "PENDENTE",
     );
 
-  const revisaoNaData = (tarefa: FilhoTarefa, data: string) => {
-    const registro = registroNaData(tarefa, data);
-    return registro
-      ? revisoesTarefaFilho.find(
-          (revisao) => revisao.id_ocorrencia === registro.id,
-        )
-      : undefined;
-  };
-
   const diaTemPendencia = (vigenciaId: number, data: string) => {
     if (data > hoje) return false;
 
@@ -480,15 +415,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         return false;
       }
 
-      if (!vigenciaEmAndamento(vigencia)) {
-        const dataSelecionada = diasSelecionados[vigencia.id];
-        const temRevisaoPendente = revisoesPendentes.some(
-          (revisao) =>
-            revisao.id_filho_tarefa === tarefa.id &&
-            revisao.data_referencia === dataSelecionada,
-        );
-        if (!temRevisaoPendente) return false;
-      }
       if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
         return false;
       }
@@ -507,7 +433,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       focoSolicitacao.idFilhoTarefa,
       focoSolicitacao.data ?? "",
       focoSolicitacao.idSolicitacao ?? "",
-      focoSolicitacao.idRevisao ?? "",
     ].join(":");
 
     if (ultimoFocoAplicado.current === chaveFoco) return;
@@ -520,24 +445,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     const vigencia = vigencias.find((item) => item.id === atribuicao.id_vigencia);
     if (!vigencia) return;
 
-    const revisaoFoco = focoSolicitacao.idRevisao
-      ? revisoesPendentes.find(
-          (revisao) =>
-            revisao.id === focoSolicitacao.idRevisao &&
-            revisao.id_filho_tarefa === atribuicao.id,
-        )
-      : undefined;
-    const podeExibirFinalizada =
-      vigenciaEmAndamento(vigencia) ||
-      idsVigenciasComRevisaoPendente.has(vigencia.id);
-
-    if (!podeExibirFinalizada) return;
-
-    const dataPreferida =
-      focoSolicitacao.data ??
-      revisaoFoco?.data_referencia ??
-      revisoesPendentesPorVigencia.get(vigencia.id)?.[0]?.data_referencia;
-
+    if (!vigenciaEmAndamento(vigencia)) return;
+    const dataPreferida = focoSolicitacao.data;
     const dataFoco =
       dataPreferida &&
       dataPertenceAVigenciaAteHoje(vigencia, dataPreferida, hoje)
@@ -567,10 +476,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     atribuicoes,
     focoSolicitacao,
     hoje,
-    idsVigenciasComRevisaoPendente,
     isLoading,
-    revisoesPendentes,
-    revisoesPendentesPorVigencia,
     vigencias,
   ]);
 
@@ -850,7 +756,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
-        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
         solicitacaoPendente
           ? notificarRespostaFilho("SOLICITACAO", solicitacaoPendente.id)
           : Promise.resolve(null),
@@ -946,15 +851,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       return;
     }
 
-    const revisaoPendente = revisoesPendentes.find(
-      (revisao) => revisao.id_ocorrencia === registro.id,
-    );
-    const podeResolverRevisao =
-      registro.tipo === "NAO_FEZ" && Boolean(revisaoPendente);
 
     if (
       !tarefa.t_vigencia ||
-      (!vigenciaEmAndamento(tarefa.t_vigencia) && !podeResolverRevisao)
+      (!vigenciaEmAndamento(tarefa.t_vigencia))
     ) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
@@ -966,15 +866,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   async function salvarFez(draft: FezDraft, existente?: Ocorrencia) {
     const tarefa = draft.tarefa;
     const vigencia = tarefa.t_vigencia;
-    const revisaoPendente = existente
-      ? revisoesPendentes.find(
-          (revisao) => revisao.id_ocorrencia === existente.id,
-        )
-      : undefined;
-    const podeResolverRevisao =
-      existente?.tipo === "NAO_FEZ" && Boolean(revisaoPendente);
 
-    if (!vigencia || (!vigenciaEmAndamento(vigencia) && !podeResolverRevisao)) {
+    if (!vigencia || (!vigenciaEmAndamento(vigencia))) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
     }
@@ -987,9 +880,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     const gerouEstrela = !existente || existente.tipo !== "FEZ";
     const solicitacaoPendente = solicitacaoNaData(tarefa, draft.data);
     const interacaoPendente =
-      revisaoPendente
-        ? { tipo: "REVISAO" as const, id: revisaoPendente.id }
-        : solicitacaoPendente
+      solicitacaoPendente
           ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
           : null;
 
@@ -1001,8 +892,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         dataIso: existente
           ? undefined
           : new Date(draft.data + "T12:00:00-03:00").toISOString(),
-        idRevisao:
-          existente?.tipo === "NAO_FEZ" ? revisaoPendente?.id : undefined,
         motivo:
           existente?.tipo === "NAO_FEZ"
             ? "Alteração de Não fez para Fez"
@@ -1016,7 +905,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
-        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
         interacaoPendente
           ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
           : Promise.resolve(null),
@@ -1042,15 +930,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     existente?: Ocorrencia,
   ) {
     const vigencia = tarefa.t_vigencia;
-    const revisaoPendente = existente
-      ? revisoesPendentes.find(
-          (revisao) => revisao.id_ocorrencia === existente.id,
-        )
-      : undefined;
-    const podeResolverRevisao =
-      existente?.tipo === "NAO_FEZ" && Boolean(revisaoPendente);
 
-    if (!vigencia || (!vigenciaEmAndamento(vigencia) && !podeResolverRevisao)) {
+    if (!vigencia || (!vigenciaEmAndamento(vigencia))) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
     }
@@ -1063,9 +944,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
     const solicitacaoPendente = solicitacaoNaData(tarefa, data);
     const interacaoPendente =
-      revisaoPendente
-        ? { tipo: "REVISAO" as const, id: revisaoPendente.id }
-        : solicitacaoPendente
+      solicitacaoPendente
           ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
           : null;
 
@@ -1077,8 +956,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         dataIso: existente
           ? undefined
           : new Date(data + "T12:00:00-03:00").toISOString(),
-        idRevisao:
-          existente?.tipo === "NAO_FEZ" ? revisaoPendente?.id : undefined,
         motivo:
           existente?.tipo === "FEZ"
             ? "Alteração de Fez para Não precisou"
@@ -1092,7 +969,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
-        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
         interacaoPendente
           ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
           : Promise.resolve(null),
@@ -1160,10 +1036,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
           queryKey: ["solicitacoes_tarefa_filho"],
           refetchType: "all",
         }),
-        qc.invalidateQueries({
-          queryKey: ["revisoes_tarefa_filho"],
-          refetchType: "all",
-        }),
       ]);
 
       setConfirmarExcluirSelecionadas(null);
@@ -1193,29 +1065,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     } catch (error) {
       toast.error(
         msgErro(error instanceof Error ? { message: error.message } : null),
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function manterNaoFezRevisao(idRevisao: number) {
-    setBusy(true);
-    try {
-      await resolverRevisao(idRevisao, "MANTER_NAO_FEZ");
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
-        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
-        notificarRespostaFilho("REVISAO", idRevisao),
-      ]);
-      toast.success("Revisão encerrada · Não fez mantido");
-    } catch (error) {
-      toast.error(
-        msgErro(
-          error instanceof Error
-            ? { message: error.message }
-            : (error as { message?: string }),
-        ),
       );
     } finally {
       setBusy(false);
@@ -1339,12 +1188,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     <h2 className={uiTypography.secondaryTitleStrongLargeDesktop}>
                       {fmtVigencia(vigencia)}
                     </h2>
-                    {!vigenciaEmAndamento(vigencia) &&
-                      idsVigenciasComRevisaoPendente.has(vigencia.id) && (
-                        <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-                          Finalizada · revisão pendente
-                        </span>
-                      )}
                   </div>
                 </div>
               </div>
@@ -1665,7 +1508,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                 {tarefasDoFilho.map((tarefa) => {
                                   const registro = registroNaData(tarefa, dataSelecionada);
                                   const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
-                                  const revisao = revisaoNaData(tarefa, dataSelecionada);
                                   const filho = filhos.find((item) => item.id === tarefa.id_filho);
                                   const consequencia = registro?.t_ocorrencia_consequencia;
                                   return (
@@ -1703,17 +1545,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 <BellRing className="h-3.5 w-3.5 shrink-0" />
                                                 <span className="min-w-0 break-words">
                                                   {primeiroNomeFilho(filho?.nome)} avisou que terminou às {formatarHora(solicitacao.created_at)}
-                                                </span>
-                                              </p>
-                                            </div>
-                                          )}
-
-                                          {registro?.tipo === "NAO_FEZ" && revisao?.status === "PENDENTE" && (
-                                            <div className="animate-soft-attention ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-amber-700 dark:text-amber-300">
-                                              <p className="flex min-w-0 items-center gap-1 font-semibold text-amber-700 dark:text-amber-300">
-                                                <BellRing className="h-3.5 w-3.5 shrink-0" />
-                                                <span className="min-w-0 break-words">
-                                                  {primeiroNomeFilho(filho?.nome)} pediu revisão às {formatarHora(revisao.created_at)}
                                                 </span>
                                               </p>
                                             </div>
@@ -1766,71 +1597,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                                           </div>
                                         )}
-                                        {registro?.tipo === "NAO_FEZ" &&
-                                          revisao?.status === "PENDENTE" && (
-                                            <div
-                                              className="inline-flex shrink-0 items-center gap-1 self-center"
-                                              role="group"
-                                              aria-label="Ações da revisão solicitada"
-                                            >
-                                              <Hint content="Aceitar revisão e alterar para Fez">
-                                                <Button
-                                                  type="button"
-                                                  size="icon"
-                                                  variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
-                                                  disabled={busy}
-                                                  aria-label="Aceitar revisão e alterar para Fez"
-                                                  onClick={() =>
-                                                    abrirTrocaMarcacao(
-                                                      tarefa,
-                                                      totalNaoFez,
-                                                      dataSelecionada,
-                                                      registro,
-                                                      "FEZ",
-                                                    )
-                                                  }
-                                                >
-                                                  <ThumbsUp className="h-4 w-4 text-green-600" />
-                                                </Button>
-                                              </Hint>
-                                              <Hint content="Alterar para Não precisou">
-                                                <Button
-                                                  type="button"
-                                                  size="icon"
-                                                  variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
-                                                  disabled={busy}
-                                                  aria-label="Alterar para Não precisou"
-                                                  onClick={() =>
-                                                    abrirTrocaMarcacao(
-                                                      tarefa,
-                                                      totalNaoFez,
-                                                      dataSelecionada,
-                                                      registro,
-                                                      "NAO_PRECISOU",
-                                                    )
-                                                  }
-                                                >
-                                                  <Minus className="h-4 w-4 text-muted-foreground" />
-                                                </Button>
-                                              </Hint>
-                                              <Hint content="Manter Não fez">
-                                                <Button
-                                                  type="button"
-                                                  size="icon"
-                                                  variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
-                                                  disabled={busy}
-                                                  aria-label="Manter Não fez"
-                                                  onClick={() => void manterNaoFezRevisao(revisao.id)}
-                                                >
-                                                  <ThumbsDown className="h-4 w-4 text-red-600" />
-                                                </Button>
-                                              </Hint>
-                                            </div>
-                                          )}
-
                                         {!registro && !bloqueada && (
                                           <>
                                             <Button
@@ -1937,7 +1703,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               )}
                                               {registro.tipo === "NAO_FEZ" &&
                                                 !bloqueada &&
-                                                revisao?.status !== "PENDENTE" &&
                                                 !consequenciaEhPenalidadeCumprida(consequencia) && (
                                                   <DropdownMenuItem
                                                     onSelect={() =>

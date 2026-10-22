@@ -11,8 +11,6 @@ function classeStatus(status: string) {
       return "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/35 dark:text-green-300";
     case "PENDENTE":
       return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-300";
-    case "SUSPENSA_REVISAO":
-      return "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/35 dark:text-sky-300";
     case "CANCELADA":
     case "ESTORNADO":
       return "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300";

@@ -90,7 +90,6 @@ export const useFilhoTarefas = () =>
   });
 
 export type SolicitacaoTarefaFilho = Tables<"t_solicitacao_tarefa_filho">;
-export type RevisaoTarefaFilho = Tables<"t_revisao_tarefa_filho">;
 
 export const useSolicitacoesTarefaFilho = () =>
   useQuery({
@@ -99,19 +98,6 @@ export const useSolicitacoesTarefaFilho = () =>
       unwrap<SolicitacaoTarefaFilho[]>(
         supabase
           .from("t_solicitacao_tarefa_filho")
-          .select("*")
-          .order("created_at", { ascending: false }),
-      ),
-    refetchInterval: 5_000,
-  });
-
-export const useRevisoesTarefaFilho = () =>
-  useQuery({
-    queryKey: ["revisoes_tarefa_filho"],
-    queryFn: () =>
-      unwrap<RevisaoTarefaFilho[]>(
-        supabase
-          .from("t_revisao_tarefa_filho")
           .select("*")
           .order("created_at", { ascending: false }),
       ),
@@ -153,11 +139,8 @@ const ERROS: [RegExp, string][] = [
   [/Resultados só podem ser alterados em vigência em andamento|Resultados so podem ser alterados em vigencia em andamento/i, "Os resultados só podem ser alterados em vigência em andamento"],
   [/A data do resultado deve estar dentro da vigência|A data do resultado deve estar dentro da vigencia/i, "A data do resultado deve estar dentro da vigência"],
   [/Não é permitido registrar resultado em data futura|Nao e permitido registrar resultado em data futura/i, "Não é permitido registrar resultado em data futura"],
-  [/Atribuicao com revisao pendente do filho nao pode ser excluida diretamente|Atribuição com revisão pendente do filho não pode ser excluída diretamente/i, "Esta atribuição possui uma revisão pendente do filho e não pode ser excluída"],
   [/Atribuicao com aviso pendente do filho nao pode ser excluida diretamente|Atribuição com aviso pendente do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso pendente do filho e não pode ser excluída"],
   [/Vigência com Fez\/Não fez ou pedido pendente do filho não pode ser excluída|Vigencia com Fez\/Nao fez ou pedido pendente do filho nao pode ser excluida/i, "Esta vigência possui “Fez”/“Não fez” ou pedido pendente do filho e não pode ser excluída"],
-  [/Atribuicao com revisao do filho nao pode ser excluida diretamente|Atribuição com revisão do filho não pode ser excluída diretamente/i, "Esta atribuição possui uma revisão enviada pelo filho e não pode ser excluída"],
-  [/Atribuicao com revisao do filho nao pode ser editada|Atribuição com revisão do filho não pode ser editada/i, "Esta atribuição possui uma revisão enviada pelo filho e não pode ser alterada"],
   [/Atribuicao com aviso do filho nao pode ser excluida diretamente|Atribuição com aviso do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser excluída"],
   [/Atribuicao com aviso do filho nao pode ser editada|Atribuição com aviso do filho não pode ser editada/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser alterada"],
   [/Há avisos do filho fora do novo período da vigência|Ha avisos do filho fora do novo periodo da vigencia/i, "Há avisos enviados pelo filho fora do novo período. Corrija o período antes de salvar"],

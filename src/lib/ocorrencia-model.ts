@@ -11,8 +11,6 @@ export function rotuloStatusConsequencia(status: string) {
       return "Aplicado";
     case "PENDENTE":
       return "Pendente";
-    case "SUSPENSA_REVISAO":
-      return "Em revisão";
     case "CUMPRIDA":
       return "Cumprida";
     case "CANCELADA":
