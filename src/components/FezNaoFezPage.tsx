@@ -1299,7 +1299,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               className="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
                               aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
                             >
-                              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
+                              <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
                               <span>{totaisEstrelas[filho.id] ?? 0} estrelas</span>
                             </span>
                             <span className="inline-flex items-center justify-end gap-1 tabular-nums text-muted-foreground">
@@ -1332,7 +1332,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               className="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
                               aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
                             >
-                              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
+                              <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
                               <span>{totaisEstrelas[filho.id] ?? 0} estrelas</span>
                             </span>
                             <span className="inline-flex items-center gap-1 tabular-nums text-muted-foreground">
