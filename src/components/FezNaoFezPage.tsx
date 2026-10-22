@@ -64,6 +64,7 @@ import {
 import { reais } from "@/lib/mesada";
 import {
   consequenciaEhDescontoAplicado,
+  consequenciaEhPenalidadeCumprida,
   consequenciaEhPenalidadePendente,
   descreverConsequenciaOcorrencia,
 } from "@/lib/ocorrencia-model";
@@ -1775,7 +1776,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               )}
                                               {registro.tipo === "NAO_FEZ" &&
                                                 !bloqueada &&
-                                                revisao?.status !== "PENDENTE" && (
+                                                revisao?.status !== "PENDENTE" &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) && (
                                                   <DropdownMenuItem
                                                     onSelect={() =>
                                                       abrirNaoFez(
@@ -1804,7 +1806,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                     Marcar penalidade como cumprida
                                                   </DropdownMenuItem>
                                                 )}
-                                              {!bloqueada && (
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) && (
                                                 <DropdownMenuItem
                                                   className="text-destructive focus:text-destructive"
                                                   onSelect={() =>
