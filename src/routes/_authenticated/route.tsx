@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import { useActionLoading } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
-import { CheckinDiario } from "@/components/CheckinDiario";
 import { msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
@@ -95,11 +94,11 @@ const NAV_ITENS: NavItem[] = [
 ];
 
 const ETAPAS = [
-  { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se marcar ‘Tem mesada’, preencha também o valor: nesse caso, cada ‘Não fez’ gera o desconto definido na vigência." },
+  { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se ele recebe mesada, marque essa opção e informe o valor. A consequência de cada “Não fez” será escolhida no momento da marcação." },
   { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
-  { to: "/vigencias", label: "Vigências", title: "Defina o período e as regras", rule: "Escolha as datas, o limite de ‘Não fez’, a penalidade escrita e o desconto por ocorrência. Com mesada, aplica-se o desconto; sem mesada, a penalidade escrita ao atingir o limite." },
+  { to: "/vigencias", label: "Vigências", title: "Defina o período", rule: "Escolha apenas o início e o fim do combinado. A vigência organiza o período e as atribuições; bonificações e consequências pertencem a cada ocorrência." },
   { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Uma atribuição que já tenha registro de ‘Fez’ ou ‘Não fez’ não pode ser excluída; outras atribuições sem histórico continuam independentes." },
-  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre ‘Fez’ ou ‘Não fez’ na data em que aconteceu. Para filho sem mesada, o limite de penalidade soma os ‘Não fez’ de todas as tarefas na vigência; com mesada, cada ‘Não fez’ gera seu desconto." },
+  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre “Fez” ou “Não fez” na data em que aconteceu. Em cada “Não fez”, escolha de forma independente: nada, desconto da mesada (quando houver) ou penalidade." },
 ] as const;
 
 function AuthenticatedLayout() {
@@ -122,7 +121,6 @@ function AuthenticatedLayout() {
   const [menuDesktopRecolhido, setMenuDesktopRecolhido] = useState(false);
   const [menuUsuarioDesktopAberto, setMenuUsuarioDesktopAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
-  const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
   const [feedbackAberto, setFeedbackAberto] = useState(false);
   const [modoEscuro, setModoEscuro] = useState(() => resolveTheme(getThemePreference()) === "dark");
@@ -301,7 +299,6 @@ function AuthenticatedLayout() {
     <>
       {!saindo && <AppPushNotifications />}
       {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
-      {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="min-h-screen md:flex">
         <aside
           className={`native-sticky-safe-top sticky top-0 z-30 border-b bg-sidebar transition-[width,border-color] duration-300 ease-out md:sticky md:top-0 md:z-auto md:flex md:h-screen md:shrink-0 md:flex-col md:border-b-0 ${
