@@ -25,12 +25,3 @@ export function penalidadesPendentes(ocorrencias: Ocorrencia[]) {
       ),
   );
 }
-
-export function penalidadesSuspensasEmRevisao(ocorrencias: Ocorrencia[]) {
-  return ocorrencias.filter(
-    (ocorrencia) =>
-      ocorrencia.tipo === "NAO_FEZ" &&
-      ocorrencia.t_ocorrencia_consequencia?.tipo === "PENALIDADE" &&
-      ocorrencia.t_ocorrencia_consequencia.status === "SUSPENSA_REVISAO",
-  );
-}

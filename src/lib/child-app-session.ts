@@ -19,7 +19,7 @@ export type ConsequenciaOcorrenciaFilho = {
   tipo: "DESCONTO" | "PENALIDADE";
   desconto_valor: number | null;
   penalidade_descricao: string | null;
-  status: "APLICADO" | "PENDENTE" | "SUSPENSA_REVISAO" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
+  status: "APLICADO" | "PENDENTE" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
   cumprida_em: string | null;
   cancelada_em: string | null;
 };
@@ -43,17 +43,6 @@ export type SolicitacaoTarefaFilhoApp = {
   data_referencia: string;
   observacao: string | null;
   status: "PENDENTE" | "RESOLVIDA_FEZ" | "RESOLVIDA_NAO_FEZ" | "RESOLVIDA_NAO_PRECISOU";
-  created_at: string;
-  resolvido_em: string | null;
-};
-
-export type RevisaoTarefaFilhoApp = {
-  id: number;
-  id_ocorrencia: number;
-  id_filho_tarefa: number;
-  data_referencia: string;
-  observacao: string | null;
-  status: "PENDENTE" | "MANTEVE_NAO_FEZ" | "ALTERADO_PARA_FEZ" | "ALTERADO_PARA_NAO_PRECISOU" | "MARCACAO_DESFEITA";
   created_at: string;
   resolvido_em: string | null;
 };
@@ -83,7 +72,6 @@ export type PainelFilho = {
   vigencias: VigenciaFilho[];
   estrelas?: EstrelasFilho;
   solicitacoes_hoje?: SolicitacaoTarefaFilhoApp[];
-  revisoes?: RevisaoTarefaFilhoApp[];
   comunicacao?: {
     mensagem_global_ativa: boolean;
     mensagem_global: string | null;
@@ -102,13 +90,6 @@ type RespostaSolicitacao = {
   ok: true;
   ja_existia: boolean;
   solicitacao: SolicitacaoTarefaFilhoApp;
-  notificacoes_enviadas?: number;
-};
-
-type RespostaRevisao = {
-  ok: true;
-  ja_existia: boolean;
-  revisao: RevisaoTarefaFilhoApp;
   notificacoes_enviadas?: number;
 };
 
@@ -180,7 +161,7 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     body: JSON.stringify(body),
   });
 
-  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRevisao | RespostaRecompensaConcluida | RespostaErro;
+  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRecompensaConcluida | RespostaErro;
 
   if (!response.ok) {
     const codigo = "codigo" in data ? data.codigo : undefined;
@@ -202,12 +183,6 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     }
     if (codigo === "JA_MARCADA") {
       throw new Error("O responsável já marcou esta tarefa hoje.");
-    }
-    if (codigo === "REVISAO_INDISPONIVEL") {
-      throw new Error("Esta marcação não está disponível para revisão.");
-    }
-    if (codigo === "REVISAO_JA_SOLICITADA") {
-      throw new Error("A revisão desta tarefa já foi solicitada.");
     }
     if (codigo === "OBSERVACAO_INVALIDA") {
       throw new Error("A observação deve ter no máximo 120 caracteres.");
@@ -377,27 +352,6 @@ export async function avisarTarefaConcluida(
   }
 
   return data as RespostaSolicitacao;
-}
-
-export async function pedirRevisaoTarefa(
-  idOcorrencia: number,
-  observacao?: string,
-): Promise<RespostaRevisao> {
-  const token = await lerSessaoFilhoLocal();
-  if (!token) throw new Error("Este acesso não está mais ativo.");
-
-  const data = await chamarAcessoFilho({
-    acao: "pedir_revisao_nao_fez",
-    token,
-    id_ocorrencia: idOcorrencia,
-    observacao: observacao?.trim() || null,
-  });
-
-  if (!("ok" in data) || data.ok !== true || !("revisao" in data)) {
-    throw new Error("Não foi possível pedir a revisão ao responsável.");
-  }
-
-  return data as RespostaRevisao;
 }
 
 export async function confirmarRecompensaAproveitada(

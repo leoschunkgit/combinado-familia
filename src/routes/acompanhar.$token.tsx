@@ -34,7 +34,7 @@ type Consequencia = {
   tipo: "DESCONTO" | "PENALIDADE";
   desconto_valor: number | null;
   penalidade_descricao: string | null;
-  status: "APLICADO" | "PENDENTE" | "SUSPENSA_REVISAO" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
+  status: "APLICADO" | "PENDENTE" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
   cumprida_em: string | null;
   cancelada_em: string | null;
 };
