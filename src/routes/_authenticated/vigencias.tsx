@@ -433,9 +433,6 @@ function VigenciasPage() {
               Sua vigência tem {diasDaVigencia(form.data_inicio, form.data_fim)} {diasDaVigencia(form.data_inicio, form.data_fim) === 1 ? "dia" : "dias"}.
             </p>
           )}
-          <div className="rounded-lg border bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-            A vigência define apenas o período. Desconto, penalidade ou nenhuma consequência são escolhidos quando um “Não fez” é registrado.
-          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setNovoAberto(false)}>Cancelar</Button>
             <Button type="submit">Cadastrar</Button>
