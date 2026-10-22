@@ -33,8 +33,16 @@ export const resultadoOcorrenciaConfig: Record<
   },
 };
 
-export function rotuloResultado(tipo: ResultadoOcorrencia) {
-  return resultadoOcorrenciaConfig[tipo].rotulo;
+export function isResultadoOcorrencia(
+  tipo: string,
+): tipo is ResultadoOcorrencia {
+  return (RESULTADOS_OCORRENCIA as readonly string[]).includes(tipo);
+}
+
+export function rotuloResultado(tipo: string) {
+  return isResultadoOcorrencia(tipo)
+    ? resultadoOcorrenciaConfig[tipo].rotulo
+    : tipo;
 }
 
 export function resultadoGeraEstrela(tipo: ResultadoOcorrencia) {
