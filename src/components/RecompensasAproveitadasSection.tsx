@@ -28,7 +28,7 @@ export function RecompensasAproveitadasSection({
 
   return (
     <CollapsibleSection
-      className="bg-clean-surface"
+      className="border-0 bg-clean-surface"
       title={
         <span className="inline-flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-amber-500" />
@@ -41,23 +41,21 @@ export function RecompensasAproveitadasSection({
     >
       <div className="space-y-2.5">
         {aproveitadas.map((resgate) => (
-          <article key={resgate.id} className="rounded-xl border bg-clean-surface p-2.5 sm:p-3">
+          <article key={resgate.id} className="rounded-xl bg-clean-surface p-2.5 sm:p-3">
             <div className="space-y-1.5">
-              <InfoTile
-                compact
-                label="Recompensa"
-                icon={<Gift className="h-3.5 w-3.5" />}
-                value={resgate.nome_exibicao}
-                className="bg-clean-surface"
-                valueClassName="text-sm font-bold leading-tight sm:text-base"
-              />
+              <div className="flex min-w-0 items-center gap-2 px-2.5 py-1.5">
+                <Gift className="h-4 w-4 shrink-0 text-primary" />
+                <p className="min-w-0 break-words text-sm font-bold leading-tight sm:text-base">
+                  {resgate.nome_exibicao}
+                </p>
+              </div>
               <InfoTile
                 compact
                 inline
                 label="Quantidade de estrelas atingidas para conquista"
                 icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />}
                 value={resgate.quantidade_estrelas_conquista}
-                className="bg-clean-surface"
+                className="border-0 bg-clean-surface"
                 valueClassName="font-semibold tabular-nums"
               />
               <InfoTile
@@ -66,7 +64,7 @@ export function RecompensasAproveitadasSection({
                 label="Conquistou em"
                 icon={<Trophy className="h-3.5 w-3.5" />}
                 value={dataHora(resgate.conquistou_em)}
-                className="bg-clean-surface"
+                className="border-0 bg-clean-surface"
                 valueClassName="font-semibold tabular-nums"
               />
               <InfoTile
@@ -75,7 +73,7 @@ export function RecompensasAproveitadasSection({
                 label="Aproveitou em"
                 icon={<CheckCircle2 className="h-3.5 w-3.5" />}
                 value={dataHora(resgate.aproveitou_em!)}
-                className="bg-clean-surface"
+                className="border-0 bg-clean-surface"
                 valueClassName="font-semibold tabular-nums"
               />
               <InfoTile
@@ -84,7 +82,7 @@ export function RecompensasAproveitadasSection({
                 label="Contagem recomeçou em"
                 icon={<RefreshCcw className="h-3.5 w-3.5" />}
                 value={dataHora(resgate.contagem_recomecou_em!)}
-                className="bg-clean-surface"
+                className="border-0 bg-clean-surface"
                 valueClassName="font-semibold tabular-nums"
               />
             </div>
