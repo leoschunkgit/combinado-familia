@@ -7,8 +7,8 @@ begin
   if exists(select 1 from information_schema.columns where table_schema='public' and column_name='id_revisao') then
     raise exception 'Coluna obsoleta ainda existe';
   end if;
-  if has_schema_privilege('authenticated','arquivo_interno','USAGE') or has_schema_privilege('anon','arquivo_interno','USAGE') then
-    raise exception 'Arquivo interno acessível pelo cliente';
+  if to_regnamespace('arquivo_interno') is not null then
+    raise exception 'Arquivo histórico de revisão ainda existe';
   end if;
 end;
 $schema_test$;
