@@ -27,6 +27,7 @@ import { AppBrand } from "@/components/AppBrand";
 import { AppGlobalMessage } from "@/components/AppGlobalMessage";
 import {
   consequenciaEhDescontoAplicado,
+  consequenciaEhPenalidadeCumprida,
   consequenciaEhPenalidadePendente,
 } from "@/lib/ocorrencia-model";
 import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
@@ -335,6 +336,15 @@ export function PainelFilhoApp({
       ).length,
     0,
   );
+  const penalidadesCumpridas = tarefasAtual.reduce(
+    (total, tarefa) =>
+      total +
+      tarefa.ocorrencias.filter(
+        (ocorrencia) =>
+          consequenciaEhPenalidadeCumprida(ocorrencia.consequencia),
+      ).length,
+    0,
+  );
 
   async function enviarAvisoTarefa() {
     if (!avisoTarefa || enviandoAviso) return;
@@ -617,7 +627,7 @@ export function PainelFilhoApp({
                     <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/45 dark:text-green-300">Em andamento</Badge>
                   </div>
 
-                  {painel.filho.tem_mesada ? (
+                  {painel.filho.tem_mesada && (
                     <div className="grid grid-cols-3 border-t text-sm">
                       <div className="min-w-0 px-2 py-3 text-center sm:px-4">
                         <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Valor da mesada</p>
@@ -632,18 +642,22 @@ export function PainelFilhoApp({
                         <p className="mt-1 break-words font-semibold">{dinheiro(mesadaFinal ?? 0)}</p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-2 border-t text-sm">
-                      <div className="px-4 py-3 sm:px-5">
-                        <p className="text-xs text-muted-foreground">Não fez nesta vigência</p>
-                        <p className="mt-0.5 font-semibold">{qtdNaoFez}</p>
-                      </div>
-                      <div className="border-l px-4 py-3 sm:px-5">
-                        <p className="text-xs text-muted-foreground">Penalidades pendentes</p>
-                        <p className="mt-0.5 break-words font-semibold">{penalidadesPendentes}</p>
-                      </div>
-                    </div>
                   )}
+
+                  <div className="grid grid-cols-3 border-t text-sm">
+                    <div className="min-w-0 px-2 py-3 text-center sm:px-4">
+                      <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Não fez</p>
+                      <p className="mt-1 font-semibold tabular-nums">{qtdNaoFez}</p>
+                    </div>
+                    <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
+                      <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Penalidades a cumprir</p>
+                      <p className="mt-1 font-semibold tabular-nums">{penalidadesPendentes}</p>
+                    </div>
+                    <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
+                      <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Penalidades cumpridas</p>
+                      <p className="mt-1 font-semibold tabular-nums">{penalidadesCumpridas}</p>
+                    </div>
+                  </div>
                 </section>
               </>
             ) : (
