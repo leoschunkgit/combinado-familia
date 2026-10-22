@@ -32,7 +32,7 @@ begin
   insert into fixture_revisao values(ocorrencia);
 end;
 $test$;
-\ir ../migrations/20261022122141_retirar_fluxo_revisao.sql
+\ir ../migrations/20261022124401_retirar_fluxo_revisao.sql
 do $test$
 declare occ bigint;
 begin
