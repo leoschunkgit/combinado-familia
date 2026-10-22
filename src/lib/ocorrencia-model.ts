@@ -32,6 +32,12 @@ export function consequenciaEhPenalidadePendente(
   return consequencia?.tipo === "PENALIDADE" && consequencia.status === "PENDENTE";
 }
 
+export function consequenciaEhPenalidadeCumprida(
+  consequencia: ConsequenciaOcorrenciaLike | null | undefined,
+) {
+  return consequencia?.tipo === "PENALIDADE" && consequencia.status === "CUMPRIDA";
+}
+
 export function descreverConsequenciaOcorrencia(
   consequencia: ConsequenciaOcorrenciaLike | null | undefined,
   formatarMoeda: (valor: number) => string,
