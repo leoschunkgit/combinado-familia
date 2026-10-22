@@ -1,0 +1,1 @@
+-- Migration histórica de limpeza do autoteste na DEV. Sem alteração persistente adicional.

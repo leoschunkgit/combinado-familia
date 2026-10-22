@@ -1,0 +1,2 @@
+-- Estado final desta etapa já está consolidado em 20261022012312_fechar_nucleo_reconciliacao_ocorrencias.sql para instalações novas.
+-- Mantido para alinhar o histórico de migrations da DEV.
