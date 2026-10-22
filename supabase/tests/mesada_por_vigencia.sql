@@ -1,6 +1,17 @@
 begin;
 
 do $$
+begin
+  if not has_function_privilege(
+    'authenticated',
+    'public.total_descontos_aplicados_filho_vigencia_interno(bigint,bigint,bigint,bigint)',
+    'EXECUTE'
+  ) then
+    raise exception 'AUTHENTICATED_SEM_EXECUTE_HELPER_MESADA_VIGENCIA';
+  end if;
+end $$;
+
+do $$
 declare
   v_id_usuario_pai bigint;
   v_id_vigencia bigint;
