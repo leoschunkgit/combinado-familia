@@ -438,7 +438,6 @@ export type Database = {
           id: number
           id_usuario_pai: number
           idade: number | null
-          mesada_ciclo_atual: number
           nome: string
           tem_mesada: boolean
           tem_mesada_opcional: boolean | null
@@ -453,7 +452,6 @@ export type Database = {
           id?: never
           id_usuario_pai?: number
           idade?: number | null
-          mesada_ciclo_atual?: number
           nome: string
           tem_mesada?: boolean
           tem_mesada_opcional?: boolean | null
@@ -468,7 +466,6 @@ export type Database = {
           id?: never
           id_usuario_pai?: number
           idade?: number | null
-          mesada_ciclo_atual?: number
           nome?: string
           tem_mesada?: boolean
           tem_mesada_opcional?: boolean | null
@@ -785,7 +782,6 @@ export type Database = {
           id: number
           id_ocorrencia: number
           id_usuario_pai: number
-          mesada_ciclo: number | null
           penalidade_descricao: string | null
           status: string
           tipo: string
@@ -799,7 +795,6 @@ export type Database = {
           id?: number
           id_ocorrencia: number
           id_usuario_pai: number
-          mesada_ciclo?: number | null
           penalidade_descricao?: string | null
           status: string
           tipo: string
@@ -813,7 +808,6 @@ export type Database = {
           id?: number
           id_ocorrencia?: number
           id_usuario_pai?: number
-          mesada_ciclo?: number | null
           penalidade_descricao?: string | null
           status?: string
           tipo?: string
@@ -1767,6 +1761,15 @@ export type Database = {
       sincronizar_estrela_ocorrencia_interno: {
         Args: { p_id_ocorrencia: number; p_id_usuario_pai: number }
         Returns: undefined
+      }
+      total_descontos_aplicados_filho_vigencia_interno: {
+        Args: {
+          p_id_filho: number
+          p_id_usuario_pai: number
+          p_id_vigencia: number
+          p_ignorar_id_consequencia?: number
+        }
+        Returns: number
       }
       vigencia_ocorrencia_em_andamento_interno: {
         Args: { p_id_ocorrencia: number; p_id_usuario_pai: number }

@@ -27,7 +27,7 @@ import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
 import { AppGlobalMessage } from "@/components/AppGlobalMessage";
 import {
-  consequenciaEhDescontoAplicadoNoCiclo,
+  consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadeCumprida,
   consequenciaEhPenalidadePendente,
 } from "@/lib/ocorrencia-model";
@@ -318,10 +318,7 @@ export function PainelFilhoApp({
           total +
           tarefa.ocorrencias.reduce((subtotal, ocorrencia) => {
             const consequencia = ocorrencia.consequencia;
-            return consequenciaEhDescontoAplicadoNoCiclo(
-              consequencia,
-              painel.filho.mesada_ciclo_atual,
-            )
+            return consequenciaEhDescontoAplicado(consequencia)
               ? subtotal + Number(consequencia?.desconto_valor ?? 0)
               : subtotal;
           }, 0),
