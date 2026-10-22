@@ -311,6 +311,35 @@ export function PainelFilhoApp({
     [tarefasAtual],
   );
 
+  const revisoesPendentesDetalhadas = useMemo(() => {
+    const revisoesPendentes = new Map(
+      (painel.revisoes ?? [])
+        .filter((revisao) => revisao.status === "PENDENTE")
+        .map((revisao) => [revisao.id_ocorrencia, revisao]),
+    );
+    const itens: Array<{
+      revisaoId: number;
+      tarefaNome: string;
+      data: string;
+    }> = [];
+
+    for (const vigencia of painel.vigencias) {
+      for (const tarefa of vigencia.tarefas) {
+        for (const ocorrencia of tarefa.ocorrencias) {
+          const revisao = revisoesPendentes.get(ocorrencia.id);
+          if (!revisao) continue;
+          itens.push({
+            revisaoId: revisao.id,
+            tarefaNome: tarefa.nome,
+            data: ocorrencia.data,
+          });
+        }
+      }
+    }
+
+    return itens.sort((a, b) => +new Date(b.data) - +new Date(a.data));
+  }, [painel.revisoes, painel.vigencias]);
+
   const registrosPorData = useMemo(() => {
     const grupos: Array<{
       data: string;
@@ -640,6 +669,42 @@ export function PainelFilhoApp({
                 className="mt-0.5 shrink-0"
               />
             </div>
+
+            {revisoesPendentesDetalhadas.length > 0 && (
+              <section className="overflow-hidden rounded-2xl border border-amber-300 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/20">
+                <div className="flex items-start gap-3 px-4 py-3.5 sm:px-5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+                    <BellRing className="h-4.5 w-4.5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {revisoesPendentesDetalhadas.length === 1
+                        ? "Revisão aguardando o responsável"
+                        : `${revisoesPendentesDetalhadas.length} revisões aguardando o responsável`}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      O pedido continua pendente até o responsável decidir, mesmo que a vigência já tenha terminado.
+                    </p>
+                  </div>
+                </div>
+                <div className="divide-y border-t border-amber-200/80 dark:border-amber-900/70">
+                  {revisoesPendentesDetalhadas.map((item) => (
+                    <div
+                      key={item.revisaoId}
+                      className="flex min-w-0 items-center gap-2 px-4 py-2.5 text-xs sm:px-5"
+                    >
+                      <TarefaIcone nome={item.tarefaNome} className="shrink-0" />
+                      <span className="min-w-0 flex-1 break-words font-medium">
+                        {item.tarefaNome}
+                      </span>
+                      <span className="shrink-0 text-muted-foreground">
+                        {data(item.data)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {vigenciaAtual ? (
               <>
