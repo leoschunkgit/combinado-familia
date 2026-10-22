@@ -246,6 +246,67 @@ export type Database = {
           },
         ]
       }
+      t_estrela_concessao: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: number
+          id_filho: number
+          id_filho_tarefa_origem: number | null
+          id_ocorrencia_origem: number | null
+          id_tarefa: number
+          id_usuario_pai: number
+          id_vigencia: number
+          tarefa_nome_snapshot: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: number
+          id_filho: number
+          id_filho_tarefa_origem?: number | null
+          id_ocorrencia_origem?: number | null
+          id_tarefa: number
+          id_usuario_pai: number
+          id_vigencia: number
+          tarefa_nome_snapshot?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: number
+          id_filho?: number
+          id_filho_tarefa_origem?: number | null
+          id_ocorrencia_origem?: number | null
+          id_tarefa?: number
+          id_usuario_pai?: number
+          id_vigencia?: number
+          tarefa_nome_snapshot?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_estrela_concessao_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_estrela_concessao_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_estrela_concessao_same_pai_filho_fk"
+            columns: ["id_usuario_pai", "id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
+        ]
+      }
       t_estrela_movimento: {
         Row: {
           created_at: string
@@ -599,33 +660,27 @@ export type Database = {
       t_filho_tarefa: {
         Row: {
           created_at: string
-          feito: string | null
           id: number
           id_filho: number
           id_tarefa: number
           id_usuario_pai: number
           id_vigencia: number
-          qtd_nao_fez: number
         }
         Insert: {
           created_at?: string
-          feito?: string | null
           id?: never
           id_filho: number
           id_tarefa: number
           id_usuario_pai?: number
           id_vigencia: number
-          qtd_nao_fez?: number
         }
         Update: {
           created_at?: string
-          feito?: string | null
           id?: never
           id_filho?: number
           id_tarefa?: number
           id_usuario_pai?: number
           id_vigencia?: number
-          qtd_nao_fez?: number
         }
         Relationships: [
           {
@@ -679,82 +734,6 @@ export type Database = {
           },
         ]
       }
-      t_revisao_tarefa_filho: {
-        Row: {
-          created_at: string
-          data_referencia: string
-          id: number
-          id_filho_tarefa: number
-          observacao: string | null
-          resolvido_em: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          data_referencia: string
-          id?: number
-          id_filho_tarefa: number
-          observacao?: string | null
-          resolvido_em?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          data_referencia?: string
-          id?: number
-          id_filho_tarefa?: number
-          observacao?: string | null
-          resolvido_em?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "t_revisao_tarefa_filho_id_filho_tarefa_fkey"
-            columns: ["id_filho_tarefa"]
-            isOneToOne: false
-            referencedRelation: "t_filho_tarefa"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      t_solicitacao_tarefa_filho: {
-        Row: {
-          created_at: string
-          data_referencia: string
-          id: number
-          id_filho_tarefa: number
-          observacao: string | null
-          resolvido_em: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          data_referencia: string
-          id?: number
-          id_filho_tarefa: number
-          observacao?: string | null
-          resolvido_em?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          data_referencia?: string
-          id?: number
-          id_filho_tarefa?: number
-          observacao?: string | null
-          resolvido_em?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "t_solicitacao_tarefa_filho_id_filho_tarefa_fkey"
-            columns: ["id_filho_tarefa"]
-            isOneToOne: false
-            referencedRelation: "t_filho_tarefa"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       t_ocorrencia: {
         Row: {
           bonificacao_descricao: string | null
@@ -803,6 +782,113 @@ export type Database = {
           },
         ]
       }
+      t_ocorrencia_consequencia: {
+        Row: {
+          cancelada_em: string | null
+          created_at: string
+          cumprida_em: string | null
+          desconto_valor: number | null
+          id: number
+          id_ocorrencia: number
+          id_usuario_pai: number
+          penalidade_descricao: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          cancelada_em?: string | null
+          created_at?: string
+          cumprida_em?: string | null
+          desconto_valor?: number | null
+          id?: number
+          id_ocorrencia: number
+          id_usuario_pai: number
+          penalidade_descricao?: string | null
+          status: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          cancelada_em?: string | null
+          created_at?: string
+          cumprida_em?: string | null
+          desconto_valor?: number | null
+          id?: number
+          id_ocorrencia?: number
+          id_usuario_pai?: number
+          penalidade_descricao?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_ocorrencia_consequencia_id_ocorrencia_fkey"
+            columns: ["id_ocorrencia"]
+            isOneToOne: true
+            referencedRelation: "t_ocorrencia"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_ocorrencia_consequencia_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_ocorrencia_reconciliacao: {
+        Row: {
+          acao: string
+          created_at: string
+          estado_anterior: Json | null
+          estado_novo: Json | null
+          id: number
+          id_filho_tarefa: number
+          id_ocorrencia: number | null
+          id_revisao: number | null
+          id_usuario_pai: number
+          motivo: string | null
+          origem: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          estado_anterior?: Json | null
+          estado_novo?: Json | null
+          id?: number
+          id_filho_tarefa: number
+          id_ocorrencia?: number | null
+          id_revisao?: number | null
+          id_usuario_pai: number
+          motivo?: string | null
+          origem?: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          estado_anterior?: Json | null
+          estado_novo?: Json | null
+          id?: number
+          id_filho_tarefa?: number
+          id_ocorrencia?: number | null
+          id_revisao?: number | null
+          id_usuario_pai?: number
+          motivo?: string | null
+          origem?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_ocorrencia_reconciliacao_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_push_dispositivo: {
         Row: {
           ativo: boolean
@@ -834,6 +920,64 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "t_push_dispositivo_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_push_dispositivo_filho: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: number
+          id_acesso_app_filho: number
+          id_filho: number
+          id_usuario_pai: number
+          plataforma: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_acesso_app_filho: number
+          id_filho: number
+          id_usuario_pai: number
+          plataforma: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: number
+          id_acesso_app_filho?: number
+          id_filho?: number
+          id_usuario_pai?: number
+          plataforma?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_push_dispositivo_filho_id_acesso_app_filho_fkey"
+            columns: ["id_acesso_app_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho_acesso_app"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_push_dispositivo_filho_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_push_dispositivo_filho_id_usuario_pai_fkey"
             columns: ["id_usuario_pai"]
             isOneToOne: false
             referencedRelation: "t_usuario_pai"
@@ -896,6 +1040,109 @@ export type Database = {
           },
         ]
       }
+      t_push_envio_filho: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: number
+          id_filho: number
+          id_push_dispositivo_filho: number
+          id_usuario_pai: number
+          janela_envio: string
+          qtd_pendencias: number
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: number
+          id_filho: number
+          id_push_dispositivo_filho: number
+          id_usuario_pai: number
+          janela_envio: string
+          qtd_pendencias: number
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: number
+          id_filho?: number
+          id_push_dispositivo_filho?: number
+          id_usuario_pai?: number
+          janela_envio?: string
+          qtd_pendencias?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_push_envio_filho_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_push_envio_filho_id_push_dispositivo_filho_fkey"
+            columns: ["id_push_dispositivo_filho"]
+            isOneToOne: false
+            referencedRelation: "t_push_dispositivo_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_push_envio_filho_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_push_resposta_filho: {
+        Row: {
+          created_at: string
+          id: number
+          id_filho: number
+          id_interacao: number
+          id_usuario_pai: number
+          notificacoes_enviadas: number
+          status_resposta: string
+          tipo_interacao: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          id_filho: number
+          id_interacao: number
+          id_usuario_pai: number
+          notificacoes_enviadas: number
+          status_resposta: string
+          tipo_interacao: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          id_filho?: number
+          id_interacao?: number
+          id_usuario_pai?: number
+          notificacoes_enviadas?: number
+          status_resposta?: string
+          tipo_interacao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_push_resposta_filho_id_filho_fkey"
+            columns: ["id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_push_resposta_filho_id_usuario_pai_fkey"
+            columns: ["id_usuario_pai"]
+            isOneToOne: false
+            referencedRelation: "t_usuario_pai"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       t_recompensa_estrela: {
         Row: {
           ativo: boolean
@@ -947,6 +1194,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "t_usuario_pai"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_recompensa_estrela_same_pai_filho_fk"
+            columns: ["id_usuario_pai", "id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id_usuario_pai", "id"]
           },
         ]
       }
@@ -1024,6 +1278,92 @@ export type Database = {
             referencedRelation: "t_usuario_pai"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "t_recompensa_resgate_same_pai_filho_fk"
+            columns: ["id_usuario_pai", "id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
+        ]
+      }
+      t_revisao_tarefa_filho: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: number
+          id_filho_tarefa: number
+          id_ocorrencia: number
+          observacao: string | null
+          resolvido_em: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: number
+          id_filho_tarefa: number
+          id_ocorrencia: number
+          observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: number
+          id_filho_tarefa?: number
+          id_ocorrencia?: number
+          observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_revisao_tarefa_filho_id_filho_tarefa_fkey"
+            columns: ["id_filho_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_filho_tarefa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      t_solicitacao_tarefa_filho: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: number
+          id_filho_tarefa: number
+          observacao: string | null
+          resolvido_em: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: number
+          id_filho_tarefa: number
+          observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: number
+          id_filho_tarefa?: number
+          observacao?: string | null
+          resolvido_em?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_solicitacao_tarefa_filho_id_filho_tarefa_fkey"
+            columns: ["id_filho_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_filho_tarefa"
+            referencedColumns: ["id"]
+          },
         ]
       }
       t_tarefa: {
@@ -1089,10 +1429,6 @@ export type Database = {
           data_inicio: string
           id: number
           id_usuario_pai: number
-          penalidade: string | null
-          qtd_ocorrencia: number
-          tipo_penalidade: string
-          valor_debito: number | null
         }
         Insert: {
           created_at?: string
@@ -1100,10 +1436,6 @@ export type Database = {
           data_inicio: string
           id?: never
           id_usuario_pai?: number
-          penalidade?: string | null
-          qtd_ocorrencia?: number
-          tipo_penalidade?: string
-          valor_debito?: number | null
         }
         Update: {
           created_at?: string
@@ -1111,10 +1443,6 @@ export type Database = {
           data_inicio?: string
           id?: never
           id_usuario_pai?: number
-          penalidade?: string | null
-          qtd_ocorrencia?: number
-          tipo_penalidade?: string
-          valor_debito?: number | null
         }
         Relationships: [
           {
@@ -1257,15 +1585,48 @@ export type Database = {
         }
         Returns: Json
       }
-      confirmar_recompensa_aproveitada: {
-        Args: { p_id_recompensa: number }
-        Returns: Json
-      }
       alterar_status_resgate_estrelas: {
         Args: { p_id_resgate: number; p_status: string }
         Returns: boolean
       }
       app_config_publico: { Args: never; Returns: Json }
+      concluir_ciclo_recompensa_interno: {
+        Args: {
+          p_confirmado_por: string
+          p_id_filho: number
+          p_id_recompensa: number
+          p_id_usuario_pai: number
+        }
+        Returns: Json
+      }
+      concluir_recompensa_filho_interno: {
+        Args: { p_id_recompensa: number; p_token: string }
+        Returns: Json
+      }
+      confirmar_recompensa_aproveitada: {
+        Args: { p_id_recompensa: number }
+        Returns: Json
+      }
+      contar_nao_fez_filho_vigencia: {
+        Args: { p_id_filho: number; p_id_vigencia: number }
+        Returns: number
+      }
+      criar_revisao_ocorrencia_filho_interno: {
+        Args: {
+          p_id_ocorrencia: number
+          p_observacao?: string
+          p_token: string
+        }
+        Returns: Json
+      }
+      criar_solicitacao_tarefa_filho_interno: {
+        Args: {
+          p_id_filho_tarefa: number
+          p_observacao?: string
+          p_token: string
+        }
+        Returns: Json
+      }
       current_admin_id: { Args: never; Returns: number }
       current_pai_id: { Args: never; Returns: number }
       desativar_acesso_publico_filho: {
@@ -1277,14 +1638,7 @@ export type Database = {
         Returns: boolean
       }
       duplicar_vigencia_com_atribuicoes: {
-        Args: {
-          p_data_fim: string
-          p_data_inicio: string
-          p_modelo_id: number
-          p_penalidade: string
-          p_qtd_ocorrencia: number
-          p_valor_debito: number
-        }
+        Args: { p_data_fim: string; p_data_inicio: string; p_modelo_id: number }
         Returns: {
           id_vigencia: number
           qtd_atribuicoes: number
@@ -1318,9 +1672,13 @@ export type Database = {
         Args: { p_id_vigencia: number }
         Returns: boolean
       }
-      existe_filho_sem_mesada_no_limite: {
-        Args: { p_id_vigencia: number }
-        Returns: boolean
+      garantir_conquista_recompensa_estrelas_interno: {
+        Args: {
+          p_id_filho: number
+          p_id_recompensa?: number
+          p_id_usuario_pai: number
+        }
+        Returns: undefined
       }
       gerar_acesso_publico_filho: {
         Args: { p_id_filho: number }
@@ -1348,6 +1706,14 @@ export type Database = {
           revogado_em: string
           ultimo_acesso_em: string
         }[]
+      }
+      marco_recompensa_estrelas_interno: {
+        Args: {
+          p_id_filho: number
+          p_id_recompensa: number
+          p_id_usuario_pai: number
+        }
+        Returns: number
       }
       montar_painel_app_filho: {
         Args: { p_id_filho: number; p_id_usuario_pai: number }
@@ -1378,16 +1744,26 @@ export type Database = {
         }
         Returns: Json
       }
-      resolver_revisao_tarefa_filho: {
-        Args: { p_decisao: string; p_id_revisao: number }
-        Returns: boolean
+      reconciliar_ocorrencia: {
+        Args: {
+          p_acao: string
+          p_bonificacao_descricao?: string
+          p_bonificacao_tipo?: string
+          p_bonificacao_valor?: number
+          p_consequencia_tipo?: string
+          p_created_at?: string
+          p_desconto_valor?: number
+          p_id_filho_tarefa?: number
+          p_id_ocorrencia?: number
+          p_id_revisao?: number
+          p_motivo?: string
+          p_novo_tipo?: string
+          p_penalidade_descricao?: string
+        }
+        Returns: Json
       }
-      recalcular_estado_atribuicao: {
-        Args: { p_id: number }
-        Returns: undefined
-      }
-      recalcular_penalidade_vigencia: {
-        Args: { p_id_vigencia: number }
+      reconciliar_recompensas_estrelas_filho_interno: {
+        Args: { p_id_filho: number; p_id_usuario_pai: number }
         Returns: undefined
       }
       regenerar_acesso_publico_filho: {
@@ -1395,19 +1771,6 @@ export type Database = {
         Returns: {
           ativo: boolean
           token: string
-        }[]
-      }
-      registrar_nao_fez_com_penalidade: {
-        Args: {
-          p_created_at: string
-          p_id_filho_tarefa: number
-          p_id_ocorrencia?: number
-          p_penalidade?: string
-        }
-        Returns: {
-          novo_total: number
-          penalidade: string
-          penalizado: boolean
         }[]
       }
       registrar_telemetria_app: {
@@ -1421,6 +1784,10 @@ export type Database = {
       resgatar_recompensa_estrelas: {
         Args: { p_id_recompensa: number }
         Returns: number
+      }
+      resolver_revisao_tarefa_filho: {
+        Args: { p_decisao: string; p_id_revisao: number }
+        Returns: boolean
       }
       resumo_estrelas_filho: { Args: { p_id_filho: number }; Returns: Json }
       resumo_estrelas_filho_interno: {
@@ -1448,6 +1815,10 @@ export type Database = {
           p_nome: string
         }
         Returns: number
+      }
+      sincronizar_estrela_ocorrencia_interno: {
+        Args: { p_id_ocorrencia: number; p_id_usuario_pai: number }
+        Returns: undefined
       }
     }
     Enums: {
