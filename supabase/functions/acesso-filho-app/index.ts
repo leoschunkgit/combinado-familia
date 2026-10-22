@@ -122,6 +122,7 @@ serve(async (req) => {
       push_token?: unknown;
       plataforma?: unknown;
       id_filho_tarefa?: unknown;
+      id_ocorrencia?: unknown;
       id_recompensa?: unknown;
       observacao?: unknown;
     } | null;
@@ -264,30 +265,30 @@ serve(async (req) => {
 
     if (acao === "pedir_revisao_nao_fez") {
       const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
-      const idFilhoTarefa = typeof body?.id_filho_tarefa === "number"
-        ? body.id_filho_tarefa
-        : Number(body?.id_filho_tarefa);
+      const idOcorrencia = typeof body?.id_ocorrencia === "number"
+        ? body.id_ocorrencia
+        : Number(body?.id_ocorrencia);
       const observacao = typeof body?.observacao === "string"
         ? body.observacao.trim()
         : null;
 
       if (
         !/^[0-9a-f]{64}$/.test(token) ||
-        !Number.isInteger(idFilhoTarefa) ||
-        idFilhoTarefa <= 0 ||
+        !Number.isInteger(idOcorrencia) ||
+        idOcorrencia <= 0 ||
         (observacao !== null && observacao.length > 120)
       ) {
         return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
       }
 
-      const { data, error } = await admin.rpc("criar_revisao_tarefa_filho_interno", {
+      const { data, error } = await admin.rpc("criar_revisao_ocorrencia_filho_interno", {
         p_token: token,
-        p_id_filho_tarefa: idFilhoTarefa,
+        p_id_ocorrencia: idOcorrencia,
         p_observacao: observacao || null,
       });
 
       if (error) {
-        console.error("Erro ao criar revisão da tarefa do filho:", error);
+        console.error("Erro ao criar revisão da ocorrência do filho:", error);
         return json({ error: "Não foi possível pedir a revisão ao responsável" }, 500);
       }
 
@@ -296,7 +297,7 @@ serve(async (req) => {
         const codigo = typeof retorno?.codigo === "string" ? retorno.codigo : "REQUISICAO_INVALIDA";
         const status =
           codigo === "SESSAO_INVALIDA" ? 401 :
-          codigo === "TAREFA_INVALIDA" ? 403 :
+          codigo === "OCORRENCIA_INVALIDA" ? 403 :
           codigo === "REVISAO_INDISPONIVEL" || codigo === "VIGENCIA_INATIVA" ? 409 :
           400;
         return json(retorno ?? { ok: false, codigo }, status);
@@ -332,7 +333,8 @@ serve(async (req) => {
           target: "revisao_tarefa_filho",
           route: "/ocorrencias",
           id_filho: String(idFilho),
-          id_filho_tarefa: String(idFilhoTarefa),
+          id_ocorrencia: String(idOcorrencia),
+          id_filho_tarefa: String(revisao?.id_filho_tarefa ?? ""),
           id_revisao: String(revisao?.id ?? ""),
           data_referencia: String(revisao?.data_referencia ?? ""),
         },
