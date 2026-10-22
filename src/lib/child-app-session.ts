@@ -370,7 +370,7 @@ export async function avisarTarefaConcluida(
   const data = await chamarAcessoFilho({
     acao: "avisar_tarefa_concluida",
     token,
-    id_ocorrencia: idOcorrencia,
+    id_filho_tarefa: idFilhoTarefa,
     observacao: observacao?.trim() || null,
   });
 
@@ -391,7 +391,7 @@ export async function pedirRevisaoTarefa(
   const data = await chamarAcessoFilho({
     acao: "pedir_revisao_nao_fez",
     token,
-    id_filho_tarefa: idFilhoTarefa,
+    id_ocorrencia: idOcorrencia,
     observacao: observacao?.trim() || null,
   });
 
