@@ -22,8 +22,7 @@ export function ActionLoadingProvider({ children }: { children: ReactNode }) {
     predicate: (query) => {
       const raiz = query.queryKey[0];
       const atualizacaoSilenciosa =
-        raiz === "solicitacoes_tarefa_filho" ||
-        raiz === "revisoes_tarefa_filho";
+        raiz === "solicitacoes_tarefa_filho";
 
       return !atualizacaoSilenciosa || query.state.data === undefined;
     },

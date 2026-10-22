@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Eye, EyeOff, Fingerprint, Home, Loader2, ShieldCheck, UserRound, Users } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Fingerprint, Loader2, ShieldCheck, UserRound, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
 import { obterSessaoResponsavelPersistida } from "@/lib/responsavel-session";
 import { AcessoFilhoLogin } from "@/components/AcessoFilhoLogin";
 import { PainelFilhoApp } from "@/components/PainelFilhoApp";
+import { AppBrand } from "@/components/AppBrand";
 import {
   encerrarSessaoFilho,
   lerSessaoFilhoLocal,
@@ -349,7 +350,7 @@ function Index() {
         </div>
       )}
       <section className="relative flex flex-col justify-between overflow-hidden bg-primary p-4 text-primary-foreground sm:p-6 md:p-8 lg:p-14">
-        <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground sm:h-9 sm:w-9 lg:h-10 lg:w-10 lg:rounded-xl"><Home className="h-4 w-4 lg:h-5 lg:w-5" /></span><span className="flex flex-col items-start leading-none"><span className="font-display text-xl font-bold lg:text-2xl">Combinado</span><span className="-mt-0.5 text-[11px] font-semibold tracking-wide opacity-80 lg:-mt-1 lg:text-[13px]">família</span></span></div>
+        <AppBrand inverse className="h-[3.25rem] md:h-16 [&_img]:h-[3.25rem] md:[&_img]:h-16" />
         <div className="my-4 sm:my-5 lg:my-12"><h1 className="max-w-lg text-4xl font-bold leading-tight md:text-6xl">Combinado é combinado. <span className="text-accent">Em família também.</span></h1><p className="mt-2 max-w-md text-sm leading-snug opacity-80 sm:text-base lg:mt-6 lg:text-lg lg:leading-normal">Defina tarefas e um período para cada filho. Cadastre uma penalidade escrita e um desconto por ocorrência: quem tem mesada recebe o desconto; quem não tem recebe a penalidade escrita. Acompanhe tudo em um só lugar.</p></div>
         <ul className="hidden gap-3 text-sm opacity-90 sm:grid sm:grid-cols-3 lg:grid"><li className="flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> Vários filhos</li><li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Ocorrências claras</li><li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-accent" /> Dados privados</li></ul>
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/20" />

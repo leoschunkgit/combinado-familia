@@ -3,9 +3,8 @@ import { savePdfDocument } from "@/lib/pdf-export";
 
 export type RelatorioPdfRegistro = {
   data: string;
-  resultado: "Fez" | "Não fez";
+  resultado: "Fez" | "Não fez" | "Não precisou";
   detalhe?: string | undefined;
-  penalidadeAtingida?: boolean;
 };
 
 export type RelatorioPdfTarefa = {
@@ -29,9 +28,7 @@ export type RelatorioPdfFilho = {
 export type RelatorioPdfVigencia = {
   periodo: string;
   status: string;
-  penalidade: string;
-  limite: string;
-  descontoMesada: string;
+  resumoConsequencias: string;
   filhos: RelatorioPdfFilho[];
 };
 
@@ -197,15 +194,14 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
     doc.text(vigencia.periodo, MARGIN + 5, y + 13);
     y += 22;
 
-    const boxGap = 4;
-    const boxWidth = (CONTENT_WIDTH - boxGap) / 2;
-    const yInicial = y;
-    caixa("Penalidade / limite", `${vigencia.penalidade} · ${vigencia.limite}`, MARGIN, boxWidth, "ambar");
-    const yEsquerda = y;
-    y = yInicial;
-    caixa("Desconto da mesada", vigencia.descontoMesada, MARGIN + boxWidth + boxGap, boxWidth, "verde");
-    const yDireita = y;
-    y = Math.max(yEsquerda, yDireita) + 2;
+    caixa(
+      "Consequências do “Não fez”",
+      vigencia.resumoConsequencias,
+      MARGIN,
+      CONTENT_WIDTH,
+      "neutro",
+    );
+    y += 2;
 
     for (const filho of vigencia.filhos) {
       garantirEspaco(20);
@@ -314,9 +310,7 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
         desenharCabecalhoRegistros();
 
         for (const [indiceRegistro, registro] of tarefa.registros.entries()) {
-          const detalhe = [registro.detalhe, registro.penalidadeAtingida ? "Penalidade atingida" : ""]
-            .filter(Boolean)
-            .join(" · ") || "—";
+          const detalhe = registro.detalhe || "—";
           const linhasDetalhe = doc.splitTextToSize(detalhe, larguraDetalhe) as string[];
           const altura = Math.max(8, linhasDetalhe.length * 3.6 + 3.5);
 
@@ -340,11 +334,15 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
           doc.text(registro.data, xData, y + 4.8);
 
           const corResultado: [number, number, number] =
-            registro.resultado === "Fez" ? [55, 125, 80] : [175, 65, 65];
+            registro.resultado === "Fez"
+              ? [55, 125, 80]
+              : registro.resultado === "Não fez"
+                ? [175, 65, 65]
+                : [95, 105, 100];
           doc.setFillColor(
-            registro.resultado === "Fez" ? 239 : 252,
-            registro.resultado === "Fez" ? 248 : 241,
-            registro.resultado === "Fez" ? 242 : 241,
+            registro.resultado === "Fez" ? 239 : registro.resultado === "Não fez" ? 252 : 245,
+            registro.resultado === "Fez" ? 248 : registro.resultado === "Não fez" ? 241 : 246,
+            registro.resultado === "Fez" ? 242 : registro.resultado === "Não fez" ? 241 : 245,
           );
           doc.roundedRect(xResultado - 1.5, y + 1.4, 24, 5.2, 2.6, 2.6, "F");
           doc.setFont("helvetica", "bold");

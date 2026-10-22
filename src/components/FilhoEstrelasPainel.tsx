@@ -38,8 +38,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     | null
   >(null);
 
-  async function carregar() {
-    setCarregando(true);
+  async function carregar(silencioso = false) {
+    if (!silencioso) setCarregando(true);
     try {
       const { data, error } = await supabase.rpc("resumo_estrelas_filho", {
         p_id_filho: filho.id,
@@ -50,9 +50,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       const proximoResumo = (data as unknown as ResumoEstrelas | null) ?? resumoEstrelasVazio;
       setResumo(proximoResumo);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível carregar as estrelas.");
+      if (!silencioso) {
+        toast.error(error instanceof Error ? error.message : "Não foi possível carregar as estrelas.");
+      }
     } finally {
-      setCarregando(false);
+      if (!silencioso) setCarregando(false);
     }
   }
 
@@ -66,6 +68,12 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     setRecompensasAbertas(false);
     setConfirmacao(null);
     void carregar();
+
+    const intervalo = window.setInterval(() => {
+      void carregar(true);
+    }, 5_000);
+
+    return () => window.clearInterval(intervalo);
   }, [filho.id]);
 
   function limparForm() {
@@ -85,6 +93,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   }
 
   function editarRecompensa(recompensa: RecompensaEstrelaResumo) {
+    if (!recompensa.pode_editar) {
+      toast.error("Aguarde a recompensa ser marcada como aproveitada para editar.");
+      return;
+    }
+
     setEditando(recompensa);
     setNome(recompensa.nome);
     setDescricao(recompensa.descricao ?? "");
@@ -130,6 +143,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   async function confirmarAcao() {
     if (!confirmacao) return;
 
+    let resumoAtualizado: ResumoEstrelas | null = null;
+
     setSalvando(true);
     try {
       if (confirmacao.tipo === "APROVEITOU") {
@@ -138,7 +153,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         });
         if (error) throw error;
 
-        const retorno = data as unknown as { ok?: boolean; codigo?: string } | null;
+        const retorno = data as unknown as {
+          ok?: boolean;
+          codigo?: string;
+          resumo?: ResumoEstrelas;
+        } | null;
         if (!retorno?.ok) {
           if (retorno?.codigo === "RECOMPENSA_INDISPONIVEL") {
             throw new Error("Esta recompensa já foi concluída ou não está mais disponível.");
@@ -146,6 +165,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           throw new Error("Não foi possível confirmar a recompensa.");
         }
 
+        resumoAtualizado = retorno.resumo ?? null;
         toast.success("Recompensa marcada como aproveitada");
       } else if (confirmacao.tipo === "DESATIVAR") {
         const { error } = await supabase.rpc("desativar_recompensa_estrelas", {
@@ -162,7 +182,11 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       }
 
       setConfirmacao(null);
-      await carregar();
+      if (resumoAtualizado) {
+        setResumo(resumoAtualizado);
+      } else {
+        await carregar();
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível concluir a ação.");
     } finally {
@@ -171,7 +195,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
   }
 
   const recompensasOrdenadas = [...resumo.recompensas].sort((a, b) => a.id - b.id);
-  const recompensaEditandoTemPendente = editando?.pendente === true;
 
   if (carregando) {
     return (
@@ -224,13 +247,44 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                 Math.max(0, (progressoExibido / metaExibida) * 100),
               );
               return (
-                <article key={recompensa.id} className="rounded-xl border bg-clean-surface p-3 shadow-sm sm:p-4">
+                <article key={recompensa.id} className="rounded-xl border bg-clean-surface p-3 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-semibold">{recompensa.nome_exibicao}</p>
                       {recompensa.descricao_exibicao && <p className="mt-0.5 break-words text-xs text-muted-foreground">{recompensa.descricao_exibicao}</p>}
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{metaExibida}</span>
+
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span className="inline-flex items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{metaExibida}</span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome_exibicao}`}>
+                            <EllipsisVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem
+                            disabled={!recompensa.pode_editar}
+                            title={!recompensa.pode_editar ? "Aguarde a recompensa ser marcada como aproveitada." : undefined}
+                            onSelect={() => editarRecompensa(recompensa)}
+                          >
+                            <Pencil className="h-4 w-4" />Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!recompensa.pode_desativar}
+                            title={!recompensa.pode_desativar ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
+                            onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}
+                          >
+                            <X className="h-4 w-4" />Desativar
+                          </DropdownMenuItem>
+                          {recompensa.pode_excluir && (
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
+                              <Trash2 className="h-4 w-4" />Excluir
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
                   <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -260,30 +314,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-end gap-2 border-t pt-3">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome_exibicao}`}>
-                          <EllipsisVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onSelect={() => editarRecompensa(recompensa)}><Pencil className="h-4 w-4" />Editar</DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={!recompensa.pode_desativar}
-                          title={!recompensa.pode_desativar ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
-                          onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}
-                        >
-                          <X className="h-4 w-4" />Desativar
-                        </DropdownMenuItem>
-                        {recompensa.pode_excluir && (
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
-                            <Trash2 className="h-4 w-4" />Excluir
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
                 </article>
               );
             })}
@@ -325,12 +355,6 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
               </div>
             </div>
 
-            {recompensaEditandoTemPendente && (
-              <p className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-                Nome e descrição são atualizados agora. Se a quantidade de estrelas mudar, a conquista atual mantém a meta que já foi alcançada; a nova quantidade vale para o próximo ciclo.
-              </p>
-            )}
-
             <DialogFooter>
               <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
               <Button type="submit" disabled={salvando}>
@@ -358,7 +382,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
               ? `Confirme que ${filho.nome} já aproveitou “${confirmacao.recompensa.nome_exibicao}”. A nova contagem começa a partir das próximas estrelas.`
               : confirmacao?.tipo === "DESATIVAR"
                 ? "A recompensa deixa de aparecer nos próximos ciclos. O histórico já existente permanece."
-                : "Esta recompensa nunca foi conquistada e será excluída definitivamente."}
+                : "Esta recompensa será excluída. As estrelas já conquistadas e o histórico existente serão preservados."}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmacao(null)}>Voltar</Button>

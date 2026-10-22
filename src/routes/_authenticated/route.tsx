@@ -2,14 +2,13 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, ListPlus, MessageSquareText, ShieldCheck, Smartphone, Star } from "lucide-react";
+import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, ListPlus, MessageSquareText, ShieldCheck, Smartphone, Star, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import { useActionLoading } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
-import { CheckinDiario } from "@/components/CheckinDiario";
 import { msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
@@ -20,6 +19,7 @@ import { AppSystemStatus } from "@/components/AppSystemStatus";
 import { AppBrand } from "@/components/AppBrand";
 import { AppPageContent } from "@/components/AppPageContent";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
+import { FilhoThemeToggle } from "@/components/FilhoThemeToggle";
 import { Hint } from "@/components/Hint";
 import { desativarPushAtual } from "@/lib/push-notifications";
 import { registrarTelemetriaApp } from "@/lib/app-telemetry";
@@ -31,6 +31,12 @@ import {
   encerrarSessaoResponsavelNesteAparelho,
   obterUsuarioResponsavelPersistido,
 } from "@/lib/responsavel-session";
+import {
+  getThemePreference,
+  resolveTheme,
+  saveThemePreference,
+  THEME_CHANGE_EVENT,
+} from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -88,11 +94,11 @@ const NAV_ITENS: NavItem[] = [
 ];
 
 const ETAPAS = [
-  { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se marcar ‘Tem mesada’, preencha também o valor: nesse caso, cada ‘Não fez’ gera o desconto definido na vigência." },
+  { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se ele recebe mesada, marque essa opção e informe o valor. A consequência de cada “Não fez” será escolhida no momento da marcação." },
   { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
-  { to: "/vigencias", label: "Vigências", title: "Defina o período e as regras", rule: "Escolha as datas, o limite de ‘Não fez’, a penalidade escrita e o desconto por ocorrência. Com mesada, aplica-se o desconto; sem mesada, a penalidade escrita ao atingir o limite." },
-  { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Uma atribuição que já tenha registro de ‘Fez’ ou ‘Não fez’ não pode ser excluída; outras atribuições sem histórico continuam independentes." },
-  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre ‘Fez’ ou ‘Não fez’ na data em que aconteceu. Para filho sem mesada, o limite de penalidade soma os ‘Não fez’ de todas as tarefas na vigência; com mesada, cada ‘Não fez’ gera seu desconto." },
+  { to: "/vigencias", label: "Vigências", title: "Defina o período", rule: "Escolha apenas o início e o fim do combinado. A vigência organiza o período e as atribuições; as consequências pertencem a cada ocorrência." },
+  { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione a vigência, o filho e as tarefas. Uma atribuição que já tenha algum resultado não pode ser excluída; outras atribuições sem histórico continuam independentes." },
+  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre “Fez”, “Não fez” ou “Não precisou” na data em que aconteceu. “Não precisou” encerra a pendência sem estrela e sem consequência. Em cada “Não fez”, escolha de forma independente: nada, desconto da mesada (quando houver) ou penalidade." },
 ] as const;
 
 function AuthenticatedLayout() {
@@ -115,13 +121,31 @@ function AuthenticatedLayout() {
   const [menuDesktopRecolhido, setMenuDesktopRecolhido] = useState(false);
   const [menuUsuarioDesktopAberto, setMenuUsuarioDesktopAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
-  const [modalPendenciasAberto, setModalPendenciasAberto] = useState(false);
   const [confirmarCloneMenuAberto, setConfirmarCloneMenuAberto] = useState(false);
   const [feedbackAberto, setFeedbackAberto] = useState(false);
+  const [modoEscuro, setModoEscuro] = useState(() => resolveTheme(getThemePreference()) === "dark");
 
   useEffect(() => {
     void registrarTelemetriaApp();
   }, []);
+
+  useEffect(() => {
+    const sincronizarTema = () => setModoEscuro(resolveTheme(getThemePreference()) === "dark");
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+    window.addEventListener(THEME_CHANGE_EVENT, sincronizarTema);
+    media.addEventListener("change", sincronizarTema);
+
+    return () => {
+      window.removeEventListener(THEME_CHANGE_EVENT, sincronizarTema);
+      media.removeEventListener("change", sincronizarTema);
+    };
+  }, []);
+
+  const alterarModoEscuro = (escuro: boolean) => {
+    setModoEscuro(escuro);
+    saveThemePreference(escuro ? "dark" : "light");
+  };
 
   async function clonarPeloMenu() {
     try {
@@ -275,7 +299,6 @@ function AuthenticatedLayout() {
     <>
       {!saindo && <AppPushNotifications />}
       {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
-      {!saindo && configuracaoInicialConcluida && <CheckinDiario open={modalPendenciasAberto} onOpenChange={setModalPendenciasAberto} />}
       <div className="min-h-screen md:flex">
         <aside
           className={`native-sticky-safe-top sticky top-0 z-30 border-b bg-sidebar transition-[width,border-color] duration-300 ease-out md:sticky md:top-0 md:z-auto md:flex md:h-screen md:shrink-0 md:flex-col md:border-b-0 ${
@@ -429,6 +452,17 @@ function AuthenticatedLayout() {
                       Administração
                     </Link>
                   )}
+                  <div className="flex items-center justify-between gap-2 rounded-md px-2.5 py-2">
+                    <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Palette className="h-4 w-4" />
+                      Aparência
+                    </span>
+                    <FilhoThemeToggle
+                      modoEscuro={modoEscuro}
+                      onChange={alterarModoEscuro}
+                      comEstrela={false}
+                    />
+                  </div>
                   <div className="my-1 h-px bg-muted" />
                   <button
                     type="button"
@@ -555,6 +589,18 @@ function AuthenticatedLayout() {
                     Administração
                   </Link>
                 )}
+
+                <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
+                  <span className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+                    <Palette className="h-4 w-4" />
+                    Aparência
+                  </span>
+                  <FilhoThemeToggle
+                    modoEscuro={modoEscuro}
+                    onChange={alterarModoEscuro}
+                    comEstrela={false}
+                  />
+                </div>
 
                 <div className="my-2 h-px bg-border" />
 

@@ -23,7 +23,7 @@ function Inicio() {
     { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
     { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
     { numero: "3", titulo: "Faça as atribuições", texto: "Associe os filhos às tarefas e defina as vigências dos combinados.", to: "/atribuicoes", icon: Link2 },
-    { numero: "4", titulo: "Registre Fez / Não fez", texto: "Marque quando um combinado foi ou não foi cumprido e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
+    { numero: "4", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
     { numero: "5", titulo: "Histórico", texto: "Veja o que aconteceu ao longo das vigências, acompanhe os registros e gere relatórios.", to: "/relatorio", icon: History },
   ];
 
@@ -39,7 +39,7 @@ function Inicio() {
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">Você tem pendências para resolver</p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  {totalPendencias} {totalPendencias === 1 ? "registro precisa" : "registros precisam"} de “Fez” ou “Não fez”.
+                  {totalPendencias} {totalPendencias === 1 ? "registro precisa" : "registros precisam"} de um resultado.
                 </p>
               </div>
             </div>
@@ -118,7 +118,7 @@ function Inicio() {
           <div>
             <h2 className={uiTypography.secondaryTitle}>A primeira ação é cadastrar os filhos</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Depois disso, você poderá criar as tarefas, fazer as atribuições e definir as vigências. Quando estiver tudo configurado, os registros de Fez / Não fez ficam prontos para serem lançados e o histórico para ser consultado.
+              Depois disso, você poderá criar as tarefas, fazer as atribuições e definir as vigências. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados e o histórico para ser consultado.
             </p>
           </div>
         </div>

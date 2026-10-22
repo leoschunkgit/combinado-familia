@@ -2,14 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  AlertTriangle,
   BellRing,
   CalendarRange,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   EllipsisVertical,
-  Info,
+  Minus,
   Pencil,
   Star,
   ThumbsDown,
@@ -18,8 +17,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +32,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
@@ -43,20 +39,11 @@ import { Pick } from "@/components/Pick";
 import { Hint } from "@/components/Hint";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   fmtVigencia,
   msgErro,
   useFilhos,
   useFilhoTarefas,
   useOcorrencias,
-  resolverRevisaoTarefaFilho,
-  useRevisoesTarefaFilho,
   useSolicitacoesTarefaFilho,
   useVigencias,
   useTarefas,
@@ -64,18 +51,24 @@ import {
   type Ocorrencia,
   type Vigencia,
 } from "@/lib/db";
+import { reais } from "@/lib/mesada";
 import {
-  ocorrenciasPenalizadas,
-  registrarNaoFezComPenalidade,
-} from "@/lib/penalidade";
+  consequenciaEhDescontoAplicado,
+  consequenciaEhPenalidadeCumprida,
+  consequenciaEhPenalidadePendente,
+} from "@/lib/ocorrencia-model";
 import {
-  reais,
-  usaDesconto,
-  valorDebitado,
-} from "@/lib/mesada";
+  cumprirPenalidade,
+  desfazerOcorrencias,
+  registrarFez,
+  registrarNaoFez,
+  registrarNaoPrecisou,
+  type ConsequenciaNaoFezTipo,
+} from "@/lib/ocorrencia-service";
 import {
   botaoFezClass,
   botaoNaoFezClass,
+  botaoNaoPrecisouClass,
 } from "@/lib/action-button-styles";
 import { useActionLoading } from "@/components/ActionLoading";
 import {
@@ -84,7 +77,8 @@ import {
   vigenciaEmAndamento,
 } from "@/components/VigenciaStatus";
 import { uiTypography } from "@/lib/ui-typography";
-import { PenalidadeDialog } from "@/components/PenalidadeDialog";
+import { NaoFezDialog, type NaoFezDraft } from "@/components/NaoFezDialog";
+import { ConsequenciaOcorrenciaResumo } from "@/components/ConsequenciaOcorrenciaResumo";
 import {
   dataBrasil,
   dataPertenceAVigenciaAteHoje,
@@ -94,44 +88,45 @@ import {
 import { notificarRespostaFilho } from "@/lib/child-response-notifications";
 
 type ModoPagina = "todos" | "pendentes";
-type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 
 type FezDraft = {
-  modo: "REGISTRAR" | "EDITAR";
-  ocorrenciaId?: number;
   tarefa: FilhoTarefa;
   total: number;
   data: string;
-  bonusTipo: BonusTipo;
-  descricao: string;
-  valor: string;
 };
+
+type ResultadoOcorrencia = "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
 
 type Troca = {
-  direcao: "PARA_FEZ" | "PARA_NAO_FEZ";
+  alvo: ResultadoOcorrencia;
   tarefa: FilhoTarefa;
   total: number;
+  data: string;
   ocorrencia: Ocorrencia;
-  fez?: FezDraft;
 };
 
-type BonificacaoInfo = {
-  tarefa: FilhoTarefa;
-  total: number;
-  ocorrencia: Ocorrencia;
-};
+function rotuloResultado(tipo: string) {
+  if (tipo === "FEZ") return "Fez";
+  if (tipo === "NAO_FEZ") return "Não fez";
+  return "Não precisou";
+}
+
+function classeResultadoTexto(tipo: string) {
+  if (tipo === "FEZ") return "text-green-700 dark:text-green-300";
+  if (tipo === "NAO_FEZ") return "text-red-700 dark:text-red-300";
+  return "text-muted-foreground";
+}
 
 type ExcluirSelecionadasDraft = {
   tarefa: FilhoTarefa;
   ids: number[];
+  quantidadeProtegida?: number;
 };
 
-type PenalidadeDraft = {
+type NaoFezPageDraft = NaoFezDraft & {
   tarefa: FilhoTarefa;
   total: number;
-  data: string;
   existente?: Ocorrencia;
-  descricao: string;
 };
 
 export type FocoSolicitacaoTarefa = {
@@ -139,7 +134,6 @@ export type FocoSolicitacaoTarefa = {
   idFilhoTarefa?: number;
   data?: string;
   idSolicitacao?: number;
-  idRevisao?: number;
 };
 
 type FezNaoFezPageProps = {
@@ -169,7 +163,7 @@ function formatarHora(data: string) {
   }).format(new Date(data));
 }
 
-function valorBonificacaoNumero(valor: string) {
+function valorMonetarioNumero(valor: string) {
   if (!valor.trim()) return null;
   const numero = Number(valor.replace(",", "."));
   if (!Number.isFinite(numero)) return null;
@@ -185,11 +179,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const { data: solicitacoesTarefaFilho = [] } = useSolicitacoesTarefaFilho();
-  const { data: revisoesTarefaFilho = [] } = useRevisoesTarefaFilho();
   const hoje = useDataBrasilAtual();
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
 
-  const penalizadas = ocorrenciasPenalizadas(ocorrencias, vigencias);
   const filhoDaTarefa = (tarefa?: FilhoTarefa | null) =>
     tarefa ? filhos.find((filho) => filho.id === tarefa.id_filho) : undefined;
   const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -199,13 +191,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
-  const [fez, setFez] = useState<FezDraft | null>(null);
-  const [bonificacaoInfo, setBonificacaoInfo] = useState<BonificacaoInfo | null>(null);
   const [troca, setTroca] = useState<Troca | null>(null);
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
     useState<ExcluirSelecionadasDraft | null>(null);
-  const [penalidadePendente, setPenalidadePendente] =
-    useState<PenalidadeDraft | null>(null);
+  const [naoFez, setNaoFez] = useState<NaoFezPageDraft | null>(null);
   const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
   const [totaisEstrelas, setTotaisEstrelas] = useState<Record<number, number>>({});
   const [agora, setAgora] = useState(() => Date.now());
@@ -262,20 +251,23 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       ),
     [agora, vigenciasOrdenadas],
   );
+  const vigenciasOperacionais = vigenciasEmAndamento;
   useEffect(() => {
     setDiasSelecionados((atual) => {
       const proximo = { ...atual };
-      const idsAtivos = new Set(vigenciasEmAndamento.map((vigencia) => vigencia.id));
+      const idsOperacionais = new Set(
+        vigenciasOperacionais.map((vigencia) => vigencia.id),
+      );
       let mudou = false;
 
       for (const id of Object.keys(proximo)) {
-        if (!idsAtivos.has(Number(id))) {
+        if (!idsOperacionais.has(Number(id))) {
           delete proximo[Number(id)];
           mudou = true;
         }
       }
 
-      for (const vigencia of vigenciasEmAndamento) {
+      for (const vigencia of vigenciasOperacionais) {
         if (!(vigencia.id in proximo)) {
           proximo[vigencia.id] = hoje;
           mudou = true;
@@ -284,7 +276,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
       return mudou ? proximo : atual;
     });
-  }, [hoje, vigenciasEmAndamento]);
+  }, [hoje, vigenciasOperacionais]);
 
   function datasDoPeriodoDaVigencia(vigencia: Vigencia) {
     const inicio = dataBrasil(vigencia.data_inicio);
@@ -326,7 +318,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      for (const vigencia of vigenciasEmAndamento) {
+      for (const vigencia of vigenciasOperacionais) {
         const dataSelecionada = diasSelecionados[vigencia.id];
         const area = diasScrollRefs.current[vigencia.id];
         if (!dataSelecionada || !area) continue;
@@ -344,7 +336,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [diasSelecionados, vigenciasEmAndamento]);
+  }, [diasSelecionados, vigenciasOperacionais]);
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -367,13 +359,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         s.id_filho_tarefa === tarefa.id &&
         s.data_referencia === data &&
         s.status === "PENDENTE",
-    );
-
-  const revisaoNaData = (tarefa: FilhoTarefa, data: string) =>
-    revisoesTarefaFilho.find(
-      (r) =>
-        r.id_filho_tarefa === tarefa.id &&
-        r.data_referencia === data,
     );
 
   const diaTemPendencia = (vigenciaId: number, data: string) => {
@@ -410,10 +395,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     if (filtro.resultado === "NAO_FEZ") {
-      return datasFiltradas.filter((data) => {
-        const registro = registroNaData(tarefa, data);
-        return Boolean(registro && registro.tipo !== "FEZ");
-      });
+      return datasFiltradas.filter(
+        (data) => registroNaData(tarefa, data)?.tipo === "NAO_FEZ",
+      );
+    }
+
+    if (filtro.resultado === "NAO_PRECISOU") {
+      return datasFiltradas.filter(
+        (data) => registroNaData(tarefa, data)?.tipo === "NAO_PRECISOU",
+      );
     }
 
     return datasFiltradas;
@@ -424,6 +414,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
         return false;
       }
+
       if (filtro.tarefa !== "all" && tarefa.id_tarefa !== Number(filtro.tarefa)) {
         return false;
       }
@@ -442,7 +433,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       focoSolicitacao.idFilhoTarefa,
       focoSolicitacao.data ?? "",
       focoSolicitacao.idSolicitacao ?? "",
-      focoSolicitacao.idRevisao ?? "",
     ].join(":");
 
     if (ultimoFocoAplicado.current === chaveFoco) return;
@@ -453,12 +443,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     if (!atribuicao) return;
 
     const vigencia = vigencias.find((item) => item.id === atribuicao.id_vigencia);
-    if (!vigencia || !vigenciaEmAndamento(vigencia)) return;
+    if (!vigencia) return;
 
+    if (!vigenciaEmAndamento(vigencia)) return;
+    const dataPreferida = focoSolicitacao.data;
     const dataFoco =
-      focoSolicitacao.data &&
-      dataPertenceAVigenciaAteHoje(vigencia, focoSolicitacao.data, hoje)
-        ? focoSolicitacao.data
+      dataPreferida &&
+      dataPertenceAVigenciaAteHoje(vigencia, dataPreferida, hoje)
+        ? dataPreferida
         : hoje;
 
     const proximoFiltro = {
@@ -480,10 +472,16 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }));
 
     ultimoFocoAplicado.current = chaveFoco;
-  }, [atribuicoes, focoSolicitacao, hoje, isLoading, vigencias]);
+  }, [
+    atribuicoes,
+    focoSolicitacao,
+    hoje,
+    isLoading,
+    vigencias,
+  ]);
 
   const idsVigenciasRascunho = new Set(
-    vigenciasEmAndamento.map((vigencia) => vigencia.id),
+    vigenciasOperacionais.map((vigencia) => vigencia.id),
   );
   const atribuicoesRascunho = atribuicoes.filter((item) =>
     idsVigenciasRascunho.has(item.id_vigencia),
@@ -533,7 +531,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       );
     });
 
-  const vigenciasParaExibir = vigenciasEmAndamento
+  const vigenciasParaExibir = vigenciasOperacionais
     .filter((vigencia) =>
       filhosEstruturais.some(
         (filho) => tarefasEstruturais(vigencia, filho.id).length > 0,
@@ -587,7 +585,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      for (const vigencia of vigenciasEmAndamento) {
+      for (const vigencia of vigenciasOperacionais) {
         const filhoSelecionado = filhosSelecionados[vigencia.id];
         const area = filhosScrollRefs.current[vigencia.id];
         if (!filhoSelecionado || !area) continue;
@@ -607,7 +605,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [filhosSelecionados, vigenciasEmAndamento]);
+  }, [filhosSelecionados, vigenciasOperacionais]);
 
   useEffect(() => {
     if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
@@ -633,12 +631,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     );
   }
 
-  async function salvarNaoFez(
+  function abrirNaoFez(
     tarefa: FilhoTarefa,
     total: number,
     data: string,
     existente?: Ocorrencia,
-    penalidadeTexto?: string,
   ) {
     const vigencia = tarefa.t_vigencia;
     if (!vigencia || !vigenciaEmAndamento(vigencia)) {
@@ -653,61 +650,136 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       return;
     }
 
-    const filho = filhos.find((item) => item.id === tarefa.id_filho);
-    const vigenciaCompleta = vigencias.find(
-      (item) => item.id === tarefa.id_vigencia,
-    );
+    const filho = filhoDaTarefa(tarefa);
+    if (!filho) {
+      toast.error("Filho não encontrado");
+      return;
+    }
+
+    const consequenciaAtual = existente?.t_ocorrencia_consequencia;
+    const temMesada =
+      filho.tem_mesada_opcional === true && filho.valor_mesada !== null;
+    const tipoAtual: ConsequenciaNaoFezTipo =
+      consequenciaAtual?.tipo === "DESCONTO" && temMesada
+        ? "DESCONTO"
+        : consequenciaAtual?.tipo === "PENALIDADE"
+          ? "PENALIDADE"
+          : "NENHUMA";
+
+    setNaoFez({
+      tarefa,
+      total,
+      data,
+      existente,
+      quantidadeNaoFezAtual: total,
+      filhoNome: filho.nome,
+      filhoCor: filho.cor,
+      filhoAvatar: filho.avatar,
+      tarefaNome: tarefa.t_tarefa?.nome ?? "Tarefa",
+      temMesada,
+      consequenciaTipo: tipoAtual,
+      descontoValor:
+        tipoAtual === "DESCONTO" && consequenciaAtual?.desconto_valor != null
+          ? String(consequenciaAtual.desconto_valor).replace(".", ",")
+          : "",
+      penalidadeDescricao:
+        tipoAtual === "PENALIDADE"
+          ? consequenciaAtual?.penalidade_descricao ?? ""
+          : "",
+    });
+  }
+
+  async function salvarNaoFez(draft: NaoFezPageDraft) {
+    const { tarefa, data, existente } = draft;
+    const vigencia = tarefa.t_vigencia;
+
+    if (!vigencia || !vigenciaEmAndamento(vigencia)) {
+      toast.error("Ações só podem ser feitas em uma vigência em andamento");
+      return;
+    }
+
+    if (!dataValida(tarefa, data)) {
+      toast.error(
+        "A data do “Não fez” deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência",
+      );
+      return;
+    }
+
+    const descontoValor =
+      draft.consequenciaTipo === "DESCONTO"
+        ? valorMonetarioNumero(draft.descontoValor)
+        : null;
+
+    if (
+      draft.consequenciaTipo === "DESCONTO" &&
+      (descontoValor === null || descontoValor <= 0)
+    ) {
+      toast.error("Informe um valor de desconto maior que zero");
+      return;
+    }
+
+    if (
+      draft.consequenciaTipo === "PENALIDADE" &&
+      (draft.penalidadeDescricao.trim().length < 2 ||
+        draft.penalidadeDescricao.trim().length > 200)
+    ) {
+      toast.error("Informe uma penalidade entre 2 e 200 caracteres");
+      return;
+    }
+
     const solicitacaoPendente = solicitacaoNaData(tarefa, data);
 
     setBusy(true);
     try {
-      const resultado = await registrarNaoFezComPenalidade({
-        tarefa,
-        filho,
-        vigenciaCompleta,
-        filhos,
-        ocorrencias,
-        dataIso: new Date(data + "T12:00:00-03:00").toISOString(),
-        existente,
-        penalidadeTexto,
+      const resultado = await registrarNaoFez({
+        idOcorrencia: existente?.id,
+        idFilhoTarefa: existente ? undefined : tarefa.id,
+        dataIso: existente
+          ? undefined
+          : new Date(data + "T12:00:00-03:00").toISOString(),
+        consequenciaTipo: draft.consequenciaTipo,
+        descontoValor,
+        penalidadeDescricao:
+          draft.consequenciaTipo === "PENALIDADE"
+            ? draft.penalidadeDescricao.trim()
+            : null,
+        motivo:
+          existente?.tipo === "FEZ"
+            ? "Alteração de Fez para Não fez"
+            : existente?.tipo === "NAO_PRECISOU"
+              ? "Alteração de Não precisou para Não fez"
+              : "Registro de Não fez",
       });
-
-      if (resultado.status === "PRECISA_PENALIDADE") {
-        setTroca(null);
-        setPenalidadePendente({
-          tarefa,
-          total: resultado.totalAtual,
-          data,
-          existente,
-          descricao: "",
-        });
-        return;
-      }
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
-        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
         solicitacaoPendente
           ? notificarRespostaFilho("SOLICITACAO", solicitacaoPendente.id)
           : Promise.resolve(null),
       ]);
-      setTroca(null);
-      setPenalidadePendente(null);
 
-      if (resultado.comDesconto && filho) {
+      setNaoFez(null);
+      setTroca(null);
+
+      const resposta = resultado as {
+        contador_nao_fez_vigencia?: number;
+      } | null;
+      const contador = Number(resposta?.contador_nao_fez_vigencia ?? 0);
+
+      if (draft.consequenciaTipo === "DESCONTO" && descontoValor !== null) {
         toast.success(
-          `“Não fez” registrado · Desconto acumulado: ${reais(
-            valorDebitado(filho, vigencia, resultado.novoTotal),
-          )}`,
+          `“Não fez” registrado · Desconto: ${reais(descontoValor)} · Total na vigência: ${contador}`,
         );
-      } else if (resultado.penalizado) {
-        toast.warning(`Limite atingido! Penalidade: ${resultado.penalidade}`);
+      } else if (draft.consequenciaTipo === "PENALIDADE") {
+        toast.success(
+          `“Não fez” registrado · Penalidade pendente · Total na vigência: ${contador}`,
+        );
       } else {
         toast.success(
-          `“Não fez” registrado (${resultado.novoTotal}/${vigencia.qtd_ocorrencia})`,
+          `“Não fez” registrado · Total na vigência: ${contador}`,
         );
       }
     } catch (error) {
@@ -729,28 +801,18 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
-    if (existente?.tipo === "FEZ") {
-      setTroca({
-        direcao: "PARA_NAO_FEZ",
-        tarefa,
-        total,
-        ocorrencia: existente,
-      });
+    if (existente && existente.tipo !== "NAO_FEZ") {
+      abrirTrocaMarcacao(tarefa, total, data, existente, "NAO_FEZ");
       return;
     }
+
     if (existente) return;
-    void runAction(() => salvarNaoFez(tarefa, total, data));
+    abrirNaoFez(tarefa, total, data);
   }
 
-  async function confirmarPenalidade() {
-    if (!penalidadePendente) return;
-    await salvarNaoFez(
-      penalidadePendente.tarefa,
-      penalidadePendente.total,
-      penalidadePendente.data,
-      penalidadePendente.existente,
-      penalidadePendente.descricao.trim(),
-    );
+  async function confirmarNaoFez() {
+    if (!naoFez) return;
+    await salvarNaoFez(naoFez);
   }
 
   function abrirFez(
@@ -759,46 +821,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
-    const draft: FezDraft = {
-      modo: "REGISTRAR",
-      tarefa,
-      total,
-      data,
-      bonusTipo: "NENHUMA",
-      descricao: "",
-      valor: "",
-      ...(existente ? { ocorrenciaId: existente.id } : {}),
-    };
-
-    void runAction(() => salvarFez(draft, existente));
-  }
-
-  function abrirEdicaoBonificacao(info: BonificacaoInfo) {
-    const { tarefa, total, ocorrencia } = info;
-    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
-      toast.error("Ações só podem ser feitas em uma vigência em andamento");
+    if (existente && existente.tipo !== "FEZ") {
+      abrirTrocaMarcacao(tarefa, total, data, existente, "FEZ");
       return;
     }
+    if (existente) return;
 
-    setBonificacaoInfo(null);
-    setFez({
-      modo: "EDITAR",
-      ocorrenciaId: ocorrencia.id,
-      tarefa,
-      total,
-      data: dataBrasil(ocorrencia.created_at),
-      bonusTipo:
-        ocorrencia.bonificacao_tipo === "TEXTO"
-          ? "TEXTO"
-          : ocorrencia.bonificacao_tipo === "VALOR"
-            ? "VALOR"
-            : "NENHUMA",
-      descricao: ocorrencia.bonificacao_descricao ?? "",
-      valor:
-        ocorrencia.bonificacao_valor == null
-          ? ""
-          : String(ocorrencia.bonificacao_valor).replace(".", ","),
-    });
+    const draft: FezDraft = { tarefa, total, data };
+    void runAction(() => salvarFez(draft));
   }
 
   function abrirTrocaMarcacao(
@@ -806,44 +836,38 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     total: number,
     data: string,
     registro: Ocorrencia,
+    alvo: ResultadoOcorrencia,
   ) {
-    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
+    if (registro.tipo === alvo) return;
+
+    if (
+      consequenciaEhPenalidadeCumprida(
+        registro.t_ocorrencia_consequencia,
+      )
+    ) {
+      toast.error(
+        "Não é possível alterar este resultado porque a penalidade já foi cumprida",
+      );
+      return;
+    }
+
+
+    if (
+      !tarefa.t_vigencia ||
+      (!vigenciaEmAndamento(tarefa.t_vigencia))
+    ) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
     }
 
-    if (registro.tipo === "FEZ") {
-      setTroca({
-        direcao: "PARA_NAO_FEZ",
-        tarefa,
-        total,
-        ocorrencia: registro,
-      });
-      return;
-    }
-
-    setTroca({
-      direcao: "PARA_FEZ",
-      tarefa,
-      total,
-      ocorrencia: registro,
-      fez: {
-        modo: "REGISTRAR",
-        ocorrenciaId: registro.id,
-        tarefa,
-        total,
-        data,
-        bonusTipo: "NENHUMA",
-        descricao: "",
-        valor: "",
-      },
-    });
+    setTroca({ alvo, tarefa, total, data, ocorrencia: registro });
   }
 
   async function salvarFez(draft: FezDraft, existente?: Ocorrencia) {
     const tarefa = draft.tarefa;
     const vigencia = tarefa.t_vigencia;
-    if (!vigencia || !vigenciaEmAndamento(vigencia)) {
+
+    if (!vigencia || (!vigenciaEmAndamento(vigencia))) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
     }
@@ -853,77 +877,43 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       );
       return;
     }
-    if (draft.bonusTipo === "TEXTO" && !draft.descricao.trim()) {
-      toast.error("Informe a bonificação escrita");
-      return;
-    }
-
-    const valor =
-      draft.bonusTipo === "VALOR"
-        ? valorBonificacaoNumero(draft.valor)
-        : null;
-    if (
-      draft.bonusTipo === "VALOR" &&
-      (valor === null || valor <= 0)
-    ) {
-      toast.error("Informe um valor de bonificação maior que zero");
-      return;
-    }
-
     const gerouEstrela = !existente || existente.tipo !== "FEZ";
-    const revisaoPendente = revisaoNaData(tarefa, draft.data);
     const solicitacaoPendente = solicitacaoNaData(tarefa, draft.data);
     const interacaoPendente =
-      revisaoPendente?.status === "PENDENTE"
-        ? { tipo: "REVISAO" as const, id: revisaoPendente.id }
-        : solicitacaoPendente
+      solicitacaoPendente
           ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
           : null;
 
     setBusy(true);
     try {
-      const payload = {
-        tipo: "FEZ",
-        bonificacao_tipo:
-          draft.bonusTipo === "NENHUMA" ? null : draft.bonusTipo,
-        bonificacao_descricao:
-          draft.bonusTipo === "TEXTO" ? draft.descricao.trim() : null,
-        bonificacao_valor: draft.bonusTipo === "VALOR" ? valor : null,
-      };
-      const resposta = existente
-        ? await supabase
-            .from("t_ocorrencia")
-            .update(payload)
-            .eq("id", existente.id)
-        : await supabase.from("t_ocorrencia").insert({
-            ...payload,
-            id_filho_tarefa: tarefa.id,
-            created_at: new Date(
-              draft.data + "T12:00:00-03:00",
-            ).toISOString(),
-          });
-
-      if (resposta.error) {
-        toast.error(msgErro(resposta.error));
-        return;
-      }
+      await registrarFez({
+        idOcorrencia: existente?.id,
+        idFilhoTarefa: existente ? undefined : tarefa.id,
+        dataIso: existente
+          ? undefined
+          : new Date(draft.data + "T12:00:00-03:00").toISOString(),
+        motivo:
+          existente?.tipo === "NAO_FEZ"
+            ? "Alteração de Não fez para Fez"
+            : existente?.tipo === "NAO_PRECISOU"
+              ? "Alteração de Não precisou para Fez"
+              : "Registro de Fez",
+      });
 
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
         qc.invalidateQueries({ queryKey: ["vigencias"] }),
         qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
         qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
-        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
         interacaoPendente
           ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
           : Promise.resolve(null),
       ]);
-      setFez(null);
       setTroca(null);
       toast.success(
         gerouEstrela
           ? "“Fez” registrado · +1 estrela"
-          : "Recompensa extra atualizada",
+          : "“Fez” atualizado",
       );
     } catch (error) {
       toast.error(
@@ -934,41 +924,80 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
   }
 
-  async function confirmarFez() {
-    if (!fez) return;
+  async function salvarNaoPrecisou(
+    tarefa: FilhoTarefa,
+    data: string,
+    existente?: Ocorrencia,
+  ) {
+    const vigencia = tarefa.t_vigencia;
 
-    if (fez.modo === "EDITAR") {
-      const existente = ocorrencias.find(
-        (o) => o.id === fez.ocorrenciaId && o.tipo === "FEZ",
-      );
-      if (!existente) {
-        toast.error("Registro de “Fez” não encontrado");
-        return;
-      }
-      await salvarFez(fez, existente);
+    if (!vigencia || (!vigenciaEmAndamento(vigencia))) {
+      toast.error("Ações só podem ser feitas em uma vigência em andamento");
       return;
     }
-
-    const existente = registroNaData(fez.tarefa, fez.data);
-    if (existente) {
-      if (existente.tipo !== "FEZ") {
-        setTroca({
-          direcao: "PARA_FEZ",
-          tarefa: fez.tarefa,
-          total: fez.total,
-          ocorrencia: existente,
-          fez,
-        });
-        setFez(null);
-        return;
-      }
+    if (!dataValida(tarefa, data)) {
       toast.error(
-        "Já existe um “Fez” para esta tarefa nesta data.",
+        "A data do “Não precisou” deve estar entre o início da vigência e hoje, sem ultrapassar o fim da vigência",
       );
       return;
     }
 
-    await salvarFez(fez);
+    const solicitacaoPendente = solicitacaoNaData(tarefa, data);
+    const interacaoPendente =
+      solicitacaoPendente
+          ? { tipo: "SOLICITACAO" as const, id: solicitacaoPendente.id }
+          : null;
+
+    setBusy(true);
+    try {
+      await registrarNaoPrecisou({
+        idOcorrencia: existente?.id,
+        idFilhoTarefa: existente ? undefined : tarefa.id,
+        dataIso: existente
+          ? undefined
+          : new Date(data + "T12:00:00-03:00").toISOString(),
+        motivo:
+          existente?.tipo === "FEZ"
+            ? "Alteração de Fez para Não precisou"
+            : existente?.tipo === "NAO_FEZ"
+              ? "Alteração de Não fez para Não precisou"
+              : "Registro de Não precisou",
+      });
+
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
+        qc.invalidateQueries({ queryKey: ["vigencias"] }),
+        qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
+        qc.invalidateQueries({ queryKey: ["solicitacoes_tarefa_filho"] }),
+        interacaoPendente
+          ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
+          : Promise.resolve(null),
+      ]);
+
+      setTroca(null);
+      toast.success("“Não precisou” registrado");
+    } catch (error) {
+      toast.error(
+        msgErro(error instanceof Error ? { message: error.message } : null),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function solicitarNaoPrecisou(
+    tarefa: FilhoTarefa,
+    total: number,
+    data: string,
+    existente?: Ocorrencia,
+  ) {
+    if (existente && existente.tipo !== "NAO_PRECISOU") {
+      abrirTrocaMarcacao(tarefa, total, data, existente, "NAO_PRECISOU");
+      return;
+    }
+    if (existente) return;
+
+    void runAction(() => salvarNaoPrecisou(tarefa, data));
   }
 
   async function excluirSelecionadas(item: ExcluirSelecionadasDraft) {
@@ -982,16 +1011,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("t_ocorrencia")
-        .delete()
-        .in("id", ids);
-      if (error) {
-        toast.error(msgErro(error));
-        return;
-      }
+      const resultado = await desfazerOcorrencias(ids);
+      const idsDesfeitos = resultado.ids_desfeitos ?? [];
 
-      const projetadas = ocorrencias.filter((o) => !ids.includes(o.id));
+      const projetadas = ocorrencias.filter(
+        (o) => !idsDesfeitos.includes(o.id),
+      );
       qc.setQueryData<Ocorrencia[]>(["ocorrencias"], projetadas);
 
       await Promise.all([
@@ -1011,18 +1036,32 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
           queryKey: ["solicitacoes_tarefa_filho"],
           refetchType: "all",
         }),
-        qc.invalidateQueries({
-          queryKey: ["revisoes_tarefa_filho"],
-          refetchType: "all",
-        }),
       ]);
 
       setConfirmarExcluirSelecionadas(null);
-      toast.success(
-        ids.length === 1
-          ? "Marcação desfeita · estrelas conquistadas permanecem"
-          : "Marcações desfeitas · estrelas conquistadas permanecem",
-      );
+
+      if (resultado.quantidade_preservada > 0) {
+        const preservadas = resultado.quantidade_preservada;
+        const desfeitas = resultado.quantidade_desfeita;
+
+        if (desfeitas > 0) {
+          toast.success(
+            `${desfeitas} ${desfeitas === 1 ? "marcação desfeita" : "marcações desfeitas"}. ${preservadas} ${preservadas === 1 ? "foi preservada" : "foram preservadas"} por já ${preservadas === 1 ? "ter" : "terem"} penalidade cumprida.`,
+          );
+        } else {
+          toast.info(
+            preservadas === 1
+              ? "A marcação foi preservada porque a penalidade já foi cumprida."
+              : "As marcações foram preservadas porque as penalidades já foram cumpridas.",
+          );
+        }
+      } else {
+        toast.success(
+          resultado.quantidade_desfeita === 1
+            ? "Marcação desfeita"
+            : "Marcações desfeitas",
+        );
+      }
     } catch (error) {
       toast.error(
         msgErro(error instanceof Error ? { message: error.message } : null),
@@ -1032,15 +1071,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
   }
 
-  async function manterNaoFezRevisao(idRevisao: number) {
+  async function marcarPenalidadeCumprida(idOcorrencia: number) {
     setBusy(true);
     try {
-      await resolverRevisaoTarefaFilho(idRevisao);
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["revisoes_tarefa_filho"] }),
-        notificarRespostaFilho("REVISAO", idRevisao),
-      ]);
-      toast.success("Revisão encerrada · Não fez mantido");
+      await cumprirPenalidade(idOcorrencia);
+      await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
+      toast.success("Penalidade marcada como cumprida");
     } catch (error) {
       toast.error(
         msgErro(
@@ -1071,7 +1107,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     <>
       <PageHeader
         title="Fez / Não fez"
-        description="Marque as tarefas do dia"
+        description="Marque “Fez”, “Não fez” ou “Não precisou”"
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
 
@@ -1112,7 +1148,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
             />
             {modo === "todos" && (
               <Pick
-                label="Fez / Não fez"
+                label="Resultado"
                 resultIcons
                 value={f.resultado}
                 onChange={(resultado) => setF({ ...f, resultado })}
@@ -1120,6 +1156,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                 options={[
                   { value: "FEZ", label: "Fez" },
                   { value: "NAO_FEZ", label: "Não fez" },
+                  { value: "NAO_PRECISOU", label: "Não precisou" },
                 ]}
               />
             )}
@@ -1177,7 +1214,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     {datasDoPeriodoDaVigencia(vigencia).map((data) => {
                       const selecionada = diasSelecionados[vigencia.id] === data;
                       const futura = data > hoje;
-                      const comPendencia = !futura && diaTemPendencia(vigencia.id, data);
+                      const comPendencia =
+                        vigenciaEmAndamento(vigencia) &&
+                        !futura &&
+                        diaTemPendencia(vigencia.id, data);
                       return (
                         <button
                           key={data}
@@ -1311,11 +1351,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     [grupoFilhoSelecionado].map(({ filho, tarefas: tarefasDoFilho }) => {
                     const chave = `${vigencia.id}-${filho.id}`;
                     const filhoAberto = filhosAbertos[chave] === true;
-                    const totalNaoFez = ocorrencias.filter(
+                    const ocorrenciasFilhoVigencia = ocorrencias.filter(
                       (ocorrencia) =>
-                        ocorrencia.tipo !== "FEZ" &&
                         ocorrencia.t_filho_tarefa?.id_filho === filho.id &&
                         ocorrencia.t_filho_tarefa?.id_vigencia === vigencia.id,
+                    );
+                    const totalNaoFez = ocorrenciasFilhoVigencia.filter(
+                      (ocorrencia) => ocorrencia.tipo === "NAO_FEZ",
                     ).length;
                     const totalPendencias =
                       modo === "pendentes"
@@ -1325,17 +1367,29 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             0,
                           )
                         : 0;
-                    const comDesconto = usaDesconto(filho, vigencia);
-                    const totalDescontado = comDesconto
-                      ? valorDebitado(filho, vigencia, totalNaoFez)
-                      : 0;
+                    const temMesada =
+                      filho.tem_mesada_opcional === true &&
+                      filho.valor_mesada !== null;
+                    const totalDescontado = ocorrenciasFilhoVigencia.reduce(
+                      (total, ocorrencia) => {
+                        const consequencia = ocorrencia.t_ocorrencia_consequencia;
+                        return consequenciaEhDescontoAplicado(consequencia)
+                          ? total + Number(consequencia?.desconto_valor ?? 0)
+                          : total;
+                      },
+                      0,
+                    );
                     const saldoMesada = Math.max(
                       0,
                       (filho.valor_mesada ?? 0) - totalDescontado,
                     );
-                    const penalizado =
-                      !comDesconto &&
-                      totalNaoFez >= vigencia.qtd_ocorrencia;
+                    const penalidadesPendentes = ocorrenciasFilhoVigencia.filter(
+                      (ocorrencia) =>
+                        ocorrencia.tipo === "NAO_FEZ" &&
+                        consequenciaEhPenalidadePendente(
+                          ocorrencia.t_ocorrencia_consequencia,
+                        ),
+                    ).length;
                     const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     const registrosDoDia = tarefasDoFilho
@@ -1347,6 +1401,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                         (item): item is { tarefa: FilhoTarefa; registro: Ocorrencia } =>
                           Boolean(item.registro),
                       );
+                    const quantidadeProtegidaDesfazer = registrosDoDia.filter(
+                      ({ registro }) =>
+                        consequenciaEhPenalidadeCumprida(
+                          registro.t_ocorrencia_consequencia,
+                        ),
+                    ).length;
+                    const quantidadeDisponivelDesfazer =
+                      registrosDoDia.length - quantidadeProtegidaDesfazer;
                     return (
                       <article
                         key={filho.id}
@@ -1379,22 +1441,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   : "pendências"}
                               </span>
                             )}
-                            {comDesconto ? (
-                              <span className="font-semibold text-muted-foreground">
-                                Com mesada
-                              </span>
-                            ) : (
-                              <span className="font-semibold tabular-nums">
-                                Não fez: {totalNaoFez} de{" "}
-                                {vigencia.qtd_ocorrencia}
-                              </span>
-                            )}
+                            <span className="font-semibold tabular-nums">
+                              Não fez: {totalNaoFez}
+                            </span>
                           </div>
                         </button>
 
                         {filhoAberto && (
                           <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
-                            {comDesconto ? (
+                            {temMesada && (
                               <div className="mb-4 grid grid-cols-3 overflow-hidden rounded-lg border bg-muted/20 text-sm tabular-nums">
                                 <div className="px-3 py-2.5">
                                   <p className="text-[11px] font-medium text-muted-foreground">Mesada</p>
@@ -1409,14 +1464,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   <p className="mt-0.5 font-semibold text-primary">{reais(saldoMesada)}</p>
                                 </div>
                               </div>
-                            ) : penalizado ? (
-                              <div className="mb-4">
-                                <Badge variant="destructive" className="px-3 py-1 text-[13px] font-bold">
-                                  <AlertTriangle className="mr-1 h-3.5 w-3.5" />
-                                  Penalidade: {vigencia.penalidade}
-                                </Badge>
+                            )}
+                            {penalidadesPendentes > 0 && (
+                              <div className="mb-4 rounded-lg border bg-muted/20 px-3 py-2 text-sm font-medium">
+                                {penalidadesPendentes} {penalidadesPendentes === 1 ? "penalidade pendente" : "penalidades pendentes"}
                               </div>
-                            ) : null}
+                            )}
 
                             <div className="bg-white dark:bg-background">
                               <div className="border-b border-border/60 bg-transparent px-1 py-2.5">
@@ -1427,7 +1480,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                     </p>
                                   </div>
 
-                                  {!bloqueada && registrosDoDia.length > 0 && (
+                                  {!bloqueada && quantidadeDisponivelDesfazer > 0 && (
                                     <Button
                                       type="button"
                                       size="sm"
@@ -1438,11 +1491,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                         setConfirmarExcluirSelecionadas({
                                           tarefa: registrosDoDia[0].tarefa,
                                           ids: registrosDoDia.map(({ registro }) => registro.id),
+                                          quantidadeProtegida: quantidadeProtegidaDesfazer,
                                         })
                                       }
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
-                                      Desfazer todos
+                                      {quantidadeProtegidaDesfazer > 0
+                                        ? "Desfazer disponíveis"
+                                        : "Desfazer todos"}
                                     </Button>
                                   )}
                                 </div>
@@ -1452,8 +1508,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                 {tarefasDoFilho.map((tarefa) => {
                                   const registro = registroNaData(tarefa, dataSelecionada);
                                   const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
-                                  const revisao = revisaoNaData(tarefa, dataSelecionada);
                                   const filho = filhos.find((item) => item.id === tarefa.id_filho);
+                                  const consequencia = registro?.t_ocorrencia_consequencia;
                                   return (
                                     <div
                                       key={tarefa.id}
@@ -1468,18 +1524,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               nome={tarefa.t_tarefa?.nome ?? "Tarefa"}
                                               className={`mt-0.5 ${
                                                 registro
-                                                  ? registro.tipo === "FEZ"
-                                                    ? "text-green-700 dark:text-green-300"
-                                                    : "text-red-700 dark:text-red-300"
+                                                  ? classeResultadoTexto(registro.tipo)
                                                   : ""
                                               }`}
                                             />
                                             <p
                                               className={`min-w-0 break-words text-sm font-medium leading-tight ${
                                                 registro
-                                                  ? registro.tipo === "FEZ"
-                                                    ? "text-green-700 dark:text-green-300"
-                                                    : "text-red-700 dark:text-red-300"
+                                                  ? classeResultadoTexto(registro.tipo)
                                                   : ""
                                               }`}
                                             >
@@ -1498,15 +1550,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             </div>
                                           )}
 
-                                          {registro?.tipo === "NAO_FEZ" && revisao?.status === "PENDENTE" && (
-                                            <div className="animate-soft-attention ml-6 mt-1.5 min-w-0 text-[11px] leading-snug text-amber-700 dark:text-amber-300">
-                                              <p className="flex min-w-0 items-center gap-1 font-semibold text-amber-700 dark:text-amber-300">
-                                                <BellRing className="h-3.5 w-3.5 shrink-0" />
-                                                <span className="min-w-0 break-words">
-                                                  {primeiroNomeFilho(filho?.nome)} pediu revisão às {formatarHora(revisao.created_at)}
-                                                </span>
-                                              </p>
-                                            </div>
+                                          {registro?.tipo === "NAO_FEZ" && (
+                                            <ConsequenciaOcorrenciaResumo
+                                              consequencia={consequencia}
+                                              formatarMoeda={reais}
+                                              className="ml-6 mt-1.5 text-[11px] leading-snug text-muted-foreground"
+                                            />
                                           )}
                                         </div>
                                       </div>
@@ -1514,21 +1563,25 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                       <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
                                         {registro && (
                                           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-                                            <Hint content={registro.tipo === "FEZ" ? "Fez" : "Não fez"}>
+                                            <Hint content={rotuloResultado(registro.tipo)}>
                                               <span
                                                 className={
                                                   registro.tipo === "FEZ"
                                                     ? "inline-flex h-5 w-5 items-center justify-center text-green-600 dark:text-green-400"
-                                                    : "inline-flex h-5 w-5 items-center justify-center text-red-600 dark:text-red-400"
+                                                    : registro.tipo === "NAO_FEZ"
+                                                      ? "inline-flex h-5 w-5 items-center justify-center text-red-600 dark:text-red-400"
+                                                      : "inline-flex h-5 w-5 items-center justify-center text-muted-foreground"
                                                 }
                                               >
                                                 {registro.tipo === "FEZ" ? (
                                                   <ThumbsUp className="h-4 w-4" />
-                                                ) : (
+                                                ) : registro.tipo === "NAO_FEZ" ? (
                                                   <ThumbsDown className="h-4 w-4" />
+                                                ) : (
+                                                  <Minus className="h-4 w-4" />
                                                 )}
                                                 <span className="sr-only">
-                                                  {registro.tipo === "FEZ" ? "Fez" : "Não fez"}
+                                                  {rotuloResultado(registro.tipo)}
                                                 </span>
                                               </span>
                                             </Hint>
@@ -1542,63 +1595,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Hint>
                                             )}
 
-                                            {registro.tipo !== "FEZ" &&
-                                              !comDesconto &&
-                                              penalizadas.has(registro.id) && (
-                                                <span
-                                                  className="inline-flex shrink-0 text-destructive"
-                                                  role="img"
-                                                  aria-label="Limite de penalidade atingido"
-                                                >
-                                                  <AlertTriangle className="h-4 w-4" />
-                                                </span>
-                                              )}
                                           </div>
                                         )}
-                                        {registro?.tipo === "NAO_FEZ" &&
-                                          revisao?.status === "PENDENTE" &&
-                                          !bloqueada && (
-                                            <div
-                                              className="inline-flex shrink-0 items-center gap-1 self-center"
-                                              role="group"
-                                              aria-label="Ações da revisão solicitada"
-                                            >
-                                              <Hint content="Aceitar revisão e alterar para Fez">
-                                                <Button
-                                                  type="button"
-                                                  size="icon"
-                                                  variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
-                                                  disabled={busy}
-                                                  aria-label="Aceitar revisão e alterar para Fez"
-                                                  onClick={() =>
-                                                    abrirTrocaMarcacao(
-                                                      tarefa,
-                                                      totalNaoFez,
-                                                      dataSelecionada,
-                                                      registro,
-                                                    )
-                                                  }
-                                                >
-                                                  <ThumbsUp className="h-4 w-4 text-green-600" />
-                                                </Button>
-                                              </Hint>
-                                              <Hint content="Manter Não fez">
-                                                <Button
-                                                  type="button"
-                                                  size="icon"
-                                                  variant="outline"
-                                                  className="h-8 w-8 shrink-0 rounded-full p-0"
-                                                  disabled={busy}
-                                                  aria-label="Manter Não fez"
-                                                  onClick={() => void manterNaoFezRevisao(revisao.id)}
-                                                >
-                                                  <ThumbsDown className="h-4 w-4 text-red-600" />
-                                                </Button>
-                                              </Hint>
-                                            </div>
-                                          )}
-
                                         {!registro && !bloqueada && (
                                           <>
                                             <Button
@@ -1620,7 +1618,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
+                                              className={`min-w-0 px-2 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
                                               disabled={busy}
                                               onClick={() =>
                                                 solicitarNaoFez(
@@ -1632,6 +1630,22 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             >
                                               <ThumbsDown className="h-4 w-4 text-red-600" />
                                               Não fez
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className={`min-w-0 px-2 sm:min-w-24 sm:px-3 ${botaoNaoPrecisouClass}`}
+                                              disabled={busy}
+                                              onClick={() =>
+                                                solicitarNaoPrecisou(
+                                                  tarefa,
+                                                  totalNaoFez,
+                                                  dataSelecionada,
+                                                )
+                                              }
+                                            >
+                                              <Minus className="h-4 w-4" />
+                                              Não precisou
                                             </Button>
                                           </>
                                         )}
@@ -1651,38 +1665,75 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
-                                              {!bloqueada && (
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) &&
+                                                registro.tipo !== "FEZ" && (
                                                 <DropdownMenuItem
                                                   onSelect={() =>
-                                                    abrirTrocaMarcacao(
-                                                      tarefa,
-                                                      totalNaoFez,
-                                                      dataSelecionada,
-                                                      registro,
-                                                    )
+                                                    abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "FEZ")
                                                   }
                                                 >
                                                   <Pencil className="h-4 w-4" />
-                                                  {registro.tipo === "FEZ"
-                                                    ? "Alterar para Não fez"
-                                                    : "Alterar para Fez"}
+                                                  Alterar para Fez
                                                 </DropdownMenuItem>
                                               )}
-                                              {registro.tipo === "FEZ" && (
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) &&
+                                                registro.tipo !== "NAO_FEZ" && (
                                                 <DropdownMenuItem
                                                   onSelect={() =>
-                                                    setBonificacaoInfo({
-                                                      tarefa,
-                                                      total: totalNaoFez,
-                                                      ocorrencia: registro,
-                                                    })
+                                                    abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "NAO_FEZ")
                                                   }
                                                 >
-                                                  <Info className="h-4 w-4" />
-                                                  Ver bonificação
+                                                  <Pencil className="h-4 w-4" />
+                                                  Alterar para Não fez
                                                 </DropdownMenuItem>
                                               )}
-                                              {!bloqueada && (
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) &&
+                                                registro.tipo !== "NAO_PRECISOU" && (
+                                                <DropdownMenuItem
+                                                  onSelect={() =>
+                                                    abrirTrocaMarcacao(tarefa, totalNaoFez, dataSelecionada, registro, "NAO_PRECISOU")
+                                                  }
+                                                >
+                                                  <Minus className="h-4 w-4" />
+                                                  Alterar para Não precisou
+                                                </DropdownMenuItem>
+                                              )}
+                                              {registro.tipo === "NAO_FEZ" &&
+                                                !bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      abrirNaoFez(
+                                                        tarefa,
+                                                        totalNaoFez,
+                                                        dataSelecionada,
+                                                        registro,
+                                                      )
+                                                    }
+                                                  >
+                                                    <Pencil className="h-4 w-4" />
+                                                    Editar consequência
+                                                  </DropdownMenuItem>
+                                                )}
+                                              {registro.tipo === "NAO_FEZ" &&
+                                                !bloqueada &&
+                                                consequenciaEhPenalidadePendente(consequencia) && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      void runAction(() =>
+                                                        marcarPenalidadeCumprida(registro.id),
+                                                      )
+                                                    }
+                                                  >
+                                                    <ClipboardCheck className="h-4 w-4" />
+                                                    Marcar penalidade como cumprida
+                                                  </DropdownMenuItem>
+                                                )}
+                                              {!bloqueada &&
+                                                !consequenciaEhPenalidadeCumprida(consequencia) && (
                                                 <DropdownMenuItem
                                                   className="text-destructive focus:text-destructive"
                                                   onSelect={() =>
@@ -1717,258 +1768,16 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         })}
       </div>
 
-      <PenalidadeDialog
-        open={Boolean(penalidadePendente)}
-        value={penalidadePendente?.descricao ?? ""}
+      <NaoFezDialog
+        open={Boolean(naoFez)}
+        value={naoFez}
         busy={busy}
-        inputId="penalidade-limite"
-        contexto={penalidadePendente ? (() => {
-          const filho = filhoDaTarefa(penalidadePendente.tarefa);
-          return (
-            <span className="inline-flex max-w-full min-w-0 items-center gap-1.5">
-              {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-              <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"}</span>
-            </span>
-          );
-        })() : undefined}
-        limite={penalidadePendente?.tarefa.t_vigencia?.qtd_ocorrencia ?? null}
-        onChange={(descricao) =>
-          setPenalidadePendente((atual) =>
-            atual ? { ...atual, descricao } : atual,
-          )
+        onChange={(value) =>
+          setNaoFez((atual) => (atual ? { ...atual, ...value } : atual))
         }
-        onCancel={() => setPenalidadePendente(null)}
-        onConfirm={() => void runAction(confirmarPenalidade)}
+        onCancel={() => setNaoFez(null)}
+        onConfirm={() => void runAction(confirmarNaoFez)}
       />
-
-      <Dialog
-        open={Boolean(bonificacaoInfo)}
-        onOpenChange={(open) => !open && setBonificacaoInfo(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Recompensa extra do “Fez”</DialogTitle>
-            <DialogDescription>
-              {bonificacaoInfo && (() => {
-                const filho = filhoDaTarefa(bonificacaoInfo.tarefa);
-                return (
-                  <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
-                    <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
-                      {filho && (
-                        <FilhoAvatar
-                          nome={filho.nome}
-                          cor={filho.cor}
-                          avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                          className="h-5 w-5"
-                        />
-                      )}
-                      <span className="min-w-0">
-                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</span>
-                        <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">{filho?.nome ?? "Filho"}</span>
-                      </span>
-                    </span>
-                    <span className="block border-t px-3 py-2.5">
-                      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
-                      <span className="mt-0.5 flex min-w-0 items-start gap-2">
-                        <TarefaIcone nome={bonificacaoInfo.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                        <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">{bonificacaoInfo.tarefa.t_tarefa?.nome}</span>
-                      </span>
-                    </span>
-                    <span className="block border-t px-3 py-2.5">
-                      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
-                      <span className="mt-0.5 block font-medium text-foreground">{formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}</span>
-                    </span>
-                  </span>
-                );
-              })()}
-            </DialogDescription>
-          </DialogHeader>
-
-          {bonificacaoInfo && (
-            <div className="rounded-lg border bg-muted/20 p-4">
-              {bonificacaoInfo.ocorrencia.bonificacao_tipo === "TEXTO" ? (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Recompensa extra escrita
-                  </p>
-                  <p className="text-sm font-medium">
-                    {bonificacaoInfo.ocorrencia.bonificacao_descricao}
-                  </p>
-                </div>
-              ) : bonificacaoInfo.ocorrencia.bonificacao_tipo === "VALOR" ? (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Valor da recompensa extra
-                  </p>
-                  <p className="text-base font-semibold">
-                    {reais(Number(bonificacaoInfo.ocorrencia.bonificacao_valor ?? 0))}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma recompensa extra definida.
-                </p>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setBonificacaoInfo(null)}
-            >
-              Fechar
-            </Button>
-            {bonificacaoInfo && (
-              <Button
-                disabled={busy}
-                onClick={() => abrirEdicaoBonificacao(bonificacaoInfo)}
-              >
-                <Pencil className="h-4 w-4" />
-                Editar recompensa extra
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(fez)}
-        onOpenChange={(open) => !open && !busy && setFez(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {fez?.modo === "EDITAR"
-                ? "Editar recompensa extra"
-                : "Registrar “Fez”"}
-            </DialogTitle>
-            <DialogDescription>
-              {fez && (() => {
-                const filho = filhoDaTarefa(fez.tarefa);
-
-                if (fez.modo !== "EDITAR") {
-                  return (
-                    <>
-                      <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
-                        {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                        <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} ·</span>
-                        <TarefaIcone nome={fez.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                        <span className="min-w-0 whitespace-normal break-words">{fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
-                      </span>
-                      {" · "}A recompensa extra é opcional.
-                    </>
-                  );
-                }
-
-                return (
-                  <span className="block space-y-2.5">
-                    <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
-                      <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
-                        {filho && (
-                          <FilhoAvatar
-                            nome={filho.nome}
-                            cor={filho.cor}
-                            avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                            className="h-5 w-5"
-                          />
-                        )}
-                        <span className="min-w-0">
-                          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</span>
-                          <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">{filho?.nome ?? "Filho"}</span>
-                        </span>
-                      </span>
-                      <span className="block border-t px-3 py-2.5">
-                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
-                        <span className="mt-0.5 flex min-w-0 items-start gap-2">
-                          <TarefaIcone nome={fez.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                          <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">{fez.tarefa.t_tarefa?.nome}</span>
-                        </span>
-                      </span>
-                      <span className="block border-t px-3 py-2.5">
-                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
-                        <span className="mt-0.5 block font-medium text-foreground">{formatarData(fez.data)}</span>
-                      </span>
-                    </span>
-                    <span className="block">A recompensa extra é opcional.</span>
-                  </span>
-                );
-              })()}
-            </DialogDescription>
-          </DialogHeader>
-
-          {fez && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Recompensa extra</Label>
-                <Select
-                  value={fez.bonusTipo}
-                  onValueChange={(valor) =>
-                    setFez({ ...fez, bonusTipo: valor as BonusTipo })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NENHUMA">Nenhuma</SelectItem>
-                    <SelectItem value="TEXTO">Escrita</SelectItem>
-                    <SelectItem value="VALOR">Valor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {fez.bonusTipo === "TEXTO" && (
-                <div className="space-y-2">
-                  <Label htmlFor="bonus-texto">Recompensa extra escrita</Label>
-                  <input
-                    id="bonus-texto"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="Ex.: Escolher o filme no sábado"
-                    value={fez.descricao}
-                    onChange={(event) =>
-                      setFez({ ...fez, descricao: event.target.value })
-                    }
-                  />
-                </div>
-              )}
-
-              {fez.bonusTipo === "VALOR" && (
-                <div className="space-y-2">
-                  <Label htmlFor="bonus-valor">
-                    Valor da recompensa extra (R$)
-                  </Label>
-                  <CurrencyInput
-                    id="bonus-valor"
-                    value={fez.valor}
-                    valueMode="decimal"
-                    onValueChange={(valor) => setFez({ ...fez, valor })}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              disabled={busy}
-              onClick={() => setFez(null)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              disabled={busy || !fez}
-              onClick={() => void runAction(confirmarFez)}
-            >
-              <ThumbsUp className="h-4 w-4" />
-              {fez?.modo === "EDITAR"
-                ? "Salvar bonificação"
-                : "Salvar Fez"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog
         open={Boolean(troca)}
@@ -1977,9 +1786,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-3">
             <DialogTitle>
-              {troca?.direcao === "PARA_FEZ"
-                ? "Alterar para “Fez”?"
-                : "Alterar para “Não fez”?"}
+              {troca ? `Alterar para “${rotuloResultado(troca.alvo)}”?` : "Alterar resultado?"}
             </DialogTitle>
             <DialogDescription className="space-y-3">
               {troca && (
@@ -1987,34 +1794,42 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                   {(() => {
                     const filho = filhoDaTarefa(troca.tarefa);
                     return (
-                      <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
-                        <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
+                      <span className="grid min-w-0 grid-cols-[0.9fr_1.5fr_auto] divide-x overflow-hidden rounded-lg border">
+                        <span className="flex min-w-0 items-center gap-1.5 px-2.5 py-2">
                           {filho && (
                             <FilhoAvatar
                               nome={filho.nome}
                               cor={filho.cor}
                               avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                              className="h-5 w-5"
+                              className="h-4 w-4"
                             />
                           )}
                           <span className="min-w-0">
-                            <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                               Filho
                             </span>
-                            <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">
+                            <span className="block truncate text-xs font-medium text-foreground">
                               {filho?.nome ?? "Filho"}
                             </span>
                           </span>
                         </span>
-                        <span className="block border-t px-3 py-2.5">
-                          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <span className="min-w-0 px-2.5 py-2">
+                          <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                             Tarefa
                           </span>
-                          <span className="mt-0.5 flex min-w-0 items-start gap-2">
-                            <TarefaIcone nome={troca.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                            <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">
+                          <span className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                            <TarefaIcone nome={troca.tarefa.t_tarefa?.nome ?? "Tarefa"} className="h-3.5 w-3.5 shrink-0" />
+                            <span className="min-w-0 truncate text-xs font-medium text-foreground">
                               {troca.tarefa.t_tarefa?.nome}
                             </span>
+                          </span>
+                        </span>
+                        <span className="px-2.5 py-2">
+                          <span className="block text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Data
+                          </span>
+                          <span className="mt-0.5 block whitespace-nowrap text-xs font-medium text-foreground">
+                            {formatarData(dataBrasil(troca.ocorrencia.created_at))}
                           </span>
                         </span>
                       </span>
@@ -2024,14 +1839,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                   <span className="block rounded-lg bg-muted/15 px-3 py-2.5 leading-relaxed">
                     Esta tarefa está marcada como{" "}
                     <span className="font-medium text-foreground">
-                      {troca.direcao === "PARA_FEZ" ? "“Não fez”" : "“Fez”"}
-                    </span>{" "}
-                    em{" "}
+                      “{rotuloResultado(troca.ocorrencia.tipo)}”
+                    </span>. Ao confirmar, ela será alterada para{" "}
                     <span className="font-medium text-foreground">
-                      {formatarData(dataBrasil(troca.ocorrencia.created_at))}
-                    </span>
-                    . Ao continuar, o resultado será substituído. Estrelas já conquistadas
-                    não são removidas nem duplicadas.
+                      “{rotuloResultado(troca.alvo)}”
+                    </span>.
                   </span>
                 </>
               )}
@@ -2048,19 +1860,30 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
             </Button>
             <Button
               disabled={busy || !troca}
-              onClick={() =>
-                troca &&
-                void runAction(() =>
-                  troca.direcao === "PARA_FEZ" && troca.fez
-                    ? salvarFez(troca.fez, troca.ocorrencia)
-                    : salvarNaoFez(
-                        troca.tarefa,
-                        troca.total,
-                        dataBrasil(troca.ocorrencia.created_at),
-                        troca.ocorrencia,
-                      ),
-                )
-              }
+              onClick={() => {
+                if (!troca) return;
+
+                if (troca.alvo === "FEZ") {
+                  void runAction(() =>
+                    salvarFez(
+                      { tarefa: troca.tarefa, total: troca.total, data: troca.data },
+                      troca.ocorrencia,
+                    ),
+                  );
+                  return;
+                }
+
+                if (troca.alvo === "NAO_PRECISOU") {
+                  void runAction(() =>
+                    salvarNaoPrecisou(troca.tarefa, troca.data, troca.ocorrencia),
+                  );
+                  return;
+                }
+
+                const atual = troca;
+                setTroca(null);
+                abrirNaoFez(atual.tarefa, atual.total, atual.data, atual.ocorrencia);
+              }}
             >
               Confirmar alteração
             </Button>
@@ -2085,6 +1908,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
               {confirmarExcluirSelecionadas && (() => {
                 const filho = filhoDaTarefa(confirmarExcluirSelecionadas.tarefa);
                 const quantidade = confirmarExcluirSelecionadas.ids.length;
+                const protegidas =
+                  confirmarExcluirSelecionadas.quantidadeProtegida ?? 0;
+                const disponiveis = Math.max(0, quantidade - protegidas);
                 return (
                   <span className="block space-y-3">
                     <span className="flex max-w-full min-w-0 items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2.5">
@@ -2103,10 +1929,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                     <span className="block">
                       <span className="block font-medium text-foreground">
-                        {quantidade} {quantidade === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
+                        {disponiveis} {disponiveis === 1 ? "marcação será desfeita" : "marcações serão desfeitas"}.
                       </span>
+                      {protegidas > 0 && (
+                        <span className="mt-1.5 block leading-relaxed">
+                          {protegidas} {protegidas === 1 ? "marcação será preservada" : "marcações serão preservadas"} porque {protegidas === 1 ? "a penalidade já foi cumprida" : "as penalidades já foram cumpridas"}.
+                        </span>
+                      )}
                       <span className="mt-1.5 block leading-relaxed">
-                        As datas que ficarem sem uma marcação de “Fez” ou “Não fez” voltarão para as pendências.
+                        As datas que ficarem sem resultado voltarão para as pendências.
                       </span>
                     </span>
                   </span>

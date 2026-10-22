@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { uiSpacing } from "@/lib/ui-spacing";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { Minus, ThumbsDown, ThumbsUp } from "lucide-react";
 
 export function Pick({
   label,
@@ -62,8 +62,10 @@ export function Pick({
             <span className="!flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
               {selectedOption.value === "FEZ" ? (
                 <ThumbsUp className="h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />
-              ) : (
+              ) : selectedOption.value === "NAO_FEZ" ? (
                 <ThumbsDown className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+              ) : (
+                <Minus className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
               )}
               <span className="min-w-0 truncate">{selectedOption.label}</span>
             </span>
@@ -90,6 +92,7 @@ export function Pick({
                 {taskIcons && <TarefaIcone nome={o.label} />}
                 {resultIcons && o.value === "FEZ" && <ThumbsUp className="h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />}
                 {resultIcons && o.value === "NAO_FEZ" && <ThumbsDown className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />}
+                {resultIcons && o.value === "NAO_PRECISOU" && <Minus className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
                 <span className="min-w-0 truncate">{o.label}</span>
               </span>
             </SelectItem>

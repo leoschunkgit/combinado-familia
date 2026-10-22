@@ -7,7 +7,6 @@ import { CalendarRange, CircleStop, Copy, EllipsisVertical, FileDown, Info, Penc
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CurrencyInput } from "@/components/CurrencyInput";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,8 +16,6 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type Vigencia } from "@/lib/db";
-import { reais } from "@/lib/mesada";
-import { validarAlteracaoLimiteNaoFez } from "@/lib/penalidade";
 import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
@@ -30,9 +27,9 @@ import { extrairPdfVigencia, podeExtrairPdfVigencia } from "@/lib/vigencia-relat
 export const Route = createFileRoute("/_authenticated/vigencias")({
   head: () => ({ meta: [
     { title: "Vigências — Combinado" },
-    { name: "description", content: "Defina o período, o limite de Não fez e o desconto da mesada." },
+    { name: "description", content: "Defina os períodos dos combinados da família." },
     { property: "og:title", content: "Vigências — Combinado" },
-    { property: "og:description", content: "Defina os períodos e limites dos combinados da família." },
+    { property: "og:description", content: "Defina os períodos dos combinados da família." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
@@ -42,39 +39,16 @@ export const Route = createFileRoute("/_authenticated/vigencias")({
 const schema = z.object({
   data_inicio: z.string().min(1, "Informe a data de início"),
   data_fim: z.string().min(1, "Informe a data de fim"),
-  valor_debito: z.string(),
-  qtd_ocorrencia: z.coerce.number().int().min(1, "Mínimo de 1 ocorrência").max(31, "Máximo de 31"),
 })
 .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_inicio) && !Number.isNaN(new Date(v.data_inicio).getTime()), { message: "Informe uma data e hora de início válidas", path: ["data_inicio"] })
 .refine((v) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v.data_fim) && !Number.isNaN(new Date(v.data_fim).getTime()), { message: "Informe uma data e hora de fim válidas", path: ["data_fim"] })
-.refine((v) => new Date(v.data_fim).getTime() > new Date(v.data_inicio).getTime(), "A data/hora fim deve ser posterior à data/hora início")
-.refine((v) => (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_debito) && Number(v.valor_debito.replace(",", ".")) > 0 && Number(v.valor_debito.replace(",", ".")) <= 9999999999.99), { message: "Informe um valor de desconto maior que zero, com até duas casas decimais", path: ["valor_debito"] });
+.refine((v) => new Date(v.data_fim).getTime() > new Date(v.data_inicio).getTime(), "A data/hora fim deve ser posterior à data/hora início");
 
-type VigenciaForm = { data_inicio: string; data_fim: string; valor_debito: string; qtd_ocorrencia: string };
-const vazio: VigenciaForm = { data_inicio: "", data_fim: "", valor_debito: "", qtd_ocorrencia: "" };
+type VigenciaForm = { data_inicio: string; data_fim: string };
+const vazio: VigenciaForm = { data_inicio: "", data_fim: "" };
 
 const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
 const diaCampo = (valor: string) => valor.slice(0, 10);
-
-const dadosRegra = (v: Pick<VigenciaForm, "valor_debito">) => ({ tipo_penalidade: "texto", valor_debito: Number(v.valor_debito.replace(",", ".")) });
-
-function RegrasVigencia({ value, onChange, prefix }: { value: VigenciaForm; onChange: (v: VigenciaForm) => void; prefix: string }) {
-  const dias = diasDaVigencia(value.data_inicio, value.data_fim);
-  return <div className="space-y-3">
-    {dias !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {dias} {dias === 1 ? "dia" : "dias"}.</p>}
-    <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 md:border-amber-300/70 md:bg-amber-50/30 p-3 space-y-2 dark:border-amber-700/60 dark:bg-amber-950/10">
-      <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-      <Label htmlFor={`${prefix}-quantidade`} className="block leading-5">Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência <span className="text-destructive" aria-hidden="true">*</span></Label>
-      <Input id={`${prefix}-quantidade`} type="number" min="1" max="31" value={value.qtd_ocorrencia} onChange={(e) => onChange({ ...value, qtd_ocorrencia: e.target.value })} />
-      <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
-    </div>
-    <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 md:border-emerald-300/70 md:bg-emerald-50/30 p-3 space-y-2 dark:border-emerald-700/60 dark:bg-emerald-950/10">
-      <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
-      <Label htmlFor={`${prefix}-valor`}>Desconto por cada “Não fez” na mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label>
-      <CurrencyInput id={`${prefix}-valor`} value={value.valor_debito} onValueChange={(valor_debito) => onChange({ ...value, valor_debito })} />
-    </div>
-  </div>;
-}
 
 function VigenciasPage() {
   const navigate = useNavigate();
@@ -152,7 +126,7 @@ function VigenciasPage() {
     }
     const { data: criada, error } = await supabase
       .from("t_vigencia")
-      .insert({ ...p.data, ...dadosRegra(p.data), penalidade: null, data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) })
+      .insert({ data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) })
       .select("id")
       .single();
     if (error || !criada) { toast.error(msgErro(error)); return; }
@@ -223,7 +197,7 @@ function VigenciasPage() {
   function abrirEdicao(v: Vigencia) {
     if (new Date(v.data_fim).getTime() < Date.now()) { toast.error("Vigências finalizadas não podem ser editadas"); return; }
     setEditando(v);
-    setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim), valor_debito: v.valor_debito === null ? "" : v.valor_debito.toFixed(2).replace(".", ","), qtd_ocorrencia: String(v.qtd_ocorrencia) });
+    setEdicao({ data_inicio: paraCampo(v.data_inicio), data_fim: paraCampo(v.data_fim) });
   }
 
   async function salvarEdicao(e: FormEvent) {
@@ -233,29 +207,18 @@ function VigenciasPage() {
     const novoInicio = new Date(p.data.data_inicio).getTime(); const novoFim = new Date(p.data.data_fim).getTime();
     if (novoFim <= novoInicio) { toast.error("A data/hora fim deve ser posterior à data/hora início"); return; }
     if (conflitaComVigenciaExistente(p.data.data_inicio, p.data.data_fim, editando.id)) { toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo."); return; }
-    const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho, qtd_nao_fez").eq("id_vigencia", editando.id);
+    const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho").eq("id_vigencia", editando.id);
     if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
     const idsVinculadas = (vinculadas ?? []).map((item) => item.id);
     if (idsVinculadas.length) {
       const { data: registros, error: registrosErro } = await supabase.from("t_ocorrencia").select("id, created_at, tipo, id_filho_tarefa").in("id_filho_tarefa", idsVinculadas);
       if (registrosErro) { toast.error(msgErro(registrosErro)); return; }
 
-      const validacaoLimite = validarAlteracaoLimiteNaoFez({
-        vigencia: editando,
-        novoLimite: p.data.qtd_ocorrencia,
-        filhos,
-        ocorrencias,
-      });
-      if (!validacaoLimite.ok) {
-        toast.error(validacaoLimite.mensagem);
-        return;
-      }
-
       const novoInicioDia = diaCampo(p.data.data_inicio); const novoFimDia = diaCampo(p.data.data_fim);
       const fora = (registros ?? []).filter((o) => { const d = diaBrasil(o.created_at); return d < novoInicioDia || d > novoFimDia; });
-      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} registro(s) de “Fez”/“Não fez” fora das novas datas. Ajuste ou remova esses registros em “Fez” / “Não fez” antes de salvar.`); return; }
+      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} resultado(s) fora das novas datas. Ajuste ou remova esses registros antes de salvar.`); return; }
     }
-    const { error } = await supabase.from("t_vigencia").update({ ...p.data, ...dadosRegra(p.data), data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
+    const { error } = await supabase.from("t_vigencia").update({ data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência atualizada"); setEditando(null);
     qc.invalidateQueries({ queryKey: ["vigencias"] }); qc.invalidateQueries({ queryKey: ["filho_tarefas"] }); qc.invalidateQueries({ queryKey: ["ocorrencias"] });
@@ -386,14 +349,8 @@ function VigenciasPage() {
             }
             contentClassName="p-4"
           >
-            <div className="space-y-2">
-              <div className="w-full rounded-lg border border-amber-400 bg-transparent md:border-amber-300/70 px-3 py-2 text-xs leading-relaxed dark:border-amber-700/60">
-                <span className="font-semibold text-foreground">Para filhos sem mesada:</span>{" "}<span className="text-muted-foreground">limite máximo de {v.qtd_ocorrencia} “Não fez”</span>
-                {v.penalidade && <><span className="text-muted-foreground"> · </span><span className="font-semibold text-foreground">Penalidade aplicada:</span>{" "}<span className="text-muted-foreground">{v.penalidade}</span></>}
-              </div>
-              <div className="w-full rounded-lg border border-emerald-400 bg-transparent md:border-emerald-300/70 px-3 py-2 text-xs leading-relaxed dark:border-emerald-700/60">
-                <span className="font-semibold text-foreground">Para filhos com mesada:</span>{" "}<span className="text-muted-foreground">{v.valor_debito !== null ? `${reais(v.valor_debito)} de desconto por cada “Não fez”` : "Não cadastrado"}</span>
-              </div>
+            <div className="rounded-lg border bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+              A vigência define somente o período do combinado. As consequências de “Não fez” são escolhidas em cada registro.
             </div>
           </CollapsibleSection>;
         })}
@@ -471,7 +428,11 @@ function VigenciasPage() {
             </div>
           )}
 
-          <RegrasVigencia value={form} onChange={setForm} prefix="novo" />
+          {modoPeriodoNovo === "DATAS" && diasDaVigencia(form.data_inicio, form.data_fim) !== null && (
+            <p className="text-sm text-muted-foreground">
+              Sua vigência tem {diasDaVigencia(form.data_inicio, form.data_fim)} {diasDaVigencia(form.data_inicio, form.data_fim) === 1 ? "dia" : "dias"}.
+            </p>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setNovoAberto(false)}>Cancelar</Button>
             <Button type="submit">Cadastrar</Button>
@@ -516,8 +477,12 @@ function VigenciasPage() {
       <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-3">
         <div className="space-y-1.5"><Label htmlFor="editar-inicio" className="text-sm">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
         <div className="space-y-1.5"><Label htmlFor="editar-fim" className="text-sm">Fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} min={edicao.data_inicio} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
-        <div className="[&_.space-y-3]:space-y-2 [&_.space-y-2]:space-y-1.5 [&_.p-3]:p-2.5 [&_input]:h-9 [&_label]:text-sm [&_p.text-xs]:text-[11px]"><RegrasVigencia value={edicao} onChange={setEdicao} prefix="editar" /></div>
-        {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} registro(s) de Fez/Não fez fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Fez / Não fez</Link> antes de salvar.</p>}
+        {diasDaVigencia(edicao.data_inicio, edicao.data_fim) !== null && (
+          <p className="text-xs text-muted-foreground">
+            Sua vigência tem {diasDaVigencia(edicao.data_inicio, edicao.data_fim)} {diasDaVigencia(edicao.data_inicio, edicao.data_fim) === 1 ? "dia" : "dias"}.
+          </p>
+        )}
+        {foraDoPeriodo.length > 0 && <p className="text-sm text-destructive">{foraDoPeriodo.length} resultado(s) fora do novo período. <Link to="/ocorrencias" className="underline">Corrigir em Fez / Não fez</Link> antes de salvar.</p>}
         <DialogFooter className="pt-1"><Button type="button" variant="outline" size="sm" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" size="sm">Salvar alterações</Button></DialogFooter>
       </form>
     </DialogContent></Dialog>

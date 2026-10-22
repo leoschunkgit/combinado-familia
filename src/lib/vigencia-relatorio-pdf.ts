@@ -7,37 +7,31 @@ import {
   type Ocorrencia,
   type Vigencia,
 } from "@/lib/db";
-import { reais, usaDesconto, valorDebitado } from "@/lib/mesada";
-import { ocorrenciasPenalizadas } from "@/lib/penalidade";
+import {
+  reais,
+  saldoMesada,
+  totalDescontosAplicados,
+} from "@/lib/mesada";
 import {
   gerarRelatorioPdf,
   type RelatorioPdfDados,
 } from "@/lib/relatorio-pdf";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
+import { descreverConsequenciaOcorrencia } from "@/lib/ocorrencia-model";
 
-function naoFez(ocorrencia: Ocorrencia) {
-  return ocorrencia.tipo !== "FEZ";
-}
+function detalheOcorrencia(ocorrencia: Ocorrencia) {
+  if (ocorrencia.tipo !== "NAO_FEZ") {
+    return undefined;
+  }
 
-function bonus(ocorrencia: Ocorrencia) {
-  if (ocorrencia.tipo !== "FEZ") return "";
-  if (
-    ocorrencia.bonificacao_tipo === "TEXTO" &&
-    ocorrencia.bonificacao_descricao
-  ) {
-    return ocorrencia.bonificacao_descricao;
-  }
-  if (
-    ocorrencia.bonificacao_tipo === "VALOR" &&
-    ocorrencia.bonificacao_valor != null
-  ) {
-    return reais(ocorrencia.bonificacao_valor);
-  }
-  return "Nenhuma";
+  return descreverConsequenciaOcorrencia(
+    ocorrencia.t_ocorrencia_consequencia,
+    reais,
+  );
 }
 
 function compararOcorrenciasPorData(a: Ocorrencia, b: Ocorrencia) {
-  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 }
 
 function statusVigencia(vigencia: Vigencia) {
@@ -81,8 +75,6 @@ export async function extrairPdfVigencia(args: {
     throw new Error("Esta vigência ainda não possui atribuições para exportar.");
   }
 
-  const penalizadas = ocorrenciasPenalizadas(ocorrencias, [vigencia]);
-
   const gruposFilhos = filhos
     .map((filho) => {
       const tarefas = tarefasDaVigencia.filter(
@@ -109,22 +101,26 @@ export async function extrairPdfVigencia(args: {
       {
         periodo: fmtVigencia(vigencia),
         status: statusVigencia(vigencia),
-        penalidade: vigencia.penalidade || "Não cadastrada",
-        limite: `${vigencia.qtd_ocorrencia} ocorrência(s)`,
-        descontoMesada:
-          vigencia.valor_debito !== null
-            ? `${reais(vigencia.valor_debito)} por Não fez`
-            : "Não cadastrado",
+        resumoConsequencias:
+          "Cada “Não fez” possui sua própria consequência: nenhuma, desconto ou penalidade.",
         filhos: gruposFilhos.map(({ filho, tarefas, registros }) => {
-          const totalNaoFez = registros.filter(naoFez).length;
-          const comDesconto = usaDesconto(filho, vigencia);
-          const totalDescontado = comDesconto
-            ? valorDebitado(filho, vigencia, totalNaoFez)
-            : 0;
-          const saldoMesada = Math.max(
-            0,
-            (filho.valor_mesada ?? 0) - totalDescontado,
-          );
+          const totalNaoFez = registros.filter(
+            (registro) => registro.tipo === "NAO_FEZ",
+          ).length;
+          const totalNaoPrecisou = registros.filter(
+            (registro) => registro.tipo === "NAO_PRECISOU",
+          ).length;
+          const totalPenalidadesPendentes = registros.filter(
+            (registro) =>
+              registro.tipo === "NAO_FEZ" &&
+              registro.t_ocorrencia_consequencia?.tipo === "PENALIDADE" &&
+              registro.t_ocorrencia_consequencia.status === "PENDENTE",
+          ).length;
+          const temMesada =
+            filho.tem_mesada_opcional === true &&
+            filho.valor_mesada !== null;
+          const totalDescontado = totalDescontosAplicados(registros);
+          const saldo = saldoMesada(filho.valor_mesada, totalDescontado);
 
           return {
             nome: filho.nome,
@@ -133,14 +129,13 @@ export async function extrairPdfVigencia(args: {
               filho.avatar === "menino" || filho.avatar === "menina"
                 ? filho.avatar
                 : null,
-            resumo: comDesconto
-              ? undefined
-              : `Penalidade: ${vigencia.penalidade || "Não cadastrada"}`,
-            mesada: comDesconto
+            resumo:
+              `Não fez: ${totalNaoFez} · Não precisou: ${totalNaoPrecisou} · Penalidades pendentes: ${totalPenalidadesPendentes}`,
+            mesada: temMesada
               ? {
                   valor: reais(filho.valor_mesada ?? 0),
                   descontos: reais(totalDescontado),
-                  saldo: reais(saldoMesada),
+                  saldo: reais(saldo ?? 0),
                 }
               : undefined,
             tarefas: tarefas.map((tarefa) => ({
@@ -155,15 +150,10 @@ export async function extrairPdfVigencia(args: {
                   resultado:
                     registro.tipo === "FEZ"
                       ? ("Fez" as const)
-                      : ("Não fez" as const),
-                  detalhe:
-                    registro.tipo === "FEZ" && bonus(registro)
-                      ? `Bonificação: ${bonus(registro)}`
-                      : undefined,
-                  penalidadeAtingida:
-                    registro.tipo !== "FEZ" &&
-                    !comDesconto &&
-                    penalizadas.has(registro.id),
+                      : registro.tipo === "NAO_FEZ"
+                        ? ("Não fez" as const)
+                        : ("Não precisou" as const),
+                  detalhe: detalheOcorrencia(registro),
                 })),
             })),
           };

@@ -122,6 +122,7 @@ serve(async (req) => {
       push_token?: unknown;
       plataforma?: unknown;
       id_filho_tarefa?: unknown;
+      id_ocorrencia?: unknown;
       id_recompensa?: unknown;
       observacao?: unknown;
     } | null;
@@ -262,91 +263,6 @@ serve(async (req) => {
       });
     }
 
-    if (acao === "pedir_revisao_nao_fez") {
-      const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
-      const idFilhoTarefa = typeof body?.id_filho_tarefa === "number"
-        ? body.id_filho_tarefa
-        : Number(body?.id_filho_tarefa);
-      const observacao = typeof body?.observacao === "string"
-        ? body.observacao.trim()
-        : null;
-
-      if (
-        !/^[0-9a-f]{64}$/.test(token) ||
-        !Number.isInteger(idFilhoTarefa) ||
-        idFilhoTarefa <= 0 ||
-        (observacao !== null && observacao.length > 120)
-      ) {
-        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
-      }
-
-      const { data, error } = await admin.rpc("criar_revisao_tarefa_filho_interno", {
-        p_token: token,
-        p_id_filho_tarefa: idFilhoTarefa,
-        p_observacao: observacao || null,
-      });
-
-      if (error) {
-        console.error("Erro ao criar revisão da tarefa do filho:", error);
-        return json({ error: "Não foi possível pedir a revisão ao responsável" }, 500);
-      }
-
-      const retorno = data as Record<string, unknown> | null;
-      if (!retorno?.ok) {
-        const codigo = typeof retorno?.codigo === "string" ? retorno.codigo : "REQUISICAO_INVALIDA";
-        const status =
-          codigo === "SESSAO_INVALIDA" ? 401 :
-          codigo === "TAREFA_INVALIDA" ? 403 :
-          codigo === "REVISAO_INDISPONIVEL" || codigo === "VIGENCIA_INATIVA" ? 409 :
-          400;
-        return json(retorno ?? { ok: false, codigo }, status);
-      }
-
-      const revisao =
-        retorno.revisao && typeof retorno.revisao === "object"
-          ? retorno.revisao as Record<string, unknown>
-          : null;
-
-      if (retorno.criada !== true) {
-        return json({
-          ok: true,
-          ja_existia: true,
-          revisao,
-          notificacoes_enviadas: 0,
-        });
-      }
-
-      const idUsuarioPai = Number(retorno.id_usuario_pai);
-      const idFilho = Number(retorno.id_filho);
-      const nomeFilho = typeof retorno.nome_filho === "string" ? retorno.nome_filho : "Seu filho";
-      const nomeTarefa = typeof retorno.nome_tarefa === "string" ? retorno.nome_tarefa : "uma tarefa";
-      const observacaoSalva =
-        typeof revisao?.observacao === "string" ? revisao.observacao : "";
-      const textoBase = nomeFilho + " pediu revisão: " + nomeTarefa + " foi marcado como Não fez.";
-      const textoPush = observacaoSalva ? textoBase + " " + observacaoSalva : textoBase;
-
-      const notificacoesEnviadas = await enviarPushAoResponsavel(admin, {
-        idUsuarioPai,
-        body: textoPush,
-        data: {
-          target: "revisao_tarefa_filho",
-          route: "/ocorrencias",
-          id_filho: String(idFilho),
-          id_filho_tarefa: String(idFilhoTarefa),
-          id_revisao: String(revisao?.id ?? ""),
-          data_referencia: String(revisao?.data_referencia ?? ""),
-        },
-        contexto: "pedido de revisão",
-      });
-
-      return json({
-        ok: true,
-        ja_existia: false,
-        revisao,
-        notificacoes_enviadas: notificacoesEnviadas,
-      });
-    }
-
     if (acao === "concluir_recompensa") {
       const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
       const idRecompensa = typeof body?.id_recompensa === "number"
@@ -398,6 +314,7 @@ serve(async (req) => {
           ok: true,
           ja_concluida: true,
           recompensa,
+          estrelas: retorno.estrelas,
           notificacoes_enviadas: 0,
         });
       }
@@ -428,6 +345,7 @@ serve(async (req) => {
         ok: true,
         ja_concluida: false,
         recompensa,
+        estrelas: retorno.estrelas,
         notificacoes_enviadas: notificacoesEnviadas,
       });
     }

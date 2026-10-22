@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { msgErro } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { PageHeader } from "@/components/PageHeader";
-import { getThemePreference, saveThemePreference, type ThemePreference } from "@/lib/theme";
+import { getThemePreference, saveThemePreference, THEME_CHANGE_EVENT, type ThemePreference } from "@/lib/theme";
 import {
   ativarBiometriaNesteAparelho,
   biometriaAtivaNesteAparelho,
@@ -42,7 +42,14 @@ function Admin() {
   const [biometriaLoading, setBiometriaLoading] = useState(false);
 
   useEffect(() => {
-    setTema(getThemePreference());
+    const sincronizarTema = () => setTema(getThemePreference());
+
+    sincronizarTema();
+    window.addEventListener(THEME_CHANGE_EVENT, sincronizarTema);
+
+    return () => {
+      window.removeEventListener(THEME_CHANGE_EVENT, sincronizarTema);
+    };
   }, []);
 
   useEffect(() => {

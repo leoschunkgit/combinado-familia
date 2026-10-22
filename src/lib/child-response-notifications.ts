@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type TipoInteracaoFilho = "SOLICITACAO" | "REVISAO";
+export type TipoInteracaoFilho = "SOLICITACAO";
 
 export async function notificarRespostaFilho(
   tipoInteracao: TipoInteracaoFilho,

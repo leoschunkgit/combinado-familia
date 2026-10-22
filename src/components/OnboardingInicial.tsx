@@ -56,8 +56,6 @@ export function OnboardingInicial() {
 
   const [inicioVigencia, setInicioVigencia] = useState(() => sugerirInicioVigencia([]));
   const [fimVigencia, setFimVigencia] = useState("");
-  const [quantidade, setQuantidade] = useState("");
-  const [desconto, setDesconto] = useState("");
 
   const [filhoSelecionado, setFilhoSelecionado] = useState("");
   const [tarefaSelecionada, setTarefaSelecionada] = useState("");
@@ -190,8 +188,6 @@ export function OnboardingInicial() {
     setVigenciaEmCorrecaoId(vigencia.id);
     setInicioVigencia(paraCampoDataHoraBrasil(vigencia.data_inicio));
     setFimVigencia(paraCampoDataHoraBrasil(vigencia.data_fim));
-    setQuantidade(String(vigencia.qtd_ocorrencia));
-    setDesconto(vigencia.valor_debito === null ? "" : vigencia.valor_debito.toFixed(2).replace(".", ","));
   }
 
   async function cadastrarVigencia() {
@@ -212,19 +208,6 @@ export function OnboardingInicial() {
       return;
     }
 
-    const qtd = Number(quantidade);
-    if (!Number.isInteger(qtd) || qtd < 1 || qtd > 31) {
-      toast.error("A quantidade de “Não fez” deve estar entre 1 e 31");
-      return;
-    }
-
-    if (!/^\d+(?:[,.]\d{1,2})?$/.test(desconto) || Number(desconto.replace(",", ".")) <= 0 || Number(desconto.replace(",", ".")) > 9999999999.99) {
-      toast.error("Informe um valor de desconto válido");
-      return;
-    }
-
-    const valorDebito = Number(desconto.replace(",", "."));
-
     const conflito = vigencias.some((vigencia) => {
       if (vigenciaEmCorrecaoId !== null && vigencia.id === vigenciaEmCorrecaoId) return false;
       const existenteInicio = new Date(vigencia.data_inicio).getTime();
@@ -240,12 +223,9 @@ export function OnboardingInicial() {
     const payload = {
       data_inicio: paraIsoDataHoraBrasil(inicioVigencia),
       data_fim: paraIsoDataHoraBrasil(fimVigencia),
-      qtd_ocorrencia: qtd,
-      tipo_penalidade: "texto",
-      valor_debito: valorDebito,
     };
     const resultado = vigenciaEmCorrecaoId === null
-      ? await supabase.from("t_vigencia").insert({ ...payload, penalidade: null }).select("id").single()
+      ? await supabase.from("t_vigencia").insert(payload).select("id").single()
       : await supabase.from("t_vigencia").update(payload).eq("id", vigenciaEmCorrecaoId).select("id").single();
     const { data: vigenciaSalva, error } = resultado;
     setSalvando(false);
@@ -425,7 +405,7 @@ export function OnboardingInicial() {
           <div className="space-y-4">
             <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Filho e tarefa prontos. Agora defina o período e as regras do combinado.</span>
+              <span>Filho e tarefa prontos. Agora defina o período do combinado.</span>
             </div>
             <div>
               <h3 className="font-semibold">{vigenciaEmCorrecaoId !== null ? "3. Corrija a vigência" : "3. Crie uma vigência"}</h3>
@@ -435,20 +415,16 @@ export function OnboardingInicial() {
               <div className="space-y-2"><Label>Início *</Label><BrDateTimeField id="onboarding-inicio-vigencia" value={inicioVigencia} onChange={setInicioVigencia} /></div>
               <div className="space-y-2"><Label>Fim *</Label><BrDateTimeField id="onboarding-fim-vigencia" value={fimVigencia} min={inicioVigencia} onChange={setFimVigencia} /></div>
             </div>
-            <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-                {diasDaVigencia(inicioVigencia, fimVigencia) !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasDaVigencia(inicioVigencia, fimVigencia)} {diasDaVigencia(inicioVigencia, fimVigencia) === 1 ? "dia" : "dias"}.</p>}
-                <Label htmlFor="onboarding-quantidade">Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência *</Label>
-                <Input id="onboarding-quantidade" type="number" min="1" max="31" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} />
-                <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
-              </div>
-            </div>
-            <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
-                <Label htmlFor="onboarding-desconto">Desconto por cada “Não fez” na mesada (R$) *</Label>
-                <CurrencyInput id="onboarding-desconto" value={desconto} onValueChange={setDesconto} placeholder="R$ 20,00" />
+            <div className="w-full rounded-lg border bg-muted/30 p-3">
+              <div className="space-y-1.5">
+                {diasDaVigencia(inicioVigencia, fimVigencia) !== null && (
+                  <p className="text-sm font-semibold">
+                    Sua vigência tem {diasDaVigencia(inicioVigencia, fimVigencia)} {diasDaVigencia(inicioVigencia, fimVigencia) === 1 ? "dia" : "dias"}.
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  A vigência define somente o período. Ao registrar um “Não fez”, você escolhe a consequência daquele registro: nada, desconto da mesada (quando houver) ou penalidade.
+                </p>
               </div>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">

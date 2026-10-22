@@ -13,25 +13,20 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-type TipoInteracao = "SOLICITACAO" | "REVISAO";
+type TipoInteracao = "SOLICITACAO";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
 }
 
-function mensagemResposta(tipo: TipoInteracao, status: string, tarefa: string) {
-  if (tipo === "SOLICITACAO") {
-    if (status === "RESOLVIDA_FEZ") {
-      return `Seu aviso foi respondido: “${tarefa}” foi marcada como Fez.`;
-    }
-    return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não fez.`;
+function mensagemResposta(status: string, tarefa: string): string {
+  if (status === "RESOLVIDA_FEZ") {
+    return `Seu aviso foi respondido: “${tarefa}” foi marcada como Fez.`;
   }
-
-  if (status === "ALTERADO_PARA_FEZ") {
-    return `Seu pedido de revisão de “${tarefa}” foi aceito: agora está como Fez.`;
+  if (status === "RESOLVIDA_NAO_PRECISOU") {
+    return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não precisou.`;
   }
-
-  return `Seu pedido de revisão de “${tarefa}” foi respondido: o Não fez foi mantido.`;
+  return `Seu aviso foi respondido: “${tarefa}” foi marcada como Não fez.`;
 }
 
 serve(async (req) => {
@@ -59,9 +54,7 @@ serve(async (req) => {
     const tipoInteracao: TipoInteracao | null =
       body?.tipo_interacao === "SOLICITACAO"
         ? "SOLICITACAO"
-        : body?.tipo_interacao === "REVISAO"
-          ? "REVISAO"
-          : null;
+        : null;
     const idInteracao = typeof body?.id_interacao === "number"
       ? body.id_interacao
       : Number(body?.id_interacao);
@@ -108,9 +101,7 @@ serve(async (req) => {
       });
     }
 
-    const tabela = tipoInteracao === "SOLICITACAO"
-      ? "t_solicitacao_tarefa_filho"
-      : "t_revisao_tarefa_filho";
+    const tabela = "t_solicitacao_tarefa_filho";
 
     const { data: interacao, error: interacaoError } = await admin
       .from(tabela)
@@ -123,10 +114,7 @@ serve(async (req) => {
       return json({ error: "Interação não encontrada" }, 404);
     }
 
-    const statusValido =
-      tipoInteracao === "SOLICITACAO"
-        ? interacao.status === "RESOLVIDA_FEZ" || interacao.status === "RESOLVIDA_NAO_FEZ"
-        : interacao.status === "MANTEVE_NAO_FEZ" || interacao.status === "ALTERADO_PARA_FEZ";
+    const statusValido = ["RESOLVIDA_FEZ", "RESOLVIDA_NAO_FEZ", "RESOLVIDA_NAO_PRECISOU"].includes(interacao.status);
 
     if (!statusValido) {
       return json({ error: "A interação ainda não possui uma resposta notificável" }, 409);
@@ -200,7 +188,7 @@ serve(async (req) => {
     }
 
     const accessToken = await obterFirebaseAccessToken(serviceAccount);
-    const texto = mensagemResposta(tipoInteracao, interacao.status, nomeTarefa);
+    const texto = mensagemResposta(interacao.status, nomeTarefa);
     let enviados = 0;
 
     for (const dispositivo of dispositivosAtivos) {

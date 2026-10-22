@@ -112,7 +112,7 @@ export function FilhoEstrelasPage({
 
                   </div>
 
-                  <div className="mt-2 min-h-[58px]">
+                  <div className="mt-1.5 min-h-[40px]">
                     {conquistada ? (
                       <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-800 dark:bg-amber-950/35">
                         <div className="flex items-start gap-2">
@@ -139,7 +139,7 @@ export function FilhoEstrelasPage({
                         )}
                       </div>
                     ) : (
-                      <div className="flex min-h-[58px] items-start pt-1">
+                      <div className="flex min-h-[40px] items-start pt-0.5">
                         <p className="text-[11px] font-medium text-muted-foreground">
                           Faltam {recompensa.faltam_exibicao} estrela{recompensa.faltam_exibicao === 1 ? "" : "s"} para conquistar
                         </p>
@@ -149,7 +149,7 @@ export function FilhoEstrelasPage({
                 </div>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-2.5">
                 <div className="flex items-end gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3 text-[11px] leading-none">

@@ -1,4 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect x="4" y="4" width="56" height="56" rx="14" fill="#FFA659"/>
-  <path d="M32 17.5 16.5 31h4.25v15.25c0 1.24 1.01 2.25 2.25 2.25h7.25V38h3.5v10.5H41c1.24 0 2.25-1.01 2.25-2.25V31h4.25L32 17.5Z" fill="#341A09"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Combinado Família">
+  <defs>
+    <linearGradient id="brandGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#087A43"/>
+      <stop offset="100%" stop-color="#005B37"/>
+    </linearGradient>
+    <linearGradient id="accentGreen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#B8F300"/>
+      <stop offset="100%" stop-color="#55D400"/>
+    </linearGradient>
+  </defs>
+  <path d="M14 29 31 13.5a2 2 0 0 1 2.7 0L51 29v20a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4Z"
+        fill="none" stroke="url(#brandGreen)" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 43.5c-2.5-2.8-9.2-7-9.2-12.1 0-3.7 2.8-6.2 5.7-6.2 1.7 0 3 .8 4 2.2 1-1.4 2.3-2.2 4-2.2 2.9 0 5.7 2.5 5.7 6.2 0 5.1-6.7 9.3-9.2 12.1-.6.7-1.4.7-2 0Z"
+        fill="url(#accentGreen)"/>
+  <g stroke="url(#accentGreen)" stroke-width="4.4" stroke-linecap="round">
+    <path d="M6.5 24.5 12 24"/>
+    <path d="M9.5 13.5 14.1 17.6"/>
+    <path d="M20 6.5V12"/>
+  </g>
 </svg>

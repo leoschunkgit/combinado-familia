@@ -1,0 +1,1100 @@
+-- Remove por completo a antiga bonificação extra do "Fez".
+-- Estrelas e recompensas permanecem como mecanismos de reconhecimento.
+
+drop function if exists public.reconciliar_ocorrencia(text,bigint,bigint,timestamp with time zone,text,text,numeric,text,text,text,numeric,bigint,text);
+
+CREATE OR REPLACE FUNCTION public.reconciliar_ocorrencia(p_acao text, p_id_ocorrencia bigint DEFAULT NULL::bigint, p_id_filho_tarefa bigint DEFAULT NULL::bigint, p_created_at timestamp with time zone DEFAULT NULL::timestamp with time zone, p_novo_tipo text DEFAULT NULL::text, p_consequencia_tipo text DEFAULT NULL::text, p_desconto_valor numeric DEFAULT NULL::numeric, p_penalidade_descricao text DEFAULT NULL::text, p_id_revisao bigint DEFAULT NULL::bigint, p_motivo text DEFAULT NULL::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_pai_id bigint;
+  v_id_ocorrencia bigint;
+  v_id_filho_tarefa bigint;
+  v_id_filho bigint;
+  v_id_vigencia bigint;
+  v_id_tarefa bigint;
+  v_tem_mesada boolean;
+  v_valor_mesada numeric;
+  v_created_at timestamptz;
+  v_created_at_original timestamptz;
+  v_tipo_anterior text;
+  v_estado_anterior jsonb;
+  v_estado_novo jsonb;
+  v_conseq_anterior jsonb;
+  v_conseq_nova jsonb;
+  v_contador integer;
+  v_acao text;
+  v_novo_tipo text;
+  v_consequencia text;
+  v_desconto_efetivo numeric;
+  v_penalidade_efetiva text;
+  v_revisao_status text;
+  v_revisao_occ bigint;
+  v_revisao_ft bigint;
+  v_revisao_data date;
+  v_data date;
+begin
+  v_acao := upper(btrim(coalesce(p_acao, '')));
+  if v_acao not in ('SALVAR','DESFAZER','CUMPRIR_PENALIDADE','SOLICITAR_REVISAO','RESOLVER_REVISAO') then
+    raise exception 'Ação de reconciliação inválida';
+  end if;
+
+  select p.id
+    into v_pai_id
+  from public.t_usuario_pai p
+  where p.auth_user_id = auth.uid();
+
+  if v_pai_id is null and v_acao = 'SOLICITAR_REVISAO' then
+    begin
+      v_pai_id := nullif(current_setting('app.revisao_filho_pai_id', true), '')::bigint;
+    exception when invalid_text_representation then
+      v_pai_id := null;
+    end;
+  end if;
+
+  if v_pai_id is null then
+    raise exception 'Responsável não encontrado';
+  end if;
+
+  if p_id_ocorrencia is not null then
+    select
+      o.id,
+      o.id_filho_tarefa,
+      o.created_at,
+      o.created_at,
+      o.tipo,
+      jsonb_build_object(
+        'id', o.id,
+        'id_filho_tarefa', o.id_filho_tarefa,
+        'tipo', o.tipo,
+        'created_at', o.created_at
+      )
+    into
+      v_id_ocorrencia,
+      v_id_filho_tarefa,
+      v_created_at,
+      v_created_at_original,
+      v_tipo_anterior,
+      v_estado_anterior
+    from public.t_ocorrencia o
+    where o.id = p_id_ocorrencia
+      and o.id_usuario_pai = v_pai_id
+    for update;
+
+    if v_id_ocorrencia is null then
+      raise exception 'Ocorrência não encontrada';
+    end if;
+  else
+    v_id_filho_tarefa := p_id_filho_tarefa;
+    v_created_at := coalesce(p_created_at, now());
+  end if;
+
+  if p_id_filho_tarefa is not null
+     and v_id_filho_tarefa is distinct from p_id_filho_tarefa then
+    raise exception 'Não é permitido mover uma ocorrência para outra atribuição';
+  end if;
+
+  if v_id_filho_tarefa is null then
+    raise exception 'Informe a atribuição';
+  end if;
+
+  if v_id_ocorrencia is not null
+     and p_created_at is not null
+     and timezone('America/Sao_Paulo', p_created_at)::date
+         is distinct from timezone('America/Sao_Paulo', v_created_at_original)::date then
+    raise exception 'Para mudar a data, desfaça a marcação e registre uma nova ocorrência';
+  end if;
+
+  if p_created_at is not null then
+    v_created_at := p_created_at;
+  end if;
+
+  v_data := timezone('America/Sao_Paulo', v_created_at)::date;
+
+  select
+    ft.id_filho,
+    ft.id_vigencia,
+    ft.id_tarefa,
+    coalesce(f.tem_mesada_opcional, false) and f.valor_mesada is not null,
+    f.valor_mesada
+  into
+    v_id_filho,
+    v_id_vigencia,
+    v_id_tarefa,
+    v_tem_mesada,
+    v_valor_mesada
+  from public.t_filho_tarefa ft
+  join public.t_filho f
+    on f.id = ft.id_filho
+   and f.id_usuario_pai = ft.id_usuario_pai
+  where ft.id = v_id_filho_tarefa
+    and ft.id_usuario_pai = v_pai_id
+  for key share of ft, f;
+
+  if v_id_filho is null then
+    raise exception 'Atribuição não encontrada para este responsável';
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      v_id_filho_tarefa::text || ':' || v_data::text,
+      0
+    )
+  );
+
+  if v_id_ocorrencia is not null then
+    select jsonb_build_object(
+      'tipo', c.tipo,
+      'desconto_valor', c.desconto_valor,
+      'penalidade_descricao', c.penalidade_descricao,
+      'status', c.status,
+      'cumprida_em', c.cumprida_em,
+      'cancelada_em', c.cancelada_em
+    )
+    into v_conseq_anterior
+    from public.t_ocorrencia_consequencia c
+    where c.id_ocorrencia = v_id_ocorrencia
+      and c.id_usuario_pai = v_pai_id
+    for update;
+  end if;
+
+  if v_id_ocorrencia is not null
+     and v_acao = 'SALVAR'
+     and upper(btrim(coalesce(p_novo_tipo, ''))) = 'NAO_FEZ'
+     and exists (
+       select 1
+       from public.t_revisao_tarefa_filho r
+       where r.id_ocorrencia = v_id_ocorrencia
+         and r.status = 'PENDENTE'
+     ) then
+    raise exception 'Esta ocorrência possui revisão pendente. Resolva a revisão antes de alterar o Não fez';
+  end if;
+
+  -- Penalidade cumprida é fato histórico e não pode ser apagada ou reescrita.
+  -- Se a marcação estiver errada, a ocorrência pode ser corrigida para FEZ,
+  -- preservando a penalidade já cumprida no histórico.
+  if v_id_ocorrencia is not null
+     and v_acao = 'DESFAZER'
+     and public.motivo_bloqueio_desfazer_ocorrencia_interno(v_pai_id, v_id_ocorrencia) = 'PENALIDADE_CUMPRIDA' then
+    raise exception 'Uma penalidade já cumprida faz parte do histórico e não pode ser desfeita. Se a marcação estiver errada, altere para Fez';
+  end if;
+
+  if v_id_ocorrencia is not null
+     and v_conseq_anterior->>'tipo' = 'PENALIDADE'
+     and v_conseq_anterior->>'status' = 'CUMPRIDA' then
+    if v_acao in ('SALVAR','RESOLVER_REVISAO')
+       and upper(btrim(coalesce(p_novo_tipo, ''))) = 'NAO_FEZ'
+       and p_consequencia_tipo is not null then
+      raise exception 'Uma penalidade já cumprida não pode ter sua consequência alterada';
+    end if;
+  end if;
+
+  if v_acao = 'SOLICITAR_REVISAO' then
+    if p_id_revisao is null or v_id_ocorrencia is null then
+      raise exception 'Informe a revisão e a ocorrência';
+    end if;
+
+    select r.status, r.id_ocorrencia, r.id_filho_tarefa, r.data_referencia
+      into v_revisao_status, v_revisao_occ, v_revisao_ft, v_revisao_data
+    from public.t_revisao_tarefa_filho r
+    join public.t_filho_tarefa ft
+      on ft.id = r.id_filho_tarefa
+     and ft.id_usuario_pai = v_pai_id
+    where r.id = p_id_revisao
+    for update of r;
+
+    if v_revisao_status is null then
+      raise exception 'Revisão não encontrada';
+    end if;
+    if v_revisao_status <> 'PENDENTE' then
+      raise exception 'Esta revisão já foi encerrada';
+    end if;
+    if v_revisao_occ <> v_id_ocorrencia
+       or v_revisao_ft <> v_id_filho_tarefa
+       or v_revisao_data <> v_data then
+      raise exception 'A revisão não pertence a esta ocorrência';
+    end if;
+    if v_tipo_anterior <> 'NAO_FEZ' then
+      raise exception 'A revisão só pode ser solicitada para um Não fez';
+    end if;
+
+    update public.t_ocorrencia_consequencia
+    set status = 'SUSPENSA_REVISAO',
+        updated_at = now()
+    where id_usuario_pai = v_pai_id
+      and id_ocorrencia = v_id_ocorrencia
+      and tipo = 'PENALIDADE'
+      and status = 'PENDENTE';
+
+  elsif v_acao = 'CUMPRIR_PENALIDADE' then
+    if v_id_ocorrencia is null then
+      raise exception 'Informe a ocorrência da penalidade';
+    end if;
+
+    update public.t_ocorrencia_consequencia
+    set status = 'CUMPRIDA',
+        cumprida_em = coalesce(cumprida_em, now()),
+        cancelada_em = null,
+        updated_at = now()
+    where id_usuario_pai = v_pai_id
+      and id_ocorrencia = v_id_ocorrencia
+      and tipo = 'PENALIDADE'
+      and status = 'PENDENTE';
+
+    if not found then
+      raise exception 'Penalidade pendente não encontrada';
+    end if;
+
+  elsif v_acao = 'DESFAZER' then
+    if v_id_ocorrencia is null then
+      raise exception 'Informe a ocorrência a desfazer';
+    end if;
+
+    update public.t_revisao_tarefa_filho
+    set status = 'MARCACAO_DESFEITA',
+        resolvido_em = now()
+    where id_ocorrencia = v_id_ocorrencia
+      and status = 'PENDENTE';
+
+    delete from public.t_estrela_concessao
+    where id_usuario_pai = v_pai_id
+      and id_ocorrencia_origem = v_id_ocorrencia;
+
+    delete from public.t_ocorrencia
+    where id = v_id_ocorrencia
+      and id_usuario_pai = v_pai_id;
+
+    perform public.reconciliar_recompensas_estrelas_filho_interno(
+      v_pai_id,
+      v_id_filho
+    );
+
+    insert into public.t_ocorrencia_reconciliacao (
+      id_usuario_pai, id_ocorrencia, id_filho_tarefa, acao, origem,
+      id_revisao, estado_anterior, estado_novo, motivo
+    ) values (
+      v_pai_id, v_id_ocorrencia, v_id_filho_tarefa, 'DESFAZER',
+      case when p_id_revisao is null then 'RESPONSAVEL' else 'REVISAO' end,
+      p_id_revisao,
+      v_estado_anterior || jsonb_build_object('consequencia', v_conseq_anterior),
+      null,
+      nullif(btrim(coalesce(p_motivo,'')), '')
+    );
+
+    v_contador := public.contar_nao_fez_filho_vigencia(
+      v_id_filho,
+      v_id_vigencia
+    );
+
+    return jsonb_build_object(
+      'ok', true,
+      'acao', 'DESFAZER',
+      'id_ocorrencia', v_id_ocorrencia,
+      'id_filho', v_id_filho,
+      'id_vigencia', v_id_vigencia,
+      'contador_nao_fez_vigencia', v_contador
+    );
+
+  else
+    if v_acao = 'RESOLVER_REVISAO' then
+      if p_id_revisao is null or v_id_ocorrencia is null then
+        raise exception 'Informe a revisão e a ocorrência';
+      end if;
+
+      select r.status, r.id_ocorrencia, r.id_filho_tarefa, r.data_referencia
+        into v_revisao_status, v_revisao_occ, v_revisao_ft, v_revisao_data
+      from public.t_revisao_tarefa_filho r
+      join public.t_filho_tarefa ft
+        on ft.id = r.id_filho_tarefa
+       and ft.id_usuario_pai = v_pai_id
+      where r.id = p_id_revisao
+      for update of r;
+
+      if v_revisao_status is null then
+        raise exception 'Revisão não encontrada';
+      end if;
+
+      if v_revisao_status <> 'PENDENTE' then
+        raise exception 'Esta revisão já foi encerrada';
+      end if;
+
+      if v_revisao_occ <> v_id_ocorrencia
+         or v_revisao_ft <> v_id_filho_tarefa
+         or v_revisao_data <> v_data then
+        raise exception 'A revisão não pertence a esta ocorrência';
+      end if;
+
+      if v_tipo_anterior <> 'NAO_FEZ' then
+        raise exception 'A revisão não pertence mais a um Não fez';
+      end if;
+
+      perform set_config('app.resolucao_revisao_ocorrencia', 'on', true);
+    end if;
+
+    v_novo_tipo := upper(btrim(coalesce(p_novo_tipo, '')));
+    if v_novo_tipo not in ('FEZ','NAO_FEZ') then
+      raise exception 'Tipo de ocorrência inválido';
+    end if;
+
+    if v_novo_tipo = 'FEZ' then
+      if p_consequencia_tipo is not null
+         or p_desconto_valor is not null
+         or nullif(btrim(coalesce(p_penalidade_descricao,'')), '') is not null then
+        raise exception 'Fez não pode receber consequência de Não fez';
+      end if;
+
+    else
+      if p_consequencia_tipo is null
+         and v_id_ocorrencia is not null
+         and v_tipo_anterior = 'NAO_FEZ' then
+        if v_conseq_anterior is null then
+          v_consequencia := 'NENHUMA';
+        else
+          v_consequencia := upper(v_conseq_anterior->>'tipo');
+          v_desconto_efetivo := nullif(v_conseq_anterior->>'desconto_valor','')::numeric;
+          v_penalidade_efetiva := nullif(v_conseq_anterior->>'penalidade_descricao','');
+        end if;
+      else
+        v_consequencia := upper(btrim(coalesce(p_consequencia_tipo, 'NENHUMA')));
+        v_desconto_efetivo := p_desconto_valor;
+        v_penalidade_efetiva := nullif(btrim(coalesce(p_penalidade_descricao,'')), '');
+      end if;
+
+      if v_consequencia not in ('NENHUMA','DESCONTO','PENALIDADE') then
+        raise exception 'Consequência do Não fez inválida';
+      end if;
+
+      if v_consequencia = 'DESCONTO' then
+        if not v_tem_mesada then
+          raise exception 'Desconto de mesada só pode ser aplicado a filho com mesada cadastrada';
+        end if;
+
+        if v_desconto_efetivo is null or v_desconto_efetivo <= 0 then
+          raise exception 'Informe um valor de desconto válido';
+        end if;
+
+      elsif v_consequencia = 'PENALIDADE' then
+        if v_penalidade_efetiva is null
+           or char_length(v_penalidade_efetiva) not between 2 and 200 then
+          raise exception 'Informe uma penalidade entre 2 e 200 caracteres';
+        end if;
+      end if;
+    end if;
+
+    if v_id_ocorrencia is null then
+      insert into public.t_ocorrencia (
+        id_usuario_pai,
+        id_filho_tarefa,
+        tipo,
+        created_at
+      )
+      values (
+        v_pai_id,
+        v_id_filho_tarefa,
+        v_novo_tipo,
+        v_created_at
+      )
+      returning id, created_at
+        into v_id_ocorrencia, v_created_at;
+
+      v_estado_anterior := null;
+      v_tipo_anterior := null;
+    else
+      update public.t_ocorrencia
+      set tipo = v_novo_tipo,
+          created_at = v_created_at
+      where id = v_id_ocorrencia
+        and id_usuario_pai = v_pai_id;
+    end if;
+
+    if v_acao = 'RESOLVER_REVISAO' then
+      perform set_config('app.resolucao_revisao_ocorrencia', 'off', true);
+    end if;
+
+    if v_novo_tipo = 'FEZ' then
+      update public.t_ocorrencia_consequencia
+      set status =
+            case
+              when tipo='DESCONTO' and status='APLICADO' then 'ESTORNADO'
+              when tipo='PENALIDADE' and status in ('PENDENTE','SUSPENSA_REVISAO') then 'CANCELADA'
+              else status
+            end,
+          cancelada_em =
+            case
+              when tipo='PENALIDADE' and status in ('PENDENTE','SUSPENSA_REVISAO') then now()
+              else cancelada_em
+            end,
+          updated_at = now()
+      where id_usuario_pai = v_pai_id
+        and id_ocorrencia = v_id_ocorrencia;
+
+    elsif v_consequencia = 'NENHUMA' then
+      delete from public.t_ocorrencia_consequencia
+      where id_usuario_pai = v_pai_id
+        and id_ocorrencia = v_id_ocorrencia;
+
+    elsif v_consequencia = 'DESCONTO' then
+      insert into public.t_ocorrencia_consequencia (
+        id_usuario_pai,
+        id_ocorrencia,
+        tipo,
+        desconto_valor,
+        penalidade_descricao,
+        status,
+        cumprida_em,
+        cancelada_em
+      )
+      values (
+        v_pai_id,
+        v_id_ocorrencia,
+        'DESCONTO',
+        v_desconto_efetivo,
+        null,
+        'APLICADO',
+        null,
+        null
+      )
+      on conflict (id_ocorrencia) do update
+      set tipo = 'DESCONTO',
+          desconto_valor = excluded.desconto_valor,
+          penalidade_descricao = null,
+          status = 'APLICADO',
+          cumprida_em = null,
+          cancelada_em = null,
+          updated_at = now();
+
+    else
+      if p_consequencia_tipo is null
+         and v_tipo_anterior = 'NAO_FEZ'
+         and v_conseq_anterior->>'tipo' = 'PENALIDADE'
+         and v_conseq_anterior->>'status' = 'CUMPRIDA' then
+        null;
+      else
+        insert into public.t_ocorrencia_consequencia (
+          id_usuario_pai,
+          id_ocorrencia,
+          tipo,
+          desconto_valor,
+          penalidade_descricao,
+          status,
+          cumprida_em,
+          cancelada_em
+        )
+        values (
+          v_pai_id,
+          v_id_ocorrencia,
+          'PENALIDADE',
+          null,
+          v_penalidade_efetiva,
+          'PENDENTE',
+          null,
+          null
+        )
+        on conflict (id_ocorrencia) do update
+        set tipo = 'PENALIDADE',
+            desconto_valor = null,
+            penalidade_descricao = excluded.penalidade_descricao,
+            status = 'PENDENTE',
+            cumprida_em = null,
+            cancelada_em = null,
+            updated_at = now();
+      end if;
+    end if;
+
+    if v_acao = 'RESOLVER_REVISAO' then
+      update public.t_revisao_tarefa_filho
+      set status = case
+            when v_novo_tipo='FEZ' then 'ALTERADO_PARA_FEZ'
+            else 'MANTEVE_NAO_FEZ'
+          end,
+          resolvido_em = now()
+      where id = p_id_revisao
+        and id_ocorrencia = v_id_ocorrencia
+        and status = 'PENDENTE';
+
+    elsif v_novo_tipo = 'FEZ' then
+      update public.t_revisao_tarefa_filho
+      set status = 'ALTERADO_PARA_FEZ',
+          resolvido_em = now()
+      where id_ocorrencia = v_id_ocorrencia
+        and status = 'PENDENTE';
+    end if;
+
+    update public.t_solicitacao_tarefa_filho s
+    set status = case
+          when v_novo_tipo='FEZ' then 'RESOLVIDA_FEZ'
+          else 'RESOLVIDA_NAO_FEZ'
+        end,
+        resolvido_em = now()
+    where s.id_filho_tarefa = v_id_filho_tarefa
+      and s.data_referencia = v_data
+      and s.status = 'PENDENTE';
+
+    perform public.sincronizar_estrela_ocorrencia_interno(
+      v_pai_id,
+      v_id_ocorrencia
+    );
+
+    perform public.reconciliar_recompensas_estrelas_filho_interno(
+      v_pai_id,
+      v_id_filho
+    );
+  end if;
+
+  select jsonb_build_object(
+    'id', o.id,
+    'id_filho_tarefa', o.id_filho_tarefa,
+    'tipo', o.tipo,
+    'created_at', o.created_at
+  )
+  into v_estado_novo
+  from public.t_ocorrencia o
+  where o.id = v_id_ocorrencia;
+
+  select jsonb_build_object(
+    'tipo', c.tipo,
+    'desconto_valor', c.desconto_valor,
+    'penalidade_descricao', c.penalidade_descricao,
+    'status', c.status,
+    'cumprida_em', c.cumprida_em,
+    'cancelada_em', c.cancelada_em
+  )
+  into v_conseq_nova
+  from public.t_ocorrencia_consequencia c
+  where c.id_ocorrencia = v_id_ocorrencia
+    and c.id_usuario_pai = v_pai_id;
+
+  insert into public.t_ocorrencia_reconciliacao (
+    id_usuario_pai,
+    id_ocorrencia,
+    id_filho_tarefa,
+    acao,
+    origem,
+    id_revisao,
+    estado_anterior,
+    estado_novo,
+    motivo
+  )
+  values (
+    v_pai_id,
+    v_id_ocorrencia,
+    v_id_filho_tarefa,
+    case
+      when v_acao='CUMPRIR_PENALIDADE' then 'CUMPRIR_PENALIDADE'
+      when v_acao='SOLICITAR_REVISAO' then 'SOLICITAR_REVISAO'
+      when v_acao='RESOLVER_REVISAO' then 'RESOLVER_REVISAO'
+      when v_estado_anterior is null then 'CRIAR'
+      else 'ALTERAR'
+    end,
+    case when v_acao in ('SOLICITAR_REVISAO','RESOLVER_REVISAO') then 'REVISAO' else 'RESPONSAVEL' end,
+    p_id_revisao,
+    case
+      when v_estado_anterior is null then null
+      else v_estado_anterior || jsonb_build_object('consequencia', v_conseq_anterior)
+    end,
+    v_estado_novo || jsonb_build_object('consequencia', v_conseq_nova),
+    nullif(btrim(coalesce(p_motivo,'')), '')
+  );
+
+  v_contador := public.contar_nao_fez_filho_vigencia(
+    v_id_filho,
+    v_id_vigencia
+  );
+
+  return jsonb_build_object(
+    'ok', true,
+    'acao', v_acao,
+    'id_ocorrencia', v_id_ocorrencia,
+    'id_filho', v_id_filho,
+    'id_vigencia', v_id_vigencia,
+    'contador_nao_fez_vigencia', v_contador,
+    'ocorrencia', v_estado_novo,
+    'consequencia', v_conseq_nova,
+    'estrelas', public.resumo_estrelas_filho_interno(v_pai_id, v_id_filho)
+  );
+end;
+$function$
+;
+
+revoke all on function public.reconciliar_ocorrencia(text,bigint,bigint,timestamp with time zone,text,text,numeric,text,bigint,text)
+  from public, anon, authenticated, service_role;
+grant execute on function public.reconciliar_ocorrencia(text,bigint,bigint,timestamp with time zone,text,text,numeric,text,bigint,text)
+  to authenticated;
+
+CREATE OR REPLACE FUNCTION public.criar_revisao_ocorrencia_filho_interno(p_token text, p_id_ocorrencia bigint, p_observacao text DEFAULT NULL::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_token_hash text;
+  v_pai_id bigint;
+  v_filho_id bigint;
+  v_id_filho_tarefa bigint;
+  v_vigencia_id bigint;
+  v_tarefa_id bigint;
+  v_inicio timestamptz;
+  v_fim timestamptz;
+  v_nome_filho text;
+  v_nome_tarefa text;
+  v_data date;
+  v_observacao text;
+  v_tipo text;
+  v_id bigint;
+  v_status text;
+  v_created_at timestamptz;
+  v_resolvido_em timestamptz;
+begin
+  if p_token is null or p_token !~ '^[0-9a-f]{64}$' then
+    return jsonb_build_object('ok', false, 'codigo', 'SESSAO_INVALIDA');
+  end if;
+
+  if p_id_ocorrencia is null or p_id_ocorrencia <= 0 then
+    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
+  end if;
+
+  v_observacao := nullif(btrim(coalesce(p_observacao, '')), '');
+  if v_observacao is not null and char_length(v_observacao) > 120 then
+    return jsonb_build_object('ok', false, 'codigo', 'OBSERVACAO_INVALIDA');
+  end if;
+
+  v_token_hash := pg_catalog.encode(
+    extensions.digest(lower(p_token), 'sha256'),
+    'hex'
+  );
+
+  select a.id_usuario_pai, a.id_filho
+    into v_pai_id, v_filho_id
+  from public.t_filho_acesso_app a
+  where a.token_hash = v_token_hash
+    and a.ativo = true
+  limit 1;
+
+  if v_pai_id is null or v_filho_id is null then
+    return jsonb_build_object('ok', false, 'codigo', 'SESSAO_INVALIDA');
+  end if;
+
+  select
+    o.id_filho_tarefa,
+    o.tipo,
+    timezone('America/Sao_Paulo', o.created_at)::date,
+    ft.id_vigencia,
+    ft.id_tarefa
+  into
+    v_id_filho_tarefa,
+    v_tipo,
+    v_data,
+    v_vigencia_id,
+    v_tarefa_id
+  from public.t_ocorrencia o
+  join public.t_filho_tarefa ft
+    on ft.id = o.id_filho_tarefa
+   and ft.id_usuario_pai = o.id_usuario_pai
+  where o.id = p_id_ocorrencia
+    and o.id_usuario_pai = v_pai_id
+    and ft.id_filho = v_filho_id
+  for update of o;
+
+  if v_id_filho_tarefa is null then
+    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
+  end if;
+
+  if v_tipo <> 'NAO_FEZ' then
+    return jsonb_build_object('ok', false, 'codigo', 'REVISAO_INDISPONIVEL');
+  end if;
+
+  select v.data_inicio, v.data_fim
+    into v_inicio, v_fim
+  from public.t_vigencia v
+  where v.id = v_vigencia_id
+    and v.id_usuario_pai = v_pai_id
+  for key share;
+
+  if v_inicio is null or v_fim is null then
+    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
+  end if;
+
+  if now() < v_inicio or now() > v_fim then
+    return jsonb_build_object('ok', false, 'codigo', 'VIGENCIA_INATIVA');
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      v_id_filho_tarefa::text || ':' || v_data::text,
+      0
+    )
+  );
+
+  select f.nome, t.nome
+    into v_nome_filho, v_nome_tarefa
+  from public.t_filho f
+  join public.t_tarefa t
+    on t.id = v_tarefa_id
+   and t.id_usuario_pai = v_pai_id
+  where f.id = v_filho_id
+    and f.id_usuario_pai = v_pai_id;
+
+  if v_nome_filho is null or v_nome_tarefa is null then
+    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
+  end if;
+
+  insert into public.t_revisao_tarefa_filho (
+    id_filho_tarefa,
+    id_ocorrencia,
+    data_referencia,
+    observacao
+  )
+  values (
+    v_id_filho_tarefa,
+    p_id_ocorrencia,
+    v_data,
+    v_observacao
+  )
+  on conflict (id_ocorrencia) do nothing
+  returning id, status, created_at, resolvido_em
+    into v_id, v_status, v_created_at, v_resolvido_em;
+
+  if v_id is null then
+    select r.id, r.status, r.created_at, r.resolvido_em, r.observacao
+      into v_id, v_status, v_created_at, v_resolvido_em, v_observacao
+    from public.t_revisao_tarefa_filho r
+    where r.id_ocorrencia = p_id_ocorrencia;
+
+    return jsonb_build_object(
+      'ok', true,
+      'criada', false,
+      'id_usuario_pai', v_pai_id,
+      'id_filho', v_filho_id,
+      'nome_filho', v_nome_filho,
+      'nome_tarefa', v_nome_tarefa,
+      'revisao', jsonb_build_object(
+        'id', v_id,
+        'id_ocorrencia', p_id_ocorrencia,
+        'id_filho_tarefa', v_id_filho_tarefa,
+        'data_referencia', v_data,
+        'observacao', v_observacao,
+        'status', v_status,
+        'created_at', v_created_at,
+        'resolvido_em', v_resolvido_em
+      )
+    );
+  end if;
+
+  perform set_config('app.revisao_filho_pai_id', v_pai_id::text, true);
+
+  perform public.reconciliar_ocorrencia(
+    p_acao => 'SOLICITAR_REVISAO',
+    p_id_ocorrencia => p_id_ocorrencia,
+    p_id_revisao => v_id,
+    p_motivo => 'Pedido de revisão do filho'
+  );
+
+  perform set_config('app.revisao_filho_pai_id', '', true);
+
+  update public.t_filho_acesso_app
+  set ultimo_acesso_em = now(),
+      updated_at = now()
+  where token_hash = v_token_hash
+    and ativo = true;
+
+  return jsonb_build_object(
+    'ok', true,
+    'criada', true,
+    'id_usuario_pai', v_pai_id,
+    'id_filho', v_filho_id,
+    'nome_filho', v_nome_filho,
+    'nome_tarefa', v_nome_tarefa,
+    'revisao', jsonb_build_object(
+      'id', v_id,
+      'id_ocorrencia', p_id_ocorrencia,
+      'id_filho_tarefa', v_id_filho_tarefa,
+      'data_referencia', v_data,
+      'observacao', v_observacao,
+      'status', v_status,
+      'created_at', v_created_at,
+      'resolvido_em', v_resolvido_em
+    )
+  );
+end;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.desfazer_ocorrencias(p_ids bigint[])
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_pai_id bigint;
+  v_ids bigint[];
+  v_id bigint;
+  v_resultados jsonb := '[]'::jsonb;
+  v_ids_desfeitos bigint[] := '{}';
+  v_ids_preservados bigint[] := '{}';
+begin
+  v_pai_id := public.current_pai_id();
+
+  if v_pai_id is null then
+    raise exception 'Responsável não encontrado';
+  end if;
+
+  select array_agg(distinct x.id order by x.id)
+    into v_ids
+  from unnest(p_ids) x(id)
+  where x.id is not null;
+
+  if v_ids is null or coalesce(array_length(v_ids,1),0)=0 then
+    raise exception 'Informe ao menos uma ocorrência';
+  end if;
+
+  if exists (
+    select 1
+    from unnest(v_ids) x(id)
+    left join public.t_ocorrencia o
+      on o.id=x.id
+     and o.id_usuario_pai=v_pai_id
+    where o.id is null
+  ) then
+    raise exception 'Uma ou mais ocorrências não pertencem ao responsável';
+  end if;
+
+  foreach v_id in array v_ids
+  loop
+    if public.motivo_bloqueio_desfazer_ocorrencia_interno(v_pai_id,v_id)
+       = 'PENALIDADE_CUMPRIDA' then
+      v_ids_preservados := array_append(v_ids_preservados,v_id);
+      continue;
+    end if;
+
+    v_resultados := v_resultados || jsonb_build_array(
+      public.reconciliar_ocorrencia(
+        p_acao => 'DESFAZER',
+        p_id_ocorrencia => v_id,
+        p_motivo => 'Desfazer marcação'
+      )
+    );
+
+    v_ids_desfeitos := array_append(v_ids_desfeitos,v_id);
+  end loop;
+
+  return jsonb_build_object(
+    'ok',true,
+    'quantidade_solicitada',coalesce(array_length(v_ids,1),0),
+    'quantidade_desfeita',coalesce(array_length(v_ids_desfeitos,1),0),
+    'quantidade_preservada',coalesce(array_length(v_ids_preservados,1),0),
+    'ids_desfeitos',to_jsonb(v_ids_desfeitos),
+    'ids_preservados',to_jsonb(v_ids_preservados),
+    'resultados',v_resultados
+  );
+end;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.resolver_revisao_tarefa_filho(p_id_revisao bigint, p_decisao text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_pai_id bigint;
+  v_id_ocorrencia bigint;
+  v_decisao text;
+begin
+  select p.id
+    into v_pai_id
+  from public.t_usuario_pai p
+  where p.auth_user_id = auth.uid();
+
+  if v_pai_id is null then
+    raise exception 'Responsável não encontrado';
+  end if;
+
+  v_decisao := upper(btrim(coalesce(p_decisao,'')));
+
+  if v_decisao not in ('MANTER_NAO_FEZ','ALTERAR_PARA_FEZ') then
+    raise exception 'Decisão de revisão inválida';
+  end if;
+
+  select r.id_ocorrencia
+    into v_id_ocorrencia
+  from public.t_revisao_tarefa_filho r
+  join public.t_filho_tarefa ft
+    on ft.id = r.id_filho_tarefa
+   and ft.id_usuario_pai = v_pai_id
+  where r.id = p_id_revisao;
+
+  if v_id_ocorrencia is null then
+    raise exception 'Revisão não encontrada';
+  end if;
+
+  perform public.reconciliar_ocorrencia(
+    p_acao => 'RESOLVER_REVISAO',
+    p_id_ocorrencia => v_id_ocorrencia,
+    p_novo_tipo => case
+      when v_decisao='ALTERAR_PARA_FEZ' then 'FEZ'
+      else 'NAO_FEZ'
+    end,
+    p_id_revisao => p_id_revisao,
+    p_motivo => 'Decisão de revisão do filho'
+  );
+
+  return true;
+end;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION public.montar_painel_filho(p_id_usuario_pai bigint, p_id_filho bigint)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare
+  v_result jsonb;
+begin
+  if not exists (
+    select 1
+    from public.t_filho f
+    where f.id = p_id_filho
+      and f.id_usuario_pai = p_id_usuario_pai
+  ) then
+    return null;
+  end if;
+
+  select jsonb_build_object(
+    'responsavel', jsonb_build_object('nome', p.nome),
+    'filho', jsonb_build_object(
+      'nome', f.nome,
+      'cor', f.cor,
+      'avatar', f.avatar,
+      'tem_mesada', coalesce(f.tem_mesada_opcional, false) and f.valor_mesada is not null,
+      'valor_mesada', f.valor_mesada
+    ),
+    'vigencias', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'id', v.id,
+          'data_inicio', v.data_inicio,
+          'data_fim', v.data_fim,
+          'qtd_nao_fez', (
+            select count(*)::integer
+            from public.t_ocorrencia o_count
+            join public.t_filho_tarefa ft_count
+              on ft_count.id = o_count.id_filho_tarefa
+            where ft_count.id_usuario_pai = p_id_usuario_pai
+              and ft_count.id_filho = p_id_filho
+              and ft_count.id_vigencia = v.id
+              and o_count.tipo = 'NAO_FEZ'
+          ),
+          'tarefas', coalesce((
+            select jsonb_agg(
+              jsonb_build_object(
+                'id', ft.id,
+                'nome', t.nome,
+                'ocorrencias', coalesce((
+                  select jsonb_agg(
+                    jsonb_build_object(
+                      'id', o.id,
+                      'tipo', o.tipo,
+                      'data', o.created_at,
+                      'consequencia',
+                        case when c.id is null then null else
+                          jsonb_build_object(
+                            'tipo', c.tipo,
+                            'desconto_valor', c.desconto_valor,
+                            'penalidade_descricao', c.penalidade_descricao,
+                            'status', c.status,
+                            'cumprida_em', c.cumprida_em,
+                            'cancelada_em', c.cancelada_em
+                          )
+                        end
+                    )
+                    order by o.created_at desc
+                  )
+                  from public.t_ocorrencia o
+                  left join public.t_ocorrencia_consequencia c
+                    on c.id_ocorrencia = o.id
+                   and c.id_usuario_pai = o.id_usuario_pai
+                  where o.id_filho_tarefa = ft.id
+                    and o.id_usuario_pai = p_id_usuario_pai
+                ), '[]'::jsonb)
+              )
+              order by t.nome
+            )
+            from public.t_filho_tarefa ft
+            join public.t_tarefa t
+              on t.id = ft.id_tarefa
+             and t.id_usuario_pai = p_id_usuario_pai
+            where ft.id_vigencia = v.id
+              and ft.id_filho = p_id_filho
+              and ft.id_usuario_pai = p_id_usuario_pai
+          ), '[]'::jsonb)
+        )
+        order by
+          case
+            when now() between v.data_inicio and v.data_fim then 0
+            when now() < v.data_inicio then 1
+            else 2
+          end,
+          case when now() < v.data_inicio then v.data_inicio end asc,
+          case when now() > v.data_fim then v.data_inicio end desc,
+          v.data_inicio asc
+      )
+      from public.t_vigencia v
+      where v.id_usuario_pai = p_id_usuario_pai
+        and exists (
+          select 1
+          from public.t_filho_tarefa ft
+          where ft.id_vigencia = v.id
+            and ft.id_filho = p_id_filho
+            and ft.id_usuario_pai = p_id_usuario_pai
+        )
+    ), '[]'::jsonb),
+    'atualizado_em', now()
+  )
+  into v_result
+  from public.t_filho f
+  join public.t_usuario_pai p on p.id = p_id_usuario_pai
+  where f.id = p_id_filho
+    and f.id_usuario_pai = p_id_usuario_pai;
+
+  return v_result;
+end;
+$function$
+;
+
+update public.t_ocorrencia_reconciliacao
+set
+  estado_anterior = case
+    when estado_anterior is null then null
+    else estado_anterior - 'bonificacao_tipo' - 'bonificacao_descricao' - 'bonificacao_valor'
+  end,
+  estado_novo = case
+    when estado_novo is null then null
+    else estado_novo - 'bonificacao_tipo' - 'bonificacao_descricao' - 'bonificacao_valor'
+  end
+where
+  coalesce(estado_anterior, '{}'::jsonb) ?| array['bonificacao_tipo','bonificacao_descricao','bonificacao_valor']
+  or coalesce(estado_novo, '{}'::jsonb) ?| array['bonificacao_tipo','bonificacao_descricao','bonificacao_valor'];
+
+update public.t_ocorrencia_reconciliacao
+set motivo = 'Atualização de Fez'
+where coalesce(motivo,'') ilike '%bonifica%'
+   or coalesce(motivo,'') ilike '%recompensa extra%';
+
+alter table public.t_ocorrencia
+  drop constraint if exists t_ocorrencia_bonificacao_tipo_check,
+  drop constraint if exists t_ocorrencia_bonificacao_valor_check,
+  drop constraint if exists t_ocorrencia_bonificacao_somente_fez_check,
+  drop constraint if exists t_ocorrencia_bonificacao_consistente_check;
+
+alter table public.t_ocorrencia
+  drop column if exists bonificacao_tipo,
+  drop column if exists bonificacao_descricao,
+  drop column if exists bonificacao_valor;

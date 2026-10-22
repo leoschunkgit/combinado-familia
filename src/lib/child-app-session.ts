@@ -15,12 +15,20 @@ const tokenFilhoValido = (token: unknown): token is string =>
 const aguardar = (ms: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
+export type ConsequenciaOcorrenciaFilho = {
+  tipo: "DESCONTO" | "PENALIDADE";
+  desconto_valor: number | null;
+  penalidade_descricao: string | null;
+  status: "APLICADO" | "PENDENTE" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
+  cumprida_em: string | null;
+  cancelada_em: string | null;
+};
+
 export type OcorrenciaFilho = {
-  tipo: "FEZ" | "NAO_FEZ";
+  id: number;
+  tipo: "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
   data: string;
-  bonificacao_tipo: "TEXTO" | "VALOR" | null;
-  bonificacao_descricao: string | null;
-  bonificacao_valor: number | null;
+  consequencia: ConsequenciaOcorrenciaFilho | null;
 };
 
 export type TarefaFilho = {
@@ -34,17 +42,7 @@ export type SolicitacaoTarefaFilhoApp = {
   id_filho_tarefa: number;
   data_referencia: string;
   observacao: string | null;
-  status: "PENDENTE" | "RESOLVIDA_FEZ" | "RESOLVIDA_NAO_FEZ";
-  created_at: string;
-  resolvido_em: string | null;
-};
-
-export type RevisaoTarefaFilhoApp = {
-  id: number;
-  id_filho_tarefa: number;
-  data_referencia: string;
-  observacao: string | null;
-  status: "PENDENTE" | "MANTEVE_NAO_FEZ" | "ALTERADO_PARA_FEZ" | "MARCACAO_DESFEITA";
+  status: "PENDENTE" | "RESOLVIDA_FEZ" | "RESOLVIDA_NAO_FEZ" | "RESOLVIDA_NAO_PRECISOU";
   created_at: string;
   resolvido_em: string | null;
 };
@@ -53,9 +51,8 @@ export type VigenciaFilho = {
   id: number;
   data_inicio: string;
   data_fim: string;
-  penalidade: string | null;
-  qtd_ocorrencia: number;
-  valor_debito: number | null;
+  qtd_nao_fez: number;
+  qtd_nao_precisou?: number;
   tarefas: TarefaFilho[];
 };
 
@@ -75,7 +72,6 @@ export type PainelFilho = {
   vigencias: VigenciaFilho[];
   estrelas?: EstrelasFilho;
   solicitacoes_hoje?: SolicitacaoTarefaFilhoApp[];
-  revisoes_hoje?: RevisaoTarefaFilhoApp[];
   comunicacao?: {
     mensagem_global_ativa: boolean;
     mensagem_global: string | null;
@@ -97,13 +93,6 @@ type RespostaSolicitacao = {
   notificacoes_enviadas?: number;
 };
 
-type RespostaRevisao = {
-  ok: true;
-  ja_existia: boolean;
-  revisao: RevisaoTarefaFilhoApp;
-  notificacoes_enviadas?: number;
-};
-
 type RespostaRecompensaConcluida = {
   ok: true;
   ja_concluida: boolean;
@@ -112,6 +101,7 @@ type RespostaRecompensaConcluida = {
     nome: string;
     id_ciclo: number;
   };
+  estrelas?: EstrelasFilho;
   notificacoes_enviadas?: number;
 };
 
@@ -171,7 +161,7 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     body: JSON.stringify(body),
   });
 
-  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRevisao | RespostaRecompensaConcluida | RespostaErro;
+  const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRecompensaConcluida | RespostaErro;
 
   if (!response.ok) {
     const codigo = "codigo" in data ? data.codigo : undefined;
@@ -193,12 +183,6 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
     }
     if (codigo === "JA_MARCADA") {
       throw new Error("O responsável já marcou esta tarefa hoje.");
-    }
-    if (codigo === "REVISAO_INDISPONIVEL") {
-      throw new Error("Esta marcação não está disponível para revisão.");
-    }
-    if (codigo === "REVISAO_JA_SOLICITADA") {
-      throw new Error("A revisão desta tarefa já foi solicitada.");
     }
     if (codigo === "OBSERVACAO_INVALIDA") {
       throw new Error("A observação deve ter no máximo 120 caracteres.");
@@ -368,27 +352,6 @@ export async function avisarTarefaConcluida(
   }
 
   return data as RespostaSolicitacao;
-}
-
-export async function pedirRevisaoTarefa(
-  idFilhoTarefa: number,
-  observacao?: string,
-): Promise<RespostaRevisao> {
-  const token = await lerSessaoFilhoLocal();
-  if (!token) throw new Error("Este acesso não está mais ativo.");
-
-  const data = await chamarAcessoFilho({
-    acao: "pedir_revisao_nao_fez",
-    token,
-    id_filho_tarefa: idFilhoTarefa,
-    observacao: observacao?.trim() || null,
-  });
-
-  if (!("ok" in data) || data.ok !== true || !("revisao" in data)) {
-    throw new Error("Não foi possível pedir a revisão ao responsável.");
-  }
-
-  return data as RespostaRevisao;
 }
 
 export async function confirmarRecompensaAproveitada(

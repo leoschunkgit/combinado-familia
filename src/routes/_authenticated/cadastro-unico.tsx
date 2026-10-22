@@ -46,15 +46,11 @@ type TarefaNovaFluxo = {
 type VigenciaDraft = {
   data_inicio: string;
   data_fim: string;
-  qtd_ocorrencia: string;
-  valor_debito: string;
 };
 
 const vigenciaInicial = (): VigenciaDraft => ({
   data_inicio: sugerirInicioVigencia([]),
   data_fim: "",
-  qtd_ocorrencia: "",
-  valor_debito: "",
 });
 
 function vigenciaEstaEmAndamentoAgora(
@@ -266,11 +262,6 @@ function CadastroUnicoPage() {
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft.data_inicio) || Number.isNaN(new Date(draft.data_inicio).getTime())) return "Informe uma data e hora de início válidas";
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(draft.data_fim) || Number.isNaN(new Date(draft.data_fim).getTime())) return "Informe uma data e hora de fim válidas";
     if (new Date(draft.data_fim).getTime() <= new Date(draft.data_inicio).getTime()) return "A data/hora fim deve ser posterior à data/hora início";
-    const qtd = Number(draft.qtd_ocorrencia);
-    if (!Number.isInteger(qtd) || qtd < 1) return "Mínimo de 1 ocorrência";
-    if (qtd > 31) return "Máximo de 31";
-    const valor = Number(draft.valor_debito.replace(",", "."));
-    if (!/^\d+(?:[,.]\d{1,2})?$/.test(draft.valor_debito) || valor <= 0 || valor > 9999999999.99) return "Informe um valor de desconto maior que zero, com até duas casas decimais";
     return null;
   }
 
@@ -311,10 +302,6 @@ function CadastroUnicoPage() {
     const payload = {
       data_inicio: paraIsoDataHoraBrasil(draftParaSalvar.data_inicio),
       data_fim: paraIsoDataHoraBrasil(draftParaSalvar.data_fim),
-      penalidade: null,
-      qtd_ocorrencia: Number(draftParaSalvar.qtd_ocorrencia),
-      tipo_penalidade: "texto",
-      valor_debito: Number(draftParaSalvar.valor_debito.replace(",", ".")),
     };
     const { data, error } = await supabase.from("t_vigencia").insert(payload).select("id").single();
     if (error || !data) { toast.error(msgErro(error)); return; }
@@ -647,7 +634,7 @@ function CadastroUnicoPage() {
                           {fmtVigencia(vigenciaEmAndamentoDisponivel)}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Você pode usar esta vigência neste Cadastro Fluxo sem alterar datas, limite, penalidade ou desconto.
+                          Você pode usar esta vigência neste Cadastro Fluxo sem alterar o período.
                         </p>
                       </div>
                       <Button
@@ -737,20 +724,8 @@ function CadastroUnicoPage() {
                 )}
                 <div className="space-y-3">
                   {diasPeriodoAtual !== null && <p className="text-sm text-muted-foreground">Sua vigência tem {diasPeriodoAtual} {diasPeriodoAtual === 1 ? "dia" : "dias"}.</p>}
-                  <div className="w-full rounded-lg border border-amber-400 bg-amber-50/60 p-3 dark:border-amber-700/60 dark:bg-amber-950/10">
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold">1 — Para filhos sem mesada</p>
-                      <Label>Escolha o limite máximo de “Não fez” que seu filho pode ter nesta vigência</Label>
-                      <Input type="number" min="1" max="31" value={vigenciaDraft.qtd_ocorrencia} onChange={(e) => setVigenciaDraft({ ...vigenciaDraft, qtd_ocorrencia: e.target.value })} />
-                      <p className="text-xs text-muted-foreground">Esse limite considera o total de “Não fez” do filho na vigência, independentemente da quantidade de tarefas atribuídas a ele.</p>
-                    </div>
-                  </div>
-                  <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50/60 p-3 dark:border-emerald-700/60 dark:bg-emerald-950/10">
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold">2 — Para filhos marcados com mesada</p>
-                      <Label>Desconto por cada “Não fez” na mesada (R$)</Label>
-                      <CurrencyInput value={vigenciaDraft.valor_debito} onValueChange={(valor_debito) => setVigenciaDraft({ ...vigenciaDraft, valor_debito })} />
-                    </div>
+                  <div className="rounded-lg border bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                    A vigência define somente o período. As consequências de cada “Não fez” serão escolhidas no momento da marcação.
                   </div>
                 </div>
                 <div className="flex flex-col-reverse gap-2 border-t pt-2.5 sm:flex-row sm:items-center sm:justify-between"><Button className="self-start" variant="ghost" size="sm" onClick={() => setEtapaNovo(2)}>Anterior</Button><Button className="w-full sm:w-auto" onClick={() => void runAction(criarVigencia)}>Criar vigência e continuar</Button></div>
