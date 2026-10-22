@@ -25,9 +25,25 @@ export const Route = createFileRoute("/acompanhar/$token")({
   component: PainelPublico,
 });
 
-type Ocorrencia = { tipo: "FEZ" | "NAO_FEZ"; data: string; bonificacao_tipo: "TEXTO" | "VALOR" | null; bonificacao_descricao: string | null; bonificacao_valor: number | null };
+type Consequencia = {
+  tipo: "DESCONTO" | "PENALIDADE";
+  desconto_valor: number | null;
+  penalidade_descricao: string | null;
+  status: "APLICADO" | "PENDENTE" | "SUSPENSA_REVISAO" | "CUMPRIDA" | "CANCELADA" | "ESTORNADO";
+  cumprida_em: string | null;
+  cancelada_em: string | null;
+};
+type Ocorrencia = {
+  id: number;
+  tipo: "FEZ" | "NAO_FEZ";
+  data: string;
+  bonificacao_tipo: "TEXTO" | "VALOR" | null;
+  bonificacao_descricao: string | null;
+  bonificacao_valor: number | null;
+  consequencia: Consequencia | null;
+};
 type Tarefa = { id: number; nome: string; ocorrencias: Ocorrencia[] };
-type Vigencia = { id: number; data_inicio: string; data_fim: string; penalidade: string | null; qtd_ocorrencia: number; valor_debito: number | null; tarefas: Tarefa[] };
+type Vigencia = { id: number; data_inicio: string; data_fim: string; qtd_nao_fez: number; tarefas: Tarefa[] };
 type Painel = { filho: { nome: string; cor: string | null; avatar: string | null; tem_mesada: boolean; valor_mesada: number | null }; responsavel: { nome: string }; vigencias: Vigencia[]; atualizado_em: string };
 
 const dataHora = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(v));
@@ -36,6 +52,23 @@ const dinheiro = (v: number) => v.toLocaleString("pt-BR", { style: "currency", c
 function status(v: Vigencia) { const s = situacaoVigencia(v); return s === "andamento" ? "Em andamento" : s === "futura" ? "Irá começar" : "Finalizada"; }
 const corStatus = (s: string) => s === "Em andamento" ? "bg-green-400" : s === "Finalizada" ? "bg-red-300" : "bg-gray-300";
 function bonus(o: Ocorrencia) { if (o.tipo !== "FEZ") return null; if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao; if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null) return dinheiro(Number(o.bonificacao_valor)); return "Sem bonificação"; }
+function consequencia(o: Ocorrencia) {
+  if (o.tipo !== "NAO_FEZ") return null;
+  const c = o.consequencia;
+  if (!c) return "Sem consequência";
+  if (c.tipo === "DESCONTO") {
+    return c.status === "ESTORNADO"
+      ? `Desconto de ${dinheiro(Number(c.desconto_valor ?? 0))} — estornado`
+      : `Desconto: ${dinheiro(Number(c.desconto_valor ?? 0))}`;
+  }
+  const status =
+    c.status === "PENDENTE" ? "Pendente" :
+    c.status === "SUSPENSA_REVISAO" ? "Suspensa — em revisão" :
+    c.status === "CUMPRIDA" ? "Cumprida" :
+    c.status === "CANCELADA" ? "Cancelada" :
+    c.status;
+  return `Penalidade: ${c.penalidade_descricao ?? "—"} · ${status}`;
+}
 
 function PainelPublico() {
   const { token } = Route.useParams();
@@ -72,11 +105,33 @@ function PainelPublico() {
   if (indisponivel || !painel) return <div className="flex min-h-screen items-center justify-center bg-muted/20 px-4"><Card className="w-full max-w-md"><CardContent className="pt-6 text-center"><House className="mx-auto h-9 w-9 text-muted-foreground" /><h1 className="mt-3 text-xl font-bold">Acesso indisponível</h1><p className="mt-2 text-sm text-muted-foreground">Este link não está ativo. Peça ao seu responsável um novo link de acompanhamento.</p></CardContent></Card></div>;
 
   const tarefasAtual = vigenciaAtual?.tarefas ?? [];
-  const qtdNaoFez = tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo !== "FEZ").length, 0);
+  const qtdNaoFez = vigenciaAtual?.qtd_nao_fez ?? tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length, 0);
   const qtdFez = tarefasAtual.reduce((n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length, 0);
-  const descontoUnitario = Number(vigenciaAtual?.valor_debito ?? 0);
-  const desconto = painel.filho.tem_mesada ? Math.min(painel.filho.valor_mesada ?? 0, qtdNaoFez * descontoUnitario) : 0;
+  const desconto = painel.filho.tem_mesada
+    ? tarefasAtual.reduce(
+        (total, tarefa) =>
+          total +
+          tarefa.ocorrencias.reduce((subtotal, ocorrencia) => {
+            const c = ocorrencia.consequencia;
+            return c?.tipo === "DESCONTO" && c.status === "APLICADO"
+              ? subtotal + Number(c.desconto_valor ?? 0)
+              : subtotal;
+          }, 0),
+        0,
+      )
+    : 0;
   const mesadaFinal = painel.filho.valor_mesada === null ? null : Math.max(0, painel.filho.valor_mesada - desconto);
+  const penalidadesPendentes = tarefasAtual.reduce(
+    (total, tarefa) =>
+      total +
+      tarefa.ocorrencias.filter(
+        (o) =>
+          o.tipo === "NAO_FEZ" &&
+          o.consequencia?.tipo === "PENALIDADE" &&
+          o.consequencia.status === "PENDENTE",
+      ).length,
+    0,
+  );
   const resultados = tarefaDatas?.ocorrencias.filter((o) => o.tipo === "FEZ" || o.tipo === "NAO_FEZ").sort((a, b) => +new Date(b.data) - +new Date(a.data)) ?? [];
 
   return <main className={`native-safe-area min-h-screen bg-muted/20 ${appPageHorizontalPaddingClass} py-5 sm:py-8`}>
@@ -140,7 +195,20 @@ function PainelPublico() {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CircleDollarSign className="h-4 w-4" />Resultado da vigência</CardTitle></CardHeader>
             <CardContent>
-              {painel.filho.tem_mesada ? <div className="space-y-2 text-sm"><div className="flex justify-between gap-3"><span>Mesada</span><strong>{dinheiro(painel.filho.valor_mesada ?? 0)}</strong></div><div className="flex justify-between gap-3"><span>Desconto por cada “Não fez”</span><strong>{dinheiro(descontoUnitario)}</strong></div><div className="flex justify-between gap-3"><span>Quantidade de “Não fez”</span><strong>{qtdNaoFez}</strong></div><div className="flex justify-between gap-3"><span>Total de descontos</span><strong>{dinheiro(desconto)}</strong></div><div className="flex justify-between gap-3 border-t pt-2"><span>Valor atual</span><strong>{dinheiro(mesadaFinal ?? 0)}</strong></div></div> : <div className="space-y-2 text-sm"><p><span className="text-muted-foreground">Penalidade:</span> <strong>{vigenciaAtual.penalidade || "—"}</strong></p><p><span className="text-muted-foreground">Quantidade de “Não fez” para ser penalizado:</span> <strong>{vigenciaAtual.qtd_ocorrencia}</strong></p><p><span className="text-muted-foreground">Quantidade atual:</span> <strong>{qtdNaoFez}</strong></p>{vigenciaAtual.qtd_ocorrencia > 0 && qtdNaoFez >= vigenciaAtual.qtd_ocorrencia && <p className="rounded-lg bg-red-50 p-2 text-xs font-medium text-red-700">Limite atingido</p>}</div>}
+              {painel.filho.tem_mesada ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between gap-3"><span>Mesada</span><strong>{dinheiro(painel.filho.valor_mesada ?? 0)}</strong></div>
+                  <div className="flex justify-between gap-3"><span>Quantidade de “Não fez”</span><strong>{qtdNaoFez}</strong></div>
+                  <div className="flex justify-between gap-3"><span>Total de descontos aplicados</span><strong>{dinheiro(desconto)}</strong></div>
+                  <div className="flex justify-between gap-3"><span>Penalidades pendentes</span><strong>{penalidadesPendentes}</strong></div>
+                  <div className="flex justify-between gap-3 border-t pt-2"><span>Valor atual</span><strong>{dinheiro(mesadaFinal ?? 0)}</strong></div>
+                </div>
+              ) : (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between gap-3"><span>Quantidade de “Não fez”</span><strong>{qtdNaoFez}</strong></div>
+                  <div className="flex justify-between gap-3"><span>Penalidades pendentes</span><strong>{penalidadesPendentes}</strong></div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -169,7 +237,7 @@ function PainelPublico() {
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const b=bonus(o); return <div key={`${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>}<div className="min-w-0"><p className="text-sm font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"} · {data(o.data)}</p>{b&&<p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
+        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const b=bonus(o); const c=consequencia(o); return <div key={o.id ?? `${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>}<div className="min-w-0"><p className="text-sm font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"} · {data(o.data)}</p>{b&&<p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}{c&&<p className="mt-1 break-words text-xs text-muted-foreground">{c}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
       </DialogContent>
     </Dialog>
   </main>;
