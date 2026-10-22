@@ -103,6 +103,15 @@ export function desfazerOcorrencia(idOcorrencia: number, motivo?: string) {
   });
 }
 
+export async function desfazerOcorrencias(ids: number[]) {
+  const { data, error } = await supabase.rpc("desfazer_ocorrencias", {
+    p_ids: ids,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 export function cumprirPenalidade(idOcorrencia: number) {
   return reconciliar({
     acao: "CUMPRIR_PENALIDADE",
