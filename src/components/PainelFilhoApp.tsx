@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BellRing,
   CalendarDays,
+  CircleDollarSign,
   ClipboardCheck,
   ClipboardList,
   Clock3,
@@ -614,44 +615,79 @@ export function PainelFilhoApp({
 
 
 
-                <section className="overflow-hidden rounded-2xl border bg-card">
-                  <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-muted-foreground">Combinado atual</p>
-                      <p className="mt-0.5 text-sm font-semibold">{data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}</p>
+                <section className="overflow-hidden rounded-3xl border bg-card">
+                  <div className="px-4 pb-3 pt-4 sm:px-5 sm:pt-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-lg font-bold leading-tight">Seu combinado</p>
+                        <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                          <span>{data(vigenciaAtual.data_inicio)} até {data(vigenciaAtual.data_fim)}</span>
+                        </p>
+                      </div>
+                      <Badge className="h-6 shrink-0 border-green-200 bg-green-100 px-2 py-0 text-[10px] font-bold text-green-700 dark:border-green-800 dark:bg-green-950/45 dark:text-green-300">
+                        Em andamento
+                      </Badge>
                     </div>
-                    <Badge className="h-5 shrink-0 border-green-200 bg-green-100 px-1.5 py-0 text-[10px] font-semibold text-green-700 dark:border-green-800 dark:bg-green-950/45 dark:text-green-300">Em andamento</Badge>
                   </div>
 
-                  {painel.filho.tem_mesada && (
-                    <div className="grid grid-cols-3 border-t text-sm">
-                      <div className="min-w-0 px-2 py-3 text-center sm:px-4">
-                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Valor da mesada</p>
-                        <p className="mt-1 break-words font-semibold">{dinheiro(painel.filho.valor_mesada ?? 0)}</p>
-                      </div>
-                      <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
-                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Descontos</p>
-                        <p className="mt-1 break-words font-semibold">{dinheiro(desconto)}</p>
-                      </div>
-                      <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
-                        <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Valor atual</p>
-                        <p className="mt-1 break-words font-semibold">{dinheiro(mesadaFinal ?? 0)}</p>
-                      </div>
-                    </div>
-                  )}
+                  <div className="space-y-3 px-4 pb-4 sm:px-5 sm:pb-5">
+                    {painel.filho.tem_mesada && (
+                      <div className="rounded-2xl border bg-muted/20 p-3.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                              <CircleDollarSign className="h-5 w-5" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-muted-foreground">Sua mesada agora</p>
+                              <p className="mt-0.5 text-2xl font-black leading-none tabular-nums text-primary">
+                                {dinheiro(mesadaFinal ?? 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
 
-                  <div className="grid grid-cols-3 border-t text-sm">
-                    <div className="min-w-0 px-2 py-3 text-center sm:px-4">
-                      <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Não fez</p>
-                      <p className="mt-1 font-semibold tabular-nums">{qtdNaoFez}</p>
-                    </div>
-                    <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
-                      <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Penalidades a cumprir</p>
-                      <p className="mt-1 font-semibold tabular-nums">{penalidadesPendentes}</p>
-                    </div>
-                    <div className="min-w-0 border-l px-2 py-3 text-center sm:px-4">
-                      <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">Penalidades cumpridas</p>
-                      <p className="mt-1 font-semibold tabular-nums">{penalidadesCumpridas}</p>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-xl border bg-background/80 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Mesada combinada</p>
+                            <p className="mt-1 text-sm font-bold tabular-nums">{dinheiro(painel.filho.valor_mesada ?? 0)}</p>
+                          </div>
+                          <div className="rounded-xl border bg-background/80 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Descontos</p>
+                            <p className="mt-1 text-sm font-bold tabular-nums text-destructive">{dinheiro(desconto)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="mb-2 text-sm font-bold">Como está indo</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="min-w-0 rounded-2xl border border-red-200/70 bg-red-50/60 px-2 py-3 text-center dark:border-red-900/50 dark:bg-red-950/20">
+                          <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400">
+                            <ThumbsDown className="h-4 w-4" />
+                          </span>
+                          <p className="mt-2 text-xl font-black leading-none tabular-nums">{qtdNaoFez}</p>
+                          <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Não fez</p>
+                        </div>
+
+                        <div className="min-w-0 rounded-2xl border border-amber-200/70 bg-amber-50/60 px-2 py-3 text-center dark:border-amber-900/50 dark:bg-amber-950/20">
+                          <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                            <Clock3 className="h-4 w-4" />
+                          </span>
+                          <p className="mt-2 text-xl font-black leading-none tabular-nums">{penalidadesPendentes}</p>
+                          <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Pra cumprir</p>
+                        </div>
+
+                        <div className="min-w-0 rounded-2xl border border-green-200/70 bg-green-50/60 px-2 py-3 text-center dark:border-green-900/50 dark:bg-green-950/20">
+                          <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300">
+                            <ClipboardCheck className="h-4 w-4" />
+                          </span>
+                          <p className="mt-2 text-xl font-black leading-none tabular-nums">{penalidadesCumpridas}</p>
+                          <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Cumpridas</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </section>
