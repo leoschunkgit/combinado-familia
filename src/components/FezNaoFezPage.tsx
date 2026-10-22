@@ -171,6 +171,21 @@ function valorBonificacaoNumero(valor: string) {
   return Math.round(numero * 100) / 100;
 }
 
+function rotuloStatusPenalidade(status: string) {
+  switch (status) {
+    case "PENDENTE":
+      return "Pendente";
+    case "SUSPENSA_REVISAO":
+      return "Suspensa — em revisão";
+    case "CUMPRIDA":
+      return "Cumprida";
+    case "CANCELADA":
+      return "Cancelada";
+    default:
+      return status;
+  }
+}
+
 export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
@@ -1107,6 +1122,25 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
   }
 
+  async function marcarPenalidadeCumprida(idOcorrencia: number) {
+    setBusy(true);
+    try {
+      await cumprirPenalidade(idOcorrencia);
+      await qc.invalidateQueries({ queryKey: ["ocorrencias"] });
+      toast.success("Penalidade marcada como cumprida");
+    } catch (error) {
+      toast.error(
+        msgErro(
+          error instanceof Error
+            ? { message: error.message }
+            : (error as { message?: string }),
+        ),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const filtrosAtivos =
     filtro.filho !== "all" ||
     filtro.tarefa !== "all" ||
@@ -1567,6 +1601,18 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </p>
                                             </div>
                                           )}
+
+                                          {registro?.tipo === "NAO_FEZ" && (
+                                            <p className="ml-6 mt-1.5 text-[11px] leading-snug text-muted-foreground">
+                                              {!consequencia
+                                                ? "Sem consequência"
+                                                : consequencia.tipo === "DESCONTO"
+                                                  ? consequencia.status === "ESTORNADO"
+                                                    ? `Desconto de ${reais(Number(consequencia.desconto_valor ?? 0))} — estornado`
+                                                    : `Desconto: ${reais(Number(consequencia.desconto_valor ?? 0))}`
+                                                  : `Penalidade: ${consequencia.penalidade_descricao ?? "—"} · ${rotuloStatusPenalidade(consequencia.status)}`}
+                                            </p>
+                                          )}
                                         </div>
                                       </div>
 
@@ -1739,6 +1785,38 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                   Ver bonificação
                                                 </DropdownMenuItem>
                                               )}
+                                              {registro.tipo === "NAO_FEZ" &&
+                                                !bloqueada &&
+                                                revisao?.status !== "PENDENTE" && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      abrirNaoFez(
+                                                        tarefa,
+                                                        totalNaoFez,
+                                                        dataSelecionada,
+                                                        registro,
+                                                      )
+                                                    }
+                                                  >
+                                                    <Pencil className="h-4 w-4" />
+                                                    Editar consequência
+                                                  </DropdownMenuItem>
+                                                )}
+                                              {registro.tipo === "NAO_FEZ" &&
+                                                !bloqueada &&
+                                                consequencia?.tipo === "PENALIDADE" &&
+                                                consequencia.status === "PENDENTE" && (
+                                                  <DropdownMenuItem
+                                                    onSelect={() =>
+                                                      void runAction(() =>
+                                                        marcarPenalidadeCumprida(registro.id),
+                                                      )
+                                                    }
+                                                  >
+                                                    <ClipboardCheck className="h-4 w-4" />
+                                                    Marcar penalidade como cumprida
+                                                  </DropdownMenuItem>
+                                                )}
                                               {!bloqueada && (
                                                 <DropdownMenuItem
                                                   className="text-destructive focus:text-destructive"
@@ -1774,28 +1852,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         })}
       </div>
 
-      <PenalidadeDialog
-        open={Boolean(penalidadePendente)}
-        value={penalidadePendente?.descricao ?? ""}
+      <NaoFezDialog
+        open={Boolean(naoFez)}
+        value={naoFez}
         busy={busy}
-        inputId="penalidade-limite"
-        contexto={penalidadePendente ? (() => {
-          const filho = filhoDaTarefa(penalidadePendente.tarefa);
-          return (
-            <span className="inline-flex max-w-full min-w-0 items-center gap-1.5">
-              {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-              <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"}</span>
-            </span>
-          );
-        })() : undefined}
-        limite={penalidadePendente?.tarefa.t_vigencia?.qtd_ocorrencia ?? null}
-        onChange={(descricao) =>
-          setPenalidadePendente((atual) =>
-            atual ? { ...atual, descricao } : atual,
-          )
+        onChange={(value) =>
+          setNaoFez((atual) => (atual ? { ...atual, ...value } : atual))
         }
-        onCancel={() => setPenalidadePendente(null)}
-        onConfirm={() => void runAction(confirmarPenalidade)}
+        onCancel={() => setNaoFez(null)}
+        onConfirm={() => void runAction(confirmarNaoFez)}
       />
 
       <Dialog
@@ -2087,8 +2152,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     <span className="font-medium text-foreground">
                       {formatarData(dataBrasil(troca.ocorrencia.created_at))}
                     </span>
-                    . Ao continuar, o resultado será substituído. Estrelas já conquistadas
-                    não são removidas nem duplicadas.
+                    . Ao continuar, o resultado será substituído e todos os efeitos
+                    relacionados serão reconciliados automaticamente.
                   </span>
                 </>
               )}
@@ -2105,19 +2170,23 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
             </Button>
             <Button
               disabled={busy || !troca}
-              onClick={() =>
-                troca &&
-                void runAction(() =>
-                  troca.direcao === "PARA_FEZ" && troca.fez
-                    ? salvarFez(troca.fez, troca.ocorrencia)
-                    : salvarNaoFez(
-                        troca.tarefa,
-                        troca.total,
-                        dataBrasil(troca.ocorrencia.created_at),
-                        troca.ocorrencia,
-                      ),
-                )
-              }
+              onClick={() => {
+                if (!troca) return;
+
+                if (troca.direcao === "PARA_FEZ" && troca.fez) {
+                  void runAction(() => salvarFez(troca.fez!, troca.ocorrencia));
+                  return;
+                }
+
+                const atual = troca;
+                setTroca(null);
+                abrirNaoFez(
+                  atual.tarefa,
+                  atual.total,
+                  dataBrasil(atual.ocorrencia.created_at),
+                  atual.ocorrencia,
+                );
+              }}
             >
               Confirmar alteração
             </Button>
