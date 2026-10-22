@@ -1304,10 +1304,23 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     return (
-                      <article
-                        key={filho.id}
-                        className="overflow-hidden rounded-xl border bg-background"
-                      >
+                      <div key={filho.id} className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 px-1 text-xs font-semibold text-muted-foreground">
+                          <span
+                            className="inline-flex items-center gap-1 tabular-nums"
+                            aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
+                          >
+                            <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
+                            <span>{totaisEstrelas[filho.id] ?? 0} estrelas</span>
+                          </span>
+                          <span className="tabular-nums">
+                            Não fez na vigência: {totalNaoFez}
+                          </span>
+                        </div>
+
+                        <article
+                          className="overflow-hidden rounded-xl border bg-background"
+                        >
                         <button
                           type="button"
                           className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 bg-white px-4 py-3 text-left dark:bg-background"
@@ -1326,26 +1339,18 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               {formatarData(dataSelecionada)}
                             </h3>
                           </div>
-                          <div className="flex shrink-0 flex-col items-end justify-center gap-1 text-sm">
-                            <span
-                              className="inline-flex items-center gap-1 font-semibold tabular-nums"
-                              aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
-                            >
-                              <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
-                              <span>{totaisEstrelas[filho.id] ?? 0}</span>
-                            </span>
-                            {modo === "pendentes" && (
+                          {modo === "pendentes" ? (
+                            <div className="flex shrink-0 flex-col items-end justify-center gap-1 text-sm">
                               <span className="font-semibold text-primary tabular-nums">
                                 {totalPendencias}{" "}
                                 {totalPendencias === 1
                                   ? "pendência"
                                   : "pendências"}
                               </span>
-                            )}
-                            <span className="font-semibold tabular-nums">
-                              Não fez: {totalNaoFez}
-                            </span>
-                          </div>
+                            </div>
+                          ) : (
+                            <span aria-hidden="true" />
+                          )}
                         </button>
 
                         {filhoAberto && (
@@ -1630,7 +1635,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             </div>
                           </div>
                         )}
-                      </article>
+                        </article>
+                      </div>
                     );
                   })}
                 </div>
