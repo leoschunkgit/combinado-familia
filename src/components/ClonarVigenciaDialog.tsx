@@ -29,7 +29,7 @@ export function ClonarVigenciaDialog({
             Você poderá editar essa nova vigência depois pelo menu <strong>Vigências</strong>.
           </p>
           <p className="text-xs text-muted-foreground">
-            Os registros de Fez/Não fez, bonificações e consequências não serão copiados.
+            Os registros de Fez/Não fez e consequências não serão copiados.
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

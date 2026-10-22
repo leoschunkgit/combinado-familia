@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type BonusFezTipo = "NENHUMA" | "TEXTO" | "VALOR";
 export type ConsequenciaNaoFezTipo = "NENHUMA" | "DESCONTO" | "PENALIDADE";
 export type DecisaoRevisao = "MANTER_NAO_FEZ" | "ALTERAR_PARA_FEZ";
 
@@ -12,9 +11,6 @@ type ReconciliarBase = {
 };
 
 type RegistrarFezInput = ReconciliarBase & {
-  bonusTipo?: BonusFezTipo;
-  bonusDescricao?: string | null;
-  bonusValor?: number | null;
   idRevisao?: number;
 };
 
@@ -34,9 +30,6 @@ async function reconciliar(params: {
   consequenciaTipo?: ConsequenciaNaoFezTipo;
   descontoValor?: number | null;
   penalidadeDescricao?: string | null;
-  bonusTipo?: BonusFezTipo;
-  bonusDescricao?: string | null;
-  bonusValor?: number | null;
   idRevisao?: number;
   motivo?: string;
 }) {
@@ -49,14 +42,6 @@ async function reconciliar(params: {
     p_consequencia_tipo: params.consequenciaTipo ?? null,
     p_desconto_valor: params.descontoValor ?? null,
     p_penalidade_descricao: params.penalidadeDescricao?.trim() || null,
-    p_bonificacao_tipo:
-      params.bonusTipo == null
-        ? null
-        : params.bonusTipo === "NENHUMA"
-          ? "NENHUMA"
-          : params.bonusTipo,
-    p_bonificacao_descricao: params.bonusDescricao?.trim() || null,
-    p_bonificacao_valor: params.bonusValor ?? null,
     p_id_revisao: params.idRevisao ?? null,
     p_motivo: params.motivo?.trim() || null,
   });
@@ -72,9 +57,6 @@ export function registrarFez(input: RegistrarFezInput) {
     idFilhoTarefa: input.idFilhoTarefa,
     dataIso: input.dataIso,
     novoTipo: "FEZ",
-    bonusTipo: input.bonusTipo ?? "NENHUMA",
-    bonusDescricao: input.bonusDescricao,
-    bonusValor: input.bonusValor,
     idRevisao: input.idRevisao,
     motivo: input.motivo,
   });

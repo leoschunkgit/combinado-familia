@@ -19,27 +19,9 @@ import {
 import { situacaoVigencia } from "@/components/VigenciaStatus";
 import { descreverConsequenciaOcorrencia } from "@/lib/ocorrencia-model";
 
-function bonus(ocorrencia: Ocorrencia) {
-  if (ocorrencia.tipo !== "FEZ") return "";
-  if (
-    ocorrencia.bonificacao_tipo === "TEXTO" &&
-    ocorrencia.bonificacao_descricao
-  ) {
-    return ocorrencia.bonificacao_descricao;
-  }
-  if (
-    ocorrencia.bonificacao_tipo === "VALOR" &&
-    ocorrencia.bonificacao_valor != null
-  ) {
-    return reais(ocorrencia.bonificacao_valor);
-  }
-  return "Nenhuma";
-}
-
 function detalheOcorrencia(ocorrencia: Ocorrencia) {
   if (ocorrencia.tipo === "FEZ") {
-    const valor = bonus(ocorrencia);
-    return valor ? `Bonificação: ${valor}` : undefined;
+    return undefined;
   }
 
   return descreverConsequenciaOcorrencia(

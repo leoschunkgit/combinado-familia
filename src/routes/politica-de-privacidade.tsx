@@ -20,7 +20,7 @@ function PoliticaPrivacidade() {
             <p className="mt-2">
               A aplicação pode tratar informações fornecidas pelo usuário, como nome, endereço de
               email, nomes dos filhos cadastrados, tarefas, vigências, ocorrências, registros de
-              “Fez” e “Não fez”, bonificações, penalidades e informações relacionadas a mesada,
+              “Fez” e “Não fez”, penalidades e informações relacionadas a mesada,
               quando utilizadas.
             </p>
           </section>

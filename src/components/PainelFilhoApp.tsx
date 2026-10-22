@@ -108,13 +108,6 @@ function status(v: VigenciaFilho) {
   return s === "andamento" ? "Em andamento" : s === "futura" ? "Irá começar" : "Finalizada";
 }
 
-function bonus(o: OcorrenciaFilho) {
-  if (o.tipo !== "FEZ") return null;
-  if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao;
-  if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null) return dinheiro(Number(o.bonificacao_valor));
-  return null;
-}
-
 export function PainelFilhoApp({
   painelInicial,
   onSair,
@@ -882,7 +875,6 @@ export function PainelFilhoApp({
                     >
                       <div className="divide-y">
                         {grupo.itens.map(({ tarefa, ocorrencia }, i) => {
-                          const b = bonus(ocorrencia);
                           const revisao =
                             ocorrencia.tipo === "NAO_FEZ"
                               ? revisaoDaOcorrencia(ocorrencia.id)
@@ -909,7 +901,6 @@ export function PainelFilhoApp({
                                 <p className={`mt-1 text-xs font-medium ${ocorrencia.tipo === "FEZ" ? "text-green-700 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>
                                   {ocorrencia.tipo === "FEZ" ? "Fez" : "Não fez"}
                                 </p>
-                                {b && <p className="mt-1 break-words text-xs text-muted-foreground">Extra: {b}</p>}
                                 {detalheConsequencia && (
                                   <p className="mt-1 break-words text-xs text-muted-foreground">
                                     {detalheConsequencia}

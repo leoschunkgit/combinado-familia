@@ -28,9 +28,6 @@ export type OcorrenciaFilho = {
   id: number;
   tipo: "FEZ" | "NAO_FEZ";
   data: string;
-  bonificacao_tipo: "TEXTO" | "VALOR" | null;
-  bonificacao_descricao: string | null;
-  bonificacao_valor: number | null;
   consequencia: ConsequenciaOcorrenciaFilho | null;
 };
 

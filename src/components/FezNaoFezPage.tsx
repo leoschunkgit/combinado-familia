@@ -8,7 +8,6 @@ import {
   ChevronRight,
   ClipboardCheck,
   EllipsisVertical,
-  Info,
   Pencil,
   Star,
   ThumbsDown,
@@ -17,7 +16,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -33,20 +31,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CurrencyInput } from "@/components/CurrencyInput";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
 import { Hint } from "@/components/Hint";
 import { TarefaIcone } from "@/components/TarefaIcone";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   fmtVigencia,
   msgErro,
@@ -97,17 +87,11 @@ import {
 import { notificarRespostaFilho } from "@/lib/child-response-notifications";
 
 type ModoPagina = "todos" | "pendentes";
-type BonusTipo = "NENHUMA" | "TEXTO" | "VALOR";
 
 type FezDraft = {
-  modo: "REGISTRAR" | "EDITAR";
-  ocorrenciaId?: number;
   tarefa: FilhoTarefa;
   total: number;
   data: string;
-  bonusTipo: BonusTipo;
-  descricao: string;
-  valor: string;
 };
 
 type Troca = {
@@ -116,12 +100,6 @@ type Troca = {
   total: number;
   ocorrencia: Ocorrencia;
   fez?: FezDraft;
-};
-
-type BonificacaoInfo = {
-  tarefa: FilhoTarefa;
-  total: number;
-  ocorrencia: Ocorrencia;
 };
 
 type ExcluirSelecionadasDraft = {
@@ -171,7 +149,7 @@ function formatarHora(data: string) {
   }).format(new Date(data));
 }
 
-function valorBonificacaoNumero(valor: string) {
+function valorMonetarioNumero(valor: string) {
   if (!valor.trim()) return null;
   const numero = Number(valor.replace(",", "."));
   if (!Number.isFinite(numero)) return null;
@@ -200,8 +178,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
-  const [fez, setFez] = useState<FezDraft | null>(null);
-  const [bonificacaoInfo, setBonificacaoInfo] = useState<BonificacaoInfo | null>(null);
   const [troca, setTroca] = useState<Troca | null>(null);
   const [confirmarExcluirSelecionadas, setConfirmarExcluirSelecionadas] =
     useState<ExcluirSelecionadasDraft | null>(null);
@@ -802,7 +778,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
     const descontoValor =
       draft.consequenciaTipo === "DESCONTO"
-        ? valorBonificacaoNumero(draft.descontoValor)
+        ? valorMonetarioNumero(draft.descontoValor)
         : null;
 
     if (
@@ -919,46 +895,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
-    const draft: FezDraft = {
-      modo: "REGISTRAR",
-      tarefa,
-      total,
-      data,
-      bonusTipo: "NENHUMA",
-      descricao: "",
-      valor: "",
-      ...(existente ? { ocorrenciaId: existente.id } : {}),
-    };
-
+    const draft: FezDraft = { tarefa, total, data };
     void runAction(() => salvarFez(draft, existente));
-  }
-
-  function abrirEdicaoBonificacao(info: BonificacaoInfo) {
-    const { tarefa, total, ocorrencia } = info;
-    if (!tarefa.t_vigencia || !vigenciaEmAndamento(tarefa.t_vigencia)) {
-      toast.error("Ações só podem ser feitas em uma vigência em andamento");
-      return;
-    }
-
-    setBonificacaoInfo(null);
-    setFez({
-      modo: "EDITAR",
-      ocorrenciaId: ocorrencia.id,
-      tarefa,
-      total,
-      data: dataBrasil(ocorrencia.created_at),
-      bonusTipo:
-        ocorrencia.bonificacao_tipo === "TEXTO"
-          ? "TEXTO"
-          : ocorrencia.bonificacao_tipo === "VALOR"
-            ? "VALOR"
-            : "NENHUMA",
-      descricao: ocorrencia.bonificacao_descricao ?? "",
-      valor:
-        ocorrencia.bonificacao_valor == null
-          ? ""
-          : String(ocorrencia.bonificacao_valor).replace(".", ","),
-    });
   }
 
   function abrirTrocaMarcacao(
@@ -997,14 +935,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       total,
       ocorrencia: registro,
       fez: {
-        modo: "REGISTRAR",
-        ocorrenciaId: registro.id,
         tarefa,
         total,
         data,
-        bonusTipo: "NENHUMA",
-        descricao: "",
-        valor: "",
       },
     });
   }
@@ -1030,23 +963,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       );
       return;
     }
-    if (draft.bonusTipo === "TEXTO" && !draft.descricao.trim()) {
-      toast.error("Informe a bonificação escrita");
-      return;
-    }
-
-    const valor =
-      draft.bonusTipo === "VALOR"
-        ? valorBonificacaoNumero(draft.valor)
-        : null;
-    if (
-      draft.bonusTipo === "VALOR" &&
-      (valor === null || valor <= 0)
-    ) {
-      toast.error("Informe um valor de bonificação maior que zero");
-      return;
-    }
-
     const gerouEstrela = !existente || existente.tipo !== "FEZ";
     const solicitacaoPendente = solicitacaoNaData(tarefa, draft.data);
     const interacaoPendente =
@@ -1064,18 +980,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         dataIso: existente
           ? undefined
           : new Date(draft.data + "T12:00:00-03:00").toISOString(),
-        bonusTipo: draft.bonusTipo,
-        bonusDescricao:
-          draft.bonusTipo === "TEXTO" ? draft.descricao.trim() : null,
-        bonusValor: draft.bonusTipo === "VALOR" ? valor : null,
         idRevisao:
           existente?.tipo === "NAO_FEZ" ? revisaoPendente?.id : undefined,
         motivo:
           existente?.tipo === "NAO_FEZ"
             ? "Alteração de Não fez para Fez"
-            : draft.modo === "EDITAR"
-              ? "Edição de recompensa extra do Fez"
-              : "Registro de Fez",
+            : "Registro de Fez",
       });
 
       await Promise.all([
@@ -1088,12 +998,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
           ? notificarRespostaFilho(interacaoPendente.tipo, interacaoPendente.id)
           : Promise.resolve(null),
       ]);
-      setFez(null);
       setTroca(null);
       toast.success(
         gerouEstrela
           ? "“Fez” registrado · +1 estrela"
-          : "Recompensa extra atualizada",
+          : "“Fez” atualizado",
       );
     } catch (error) {
       toast.error(
@@ -1102,43 +1011,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     } finally {
       setBusy(false);
     }
-  }
-
-  async function confirmarFez() {
-    if (!fez) return;
-
-    if (fez.modo === "EDITAR") {
-      const existente = ocorrencias.find(
-        (o) => o.id === fez.ocorrenciaId && o.tipo === "FEZ",
-      );
-      if (!existente) {
-        toast.error("Registro de “Fez” não encontrado");
-        return;
-      }
-      await salvarFez(fez, existente);
-      return;
-    }
-
-    const existente = registroNaData(fez.tarefa, fez.data);
-    if (existente) {
-      if (existente.tipo !== "FEZ") {
-        setTroca({
-          direcao: "PARA_FEZ",
-          tarefa: fez.tarefa,
-          total: fez.total,
-          ocorrencia: existente,
-          fez,
-        });
-        setFez(null);
-        return;
-      }
-      toast.error(
-        "Já existe um “Fez” para esta tarefa nesta data.",
-      );
-      return;
-    }
-
-    await salvarFez(fez);
   }
 
   async function excluirSelecionadas(item: ExcluirSelecionadasDraft) {
@@ -1903,20 +1775,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                     : "Alterar para Fez"}
                                                 </DropdownMenuItem>
                                               )}
-                                              {registro.tipo === "FEZ" && (
-                                                <DropdownMenuItem
-                                                  onSelect={() =>
-                                                    setBonificacaoInfo({
-                                                      tarefa,
-                                                      total: totalNaoFez,
-                                                      ocorrencia: registro,
-                                                    })
-                                                  }
-                                                >
-                                                  <Info className="h-4 w-4" />
-                                                  Ver bonificação
-                                                </DropdownMenuItem>
-                                              )}
                                               {registro.tipo === "NAO_FEZ" &&
                                                 !bloqueada &&
                                                 revisao?.status !== "PENDENTE" &&
@@ -1997,235 +1855,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       />
 
       <Dialog
-        open={Boolean(bonificacaoInfo)}
-        onOpenChange={(open) => !open && setBonificacaoInfo(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Recompensa extra do “Fez”</DialogTitle>
-            <DialogDescription>
-              {bonificacaoInfo && (() => {
-                const filho = filhoDaTarefa(bonificacaoInfo.tarefa);
-                return (
-                  <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
-                    <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
-                      {filho && (
-                        <FilhoAvatar
-                          nome={filho.nome}
-                          cor={filho.cor}
-                          avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                          className="h-5 w-5"
-                        />
-                      )}
-                      <span className="min-w-0">
-                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</span>
-                        <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">{filho?.nome ?? "Filho"}</span>
-                      </span>
-                    </span>
-                    <span className="block border-t px-3 py-2.5">
-                      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
-                      <span className="mt-0.5 flex min-w-0 items-start gap-2">
-                        <TarefaIcone nome={bonificacaoInfo.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                        <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">{bonificacaoInfo.tarefa.t_tarefa?.nome}</span>
-                      </span>
-                    </span>
-                    <span className="block border-t px-3 py-2.5">
-                      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
-                      <span className="mt-0.5 block font-medium text-foreground">{formatarData(dataBrasil(bonificacaoInfo.ocorrencia.created_at))}</span>
-                    </span>
-                  </span>
-                );
-              })()}
-            </DialogDescription>
-          </DialogHeader>
-
-          {bonificacaoInfo && (
-            <div className="rounded-lg border bg-muted/20 p-4">
-              {bonificacaoInfo.ocorrencia.bonificacao_tipo === "TEXTO" ? (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Recompensa extra escrita
-                  </p>
-                  <p className="text-sm font-medium">
-                    {bonificacaoInfo.ocorrencia.bonificacao_descricao}
-                  </p>
-                </div>
-              ) : bonificacaoInfo.ocorrencia.bonificacao_tipo === "VALOR" ? (
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Valor da recompensa extra
-                  </p>
-                  <p className="text-base font-semibold">
-                    {reais(Number(bonificacaoInfo.ocorrencia.bonificacao_valor ?? 0))}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma recompensa extra definida.
-                </p>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setBonificacaoInfo(null)}
-            >
-              Fechar
-            </Button>
-            {bonificacaoInfo && (
-              <Button
-                disabled={busy}
-                onClick={() => abrirEdicaoBonificacao(bonificacaoInfo)}
-              >
-                <Pencil className="h-4 w-4" />
-                Editar recompensa extra
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(fez)}
-        onOpenChange={(open) => !open && !busy && setFez(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {fez?.modo === "EDITAR"
-                ? "Editar recompensa extra"
-                : "Registrar “Fez”"}
-            </DialogTitle>
-            <DialogDescription>
-              {fez && (() => {
-                const filho = filhoDaTarefa(fez.tarefa);
-
-                if (fez.modo !== "EDITAR") {
-                  return (
-                    <>
-                      <span className="inline-flex max-w-full min-w-0 items-start gap-1.5">
-                        {filho && <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />}
-                        <span className="min-w-0 whitespace-normal break-words">{filho?.nome ?? "Filho"} ·</span>
-                        <TarefaIcone nome={fez.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                        <span className="min-w-0 whitespace-normal break-words">{fez.tarefa.t_tarefa?.nome} · {formatarData(fez.data)}</span>
-                      </span>
-                      {" · "}A recompensa extra é opcional.
-                    </>
-                  );
-                }
-
-                return (
-                  <span className="block space-y-2.5">
-                    <span className="block max-w-full min-w-0 overflow-hidden rounded-lg border bg-muted/20">
-                      <span className="flex min-w-0 items-center gap-2 px-3 py-2.5">
-                        {filho && (
-                          <FilhoAvatar
-                            nome={filho.nome}
-                            cor={filho.cor}
-                            avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                            className="h-5 w-5"
-                          />
-                        )}
-                        <span className="min-w-0">
-                          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</span>
-                          <span className="block min-w-0 whitespace-normal break-words font-medium text-foreground">{filho?.nome ?? "Filho"}</span>
-                        </span>
-                      </span>
-                      <span className="block border-t px-3 py-2.5">
-                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</span>
-                        <span className="mt-0.5 flex min-w-0 items-start gap-2">
-                          <TarefaIcone nome={fez.tarefa.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                          <span className="min-w-0 whitespace-normal break-words font-medium text-foreground">{fez.tarefa.t_tarefa?.nome}</span>
-                        </span>
-                      </span>
-                      <span className="block border-t px-3 py-2.5">
-                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Data</span>
-                        <span className="mt-0.5 block font-medium text-foreground">{formatarData(fez.data)}</span>
-                      </span>
-                    </span>
-                    <span className="block">A recompensa extra é opcional.</span>
-                  </span>
-                );
-              })()}
-            </DialogDescription>
-          </DialogHeader>
-
-          {fez && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Recompensa extra</Label>
-                <Select
-                  value={fez.bonusTipo}
-                  onValueChange={(valor) =>
-                    setFez({ ...fez, bonusTipo: valor as BonusTipo })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NENHUMA">Nenhuma</SelectItem>
-                    <SelectItem value="TEXTO">Escrita</SelectItem>
-                    <SelectItem value="VALOR">Valor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {fez.bonusTipo === "TEXTO" && (
-                <div className="space-y-2">
-                  <Label htmlFor="bonus-texto">Recompensa extra escrita</Label>
-                  <input
-                    id="bonus-texto"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="Ex.: Escolher o filme no sábado"
-                    value={fez.descricao}
-                    onChange={(event) =>
-                      setFez({ ...fez, descricao: event.target.value })
-                    }
-                  />
-                </div>
-              )}
-
-              {fez.bonusTipo === "VALOR" && (
-                <div className="space-y-2">
-                  <Label htmlFor="bonus-valor">
-                    Valor da recompensa extra (R$)
-                  </Label>
-                  <CurrencyInput
-                    id="bonus-valor"
-                    value={fez.valor}
-                    valueMode="decimal"
-                    onValueChange={(valor) => setFez({ ...fez, valor })}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              disabled={busy}
-              onClick={() => setFez(null)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              disabled={busy || !fez}
-              onClick={() => void runAction(confirmarFez)}
-            >
-              <ThumbsUp className="h-4 w-4" />
-              {fez?.modo === "EDITAR"
-                ? "Salvar bonificação"
-                : "Salvar Fez"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
         open={Boolean(troca)}
         onOpenChange={(open) => !open && !busy && setTroca(null)}
       >
@@ -2285,8 +1914,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     <span className="font-medium text-foreground">
                       {formatarData(dataBrasil(troca.ocorrencia.created_at))}
                     </span>
-                    . Ao continuar, o resultado será substituído e todos os efeitos
-                    relacionados serão reconciliados automaticamente.
+                    . Ao confirmar, ela será alterada para{" "}
+                    <span className="font-medium text-foreground">
+                      {troca.direcao === "PARA_FEZ" ? "“Fez”" : "“Não fez”"}
+                    </span>.
                   </span>
                 </>
               )}

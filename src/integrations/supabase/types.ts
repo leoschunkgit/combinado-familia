@@ -736,9 +736,6 @@ export type Database = {
       }
       t_ocorrencia: {
         Row: {
-          bonificacao_descricao: string | null
-          bonificacao_tipo: string | null
-          bonificacao_valor: number | null
           created_at: string
           id: number
           id_filho_tarefa: number
@@ -746,9 +743,6 @@ export type Database = {
           tipo: string
         }
         Insert: {
-          bonificacao_descricao?: string | null
-          bonificacao_tipo?: string | null
-          bonificacao_valor?: number | null
           created_at?: string
           id?: never
           id_filho_tarefa: number
@@ -756,9 +750,6 @@ export type Database = {
           tipo: string
         }
         Update: {
-          bonificacao_descricao?: string | null
-          bonificacao_tipo?: string | null
-          bonificacao_valor?: number | null
           created_at?: string
           id?: never
           id_filho_tarefa?: number
@@ -836,6 +827,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "t_usuario_pai"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "t_ocorrencia_consequencia_mesmo_pai_fk"
+            columns: ["id_usuario_pai", "id_ocorrencia"]
+            isOneToOne: false
+            referencedRelation: "t_ocorrencia"
+            referencedColumns: ["id_usuario_pai", "id"]
           },
         ]
       }
@@ -1724,6 +1722,10 @@ export type Database = {
         Args: { p_id_filho: number; p_id_usuario_pai: number }
         Returns: Json
       }
+      motivo_bloqueio_desfazer_ocorrencia_interno: {
+        Args: { p_id_ocorrencia: number; p_id_usuario_pai: number }
+        Returns: string
+      }
       obter_acesso_publico_filho: {
         Args: { p_id_filho: number }
         Returns: {
@@ -1748,9 +1750,6 @@ export type Database = {
       reconciliar_ocorrencia: {
         Args: {
           p_acao: string
-          p_bonificacao_descricao?: string
-          p_bonificacao_tipo?: string
-          p_bonificacao_valor?: number
           p_consequencia_tipo?: string
           p_created_at?: string
           p_desconto_valor?: number

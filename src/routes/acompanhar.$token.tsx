@@ -42,9 +42,6 @@ type Ocorrencia = {
   id: number;
   tipo: "FEZ" | "NAO_FEZ";
   data: string;
-  bonificacao_tipo: "TEXTO" | "VALOR" | null;
-  bonificacao_descricao: string | null;
-  bonificacao_valor: number | null;
   consequencia: Consequencia | null;
 };
 type Tarefa = { id: number; nome: string; ocorrencias: Ocorrencia[] };
@@ -56,7 +53,6 @@ const data = (v: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "Americ
 const dinheiro = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 function status(v: Vigencia) { const s = situacaoVigencia(v); return s === "andamento" ? "Em andamento" : s === "futura" ? "Irá começar" : "Finalizada"; }
 const corStatus = (s: string) => s === "Em andamento" ? "bg-green-400" : s === "Finalizada" ? "bg-red-300" : "bg-gray-300";
-function bonus(o: Ocorrencia) { if (o.tipo !== "FEZ") return null; if (o.bonificacao_tipo === "TEXTO" && o.bonificacao_descricao) return o.bonificacao_descricao; if (o.bonificacao_tipo === "VALOR" && o.bonificacao_valor !== null) return dinheiro(Number(o.bonificacao_valor)); return "Sem bonificação"; }
 function consequencia(o: Ocorrencia) {
   return o.tipo === "NAO_FEZ"
     ? descreverConsequenciaOcorrencia(o.consequencia, dinheiro)
@@ -230,7 +226,7 @@ function PainelPublico() {
             )}
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const b=bonus(o); const c=consequencia(o); return <div key={o.id ?? `${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>}<div className="min-w-0"><p className="text-sm font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"} · {data(o.data)}</p>{b&&<p className="mt-1 break-words text-xs text-muted-foreground">Bonificação: {b}</p>}{c&&<p className="mt-1 break-words text-xs text-muted-foreground">{c}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
+        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">{resultados.map((o, i) => { const c=consequencia(o); return <div key={o.id ?? `${o.data}-${i}`} className="flex items-start gap-2 rounded-lg border px-3 py-2">{o.tipo==="FEZ"?<ThumbsUp className="mt-0.5 h-5 w-5 shrink-0 text-green-600"/>:<ThumbsDown className="mt-0.5 h-5 w-5 shrink-0 text-red-500"/>}<div className="min-w-0"><p className="text-sm font-medium">{o.tipo==="FEZ"?"Fez":"Não fez"} · {data(o.data)}</p>{c&&<p className="mt-1 break-words text-xs text-muted-foreground">{c}</p>}</div></div>; })}{resultados.length===0&&<p className="text-sm text-muted-foreground">Nenhum resultado registrado.</p>}</div>
       </DialogContent>
     </Dialog>
   </main>;
