@@ -51,7 +51,7 @@ import {
 } from "@/lib/db";
 import { reais } from "@/lib/mesada";
 import {
-  consequenciaEhDescontoAplicadoNoCiclo,
+  consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadeCumprida,
   consequenciaEhPenalidadePendente,
 } from "@/lib/ocorrencia-model";
@@ -1272,10 +1272,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     const totalDescontado = ocorrenciasFilhoVigencia.reduce(
                       (total, ocorrencia) => {
                         const consequencia = ocorrencia.t_ocorrencia_consequencia;
-                        return consequenciaEhDescontoAplicadoNoCiclo(
-                          consequencia,
-                          filho.mesada_ciclo_atual,
-                        )
+                        return consequenciaEhDescontoAplicado(consequencia)
                           ? total + Number(consequencia?.desconto_valor ?? 0)
                           : total;
                       },
