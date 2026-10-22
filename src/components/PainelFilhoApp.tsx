@@ -26,6 +26,11 @@ import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
 import { AppGlobalMessage } from "@/components/AppGlobalMessage";
+import {
+  consequenciaEhDescontoAplicado,
+  consequenciaEhPenalidadePendente,
+  descreverConsequenciaOcorrencia,
+} from "@/lib/ocorrencia-model";
 import { AppFilhoPushNotifications } from "@/components/AppFilhoPushNotifications";
 import { AppPageContent, appPageHorizontalPaddingClass, appPageInnerClass } from "@/components/AppPageContent";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -338,9 +343,8 @@ export function PainelFilhoApp({
           total +
           tarefa.ocorrencias.reduce((subtotal, ocorrencia) => {
             const consequencia = ocorrencia.consequencia;
-            return consequencia?.tipo === "DESCONTO" &&
-              consequencia.status === "APLICADO"
-              ? subtotal + Number(consequencia.desconto_valor ?? 0)
+            return consequenciaEhDescontoAplicado(consequencia)
+              ? subtotal + Number(consequencia?.desconto_valor ?? 0)
               : subtotal;
           }, 0),
         0,
@@ -354,8 +358,7 @@ export function PainelFilhoApp({
       total +
       tarefa.ocorrencias.filter(
         (ocorrencia) =>
-          ocorrencia.consequencia?.tipo === "PENALIDADE" &&
-          ocorrencia.consequencia.status === "PENDENTE",
+          consequenciaEhPenalidadePendente(ocorrencia.consequencia),
       ).length,
     0,
   );
@@ -821,25 +824,12 @@ export function PainelFilhoApp({
                               : undefined;
                           const consequencia = ocorrencia.consequencia;
                           const detalheConsequencia =
-                            ocorrencia.tipo !== "NAO_FEZ"
-                              ? null
-                              : !consequencia
-                                ? "Sem consequência"
-                                : consequencia.tipo === "DESCONTO"
-                                  ? consequencia.status === "ESTORNADO"
-                                    ? `Desconto de ${dinheiro(Number(consequencia.desconto_valor ?? 0))} — estornado`
-                                    : `Desconto: ${dinheiro(Number(consequencia.desconto_valor ?? 0))}`
-                                  : `Penalidade: ${consequencia.penalidade_descricao ?? "—"} · ${
-                                      consequencia.status === "PENDENTE"
-                                        ? "Pendente"
-                                        : consequencia.status === "SUSPENSA_REVISAO"
-                                          ? "Suspensa — em revisão"
-                                          : consequencia.status === "CUMPRIDA"
-                                            ? "Cumprida"
-                                            : consequencia.status === "CANCELADA"
-                                              ? "Cancelada"
-                                              : consequencia.status
-                                    }`;
+                            ocorrencia.tipo === "NAO_FEZ"
+                              ? descreverConsequenciaOcorrencia(
+                                  consequencia,
+                                  dinheiro,
+                                )
+                              : null;
 
                           return (
                             <div key={ocorrencia.id ?? `${tarefa.id}-${ocorrencia.data}-${i}`} className="flex min-w-0 items-start gap-3 px-4 py-3.5 sm:px-5">
