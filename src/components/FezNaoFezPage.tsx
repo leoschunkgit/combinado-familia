@@ -1435,7 +1435,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   return (
                                     <div
                                       key={tarefa.id}
-                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-1 py-3"
+                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 px-1 py-3 sm:gap-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
                                         <div
@@ -1482,7 +1482,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                         </div>
                                       </div>
 
-                                      <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
+                                      <div className="-mr-1 flex shrink-0 items-center justify-end gap-1 sm:mr-0 sm:gap-3">
                                         {registro && (
                                           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
                                             {registro.tipo === "FEZ" && (
@@ -1524,7 +1524,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className={`min-w-0 px-2.5 sm:min-w-24 sm:px-3 ${botaoFezClass}`}
+                                              className={`min-w-0 px-1.5 text-xs sm:min-w-24 sm:px-3 sm:text-sm ${botaoFezClass}`}
                                               disabled={busy}
                                               onClick={() =>
                                                 abrirFez(
@@ -1534,13 +1534,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )
                                               }
                                             >
-                                              <ThumbsUp className="h-4 w-4 text-green-600" />
                                               Fez
                                             </Button>
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className={`min-w-0 px-2 sm:min-w-24 sm:px-3 ${botaoNaoFezClass}`}
+                                              className={`min-w-0 px-1.5 text-xs sm:min-w-24 sm:px-3 sm:text-sm ${botaoNaoFezClass}`}
                                               disabled={busy}
                                               onClick={() =>
                                                 solicitarNaoFez(
@@ -1550,13 +1549,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )
                                               }
                                             >
-                                              <ThumbsDown className="h-4 w-4 text-red-600" />
                                               Não fez
                                             </Button>
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              className={`min-w-0 px-2 sm:min-w-24 sm:px-3 ${botaoNaoPrecisouClass}`}
+                                              className={`min-w-0 px-1.5 text-xs sm:min-w-24 sm:px-3 sm:text-sm ${botaoNaoPrecisouClass}`}
                                               disabled={busy}
                                               onClick={() =>
                                                 solicitarNaoPrecisou(
@@ -1566,8 +1564,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )
                                               }
                                             >
-                                              <Minus className="h-4 w-4" />
-                                              Não precisou
+                                              <Minus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                              Dispensar
                                             </Button>
                                           </>
                                         )}
