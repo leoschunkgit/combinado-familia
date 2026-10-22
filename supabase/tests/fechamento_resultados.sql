@@ -27,8 +27,8 @@ declare
   v_i integer;
   v_hoje date := timezone('America/Sao_Paulo', now())::date;
 begin
-  -- Usa uma vigência ativa real apenas como contexto. Todos os dados de teste
-  -- criados abaixo são revertidos no final.
+  -- Prefere uma vigência ativa já existente. Se o ambiente estiver limpo,
+  -- cria uma vigência temporária para o próprio teste. Tudo termina em ROLLBACK.
   select p.id, p.auth_user_id, v.id
     into v_pai_id, v_auth, v_vigencia_id
   from public.t_usuario_pai p
@@ -45,7 +45,29 @@ begin
   limit 1;
 
   if v_pai_id is null or v_auth is null or v_vigencia_id is null then
-    raise exception 'TESTE: nenhum responsável com vigência ativa disponível';
+    select p.id, p.auth_user_id
+      into v_pai_id, v_auth
+    from public.t_usuario_pai p
+    where p.auth_user_id is not null
+      and not exists (
+        select 1
+        from public.t_vigencia v
+        where v.id_usuario_pai = p.id
+      )
+    order by p.id
+    limit 1;
+
+    if v_pai_id is null or v_auth is null then
+      raise exception 'TESTE: nenhum responsável disponível para criar vigência temporária';
+    end if;
+
+    insert into public.t_vigencia (
+      id_usuario_pai, data_inicio, data_fim
+    )
+    values (
+      v_pai_id, now() - interval '1 day', now() + interval '1 day'
+    )
+    returning id into v_vigencia_id;
   end if;
 
   perform set_config('request.jwt.claim.sub', v_auth::text, true);
