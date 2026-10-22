@@ -1583,7 +1583,6 @@ export type Database = {
         Args: { p_id_recompensa: number }
         Returns: boolean
       }
-      desfazer_ocorrencias: { Args: { p_ids: number[] }; Returns: Json }
       duplicar_vigencia_com_atribuicoes: {
         Args: { p_data_fim: string; p_data_inicio: string; p_modelo_id: number }
         Returns: {
@@ -1669,10 +1668,6 @@ export type Database = {
       montar_painel_filho: {
         Args: { p_id_filho: number; p_id_usuario_pai: number }
         Returns: Json
-      }
-      motivo_bloqueio_desfazer_ocorrencia_interno: {
-        Args: { p_id_ocorrencia: number; p_id_usuario_pai: number }
-        Returns: string
       }
       obter_acesso_publico_filho: {
         Args: { p_id_filho: number }
