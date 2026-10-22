@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { ResultadoOcorrencia } from "@/lib/resultado-ocorrencia";
 
 export type ConsequenciaNaoFezTipo = "NENHUMA" | "DESCONTO" | "PENALIDADE";
 
@@ -22,7 +23,7 @@ async function reconciliar(params: {
   idOcorrencia?: number;
   idFilhoTarefa?: number;
   dataIso?: string;
-  novoTipo?: "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
+  novoTipo?: ResultadoOcorrencia;
   consequenciaTipo?: ConsequenciaNaoFezTipo;
   descontoValor?: number | null;
   penalidadeDescricao?: string | null;

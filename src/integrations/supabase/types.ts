@@ -252,8 +252,8 @@ export type Database = {
           data_referencia: string
           id: number
           id_filho: number
-          id_filho_tarefa_origem: number | null
-          id_ocorrencia_origem: number | null
+          id_filho_tarefa_origem: number
+          id_ocorrencia_origem: number
           id_tarefa: number
           id_usuario_pai: number
           id_vigencia: number
@@ -264,8 +264,8 @@ export type Database = {
           data_referencia: string
           id?: number
           id_filho: number
-          id_filho_tarefa_origem?: number | null
-          id_ocorrencia_origem?: number | null
+          id_filho_tarefa_origem: number
+          id_ocorrencia_origem: number
           id_tarefa: number
           id_usuario_pai: number
           id_vigencia: number
@@ -276,8 +276,8 @@ export type Database = {
           data_referencia?: string
           id?: number
           id_filho?: number
-          id_filho_tarefa_origem?: number | null
-          id_ocorrencia_origem?: number | null
+          id_filho_tarefa_origem?: number
+          id_ocorrencia_origem?: number
           id_tarefa?: number
           id_usuario_pai?: number
           id_vigencia?: number
@@ -1564,6 +1564,10 @@ export type Database = {
       contar_nao_fez_filho_vigencia: {
         Args: { p_id_filho: number; p_id_vigencia: number }
         Returns: number
+      }
+      motivo_bloqueio_alteracao_resultado_interno: {
+        Args: { p_id_ocorrencia: number; p_id_usuario_pai: number }
+        Returns: string
       }
       criar_solicitacao_tarefa_filho_interno: {
         Args: {

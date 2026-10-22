@@ -84,6 +84,10 @@ import {
   useDataBrasilAtual,
 } from "@/lib/notificacoes";
 import { notificarRespostaFilho } from "@/lib/child-response-notifications";
+import {
+  rotuloResultado,
+  type ResultadoOcorrencia,
+} from "@/lib/resultado-ocorrencia";
 
 type ModoPagina = "todos" | "pendentes";
 
@@ -93,7 +97,6 @@ type FezDraft = {
   data: string;
 };
 
-type ResultadoOcorrencia = "FEZ" | "NAO_FEZ" | "NAO_PRECISOU";
 
 type Troca = {
   alvo: ResultadoOcorrencia;
@@ -103,11 +106,6 @@ type Troca = {
   ocorrencia: Ocorrencia;
 };
 
-function rotuloResultado(tipo: string) {
-  if (tipo === "FEZ") return "Fez";
-  if (tipo === "NAO_FEZ") return "Não fez";
-  return "Não precisou";
-}
 
 function classeResultadoTexto(tipo: string) {
   if (tipo === "FEZ") return "text-green-700 dark:text-green-300";
