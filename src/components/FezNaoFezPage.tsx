@@ -1564,7 +1564,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )
                                               }
                                             >
-                                              <Minus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                               Dispensar
                                             </Button>
                                           </>
