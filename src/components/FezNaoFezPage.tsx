@@ -63,6 +63,7 @@ import {
 } from "@/lib/db";
 import { reais } from "@/lib/mesada";
 import {
+  cumprirPenalidade,
   desfazerOcorrencias,
   registrarFez,
   registrarNaoFez,
@@ -1363,11 +1364,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     [grupoFilhoSelecionado].map(({ filho, tarefas: tarefasDoFilho }) => {
                     const chave = `${vigencia.id}-${filho.id}`;
                     const filhoAberto = filhosAbertos[chave] === true;
-                    const totalNaoFez = ocorrencias.filter(
+                    const ocorrenciasFilhoVigencia = ocorrencias.filter(
                       (ocorrencia) =>
-                        ocorrencia.tipo !== "FEZ" &&
                         ocorrencia.t_filho_tarefa?.id_filho === filho.id &&
                         ocorrencia.t_filho_tarefa?.id_vigencia === vigencia.id,
+                    );
+                    const totalNaoFez = ocorrenciasFilhoVigencia.filter(
+                      (ocorrencia) => ocorrencia.tipo === "NAO_FEZ",
                     ).length;
                     const totalPendencias =
                       modo === "pendentes"
@@ -1377,17 +1380,29 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             0,
                           )
                         : 0;
-                    const comDesconto = usaDesconto(filho, vigencia);
-                    const totalDescontado = comDesconto
-                      ? valorDebitado(filho, vigencia, totalNaoFez)
-                      : 0;
+                    const temMesada =
+                      filho.tem_mesada_opcional === true &&
+                      filho.valor_mesada !== null;
+                    const totalDescontado = ocorrenciasFilhoVigencia.reduce(
+                      (total, ocorrencia) => {
+                        const consequencia = ocorrencia.t_ocorrencia_consequencia;
+                        return consequencia?.tipo === "DESCONTO" &&
+                          consequencia.status === "APLICADO"
+                          ? total + Number(consequencia.desconto_valor ?? 0)
+                          : total;
+                      },
+                      0,
+                    );
                     const saldoMesada = Math.max(
                       0,
                       (filho.valor_mesada ?? 0) - totalDescontado,
                     );
-                    const penalizado =
-                      !comDesconto &&
-                      totalNaoFez >= vigencia.qtd_ocorrencia;
+                    const penalidadesPendentes = ocorrenciasFilhoVigencia.filter(
+                      (ocorrencia) =>
+                        ocorrencia.tipo === "NAO_FEZ" &&
+                        ocorrencia.t_ocorrencia_consequencia?.tipo === "PENALIDADE" &&
+                        ocorrencia.t_ocorrencia_consequencia.status === "PENDENTE",
+                    ).length;
                     const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     const registrosDoDia = tarefasDoFilho
@@ -1431,22 +1446,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   : "pendências"}
                               </span>
                             )}
-                            {comDesconto ? (
-                              <span className="font-semibold text-muted-foreground">
-                                Com mesada
-                              </span>
-                            ) : (
-                              <span className="font-semibold tabular-nums">
-                                Não fez: {totalNaoFez} de{" "}
-                                {vigencia.qtd_ocorrencia}
-                              </span>
-                            )}
+                            <span className="font-semibold tabular-nums">
+                              Não fez: {totalNaoFez}
+                            </span>
                           </div>
                         </button>
 
                         {filhoAberto && (
                           <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
-                            {comDesconto ? (
+                            {temMesada && (
                               <div className="mb-4 grid grid-cols-3 overflow-hidden rounded-lg border bg-muted/20 text-sm tabular-nums">
                                 <div className="px-3 py-2.5">
                                   <p className="text-[11px] font-medium text-muted-foreground">Mesada</p>
@@ -1461,14 +1469,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   <p className="mt-0.5 font-semibold text-primary">{reais(saldoMesada)}</p>
                                 </div>
                               </div>
-                            ) : penalizado ? (
-                              <div className="mb-4">
-                                <Badge variant="destructive" className="px-3 py-1 text-[13px] font-bold">
-                                  <AlertTriangle className="mr-1 h-3.5 w-3.5" />
-                                  Penalidade: {vigencia.penalidade}
-                                </Badge>
+                            )}
+                            {penalidadesPendentes > 0 && (
+                              <div className="mb-4 rounded-lg border bg-muted/20 px-3 py-2 text-sm font-medium">
+                                {penalidadesPendentes} {penalidadesPendentes === 1 ? "penalidade pendente" : "penalidades pendentes"}
                               </div>
-                            ) : null}
+                            )}
 
                             <div className="bg-white dark:bg-background">
                               <div className="border-b border-border/60 bg-transparent px-1 py-2.5">
@@ -1506,6 +1512,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
                                   const revisao = revisaoNaData(tarefa, dataSelecionada);
                                   const filho = filhos.find((item) => item.id === tarefa.id_filho);
+                                  const consequencia = registro?.t_ocorrencia_consequencia;
                                   return (
                                     <div
                                       key={tarefa.id}
@@ -1594,16 +1601,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               </Hint>
                                             )}
 
-                                            {registro.tipo !== "FEZ" &&
-                                              !comDesconto &&
-                                              penalizadas.has(registro.id) && (
+                                            {registro.tipo === "NAO_FEZ" &&
+                                              consequencia?.tipo === "PENALIDADE" &&
+                                              consequencia.status === "PENDENTE" && (
                                                 <span
-                                                  className="inline-flex shrink-0 text-destructive"
+                                                  className="inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500"
                                                   role="img"
-                                                  aria-label="Limite de penalidade atingido"
-                                                >
-                                                  <AlertTriangle className="h-4 w-4" />
-                                                </span>
+                                                  aria-label="Penalidade pendente"
+                                                />
                                               )}
                                           </div>
                                         )}
