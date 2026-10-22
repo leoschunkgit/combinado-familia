@@ -5,7 +5,6 @@ export type RelatorioPdfRegistro = {
   data: string;
   resultado: "Fez" | "Não fez";
   detalhe?: string | undefined;
-  penalidadeAtingida?: boolean;
 };
 
 export type RelatorioPdfTarefa = {
@@ -29,9 +28,7 @@ export type RelatorioPdfFilho = {
 export type RelatorioPdfVigencia = {
   periodo: string;
   status: string;
-  penalidade: string;
-  limite: string;
-  descontoMesada: string;
+  resumoConsequencias: string;
   filhos: RelatorioPdfFilho[];
 };
 
@@ -197,15 +194,14 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
     doc.text(vigencia.periodo, MARGIN + 5, y + 13);
     y += 22;
 
-    const boxGap = 4;
-    const boxWidth = (CONTENT_WIDTH - boxGap) / 2;
-    const yInicial = y;
-    caixa("Penalidade / limite", `${vigencia.penalidade} · ${vigencia.limite}`, MARGIN, boxWidth, "ambar");
-    const yEsquerda = y;
-    y = yInicial;
-    caixa("Desconto da mesada", vigencia.descontoMesada, MARGIN + boxWidth + boxGap, boxWidth, "verde");
-    const yDireita = y;
-    y = Math.max(yEsquerda, yDireita) + 2;
+    caixa(
+      "Consequências do “Não fez”",
+      vigencia.resumoConsequencias,
+      MARGIN,
+      CONTENT_WIDTH,
+      "neutro",
+    );
+    y += 2;
 
     for (const filho of vigencia.filhos) {
       garantirEspaco(20);
@@ -314,9 +310,7 @@ export async function gerarRelatorioPdf(dados: RelatorioPdfDados) {
         desenharCabecalhoRegistros();
 
         for (const [indiceRegistro, registro] of tarefa.registros.entries()) {
-          const detalhe = [registro.detalhe, registro.penalidadeAtingida ? "Penalidade atingida" : ""]
-            .filter(Boolean)
-            .join(" · ") || "—";
+          const detalhe = registro.detalhe || "—";
           const linhasDetalhe = doc.splitTextToSize(detalhe, larguraDetalhe) as string[];
           const altura = Math.max(8, linhasDetalhe.length * 3.6 + 3.5);
 
