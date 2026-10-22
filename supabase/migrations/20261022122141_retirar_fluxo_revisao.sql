@@ -1,5 +1,9 @@
 -- Revisão retirada do produto. Preserva registros anteriores como arquivo.
 -- Executar em DEV primeiro; não altera regras de estrelas/recompensas.
+-- RPCs antigas abaixo são apenas respostas de recurso removido para apps instalados.
+-- A assinatura de reconciliar_ocorrencia mantém p_id_revisao para evitar quebrar
+-- chamadas legadas com NULL; qualquer valor ou ação de revisão é rejeitado.
+-- t_revisao_tarefa_filho e id_revisao na auditoria são arquivo, nunca estado ativo.
 lock table public.t_revisao_tarefa_filho in access exclusive mode;
 alter table public.t_revisao_tarefa_filho drop constraint t_revisao_tarefa_filho_status_chk;
 alter table public.t_revisao_tarefa_filho add constraint t_revisao_tarefa_filho_status_chk
