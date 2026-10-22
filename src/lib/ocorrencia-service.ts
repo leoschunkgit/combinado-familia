@@ -103,13 +103,24 @@ export function desfazerOcorrencia(idOcorrencia: number, motivo?: string) {
   });
 }
 
-export async function desfazerOcorrencias(ids: number[]) {
+export type DesfazerOcorrenciasResultado = {
+  ok: boolean;
+  quantidade_solicitada: number;
+  quantidade_desfeita: number;
+  quantidade_preservada: number;
+  ids_desfeitos: number[];
+  ids_preservados: number[];
+};
+
+export async function desfazerOcorrencias(
+  ids: number[],
+): Promise<DesfazerOcorrenciasResultado> {
   const { data, error } = await supabase.rpc("desfazer_ocorrencias", {
     p_ids: ids,
   });
 
   if (error) throw error;
-  return data;
+  return data as unknown as DesfazerOcorrenciasResultado;
 }
 
 export function cumprirPenalidade(idOcorrencia: number) {
