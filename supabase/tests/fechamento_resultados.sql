@@ -18,6 +18,8 @@ declare
   v_occ_nao_fez bigint;
   v_occ_nao_precisou bigint;
   v_reward_id bigint;
+  v_ultimo_fim timestamptz;
+  v_inicio_2 timestamptz;
   v_res jsonb;
   v_total integer;
   v_count integer;
@@ -25,15 +27,25 @@ declare
   v_i integer;
   v_hoje date := timezone('America/Sao_Paulo', now())::date;
 begin
-  select p.id, p.auth_user_id
-    into v_pai_id, v_auth
+  -- Usa uma vigência ativa real apenas como contexto. Todos os dados de teste
+  -- criados abaixo são revertidos no final.
+  select p.id, p.auth_user_id, v.id
+    into v_pai_id, v_auth, v_vigencia_id
   from public.t_usuario_pai p
+  join lateral (
+    select v1.id
+    from public.t_vigencia v1
+    where v1.id_usuario_pai = p.id
+      and now() between v1.data_inicio and v1.data_fim
+    order by v1.data_inicio desc, v1.id desc
+    limit 1
+  ) v on true
   where p.auth_user_id is not null
   order by p.id
   limit 1;
 
-  if v_pai_id is null or v_auth is null then
-    raise exception 'TESTE: nenhum responsável disponível';
+  if v_pai_id is null or v_auth is null or v_vigencia_id is null then
+    raise exception 'TESTE: nenhum responsável com vigência ativa disponível';
   end if;
 
   perform set_config('request.jwt.claim.sub', v_auth::text, true);
@@ -46,20 +58,23 @@ begin
   )
   returning id into v_filho_id;
 
-  insert into public.t_vigencia (
-    id_usuario_pai, data_inicio, data_fim
-  )
-  values (
-    v_pai_id, now() - interval '1 day', now() + interval '2 days'
-  )
-  returning id into v_vigencia_id;
+  -- Segunda vigência temporária, criada depois de qualquer vigência existente,
+  -- prova que o contador de NAO_FEZ é isolado por vigência.
+  select max(v.data_fim)
+    into v_ultimo_fim
+  from public.t_vigencia v
+  where v.id_usuario_pai = v_pai_id;
 
-  -- Segunda vigência serve apenas para provar que a contagem de NAO_FEZ é isolada.
+  v_inicio_2 := greatest(
+    coalesce(v_ultimo_fim + interval '1 day', now() + interval '10 days'),
+    now() + interval '10 days'
+  );
+
   insert into public.t_vigencia (
     id_usuario_pai, data_inicio, data_fim
   )
   values (
-    v_pai_id, now() + interval '3 days', now() + interval '5 days'
+    v_pai_id, v_inicio_2, v_inicio_2 + interval '2 days'
   )
   returning id into v_vigencia_2_id;
 
