@@ -3,6 +3,7 @@ export type ConsequenciaOcorrenciaLike = {
   desconto_valor: number | null;
   penalidade_descricao: string | null;
   status: string;
+  mesada_ciclo?: number | null;
 };
 
 export function rotuloStatusConsequencia(status: string) {
@@ -30,6 +31,19 @@ export function consequenciaEhDescontoAplicado(
   consequencia: ConsequenciaOcorrenciaLike | null | undefined,
 ) {
   return consequencia?.tipo === "DESCONTO" && consequencia.status === "APLICADO";
+}
+
+export function consequenciaEhDescontoAplicadoNoCiclo(
+  consequencia: ConsequenciaOcorrenciaLike | null | undefined,
+  mesadaCicloAtual: number | null | undefined,
+) {
+  return (
+    consequenciaEhDescontoAplicado(consequencia) &&
+    mesadaCicloAtual !== null &&
+    mesadaCicloAtual !== undefined &&
+    mesadaCicloAtual > 0 &&
+    consequencia?.mesada_ciclo === mesadaCicloAtual
+  );
 }
 
 export function consequenciaEhPenalidadePendente(
