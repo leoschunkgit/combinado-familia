@@ -1637,6 +1637,7 @@ export type Database = {
         Args: { p_id_recompensa: number }
         Returns: boolean
       }
+      desfazer_ocorrencias: { Args: { p_ids: number[] }; Returns: Json }
       duplicar_vigencia_com_atribuicoes: {
         Args: { p_data_fim: string; p_data_inicio: string; p_modelo_id: number }
         Returns: {
