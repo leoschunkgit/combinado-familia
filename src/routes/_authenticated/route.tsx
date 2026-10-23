@@ -452,7 +452,7 @@ function AuthenticatedLayout() {
               </div>
               <div
                 role="menu"
-                className={`absolute right-0 top-full z-40 w-44 pt-1 transition-opacity ${menuUsuarioDesktopAberto ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+                className={`absolute right-0 top-full z-40 w-56 pt-1 transition-opacity ${menuUsuarioDesktopAberto ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
               >
                 <div className="rounded-lg border bg-popover p-1 text-popover-foreground shadow-md">
                   <button
