@@ -325,31 +325,6 @@ function AuthenticatedLayout() {
             </Link>
           ))}
 
-          <Link
-            to="/cadastro-unico"
-            title="Cadastro Fluxo"
-            aria-label="Cadastro Fluxo"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors active:scale-95"
-            activeProps={{ className: "!bg-primary/10 !text-primary" }}
-          >
-            <ListPlus className="h-5 w-5" />
-          </Link>
-
-          <button
-            type="button"
-            title="Clonar vigência"
-            aria-label="Clonar vigência"
-            onClick={() => {
-              if (!ultimaVigencia) {
-                toast.error("Não há vigência para clonar");
-                return;
-              }
-              setConfirmarCloneMenuAberto(true);
-            }}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors active:scale-95"
-          >
-            <Copy className="h-5 w-5" />
-          </button>
         </div>
       </div>
     </nav>
