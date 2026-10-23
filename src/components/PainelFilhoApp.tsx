@@ -263,6 +263,12 @@ export function PainelFilhoApp({
       (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_FEZ").length,
       0,
     );
+  const qtdDispensadas =
+    vigenciaAtual?.qtd_nao_precisou ??
+    tarefasAtual.reduce(
+      (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "NAO_PRECISOU").length,
+      0,
+    );
   const qtdFez = tarefasAtual.reduce(
     (n, t) => n + t.ocorrencias.filter((o) => o.tipo === "FEZ").length,
     0,
@@ -672,7 +678,7 @@ export function PainelFilhoApp({
 
                     <div>
                       <p className="mb-2 text-sm font-bold">Como está indo</p>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-5 gap-2">
                         <div className="min-w-0 rounded-2xl border border-amber-200/70 bg-amber-50/60 px-2 py-3 text-center dark:border-amber-900/50 dark:bg-amber-950/20">
                           <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
                             <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
@@ -703,6 +709,14 @@ export function PainelFilhoApp({
                           </span>
                           <p className="mt-2 text-xl font-black leading-none tabular-nums">{qtdNaoFez}</p>
                           <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Não fez</p>
+                        </div>
+
+                        <div className="min-w-0 rounded-2xl border bg-muted/30 px-2 py-3 text-center">
+                          <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                            <Minus className="h-4 w-4" />
+                          </span>
+                          <p className="mt-2 text-xl font-black leading-none tabular-nums">{qtdDispensadas}</p>
+                          <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Dispensadas</p>
                         </div>
                       </div>
                     </div>
