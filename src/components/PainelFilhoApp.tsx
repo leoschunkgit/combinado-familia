@@ -692,7 +692,7 @@ export function PainelFilhoApp({
                             <Clock3 className="h-4 w-4" />
                           </span>
                           <p className="mt-2 text-xl font-black leading-none tabular-nums">{penalidadesPendentes}</p>
-                          <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Pra cumprir</p>
+                          <p className="mt-1 whitespace-nowrap text-[10px] font-bold leading-tight tracking-tight text-muted-foreground">Pra cumprir</p>
                         </div>
 
                         <div className="min-w-0 rounded-2xl border border-green-200/70 bg-green-50/60 px-2 py-3 text-center dark:border-green-900/50 dark:bg-green-950/20">
