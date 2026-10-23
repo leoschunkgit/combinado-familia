@@ -687,12 +687,12 @@ export function PainelFilhoApp({
                           <p className="mt-1 w-full text-center text-[10px] font-bold leading-tight text-muted-foreground">Estrelas</p>
                         </div>
 
-                        <div className="min-w-0 rounded-2xl border border-amber-200/70 bg-amber-50/60 px-2 py-3 text-center dark:border-amber-900/50 dark:bg-amber-950/20">
-                          <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                        <div className="flex min-w-0 flex-col items-center rounded-2xl border border-amber-200/70 bg-amber-50/60 px-2 py-3 text-center dark:border-amber-900/50 dark:bg-amber-950/20">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
                             <Clock3 className="h-4 w-4" />
                           </span>
                           <p className="mt-2 text-xl font-black leading-none tabular-nums">{penalidadesPendentes}</p>
-                          <p className="mt-1 w-full whitespace-nowrap text-center text-[10px] font-bold leading-tight tracking-tight text-muted-foreground">Pra cumprir</p>
+                          <p className="mt-1 flex w-full justify-center whitespace-nowrap text-[10px] font-bold leading-tight tracking-tight text-muted-foreground">Pra cumprir</p>
                         </div>
 
                         <div className="flex min-w-0 flex-col items-center rounded-2xl border border-green-200/70 bg-green-50/60 px-2 py-3 text-center dark:border-green-900/50 dark:bg-green-950/20">
@@ -700,7 +700,7 @@ export function PainelFilhoApp({
                             <ClipboardCheck className="h-4 w-4" />
                           </span>
                           <p className="mt-2 text-xl font-black leading-none tabular-nums">{penalidadesCumpridas}</p>
-                          <p className="mt-1 w-full text-center text-[10px] font-bold leading-tight text-muted-foreground">Cumpridas</p>
+                          <p className="mt-1 flex w-full justify-center text-[10px] font-bold leading-tight text-muted-foreground">Cumpridas</p>
                         </div>
 
                         <div className="flex min-w-0 flex-col items-center rounded-2xl border border-red-200/70 bg-red-50/60 px-2 py-3 text-center dark:border-red-900/50 dark:bg-red-950/20">
