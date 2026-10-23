@@ -473,6 +473,14 @@ export function PainelFilhoApp({
                 {estrelas.total_conquistado}
               </button>
 
+              <span
+                className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
+                aria-label={`${qtdNaoFez} não fez`}
+              >
+                <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                {qtdNaoFez}
+              </span>
+
               <button
                 type="button"
                 className="rounded-full p-0.5 transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
