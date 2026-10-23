@@ -711,12 +711,12 @@ export function PainelFilhoApp({
                           <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Não fez</p>
                         </div>
 
-                        <div className="min-w-0 rounded-2xl border bg-muted/30 px-2 py-3 text-center">
+                        <div className="min-w-0 rounded-2xl border bg-muted/30 px-1 py-3 text-center">
                           <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
                             <Minus className="h-4 w-4" />
                           </span>
                           <p className="mt-2 text-xl font-black leading-none tabular-nums">{qtdDispensadas}</p>
-                          <p className="mt-1 text-[8px] font-bold leading-tight tracking-tight text-muted-foreground sm:text-[10px]">Dispensadas</p>
+                          <p className="mt-1 whitespace-nowrap text-[10px] font-bold leading-tight tracking-tighter text-muted-foreground">Dispensadas</p>
                         </div>
                       </div>
                     </div>
