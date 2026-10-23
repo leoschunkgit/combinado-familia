@@ -677,7 +677,7 @@ export function PainelFilhoApp({
                           <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
                             <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
                           </span>
-                          <p className="mt-2 text-xl font-black leading-none tabular-nums">{estrelas.vigencia_atual}</p>
+                          <p className="mt-2 text-xl font-black leading-none tabular-nums">{estrelas.total_conquistado}</p>
                           <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Estrelas</p>
                         </div>
 
