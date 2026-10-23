@@ -26,6 +26,7 @@ import { TarefaIcone } from "@/components/TarefaIcone";
 import { FilhoEstrelasPage } from "@/components/FilhoEstrelasPage";
 import { AppBrand } from "@/components/AppBrand";
 import { AppGlobalMessage } from "@/components/AppGlobalMessage";
+import { AppVersion } from "@/components/AppVersion";
 import {
   consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadeCumprida,
@@ -547,7 +548,7 @@ export function PainelFilhoApp({
             </div>
 
             <div className="border-t px-4 py-3 text-center text-[10px] leading-relaxed text-muted-foreground">
-              <p>Versão 1.2.17</p>
+              <AppVersion />
               <p>© 2026 Combinado Família. Todos os direitos reservados.</p>
             </div>
           </div>
