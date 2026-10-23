@@ -295,6 +295,66 @@ function AuthenticatedLayout() {
     </Button>
   );
 
+  const MenuInferiorMobile = () => (
+    <nav
+      aria-label="Navegação inferior"
+      className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur md:hidden"
+      style={{ paddingBottom: "var(--app-safe-bottom, env(safe-area-inset-bottom, 0px))" }}
+    >
+      <div
+        className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <div className="flex w-max min-w-full items-center justify-center gap-1 px-2 py-2">
+          {NAV_ITENS.map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              title={label}
+              aria-label={label}
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors active:scale-95"
+              activeProps={{ className: "!bg-primary/10 !text-primary" }}
+            >
+              <Icon className="h-5 w-5" />
+              {to === "/ocorrencias" && quantidadeNotificacoes > 0 && (
+                <span
+                  className="absolute right-1 top-1 flex h-2.5 min-w-2.5 items-center justify-center rounded-full bg-destructive"
+                  aria-label={`${quantidadeNotificacoes} notificações pendentes`}
+                />
+              )}
+            </Link>
+          ))}
+
+          <Link
+            to="/cadastro-unico"
+            title="Cadastro Fluxo"
+            aria-label="Cadastro Fluxo"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors active:scale-95"
+            activeProps={{ className: "!bg-primary/10 !text-primary" }}
+          >
+            <ListPlus className="h-5 w-5" />
+          </Link>
+
+          <button
+            type="button"
+            title="Clonar vigência"
+            aria-label="Clonar vigência"
+            onClick={() => {
+              if (!ultimaVigencia) {
+                toast.error("Não há vigência para clonar");
+                return;
+              }
+              setConfirmarCloneMenuAberto(true);
+            }}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors active:scale-95"
+          >
+            <Copy className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+
   return (
     <>
       {!saindo && <AppPushNotifications />}
@@ -382,7 +442,7 @@ function AuthenticatedLayout() {
           </button>
         </aside>
 
-        <AppPageContent>
+        <AppPageContent className="pb-24 md:pb-10">
           <AppSystemStatus ehAdmin={ehAdmin} />
           <div className={`mb-5 hidden w-full items-center md:flex ${
             menuDesktopRecolhido
@@ -487,6 +547,8 @@ function AuthenticatedLayout() {
           <Outlet />
         </AppPageContent>
 
+        <MenuInferiorMobile />
+
         {configuracaoInicialConcluida && totalPendencias > 0 && pathname !== "/ocorrencias" && (
           <Hint content="Fez / Não fez">
           <Button
@@ -495,7 +557,7 @@ function AuthenticatedLayout() {
             onClick={() => navigate({ to: "/ocorrencias" })}
             style={{
               right: "calc(1rem + env(safe-area-inset-right))",
-              bottom: "calc(1rem + env(safe-area-inset-bottom))",
+              bottom: "calc(5rem + env(safe-area-inset-bottom))",
             }}
             className="fixed z-30 h-12 w-12 rounded-full border border-primary/30 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 md:hidden"
             aria-label="Ir para Fez / Não fez"
