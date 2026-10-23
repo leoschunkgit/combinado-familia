@@ -716,7 +716,7 @@ export function PainelFilhoApp({
                             <Minus className="h-4 w-4" />
                           </span>
                           <p className="mt-2 text-xl font-black leading-none tabular-nums">{qtdDispensadas}</p>
-                          <p className="mt-1 text-[10px] font-bold leading-tight text-muted-foreground">Dispensadas</p>
+                          <p className="mt-1 text-[8px] font-bold leading-tight tracking-tight text-muted-foreground sm:text-[10px]">Dispensadas</p>
                         </div>
                       </div>
                     </div>
