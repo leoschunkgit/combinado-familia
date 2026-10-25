@@ -734,6 +734,54 @@ export type Database = {
           },
         ]
       }
+      t_filho_vigencia_mesada: {
+        Row: {
+          created_at: string
+          id: number
+          id_filho: number
+          id_usuario_pai: number
+          id_vigencia: number
+          tem_mesada: boolean
+          updated_at: string
+          valor_mesada: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          id_filho: number
+          id_usuario_pai: number
+          id_vigencia: number
+          tem_mesada?: boolean
+          updated_at?: string
+          valor_mesada?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          id_filho?: number
+          id_usuario_pai?: number
+          id_vigencia?: number
+          tem_mesada?: boolean
+          updated_at?: string
+          valor_mesada?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "t_filho_vigencia_mesada_pai_filho_fk"
+            columns: ["id_usuario_pai", "id_filho"]
+            isOneToOne: false
+            referencedRelation: "t_filho"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
+          {
+            foreignKeyName: "t_filho_vigencia_mesada_pai_vigencia_fk"
+            columns: ["id_usuario_pai", "id_vigencia"]
+            isOneToOne: false
+            referencedRelation: "t_vigencia"
+            referencedColumns: ["id_usuario_pai", "id"]
+          },
+        ]
+      }
       t_ocorrencia: {
         Row: {
           created_at: string
@@ -875,6 +923,13 @@ export type Database = {
           origem?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "t_ocorrencia_reconciliacao_id_filho_tarefa_fkey"
+            columns: ["id_filho_tarefa"]
+            isOneToOne: false
+            referencedRelation: "t_filho_tarefa"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "t_ocorrencia_reconciliacao_id_usuario_pai_fkey"
             columns: ["id_usuario_pai"]
@@ -1419,18 +1474,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      excluir_atribuicao_com_regra: {
-        Args: { p_id_filho_tarefa: number }
-        Returns: Json
-      }
-      remover_tarefa_com_regra: {
-        Args: { p_id_tarefa: number }
-        Returns: string
-      }
-      remover_todas_tarefas_com_regra: {
-        Args: never
-        Returns: Json
-      }
       admin_adicionar: { Args: { p_email: string }; Returns: number }
       admin_auditar: {
         Args: {
@@ -1515,6 +1558,7 @@ export type Database = {
           version_name: string
         }[]
       }
+      admin_limpar_dados_usuario: { Args: { p_email: string }; Returns: Json }
       admin_listar_admins: {
         Args: never
         Returns: {
@@ -1528,10 +1572,6 @@ export type Database = {
           nome: string
           ultimo_acesso: string
         }[]
-      }
-      admin_limpar_dados_usuario: {
-        Args: { p_email: string }
-        Returns: Json
       }
       admin_localizar_usuario_limpeza: {
         Args: { p_email: string }
@@ -1570,6 +1610,14 @@ export type Database = {
         Returns: boolean
       }
       app_config_publico: { Args: never; Returns: Json }
+      classificar_exclusao_atribuicao_interno: {
+        Args: { p_id_filho_tarefa: number; p_id_usuario_pai: number }
+        Returns: string
+      }
+      classificar_historico_atribuicao_interno: {
+        Args: { p_id_filho_tarefa: number; p_id_usuario_pai: number }
+        Returns: string
+      }
       concluir_ciclo_recompensa_interno: {
         Args: {
           p_confirmado_por: string
@@ -1600,6 +1648,7 @@ export type Database = {
         Returns: Json
       }
       current_admin_id: { Args: never; Returns: number }
+      current_admin_nivel: { Args: never; Returns: string }
       current_pai_id: { Args: never; Returns: number }
       desativar_acesso_publico_filho: {
         Args: { p_id_filho: number }
@@ -1636,6 +1685,10 @@ export type Database = {
         Args: { p_id_filho: number; p_id_usuario_pai: number }
         Returns: number
       }
+      excluir_atribuicao_com_regra: {
+        Args: { p_id_filho_tarefa: number }
+        Returns: Json
+      }
       excluir_recompensa_estrelas: {
         Args: { p_id_recompensa: number }
         Returns: boolean
@@ -1667,6 +1720,11 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      is_master: { Args: never; Returns: boolean }
+      limpar_historico_descartavel_atribuicao_interno: {
+        Args: { p_id_filho_tarefa: number; p_id_usuario_pai: number }
+        Returns: Json
+      }
       listar_acessos_app_filho: {
         Args: { p_id_filho: number }
         Returns: {
@@ -1753,6 +1811,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      remover_tarefa_com_regra: {
+        Args: { p_id_tarefa: number }
+        Returns: string
+      }
+      remover_tarefa_interno: {
+        Args: { p_id_tarefa: number; p_id_usuario_pai: number }
+        Returns: string
+      }
+      remover_todas_tarefas_com_regra: { Args: never; Returns: Json }
       resgatar_recompensa_estrelas: {
         Args: { p_id_recompensa: number }
         Returns: number
@@ -1787,6 +1854,10 @@ export type Database = {
       sincronizar_estrela_ocorrencia_interno: {
         Args: { p_id_ocorrencia: number; p_id_usuario_pai: number }
         Returns: undefined
+      }
+      tarefa_tem_historico_interno: {
+        Args: { p_id_tarefa: number; p_id_usuario_pai: number }
+        Returns: boolean
       }
       total_descontos_aplicados_filho_vigencia_interno: {
         Args: {
