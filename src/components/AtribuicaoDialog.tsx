@@ -83,25 +83,33 @@ export function AtribuicaoDialog({
   const [saving, setSaving] = useState(false);
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
-  const vigenciaAtiva = useMemo(
-    () => vigenciasOrdenadas.find((v) => situacaoVigencia(v) === "andamento") ?? null,
+  const vigenciasSelecionaveis = useMemo(
+    () => vigenciasOrdenadas.filter((v) => situacaoVigencia(v) !== "finalizada"),
     [vigenciasOrdenadas],
+  );
+  const vigenciaAtiva = useMemo(
+    () => vigenciasSelecionaveis.find((v) => situacaoVigencia(v) === "andamento") ?? null,
+    [vigenciasSelecionaveis],
   );
 
   useEffect(() => {
     if (!open) return;
     setItens([]);
+    const vigenciaInicialSelecionavel = vigenciaInicialId
+      ? vigenciasSelecionaveis.find((v) => v.id === vigenciaInicialId) ?? null
+      : null;
+
     setVig(
-      vigenciaInicialId
-        ? String(vigenciaInicialId)
-        : mode === "NORMAL" && vigenciaAtiva
-          ? String(vigenciaAtiva.id)
+      vigenciaInicialSelecionavel
+        ? String(vigenciaInicialSelecionavel.id)
+        : mode === "NORMAL"
+          ? String(vigenciaAtiva?.id ?? vigenciasSelecionaveis[0]?.id ?? "")
           : "",
     );
     setFilho(filhoInicial ? String(filhoInicial.id) : "");
     setFilhosSelecionados([]);
     setTarefasSelecionadas(mode === "POS_CADASTRO_TAREFA" ? tarefasIniciais.map((t) => t.id) : []);
-  }, [open, mode, vigenciaInicialId, vigenciaAtiva?.id, filhoInicial?.id, tarefasIniciais.map((t) => t.id).join(",")]);
+  }, [open, mode, vigenciaInicialId, vigenciaAtiva?.id, vigenciasSelecionaveis, filhoInicial?.id, tarefasIniciais.map((t) => t.id).join(",")]);
 
   useEffect(() => {
     if (
@@ -119,7 +127,7 @@ export function AtribuicaoDialog({
   const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
   const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada");
   const vigenciaSelecionadaFutura = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "futura");
-  const semVigencias = vigencias.length === 0;
+  const semVigencias = vigenciasSelecionaveis.length === 0;
   const semFilhos = filhos.length === 0;
   const semTarefas = tarefas.length === 0;
   const faltamCadastrosNormal = semVigencias || semFilhos || semTarefas;
@@ -296,7 +304,7 @@ export function AtribuicaoDialog({
                     label="Vigência"
                     value={vig}
                     onChange={setVig}
-                    options={vigenciasOrdenadas.map(statusVigencia)}
+                    options={vigenciasSelecionaveis.map(statusVigencia)}
                     placeholder={semVigencias ? "Nenhuma vigência cadastrada" : "Selecione"}
                     disabled={semVigencias}
                   />
