@@ -1,6 +1,6 @@
 import { uiTypography } from "@/lib/ui-typography";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BellRing, CheckCircle2, ClipboardCheck, History, Link2, ListTodo, Users } from "lucide-react";
+import { ArrowRight, BellRing, CalendarRange, CheckCircle2, ClipboardCheck, Link2, ListTodo, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFilhoTarefas, useOcorrencias, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
@@ -22,9 +22,9 @@ function Inicio() {
   const etapas = [
     { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
     { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
-    { numero: "3", titulo: "Faça as atribuições", texto: "Associe os filhos às tarefas e defina as vigências dos combinados.", to: "/atribuicoes", icon: Link2 },
-    { numero: "4", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
-    { numero: "5", titulo: "Histórico", texto: "Veja o que aconteceu ao longo das vigências, acompanhe os registros e gere relatórios.", to: "/relatorio", icon: History },
+    { numero: "3", titulo: "Crie uma vigência", texto: "Defina o período em que os combinados ficarão valendo.", to: "/vigencias", icon: CalendarRange },
+    { numero: "4", titulo: "Faça as atribuições", texto: "Associe cada filho às tarefas dentro da vigência escolhida.", to: "/atribuicoes", icon: Link2 },
+    { numero: "5", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
   ];
 
   return (
@@ -118,7 +118,7 @@ function Inicio() {
           <div>
             <h2 className={uiTypography.secondaryTitle}>A primeira ação é cadastrar os filhos</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Depois disso, você poderá criar as tarefas, fazer as atribuições e definir as vigências. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados e o histórico para ser consultado.
+              Depois disso, crie as tarefas, defina a vigência e faça as atribuições. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados.
             </p>
           </div>
         </div>
