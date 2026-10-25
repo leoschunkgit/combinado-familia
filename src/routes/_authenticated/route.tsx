@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import { useActionLoading } from "@/components/ActionLoading";
 import { OnboardingInicial } from "@/components/OnboardingInicial";
-import { msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias } from "@/lib/db";
+import { msgErro, useFilhos, useFilhoTarefas, useOcorrencias, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
@@ -106,7 +106,6 @@ function AuthenticatedLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { data: filhos = [] } = useFilhos();
-  const { data: tarefas = [] } = useTarefas();
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
