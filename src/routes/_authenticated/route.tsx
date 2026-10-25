@@ -205,7 +205,7 @@ function AuthenticatedLayout() {
   }
 
   const passoAtual = etapa === null ? null : ETAPAS[etapa];
-  const configuracaoInicialConcluida = filhos.length > 0 && tarefas.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
+  const configuracaoInicialConcluida = filhos.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
   const pendenciasHoje = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
   const pendenciasPassadas = configuracaoInicialConcluida ? pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
