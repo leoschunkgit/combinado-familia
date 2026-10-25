@@ -131,7 +131,7 @@ export function AdminLimpeza() {
       <div>
         <h2 className={uiTypography.secondaryTitle}>Limpeza de conta</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Zere os dados funcionais e históricos de uma família sem apagar a conta do responsável nem seu acesso administrativo.
+          Zere os dados funcionais e históricos de uma família sem apagar a conta do responsável nem seu acesso administrativo. Esta função só pode ser executada por ADMIN ativo ou MASTER ativo.
         </p>
       </div>
 
@@ -185,7 +185,7 @@ export function AdminLimpeza() {
                   <h3 className={uiTypography.secondaryTitle}>{usuario.nome}</h3>
                   {usuario.eh_admin && (
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
-                      ADMIN
+                      Acesso administrativo
                     </span>
                   )}
                 </div>
