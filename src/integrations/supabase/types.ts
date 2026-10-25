@@ -1419,6 +1419,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      excluir_atribuicao_com_regra: {
+        Args: { p_id_filho_tarefa: number }
+        Returns: Json
+      }
       remover_tarefa_com_regra: {
         Args: { p_id_tarefa: number }
         Returns: string
