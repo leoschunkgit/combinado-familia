@@ -1,6 +1,8 @@
+
 -- Remove definitivamente o modelo antigo de limite/penalidade por vigência.
 -- DEV está em manutenção: não mantemos camada de compatibilidade com legado de teste.
 
+-- 1) Remover triggers do modelo antigo.
 drop trigger if exists trg_guard_nao_fez_limit on public.t_ocorrencia;
 drop trigger if exists trg_recalcular_estado_atribuicao on public.t_ocorrencia;
 drop trigger if exists trg_recalcular_penalidade_ocorrencia on public.t_ocorrencia;
@@ -10,6 +12,7 @@ drop trigger if exists trg_recalcular_penalidade_filho on public.t_filho;
 drop trigger if exists trg_recalcular_estado_vigencia_regra on public.t_vigencia;
 drop trigger if exists trg_recalcular_penalidade_vigencia on public.t_vigencia;
 
+-- O guard de histórico continua existindo, mas agora vigência só tem período.
 drop trigger if exists guard_validity_history_before_change on public.t_vigencia;
 create trigger guard_validity_history_before_change
 before delete or update of data_inicio, data_fim
@@ -17,6 +20,7 @@ on public.t_vigencia
 for each row
 execute function public.guard_validity_history();
 
+-- 2) Remover funções antigas ligadas a limite, contador persistido e penalidade da vigência.
 drop function if exists public.guard_nao_fez_limit();
 drop function if exists public.recalcular_estado_atribuicao(bigint);
 drop function if exists public.recalcular_estado_atribuicao_trigger();
@@ -32,6 +36,8 @@ drop function if exists public.guard_mesada_assignment();
 drop function if exists public.guard_mesada_child();
 drop function if exists public.guard_mesada_validity();
 
+-- 3) Vigência fica exclusivamente como contexto/período.
+-- Atribuição deixa de persistir estado derivado de Não fez.
 alter table public.t_filho_tarefa
   drop column if exists qtd_nao_fez,
   drop column if exists feito;
@@ -42,6 +48,7 @@ alter table public.t_vigencia
   drop column if exists tipo_penalidade,
   drop column if exists valor_debito;
 
+-- 4) Duplicação de vigência agora duplica apenas período + atribuições.
 drop function if exists public.duplicar_vigencia_com_atribuicoes(
   bigint,timestamptz,timestamptz,text,integer,numeric
 );
@@ -87,8 +94,12 @@ begin
     raise exception 'A nova vigência deve começar depois do término da vigência modelo';
   end if;
 
-  insert into public.t_vigencia (id_usuario_pai, data_inicio, data_fim)
-  values (v_pai_id, p_data_inicio, p_data_fim)
+  insert into public.t_vigencia (
+    id_usuario_pai, data_inicio, data_fim
+  )
+  values (
+    v_pai_id, p_data_inicio, p_data_fim
+  )
   returning id into v_nova_id;
 
   insert into public.t_filho_tarefa (
@@ -112,6 +123,7 @@ grant execute on function public.duplicar_vigencia_com_atribuicoes(
   bigint,timestamptz,timestamptz
 ) to authenticated;
 
+-- 5) Contrato do painel do filho passa a refletir o modelo novo.
 create or replace function public.montar_painel_filho(
   p_id_usuario_pai bigint,
   p_id_filho bigint

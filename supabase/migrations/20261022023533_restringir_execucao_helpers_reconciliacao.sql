@@ -1,3 +1,4 @@
+
 revoke all on function public.reconciliar_ocorrencia(
   text,bigint,bigint,timestamptz,text,text,numeric,text,text,text,numeric,bigint,text
 ) from public, anon, authenticated, service_role;

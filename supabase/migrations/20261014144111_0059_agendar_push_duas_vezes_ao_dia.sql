@@ -1,36 +1,9 @@
--- 0059 - Agenda o push de pendências em duas janelas diárias.
--- Horários do cron estão em UTC:
--- 15:00 UTC = 12:00 America/Sao_Paulo
--- 22:30 UTC = 19:30 America/Sao_Paulo
 
-CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog;
-CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
+insert into public.app_cron_config (chave, valor)
+values ('push_cron_secret', 'vault:push_cron_secret')
+on conflict (chave) do update set valor = excluded.valor;
 
-DO $$
-DECLARE
-  v_job_id bigint;
-BEGIN
-  SELECT jobid INTO v_job_id
-  FROM cron.job
-  WHERE jobname = 'push-pendencias-1200-sao-paulo'
-  LIMIT 1;
-
-  IF v_job_id IS NOT NULL THEN
-    PERFORM cron.unschedule(v_job_id);
-  END IF;
-
-  SELECT jobid INTO v_job_id
-  FROM cron.job
-  WHERE jobname = 'push-pendencias-1930-sao-paulo'
-  LIMIT 1;
-
-  IF v_job_id IS NOT NULL THEN
-    PERFORM cron.unschedule(v_job_id);
-  END IF;
-END
-$$;
-
-SELECT cron.schedule(
+select cron.schedule(
   'push-pendencias-1200-sao-paulo',
   '0 15 * * *',
   $cron$
@@ -47,7 +20,7 @@ SELECT cron.schedule(
   $cron$
 );
 
-SELECT cron.schedule(
+select cron.schedule(
   'push-pendencias-1930-sao-paulo',
   '30 22 * * *',
   $cron$

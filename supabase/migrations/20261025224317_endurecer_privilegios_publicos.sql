@@ -1,3 +1,4 @@
+
 -- Privilégios de DDL/estrutura nunca são necessários ao cliente.
 revoke truncate, references, trigger
 on all tables in schema public
@@ -25,7 +26,8 @@ alter policy ocorrencia_reconciliacao_select_own
 on public.t_ocorrencia_reconciliacao
 to authenticated;
 
--- Helper interno deixa de ser RPC pública para usuários autenticados.
+-- Helper interno: triggers/RPCs privilegiados continuam podendo usá-lo,
+-- mas ele deixa de ser uma RPC pública para usuários autenticados.
 revoke execute
 on function public.total_descontos_aplicados_filho_vigencia_interno(bigint,bigint,bigint,bigint)
 from authenticated;

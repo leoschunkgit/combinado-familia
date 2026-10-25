@@ -1,0 +1,20 @@
+
+revoke execute on function public.admin_adicionar(text) from anon, service_role;
+revoke execute on function public.admin_auditar(text, text, text, jsonb) from anon, authenticated, service_role;
+revoke execute on function public.admin_auditoria_listar(integer) from anon, service_role;
+revoke execute on function public.admin_comunicacao_salvar(boolean, text, boolean, text) from anon, service_role;
+revoke execute on function public.admin_config_salvar(boolean, text, boolean, text, text, integer, text, integer) from anon, service_role;
+revoke execute on function public.admin_definir_status(bigint, boolean) from anon, service_role;
+revoke execute on function public.admin_diagnostico(text, integer) from anon, service_role;
+revoke execute on function public.admin_feature_salvar(text, text, text, boolean) from anon, service_role;
+revoke execute on function public.admin_feedback_excluir(bigint) from anon, service_role;
+revoke execute on function public.admin_feedbacks(integer) from anon, service_role;
+revoke execute on function public.admin_listar_admins() from anon, service_role;
+revoke execute on function public.admin_operacao() from anon, service_role;
+revoke execute on function public.admin_registrar_acesso() from anon, service_role;
+revoke execute on function public.admin_resumo() from anon, service_role;
+revoke execute on function public.admin_sistema_obter() from anon, service_role;
+revoke execute on function public.admin_usuarios() from anon, service_role;
+revoke execute on function public.admin_versoes_salvar(text, integer, text, integer) from anon, service_role;
+revoke execute on function public.current_admin_id() from anon, service_role;
+revoke execute on function public.is_admin() from anon, service_role;

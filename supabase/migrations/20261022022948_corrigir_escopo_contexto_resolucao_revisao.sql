@@ -1,3 +1,4 @@
+
 do $$
 declare
   v_ddl text;
@@ -23,6 +24,7 @@ begin
     || E'      perform set_config(''app.resolucao_revisao_ocorrencia'', ''off'', true);\n'
     || E'    end if;\n\n';
 
+  -- Remove qualquer reset inserido cedo demais.
   v_ddl := replace(v_ddl, v_reset, '');
 
   v_marker :=

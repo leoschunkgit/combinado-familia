@@ -1,1 +1,1 @@
--- O autoteste temporário foi removido na DEV. O estado funcional definitivo está consolidado nas migrations do núcleo.
+drop function if exists public.autoteste_reconciliador_ocorrencia();

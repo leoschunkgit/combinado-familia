@@ -1,3 +1,4 @@
+
 create index if not exists t_filho_tarefa_pai_tarefa_idx
   on public.t_filho_tarefa (id_usuario_pai, id_tarefa);
 

@@ -1,3 +1,4 @@
+
 alter table public.t_filho
   add column if not exists mesada_ciclo_atual bigint not null default 0;
 

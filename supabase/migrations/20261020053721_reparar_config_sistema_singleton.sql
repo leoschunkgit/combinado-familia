@@ -1,3 +1,4 @@
+
 -- Garante o registro singleton usado pela Administração > Sistema.
 INSERT INTO public.t_app_config (id)
 VALUES (1)

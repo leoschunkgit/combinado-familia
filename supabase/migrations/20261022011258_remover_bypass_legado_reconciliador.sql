@@ -1,3 +1,4 @@
+
 -- Remove o último vestígio da camada transitória de compatibilidade.
 -- O modelo legado já foi excluído; o reconciliador não precisa mais sinalizar bypass algum.
 do $$

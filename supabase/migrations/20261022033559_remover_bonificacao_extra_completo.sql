@@ -1,7 +1,7 @@
 -- Remove por completo a antiga bonificação extra do "Fez".
 -- Estrelas e recompensas permanecem como mecanismos de reconhecimento.
 
-drop function if exists public.reconciliar_ocorrencia(text,bigint,bigint,timestamp with time zone,text,text,numeric,text,text,text,numeric,bigint,text);
+drop function public.reconciliar_ocorrencia(text,bigint,bigint,timestamp with time zone,text,text,numeric,text,text,text,numeric,bigint,text);
 
 CREATE OR REPLACE FUNCTION public.reconciliar_ocorrencia(p_acao text, p_id_ocorrencia bigint DEFAULT NULL::bigint, p_id_filho_tarefa bigint DEFAULT NULL::bigint, p_created_at timestamp with time zone DEFAULT NULL::timestamp with time zone, p_novo_tipo text DEFAULT NULL::text, p_consequencia_tipo text DEFAULT NULL::text, p_desconto_valor numeric DEFAULT NULL::numeric, p_penalidade_descricao text DEFAULT NULL::text, p_id_revisao bigint DEFAULT NULL::bigint, p_motivo text DEFAULT NULL::text)
  RETURNS jsonb
@@ -1069,6 +1069,7 @@ end;
 $function$
 ;
 
+-- Remove também os vestígios de bonificação do histórico interno de reconciliação.
 update public.t_ocorrencia_reconciliacao
 set
   estado_anterior = case

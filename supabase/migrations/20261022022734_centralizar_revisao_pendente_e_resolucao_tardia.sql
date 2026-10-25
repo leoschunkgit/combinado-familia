@@ -1,3 +1,4 @@
+
 create or replace function public.guard_occurrence_active_validity()
 returns trigger
 language plpgsql
@@ -11,6 +12,8 @@ declare
   v_hoje date;
   v_resolucao_revisao boolean;
 begin
+  -- Cascades de FK executam dentro de triggers encadeados.
+  -- Não bloquear limpeza dependente quando filho/tarefa/atribuição/conta é removido.
   if tg_op = 'DELETE' and pg_trigger_depth() > 1 then
     return old;
   end if;
@@ -39,6 +42,8 @@ begin
     tg_op = 'UPDATE'
     and current_setting('app.resolucao_revisao_ocorrencia', true) = 'on';
 
+  -- Uma revisão pedida durante a vigência pode ser decidida depois do fim.
+  -- Esta exceção só é habilitada pelo reconciliador depois de validar a revisão exata.
   if not v_resolucao_revisao
      and (now() < v_inicio or now() > v_fim) then
     raise exception 'Fez/Não fez só pode ser alterado em vigência em andamento';
@@ -84,6 +89,7 @@ begin
     raise exception 'reconciliar_ocorrencia não encontrado';
   end if;
 
+  -- Não permita uma edição paralela do mesmo NAO_FEZ enquanto existe revisão pendente.
   v_lock_marker := E'  -- Penalidade cumprida é fato histórico e não pode ser apagada ou reescrita.\n';
   v_lock :=
     E'  if v_id_ocorrencia is not null\n'
@@ -105,6 +111,8 @@ begin
     v_ddl := replace(v_ddl, v_lock_marker, v_lock || v_lock_marker);
   end if;
 
+  -- Depois de validar id da revisão + ocorrência + atribuição + data + status,
+  -- habilita somente nesta transação a exceção para resolver revisão após o fim.
   v_revision_marker :=
     E'      if v_tipo_anterior <> ''NAO_FEZ'' then\n'
     || E'        raise exception ''A revisão não pertence mais a um Não fez'';\n'

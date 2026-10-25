@@ -1,5 +1,3 @@
--- Permite excluir recompensa apenas quando nunca houve resgate.
--- O backend protege o histórico: qualquer resgate, inclusive cancelado, bloqueia a exclusão.
 
 create or replace function public.excluir_recompensa_estrelas(p_id_recompensa bigint)
 returns boolean

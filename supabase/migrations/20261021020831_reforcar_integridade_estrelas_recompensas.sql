@@ -1,8 +1,8 @@
+
 -- Reforço estrutural do domínio de estrelas/recompensas.
--- Garante no banco as relações compostas de responsável/filho/recompensa,
+-- O banco passa a garantir também as relações compostas de proprietário/filho/recompensa,
 -- mantém concessões imutáveis e congela os snapshots do resgate.
--- "Hoje" e "Nesta vigência" continuam indicadores do FEZ atual;
--- o total de estrelas é mérito permanente.
+-- "Hoje" e "Nesta vigência" continuam indicadores do FEZ atual; o total de estrelas é mérito permanente.
 
 do $$
 begin
@@ -328,6 +328,7 @@ begin
     p_id_filho
   );
 
+  -- Indicador operacional: reflete o FEZ atual de hoje, não o mérito permanente.
   select count(*)::integer
     into v_hoje
   from public.t_ocorrencia o
@@ -355,6 +356,7 @@ begin
   order by v.data_inicio desc
   limit 1;
 
+  -- Indicador operacional: reflete os FEZ atualmente marcados na vigência.
   if v_vigencia_id is null then
     v_vigencia := 0;
   else

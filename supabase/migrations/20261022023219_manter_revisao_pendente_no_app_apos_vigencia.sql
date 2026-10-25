@@ -1,3 +1,4 @@
+
 do $$
 declare
   v_ddl text;

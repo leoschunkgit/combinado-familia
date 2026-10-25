@@ -1,3 +1,4 @@
+
 create or replace function public.current_admin_nivel()
 returns text
 language sql

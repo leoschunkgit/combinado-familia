@@ -1,3 +1,4 @@
+
 alter table public.t_tarefa
   add column if not exists ativo boolean not null default true,
   add column if not exists arquivada_em timestamptz null;
@@ -115,6 +116,7 @@ security definer
 set search_path = ''
 as $function$
 begin
+  -- Exclusão do responsável é limpeza estrutural e deve continuar em cascata.
   if pg_trigger_depth() > 1 then
     return old;
   end if;
@@ -212,6 +214,8 @@ begin
     return 'EXCLUIDA';
   end if;
 
+  -- A tarefa sai da vida futura, mas vínculos atuais e históricos permanecem.
+  -- Atribuições futuras vazias podem ser descartadas, pois ainda não viraram fato.
   delete from public.t_filho_tarefa ft
   using public.t_vigencia v
   where ft.id_usuario_pai = p_id_usuario_pai

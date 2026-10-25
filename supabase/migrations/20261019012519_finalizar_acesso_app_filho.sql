@@ -1,3 +1,4 @@
+
 create table if not exists public.t_filho_acesso_app_tentativa (
   identificador_hash text primary key,
   janela_inicio timestamptz not null default now(),

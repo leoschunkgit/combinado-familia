@@ -1,3 +1,4 @@
+
 create index if not exists idx_t_filho_acesso_app_id_filho
   on public.t_filho_acesso_app (id_filho);
 

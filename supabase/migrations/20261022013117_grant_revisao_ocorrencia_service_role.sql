@@ -1,2 +1,3 @@
--- Permissão final já está consolidada em 20261022012312_fechar_nucleo_reconciliacao_ocorrencias.sql para instalações novas.
--- Mantido para alinhar o histórico de migrations da DEV.
+
+revoke all on function public.criar_revisao_ocorrencia_filho_interno(text,bigint,text) from public;
+grant execute on function public.criar_revisao_ocorrencia_filho_interno(text,bigint,text) to service_role;

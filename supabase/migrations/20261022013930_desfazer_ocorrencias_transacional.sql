@@ -1,3 +1,4 @@
+
 create or replace function public.desfazer_ocorrencias(
   p_ids bigint[]
 )

@@ -1,3 +1,4 @@
+
 create or replace function public.sincronizar_mesada_vigencia_atribuicao_interno()
 returns trigger
 language plpgsql

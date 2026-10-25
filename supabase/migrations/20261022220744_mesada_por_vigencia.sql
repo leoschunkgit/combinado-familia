@@ -1,3 +1,4 @@
+
 drop trigger if exists a_definir_ciclo_mesada_consequencia_before_change
   on public.t_ocorrencia_consequencia;
 

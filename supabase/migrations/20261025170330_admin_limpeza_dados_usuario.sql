@@ -1,3 +1,4 @@
+
 create or replace function public.admin_localizar_usuario_limpeza(p_email text)
 returns jsonb
 language plpgsql
@@ -113,6 +114,7 @@ begin
   )
   into v_resumo;
 
+  -- Auditoria é intocável: registra a operação antes da limpeza e não será apagada.
   perform public.admin_auditar(
     'DADOS_USUARIO_LIMPOS',
     'usuario_pai',
@@ -126,6 +128,7 @@ begin
     )
   );
 
+  -- Tabelas operacionais que não dependem do filho por FK.
   delete from public.t_ocorrencia_reconciliacao
   where id_usuario_pai = v_usuario.id;
 
@@ -138,9 +141,14 @@ begin
   delete from public.t_push_dispositivo
   where id_usuario_pai = v_usuario.id;
 
+  -- Excluir filhos é a limpeza integral oficial de todos os dados/históricos deles.
+  -- As FKs CASCADE removem atribuições, ocorrências, consequências, solicitações,
+  -- estrelas, recompensas, acessos, links públicos e push do filho.
   delete from public.t_filho
   where id_usuario_pai = v_usuario.id;
 
+  -- Depois dos filhos, não restam atribuições. A limpeza administrativa pode então
+  -- remover todas as tarefas, inclusive arquivadas, sem preservar histórico.
   v_setting_anterior := current_setting('app.remocao_tarefa_autorizada', true);
   perform set_config('app.remocao_tarefa_autorizada', '1', true);
 
@@ -153,9 +161,11 @@ begin
     true
   );
 
+  -- Sem atribuições restantes, as vigências podem ser removidas normalmente.
   delete from public.t_vigencia
   where id_usuario_pai = v_usuario.id;
 
+  -- Mantém a identidade da conta, mas reabre o fluxo inicial porque a família foi zerada.
   update public.t_usuario_pai
   set onboarding_concluido = false
   where id = v_usuario.id;

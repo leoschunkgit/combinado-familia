@@ -1,3 +1,4 @@
+
 alter policy "own pai select"
 on public.t_usuario_pai
 using (auth_user_id = (select auth.uid()));

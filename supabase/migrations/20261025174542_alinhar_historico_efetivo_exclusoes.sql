@@ -1,3 +1,4 @@
+
 create or replace function public.classificar_historico_atribuicao_interno(
   p_id_usuario_pai bigint,
   p_id_filho_tarefa bigint

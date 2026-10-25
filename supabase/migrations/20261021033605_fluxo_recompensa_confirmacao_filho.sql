@@ -27,12 +27,21 @@ begin
     and f.id_usuario_pai = p_id_usuario_pai
   for update;
 
-  if not found then return; end if;
+  if not found then
+    return;
+  end if;
 
-  v_total := public.estrelas_total_conquistado_interno(p_id_usuario_pai, p_id_filho);
+  v_total := public.estrelas_total_conquistado_interno(
+    p_id_usuario_pai,
+    p_id_filho
+  );
 
   for v_recompensa in
-    select r.id, r.nome, r.descricao, r.estrelas_necessarias
+    select
+      r.id,
+      r.nome,
+      r.descricao,
+      r.estrelas_necessarias
     from public.t_recompensa_estrela r
     where r.id_usuario_pai = p_id_usuario_pai
       and r.id_filho = p_id_filho
@@ -70,14 +79,26 @@ begin
     end if;
 
     insert into public.t_recompensa_resgate (
-      id_usuario_pai, id_filho, id_recompensa, recompensa_nome,
-      recompensa_descricao_no_resgate, estrelas_utilizadas,
-      meta_estrelas_no_resgate, total_estrelas_no_resgate, status
+      id_usuario_pai,
+      id_filho,
+      id_recompensa,
+      recompensa_nome,
+      recompensa_descricao_no_resgate,
+      estrelas_utilizadas,
+      meta_estrelas_no_resgate,
+      total_estrelas_no_resgate,
+      status
     )
     values (
-      p_id_usuario_pai, p_id_filho, v_recompensa.id, v_recompensa.nome,
-      v_recompensa.descricao, v_recompensa.estrelas_necessarias,
-      v_recompensa.estrelas_necessarias, v_total, 'PENDENTE'
+      p_id_usuario_pai,
+      p_id_filho,
+      v_recompensa.id,
+      v_recompensa.nome,
+      v_recompensa.descricao,
+      v_recompensa.estrelas_necessarias,
+      v_recompensa.estrelas_necessarias,
+      v_total,
+      'PENDENTE'
     );
   end loop;
 end;
@@ -97,10 +118,22 @@ declare
   v_tarefa_nome text;
   v_data date;
 begin
-  if new.tipo <> 'FEZ' then return new; end if;
+  if new.tipo <> 'FEZ' then
+    return new;
+  end if;
 
-  select ft.id_usuario_pai, ft.id_filho, ft.id_vigencia, ft.id_tarefa, t.nome
-    into v_pai_id, v_filho_id, v_vigencia_id, v_tarefa_id, v_tarefa_nome
+  select
+    ft.id_usuario_pai,
+    ft.id_filho,
+    ft.id_vigencia,
+    ft.id_tarefa,
+    t.nome
+  into
+    v_pai_id,
+    v_filho_id,
+    v_vigencia_id,
+    v_tarefa_id,
+    v_tarefa_nome
   from public.t_filho_tarefa ft
   left join public.t_tarefa t
     on t.id = ft.id_tarefa
@@ -108,25 +141,43 @@ begin
   where ft.id = new.id_filho_tarefa
     and ft.id_usuario_pai = new.id_usuario_pai;
 
-  if v_pai_id is null or v_filho_id is null or v_vigencia_id is null or v_tarefa_id is null then
+  if v_pai_id is null
+     or v_filho_id is null
+     or v_vigencia_id is null
+     or v_tarefa_id is null then
     return new;
   end if;
 
   v_data := timezone('America/Sao_Paulo', new.created_at)::date;
 
   insert into public.t_estrela_concessao (
-    id_usuario_pai, id_filho, id_vigencia, id_tarefa,
-    id_filho_tarefa_origem, id_ocorrencia_origem,
-    tarefa_nome_snapshot, data_referencia, created_at
+    id_usuario_pai,
+    id_filho,
+    id_vigencia,
+    id_tarefa,
+    id_filho_tarefa_origem,
+    id_ocorrencia_origem,
+    tarefa_nome_snapshot,
+    data_referencia,
+    created_at
   )
   values (
-    v_pai_id, v_filho_id, v_vigencia_id, v_tarefa_id,
-    new.id_filho_tarefa, new.id, v_tarefa_nome, v_data, now()
+    v_pai_id,
+    v_filho_id,
+    v_vigencia_id,
+    v_tarefa_id,
+    new.id_filho_tarefa,
+    new.id,
+    v_tarefa_nome,
+    v_data,
+    now()
   )
   on conflict do nothing;
 
   perform public.garantir_conquista_recompensa_estrelas_interno(
-    v_pai_id, v_filho_id, null
+    v_pai_id,
+    v_filho_id,
+    null
   );
 
   return new;
@@ -151,11 +202,14 @@ declare
   v_nome text;
   v_descricao text;
 begin
-  select p.id into v_pai_id
+  select p.id
+    into v_pai_id
   from public.t_usuario_pai p
   where p.auth_user_id = auth.uid();
 
-  if v_pai_id is null then raise exception 'Responsável não encontrado'; end if;
+  if v_pai_id is null then
+    raise exception 'Responsável não encontrado';
+  end if;
 
   perform 1
   from public.t_filho f
@@ -163,7 +217,9 @@ begin
     and f.id_usuario_pai = v_pai_id
   for update;
 
-  if not found then raise exception 'Filho não encontrado para este responsável'; end if;
+  if not found then
+    raise exception 'Filho não encontrado para este responsável';
+  end if;
 
   v_nome := btrim(coalesce(p_nome, ''));
   v_descricao := nullif(btrim(coalesce(p_descricao, '')), '');
@@ -171,19 +227,33 @@ begin
   if char_length(v_nome) < 2 or char_length(v_nome) > 100 then
     raise exception 'Informe uma recompensa entre 2 e 100 caracteres';
   end if;
+
   if v_descricao is not null and char_length(v_descricao) > 300 then
     raise exception 'A descrição da recompensa deve ter no máximo 300 caracteres';
   end if;
-  if p_estrelas_necessarias is null or p_estrelas_necessarias < 1 or p_estrelas_necessarias > 100000 then
+
+  if p_estrelas_necessarias is null
+     or p_estrelas_necessarias < 1
+     or p_estrelas_necessarias > 100000 then
     raise exception 'Informe uma quantidade válida de estrelas';
   end if;
 
   if p_id_recompensa is null then
     insert into public.t_recompensa_estrela (
-      id_usuario_pai, id_filho, nome, descricao, estrelas_necessarias, ativo
+      id_usuario_pai,
+      id_filho,
+      nome,
+      descricao,
+      estrelas_necessarias,
+      ativo
     )
     values (
-      v_pai_id, p_id_filho, v_nome, v_descricao, p_estrelas_necessarias, true
+      v_pai_id,
+      p_id_filho,
+      v_nome,
+      v_descricao,
+      p_estrelas_necessarias,
+      true
     )
     returning id into v_id;
   else
@@ -197,11 +267,15 @@ begin
       and id_filho = p_id_filho
     returning id into v_id;
 
-    if v_id is null then raise exception 'Recompensa não encontrada'; end if;
+    if v_id is null then
+      raise exception 'Recompensa não encontrada';
+    end if;
   end if;
 
   perform public.garantir_conquista_recompensa_estrelas_interno(
-    v_pai_id, p_id_filho, v_id
+    v_pai_id,
+    p_id_filho,
+    v_id
   );
 
   return v_id;
@@ -216,16 +290,23 @@ set search_path = ''
 as $function$
 begin
   if tg_op = 'INSERT' then
-    if new.status <> 'PENDENTE' then raise exception 'Novo ciclo de recompensa deve iniciar como PENDENTE'; end if;
-    if new.meta_estrelas_no_resgate is null or new.total_estrelas_no_resgate is null then
+    if new.status <> 'PENDENTE' then
+      raise exception 'Novo ciclo de recompensa deve iniciar como PENDENTE';
+    end if;
+
+    if new.meta_estrelas_no_resgate is null
+       or new.total_estrelas_no_resgate is null then
       raise exception 'Ciclo de recompensa exige snapshot da meta e do total de estrelas';
     end if;
+
     if new.estrelas_utilizadas <> new.meta_estrelas_no_resgate then
       raise exception 'Meta histórica da recompensa inconsistente';
     end if;
+
     if new.entregue_em is not null or new.cancelado_em is not null then
       raise exception 'Novo ciclo não pode nascer concluído ou cancelado';
     end if;
+
     return new;
   end if;
 
@@ -299,11 +380,15 @@ begin
   if p_token is null or p_token !~ '^[0-9a-f]{64}$' then
     return jsonb_build_object('ok', false, 'codigo', 'SESSAO_INVALIDA');
   end if;
+
   if p_id_recompensa is null or p_id_recompensa <= 0 then
     return jsonb_build_object('ok', false, 'codigo', 'RECOMPENSA_INVALIDA');
   end if;
 
-  v_token_hash := pg_catalog.encode(extensions.digest(lower(p_token), 'sha256'), 'hex');
+  v_token_hash := pg_catalog.encode(
+    extensions.digest(lower(p_token), 'sha256'),
+    'hex'
+  );
 
   select a.id_usuario_pai, a.id_filho, f.nome
     into v_pai_id, v_filho_id, v_nome_filho
@@ -337,12 +422,19 @@ begin
   end if;
 
   perform public.garantir_conquista_recompensa_estrelas_interno(
-    v_pai_id, v_filho_id, p_id_recompensa
+    v_pai_id,
+    v_filho_id,
+    p_id_recompensa
   );
 
-  select rr.id, rr.recompensa_nome,
-         coalesce(rr.meta_estrelas_no_resgate, rr.estrelas_utilizadas)
-    into v_resgate_id, v_recompensa_nome, v_meta
+  select
+    rr.id,
+    rr.recompensa_nome,
+    coalesce(rr.meta_estrelas_no_resgate, rr.estrelas_utilizadas)
+  into
+    v_resgate_id,
+    v_recompensa_nome,
+    v_meta
   from public.t_recompensa_resgate rr
   where rr.id_usuario_pai = v_pai_id
     and rr.id_filho = v_filho_id
@@ -355,8 +447,16 @@ begin
   v_total := public.estrelas_total_conquistado_interno(v_pai_id, v_filho_id);
 
   if v_resgate_id is null then
-    select rr.id, rr.total_estrelas_no_resgate, rr.recompensa_nome, rr.entregue_em
-      into v_ultimo_id, v_ultimo_total, v_ultimo_nome, v_ultimo_entregue_em
+    select
+      rr.id,
+      rr.total_estrelas_no_resgate,
+      rr.recompensa_nome,
+      rr.entregue_em
+    into
+      v_ultimo_id,
+      v_ultimo_total,
+      v_ultimo_nome,
+      v_ultimo_entregue_em
     from public.t_recompensa_resgate rr
     where rr.id_usuario_pai = v_pai_id
       and rr.id_filho = v_filho_id
@@ -369,11 +469,16 @@ begin
        and v_ultimo_total = v_total
        and v_ultimo_entregue_em >= now() - interval '2 minutes' then
       return jsonb_build_object(
-        'ok', true, 'concluida', false, 'ja_concluida', true,
-        'id_usuario_pai', v_pai_id, 'id_filho', v_filho_id,
+        'ok', true,
+        'concluida', false,
+        'ja_concluida', true,
+        'id_usuario_pai', v_pai_id,
+        'id_filho', v_filho_id,
         'nome_filho', v_nome_filho,
         'recompensa', jsonb_build_object(
-          'id', p_id_recompensa, 'nome', v_ultimo_nome, 'id_ciclo', v_ultimo_id
+          'id', p_id_recompensa,
+          'nome', v_ultimo_nome,
+          'id_ciclo', v_ultimo_id
         )
       );
     end if;
@@ -398,8 +503,11 @@ begin
     and ativo = true;
 
   return jsonb_build_object(
-    'ok', true, 'concluida', true, 'ja_concluida', false,
-    'id_usuario_pai', v_pai_id, 'id_filho', v_filho_id,
+    'ok', true,
+    'concluida', true,
+    'ja_concluida', false,
+    'id_usuario_pai', v_pai_id,
+    'id_filho', v_filho_id,
     'nome_filho', v_nome_filho,
     'recompensa', jsonb_build_object(
       'id', p_id_recompensa,
@@ -431,30 +539,39 @@ declare
   v_resgates jsonb;
 begin
   if not exists (
-    select 1 from public.t_filho f
-    where f.id = p_id_filho and f.id_usuario_pai = p_id_usuario_pai
+    select 1
+    from public.t_filho f
+    where f.id = p_id_filho
+      and f.id_usuario_pai = p_id_usuario_pai
   ) then
     return null;
   end if;
 
-  v_total := public.estrelas_total_conquistado_interno(p_id_usuario_pai, p_id_filho);
+  v_total := public.estrelas_total_conquistado_interno(
+    p_id_usuario_pai,
+    p_id_filho
+  );
 
-  select count(*)::integer into v_hoje
+  select count(*)::integer
+    into v_hoje
   from public.t_ocorrencia o
   join public.t_filho_tarefa ft
-    on ft.id = o.id_filho_tarefa and ft.id_usuario_pai = o.id_usuario_pai
+    on ft.id = o.id_filho_tarefa
+   and ft.id_usuario_pai = o.id_usuario_pai
   where o.id_usuario_pai = p_id_usuario_pai
     and ft.id_filho = p_id_filho
     and o.tipo = 'FEZ'
     and timezone('America/Sao_Paulo', o.created_at)::date =
         timezone('America/Sao_Paulo', now())::date;
 
-  select v.id into v_vigencia_id
+  select v.id
+    into v_vigencia_id
   from public.t_vigencia v
   where v.id_usuario_pai = p_id_usuario_pai
     and now() between v.data_inicio and v.data_fim
     and exists (
-      select 1 from public.t_filho_tarefa ft
+      select 1
+      from public.t_filho_tarefa ft
       where ft.id_usuario_pai = p_id_usuario_pai
         and ft.id_filho = p_id_filho
         and ft.id_vigencia = v.id
@@ -465,10 +582,12 @@ begin
   if v_vigencia_id is null then
     v_vigencia := 0;
   else
-    select count(*)::integer into v_vigencia
+    select count(*)::integer
+      into v_vigencia
     from public.t_ocorrencia o
     join public.t_filho_tarefa ft
-      on ft.id = o.id_filho_tarefa and ft.id_usuario_pai = o.id_usuario_pai
+      on ft.id = o.id_filho_tarefa
+     and ft.id_usuario_pai = o.id_usuario_pai
     where o.id_usuario_pai = p_id_usuario_pai
       and ft.id_filho = p_id_filho
       and ft.id_vigencia = v_vigencia_id
@@ -495,7 +614,8 @@ begin
       order by r.estrelas_necessarias, r.nome
     ),
     '[]'::jsonb
-  ) into v_recompensas
+  )
+  into v_recompensas
   from public.t_recompensa_estrela r
   cross join lateral (
     select
@@ -530,8 +650,12 @@ begin
       p.recompensa_descricao_no_resgate as pendente_descricao,
       coalesce(p.meta_estrelas_no_resgate, p.estrelas_utilizadas) as pendente_meta
     from (
-      select rr.id, rr.recompensa_nome, rr.recompensa_descricao_no_resgate,
-             rr.meta_estrelas_no_resgate, rr.estrelas_utilizadas
+      select
+        rr.id,
+        rr.recompensa_nome,
+        rr.recompensa_descricao_no_resgate,
+        rr.meta_estrelas_no_resgate,
+        rr.estrelas_utilizadas
       from public.t_recompensa_resgate rr
       where rr.id_usuario_pai = p_id_usuario_pai
         and rr.id_filho = p_id_filho
@@ -549,7 +673,8 @@ begin
   select coalesce(jsonb_agg(x.item order by x.ordem desc), '[]'::jsonb)
     into v_resgates
   from (
-    select rr.created_at as ordem,
+    select
+      rr.created_at as ordem,
       jsonb_build_object(
         'id', rr.id,
         'id_recompensa', rr.id_recompensa,
@@ -595,15 +720,22 @@ declare
   v_filho_id bigint;
   v_status_atual text;
 begin
-  select p.id into v_pai_id
+  select p.id
+    into v_pai_id
   from public.t_usuario_pai p
   where p.auth_user_id = auth.uid();
 
-  if v_pai_id is null then raise exception 'Responsável não encontrado'; end if;
+  if v_pai_id is null then
+    raise exception 'Responsável não encontrado';
+  end if;
+
   if p_status = 'ENTREGUE' then
     raise exception 'A conclusão da recompensa deve ser confirmada pelo filho';
   end if;
-  if p_status <> 'CANCELADO' then raise exception 'Status de recompensa inválido'; end if;
+
+  if p_status <> 'CANCELADO' then
+    raise exception 'Status de recompensa inválido';
+  end if;
 
   select rr.id_filho, rr.status
     into v_filho_id, v_status_atual
@@ -612,7 +744,9 @@ begin
     and rr.id_usuario_pai = v_pai_id
   for update;
 
-  if v_filho_id is null then raise exception 'Recompensa não encontrada'; end if;
+  if v_filho_id is null then
+    raise exception 'Recompensa não encontrada';
+  end if;
 
   perform 1
   from public.t_filho f
@@ -623,7 +757,10 @@ begin
   if v_status_atual = 'ENTREGUE' then
     raise exception 'Recompensa já concluída não pode ser cancelada';
   end if;
-  if v_status_atual = 'CANCELADO' then return true; end if;
+
+  if v_status_atual = 'CANCELADO' then
+    return true;
+  end if;
 
   update public.t_recompensa_resgate
   set status = 'CANCELADO',
@@ -654,7 +791,9 @@ begin
     order by f.id_usuario_pai, f.id
   loop
     perform public.garantir_conquista_recompensa_estrelas_interno(
-      v_filho.id_usuario_pai, v_filho.id, null
+      v_filho.id_usuario_pai,
+      v_filho.id,
+      null
     );
   end loop;
 end

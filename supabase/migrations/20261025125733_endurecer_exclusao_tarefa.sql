@@ -1,3 +1,4 @@
+
 create or replace function public.validar_nova_tarefa_ativa_interno()
 returns trigger
 language plpgsql
@@ -80,6 +81,8 @@ begin
     return 'ARQUIVADA';
   end if;
 
+  -- Serializa a remoção com novas ocorrências/solicitações ligadas às atribuições.
+  -- Inserts dependentes precisam manter a atribuição existente via FK.
   perform 1
   from public.t_filho_tarefa ft
   where ft.id_usuario_pai = p_id_usuario_pai

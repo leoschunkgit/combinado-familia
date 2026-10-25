@@ -1,3 +1,4 @@
+
 create or replace function public.remover_tarefa_interno(
   p_id_usuario_pai bigint,
   p_id_tarefa bigint
@@ -49,6 +50,8 @@ begin
     return 'EXCLUIDA';
   end if;
 
+  -- A tarefa sai da vida futura, mas vínculos atuais e históricos permanecem.
+  -- Atribuições futuras vazias podem ser descartadas, pois ainda não viraram fato.
   delete from public.t_filho_tarefa ft
   using public.t_vigencia v
   where ft.id_usuario_pai = p_id_usuario_pai

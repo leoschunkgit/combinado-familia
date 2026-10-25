@@ -1,3 +1,4 @@
+
 create or replace function public.excluir_atribuicao_com_regra(p_id_filho_tarefa bigint)
 returns jsonb
 language plpgsql

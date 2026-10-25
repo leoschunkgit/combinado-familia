@@ -1,3 +1,4 @@
+
 alter table public.t_ocorrencia
   add constraint t_ocorrencia_pai_id_uniq
   unique (id_usuario_pai, id);

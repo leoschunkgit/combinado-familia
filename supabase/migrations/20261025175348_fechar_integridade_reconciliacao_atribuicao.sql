@@ -1,3 +1,4 @@
+
 delete from public.t_ocorrencia_reconciliacao r
 where not exists (
   select 1

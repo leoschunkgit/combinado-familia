@@ -1,7 +1,8 @@
--- Fecha o núcleo central de Fez/Não fez.
--- Fonte de verdade: t_ocorrencia. Consequências pertencem à ocorrência.
--- Revisão aponta para a ocorrência exata. Mutações oficiais passam pelo reconciliador.
--- Estrelas abertas acompanham o FEZ vivo; ciclos de recompensa ENTREGUES permanecem históricos.
+
+-- Fecha o núcleo central de Fez/Não fez:
+-- revisão aponta para ocorrência exata; efeitos deixam triggers dispersos;
+-- reconciliador passa a orquestrar consequência, revisão, solicitação, estrelas,
+-- recompensas, contador vivo e auditoria.
 
 alter table public.t_revisao_tarefa_filho
   add column if not exists id_ocorrencia bigint;
@@ -46,63 +47,15 @@ create unique index if not exists t_revisao_tarefa_filho_ocorrencia_uniq
 comment on column public.t_revisao_tarefa_filho.id_ocorrencia is
 'Identificador histórico exato da ocorrência NAO_FEZ contestada. Intencionalmente sem FK para a revisão sobreviver ao desfazer da marcação.';
 
-alter table public.t_ocorrencia_reconciliacao
-  drop constraint if exists t_ocorrencia_reconciliacao_acao_check;
-
-alter table public.t_ocorrencia_reconciliacao
-  add constraint t_ocorrencia_reconciliacao_acao_check
-  check (acao in (
-    'CRIAR',
-    'ALTERAR',
-    'DESFAZER',
-    'CUMPRIR_PENALIDADE',
-    'SOLICITAR_REVISAO',
-    'RESOLVER_REVISAO'
-  ));
-
-alter table public.t_ocorrencia_consequencia
-  drop constraint if exists t_ocorrencia_consequencia_status_check;
-
-alter table public.t_ocorrencia_consequencia
-  add constraint t_ocorrencia_consequencia_status_check
-  check (status in (
-    'APLICADO',
-    'PENDENTE',
-    'SUSPENSA_REVISAO',
-    'CUMPRIDA',
-    'CANCELADA',
-    'ESTORNADO'
-  ));
-
-alter table public.t_ocorrencia_consequencia
-  drop constraint if exists t_ocorrencia_consequencia_coerencia_chk;
-
-alter table public.t_ocorrencia_consequencia
-  add constraint t_ocorrencia_consequencia_coerencia_chk
-  check (
-    (
-      tipo = 'DESCONTO'
-      and desconto_valor is not null
-      and penalidade_descricao is null
-      and status in ('APLICADO','ESTORNADO')
-      and cumprida_em is null
-    )
-    or
-    (
-      tipo = 'PENALIDADE'
-      and desconto_valor is null
-      and penalidade_descricao is not null
-      and char_length(btrim(penalidade_descricao)) between 2 and 200
-      and status in ('PENDENTE','SUSPENSA_REVISAO','CUMPRIDA','CANCELADA')
-    )
-  );
-
-CREATE OR REPLACE FUNCTION public.sincronizar_estrela_ocorrencia_interno(p_id_usuario_pai bigint, p_id_ocorrencia bigint)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create or replace function public.sincronizar_estrela_ocorrencia_interno(
+  p_id_usuario_pai bigint,
+  p_id_ocorrencia bigint
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
   v_tipo text;
   v_filho_id bigint;
@@ -169,15 +122,17 @@ begin
   )
   on conflict do nothing;
 end;
-$function$
+$$;
 
-
-CREATE OR REPLACE FUNCTION public.reconciliar_recompensas_estrelas_filho_interno(p_id_usuario_pai bigint, p_id_filho bigint)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create or replace function public.reconciliar_recompensas_estrelas_filho_interno(
+  p_id_usuario_pai bigint,
+  p_id_filho bigint
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
   v_total integer;
   v_marco integer;
@@ -234,8 +189,7 @@ begin
     null
   );
 end;
-$function$
-
+$$;
 
 drop trigger if exists trg_concessao_estrela_ocorrencia on public.t_ocorrencia;
 drop function if exists public.registrar_concessao_estrela_ocorrencia();
@@ -248,19 +202,20 @@ drop function if exists public.encerrar_revisao_ao_desfazer_marcacao();
 drop function if exists public.resolver_revisao_ao_marcar_fez();
 drop function if exists public.resolver_solicitacao_tarefa_ao_marcar();
 
-drop function if exists public.criar_revisao_tarefa_filho_interno(text,bigint,text);
-
-CREATE OR REPLACE FUNCTION public.criar_revisao_ocorrencia_filho_interno(p_token text, p_id_ocorrencia bigint, p_observacao text DEFAULT NULL::text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create or replace function public.criar_revisao_tarefa_filho_interno(
+  p_token text,
+  p_id_filho_tarefa bigint,
+  p_observacao text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
   v_token_hash text;
   v_pai_id bigint;
   v_filho_id bigint;
-  v_id_filho_tarefa bigint;
   v_vigencia_id bigint;
   v_tarefa_id bigint;
   v_inicio timestamptz;
@@ -269,20 +224,19 @@ declare
   v_nome_tarefa text;
   v_data date;
   v_observacao text;
-  v_tipo text;
+  v_ocorrencia_id bigint;
+  v_ocorrencia_tipo text;
   v_id bigint;
   v_status text;
   v_created_at timestamptz;
   v_resolvido_em timestamptz;
-  v_conseq_antes jsonb;
-  v_conseq_depois jsonb;
 begin
   if p_token is null or p_token !~ '^[0-9a-f]{64}$' then
     return jsonb_build_object('ok', false, 'codigo', 'SESSAO_INVALIDA');
   end if;
 
-  if p_id_ocorrencia is null or p_id_ocorrencia <= 0 then
-    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
+  if p_id_filho_tarefa is null or p_id_filho_tarefa <= 0 then
+    return jsonb_build_object('ok', false, 'codigo', 'TAREFA_INVALIDA');
   end if;
 
   v_observacao := nullif(btrim(coalesce(p_observacao, '')), '');
@@ -306,33 +260,16 @@ begin
     return jsonb_build_object('ok', false, 'codigo', 'SESSAO_INVALIDA');
   end if;
 
-  select
-    o.id_filho_tarefa,
-    o.tipo,
-    timezone('America/Sao_Paulo', o.created_at)::date,
-    ft.id_vigencia,
-    ft.id_tarefa
-  into
-    v_id_filho_tarefa,
-    v_tipo,
-    v_data,
-    v_vigencia_id,
-    v_tarefa_id
-  from public.t_ocorrencia o
-  join public.t_filho_tarefa ft
-    on ft.id = o.id_filho_tarefa
-   and ft.id_usuario_pai = o.id_usuario_pai
-  where o.id = p_id_ocorrencia
-    and o.id_usuario_pai = v_pai_id
+  select ft.id_vigencia, ft.id_tarefa
+    into v_vigencia_id, v_tarefa_id
+  from public.t_filho_tarefa ft
+  where ft.id = p_id_filho_tarefa
+    and ft.id_usuario_pai = v_pai_id
     and ft.id_filho = v_filho_id
-  for update of o;
+  for key share;
 
-  if v_id_filho_tarefa is null then
-    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
-  end if;
-
-  if v_tipo <> 'NAO_FEZ' then
-    return jsonb_build_object('ok', false, 'codigo', 'REVISAO_INDISPONIVEL');
+  if v_vigencia_id is null then
+    return jsonb_build_object('ok', false, 'codigo', 'TAREFA_INVALIDA');
   end if;
 
   select v.data_inicio, v.data_fim
@@ -343,21 +280,39 @@ begin
   for key share;
 
   if v_inicio is null or v_fim is null then
-    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
+    return jsonb_build_object('ok', false, 'codigo', 'TAREFA_INVALIDA');
   end if;
 
-  -- A revisão pode ser pedida depois do dia da marcação, mas apenas enquanto
-  -- a vigência correspondente ainda estiver em andamento.
   if now() < v_inicio or now() > v_fim then
+    return jsonb_build_object('ok', false, 'codigo', 'VIGENCIA_INATIVA');
+  end if;
+
+  v_data := timezone('America/Sao_Paulo', now())::date;
+
+  if v_data < timezone('America/Sao_Paulo', v_inicio)::date
+     or v_data > timezone('America/Sao_Paulo', v_fim)::date then
     return jsonb_build_object('ok', false, 'codigo', 'VIGENCIA_INATIVA');
   end if;
 
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(
-      v_id_filho_tarefa::text || ':' || v_data::text,
+      p_id_filho_tarefa::text || ':' || v_data::text,
       0
     )
   );
+
+  select o.id, o.tipo
+    into v_ocorrencia_id, v_ocorrencia_tipo
+  from public.t_ocorrencia o
+  where o.id_filho_tarefa = p_id_filho_tarefa
+    and o.id_usuario_pai = v_pai_id
+    and timezone('America/Sao_Paulo', o.created_at)::date = v_data
+  limit 1
+  for update;
+
+  if v_ocorrencia_id is null or v_ocorrencia_tipo <> 'NAO_FEZ' then
+    return jsonb_build_object('ok', false, 'codigo', 'REVISAO_INDISPONIVEL');
+  end if;
 
   select f.nome, t.nome
     into v_nome_filho, v_nome_tarefa
@@ -369,7 +324,7 @@ begin
     and f.id_usuario_pai = v_pai_id;
 
   if v_nome_filho is null or v_nome_tarefa is null then
-    return jsonb_build_object('ok', false, 'codigo', 'OCORRENCIA_INVALIDA');
+    return jsonb_build_object('ok', false, 'codigo', 'TAREFA_INVALIDA');
   end if;
 
   insert into public.t_revisao_tarefa_filho (
@@ -379,20 +334,21 @@ begin
     observacao
   )
   values (
-    v_id_filho_tarefa,
-    p_id_ocorrencia,
+    p_id_filho_tarefa,
+    v_ocorrencia_id,
     v_data,
     v_observacao
   )
-  on conflict (id_ocorrencia) do nothing
+  on conflict (id_filho_tarefa, data_referencia) do nothing
   returning id, status, created_at, resolvido_em
     into v_id, v_status, v_created_at, v_resolvido_em;
 
   if v_id is null then
-    select r.id, r.status, r.created_at, r.resolvido_em, r.observacao
-      into v_id, v_status, v_created_at, v_resolvido_em, v_observacao
+    select r.id, r.status, r.created_at, r.resolvido_em, r.observacao, r.id_ocorrencia
+      into v_id, v_status, v_created_at, v_resolvido_em, v_observacao, v_ocorrencia_id
     from public.t_revisao_tarefa_filho r
-    where r.id_ocorrencia = p_id_ocorrencia;
+    where r.id_filho_tarefa = p_id_filho_tarefa
+      and r.data_referencia = v_data;
 
     return jsonb_build_object(
       'ok', true,
@@ -403,8 +359,8 @@ begin
       'nome_tarefa', v_nome_tarefa,
       'revisao', jsonb_build_object(
         'id', v_id,
-        'id_ocorrencia', p_id_ocorrencia,
-        'id_filho_tarefa', v_id_filho_tarefa,
+        'id_ocorrencia', v_ocorrencia_id,
+        'id_filho_tarefa', p_id_filho_tarefa,
         'data_referencia', v_data,
         'observacao', v_observacao,
         'status', v_status,
@@ -413,66 +369,6 @@ begin
       )
     );
   end if;
-
-  select jsonb_build_object(
-    'tipo', c.tipo,
-    'desconto_valor', c.desconto_valor,
-    'penalidade_descricao', c.penalidade_descricao,
-    'status', c.status,
-    'cumprida_em', c.cumprida_em,
-    'cancelada_em', c.cancelada_em
-  )
-  into v_conseq_antes
-  from public.t_ocorrencia_consequencia c
-  where c.id_usuario_pai = v_pai_id
-    and c.id_ocorrencia = p_id_ocorrencia
-  for update;
-
-  -- Só penalidade ainda pendente é suspensa. Desconto permanece aplicado;
-  -- penalidade já cumprida permanece como fato histórico.
-  update public.t_ocorrencia_consequencia
-  set status = 'SUSPENSA_REVISAO',
-      updated_at = now()
-  where id_usuario_pai = v_pai_id
-    and id_ocorrencia = p_id_ocorrencia
-    and tipo = 'PENALIDADE'
-    and status = 'PENDENTE';
-
-  select jsonb_build_object(
-    'tipo', c.tipo,
-    'desconto_valor', c.desconto_valor,
-    'penalidade_descricao', c.penalidade_descricao,
-    'status', c.status,
-    'cumprida_em', c.cumprida_em,
-    'cancelada_em', c.cancelada_em
-  )
-  into v_conseq_depois
-  from public.t_ocorrencia_consequencia c
-  where c.id_usuario_pai = v_pai_id
-    and c.id_ocorrencia = p_id_ocorrencia;
-
-  insert into public.t_ocorrencia_reconciliacao (
-    id_usuario_pai,
-    id_ocorrencia,
-    id_filho_tarefa,
-    acao,
-    origem,
-    id_revisao,
-    estado_anterior,
-    estado_novo,
-    motivo
-  )
-  values (
-    v_pai_id,
-    p_id_ocorrencia,
-    v_id_filho_tarefa,
-    'SOLICITAR_REVISAO',
-    'REVISAO',
-    v_id,
-    jsonb_build_object('consequencia', v_conseq_antes),
-    jsonb_build_object('consequencia', v_conseq_depois),
-    'Pedido de revisão do filho'
-  );
 
   update public.t_filho_acesso_app
   set ultimo_acesso_em = now(),
@@ -489,8 +385,8 @@ begin
     'nome_tarefa', v_nome_tarefa,
     'revisao', jsonb_build_object(
       'id', v_id,
-      'id_ocorrencia', p_id_ocorrencia,
-      'id_filho_tarefa', v_id_filho_tarefa,
+      'id_ocorrencia', v_ocorrencia_id,
+      'id_filho_tarefa', p_id_filho_tarefa,
       'data_referencia', v_data,
       'observacao', v_observacao,
       'status', v_status,
@@ -499,15 +395,28 @@ begin
     )
   );
 end;
-$function$
+$$;
 
-
-CREATE OR REPLACE FUNCTION public.reconciliar_ocorrencia(p_acao text, p_id_ocorrencia bigint DEFAULT NULL::bigint, p_id_filho_tarefa bigint DEFAULT NULL::bigint, p_created_at timestamp with time zone DEFAULT NULL::timestamp with time zone, p_novo_tipo text DEFAULT NULL::text, p_consequencia_tipo text DEFAULT NULL::text, p_desconto_valor numeric DEFAULT NULL::numeric, p_penalidade_descricao text DEFAULT NULL::text, p_bonificacao_tipo text DEFAULT NULL::text, p_bonificacao_descricao text DEFAULT NULL::text, p_bonificacao_valor numeric DEFAULT NULL::numeric, p_id_revisao bigint DEFAULT NULL::bigint, p_motivo text DEFAULT NULL::text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create or replace function public.reconciliar_ocorrencia(
+  p_acao text,
+  p_id_ocorrencia bigint default null,
+  p_id_filho_tarefa bigint default null,
+  p_created_at timestamptz default null,
+  p_novo_tipo text default null,
+  p_consequencia_tipo text default null,
+  p_desconto_valor numeric default null,
+  p_penalidade_descricao text default null,
+  p_bonificacao_tipo text default null,
+  p_bonificacao_descricao text default null,
+  p_bonificacao_valor numeric default null,
+  p_id_revisao bigint default null,
+  p_motivo text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
   v_pai_id bigint;
   v_id_ocorrencia bigint;
@@ -849,6 +758,10 @@ begin
           raise exception 'Informe um valor de desconto válido';
         end if;
 
+        if v_desconto_efetivo > v_valor_mesada then
+          raise exception 'O desconto desta ocorrência não pode ser maior que a mesada cadastrada';
+        end if;
+
       elsif v_consequencia = 'PENALIDADE' then
         if v_penalidade_efetiva is null
            or char_length(v_penalidade_efetiva) not between 2 and 200 then
@@ -900,12 +813,12 @@ begin
       set status =
             case
               when tipo='DESCONTO' and status='APLICADO' then 'ESTORNADO'
-              when tipo='PENALIDADE' and status in ('PENDENTE','SUSPENSA_REVISAO') then 'CANCELADA'
+              when tipo='PENALIDADE' and status='PENDENTE' then 'CANCELADA'
               else status
             end,
           cancelada_em =
             case
-              when tipo='PENALIDADE' and status in ('PENDENTE','SUSPENSA_REVISAO') then now()
+              when tipo='PENALIDADE' and status='PENDENTE' then now()
               else cancelada_em
             end,
           updated_at = now()
@@ -1099,15 +1012,17 @@ begin
     'estrelas', public.resumo_estrelas_filho_interno(v_pai_id, v_id_filho)
   );
 end;
-$function$
+$$;
 
-
-CREATE OR REPLACE FUNCTION public.resolver_revisao_tarefa_filho(p_id_revisao bigint, p_decisao text)
- RETURNS boolean
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create or replace function public.resolver_revisao_tarefa_filho(
+  p_id_revisao bigint,
+  p_decisao text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
   v_pai_id bigint;
   v_id_ocorrencia bigint;
@@ -1161,15 +1076,19 @@ begin
 
   return true;
 end;
-$function$
+$$;
 
-
-CREATE OR REPLACE FUNCTION public.concluir_ciclo_recompensa_interno(p_id_usuario_pai bigint, p_id_filho bigint, p_id_recompensa bigint, p_confirmado_por text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+create or replace function public.concluir_ciclo_recompensa_interno(
+  p_id_usuario_pai bigint,
+  p_id_filho bigint,
+  p_id_recompensa bigint,
+  p_confirmado_por text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
 declare
   v_recompensa_nome text;
   v_resgate_id bigint;
@@ -1300,25 +1219,9 @@ begin
     )
   );
 end;
-$function$
-
+$$;
 
 revoke insert, update, delete on public.t_ocorrencia from anon, authenticated;
-revoke insert, update, delete on public.t_ocorrencia_consequencia from anon, authenticated;
-revoke insert, update, delete on public.t_ocorrencia_reconciliacao from anon, authenticated;
-
-revoke all on function public.sincronizar_estrela_ocorrencia_interno(bigint,bigint) from public;
-revoke all on function public.reconciliar_recompensas_estrelas_filho_interno(bigint,bigint) from public;
-
-revoke all on function public.criar_revisao_ocorrencia_filho_interno(text,bigint,text) from public;
-grant execute on function public.criar_revisao_ocorrencia_filho_interno(text,bigint,text) to service_role;
-
-revoke all on function public.reconciliar_ocorrencia(
-  text,bigint,bigint,timestamptz,text,text,numeric,text,text,text,numeric,bigint,text
-) from public;
-grant execute on function public.reconciliar_ocorrencia(
-  text,bigint,bigint,timestamptz,text,text,numeric,text,text,text,numeric,bigint,text
-) to authenticated;
 
 comment on function public.reconciliar_ocorrencia(
   text,bigint,bigint,timestamptz,text,text,numeric,text,text,text,numeric,bigint,text
