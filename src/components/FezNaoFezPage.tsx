@@ -135,6 +135,13 @@ function formatarData(data: string) {
   return data.split("-").reverse().join("/");
 }
 
+function formatarDiaSemana(data: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(`${data}T12:00:00-03:00`));
+}
+
 function primeiroNomeFilho(nome?: string | null) {
   return nome?.trim().split(/\s+/)[0] || "Filho";
 }
@@ -1377,7 +1384,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             <h3
                               className={`truncate tabular-nums ${uiTypography.secondaryTitleStrong}`}
                             >
-                              {formatarData(dataSelecionada)}
+                              {formatarData(dataSelecionada)} · {formatarDiaSemana(dataSelecionada)}
                             </h3>
                           </div>
                           {modo === "pendentes" ? (
