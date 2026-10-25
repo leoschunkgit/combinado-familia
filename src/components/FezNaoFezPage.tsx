@@ -41,6 +41,7 @@ import {
   msgErro,
   useFilhos,
   useFilhoTarefas,
+  useFilhoVigenciaMesadas,
   useOcorrencias,
   useSolicitacoesTarefaFilho,
   useVigencias,
@@ -173,6 +174,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const { data: vigencias = [] } = useVigencias();
   const { data: filhos = [] } = useFilhos();
   const { data: atribuicoes = [], isLoading } = useFilhoTarefas();
+  const { data: mesadasVigencia = [] } = useFilhoVigenciaMesadas();
   const { data: tarefas = [] } = useTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const { data: solicitacoesTarefaFilho = [] } = useSolicitacoesTarefaFilho();
@@ -1273,9 +1275,18 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             0,
                           )
                         : 0;
-                    const temMesada =
-                      filho.tem_mesada_opcional === true &&
-                      filho.valor_mesada !== null;
+                    const snapshotMesada = mesadasVigencia.find(
+                      (snapshot) =>
+                        snapshot.id_filho === filho.id &&
+                        snapshot.id_vigencia === vigencia.id,
+                    );
+                    const temMesada = snapshotMesada
+                      ? snapshotMesada.tem_mesada
+                      : filho.tem_mesada_opcional === true &&
+                        filho.valor_mesada !== null;
+                    const valorMesada = snapshotMesada
+                      ? snapshotMesada.valor_mesada
+                      : filho.valor_mesada;
                     const totalDescontado = ocorrenciasFilhoVigencia.reduce(
                       (total, ocorrencia) => {
                         const consequencia = ocorrencia.t_ocorrencia_consequencia;
@@ -1287,7 +1298,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     );
                     const saldoMesada = Math.max(
                       0,
-                      (filho.valor_mesada ?? 0) - totalDescontado,
+                      (valorMesada ?? 0) - totalDescontado,
                     );
                     const penalidadesPendentes = ocorrenciasFilhoVigencia.filter(
                       (ocorrencia) =>
@@ -1319,7 +1330,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             <div className="mt-1.5 grid grid-cols-3 divide-x overflow-hidden rounded-md border bg-background text-center tabular-nums">
                               <div className="min-w-0 px-1.5 py-1.5">
                                 <p className="text-[9px] leading-none text-muted-foreground">Mesada</p>
-                                <p className="mt-1 truncate text-[11px] font-semibold">{reais(filho.valor_mesada ?? 0)}</p>
+                                <p className="mt-1 truncate text-[11px] font-semibold">{reais(valorMesada ?? 0)}</p>
                               </div>
                               <div className="min-w-0 px-1.5 py-1.5">
                                 <p className="text-[9px] leading-none text-muted-foreground">Descontos</p>
@@ -1352,7 +1363,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tabular-nums">
                               <span className="whitespace-nowrap">
                                 <span className="text-muted-foreground">Mesada</span>{" "}
-                                <strong className="font-semibold">{reais(filho.valor_mesada ?? 0)}</strong>
+                                <strong className="font-semibold">{reais(valorMesada ?? 0)}</strong>
                               </span>
                               <span className="whitespace-nowrap">
                                 <span className="text-muted-foreground">Descontos</span>{" "}
