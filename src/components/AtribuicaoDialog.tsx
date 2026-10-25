@@ -47,14 +47,11 @@ function FixedInfo({ label, values, taskIcons = false }: { label: string; values
 
 function FixedCurrentValidity({ value }: { value: string }) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-sm">Vigência</Label>
-      <div className="flex min-h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm">
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="h-2 w-2 shrink-0 rounded-full bg-green-300" aria-hidden="true" />
-          <span className="min-w-0 truncate">{value}</span>
-        </span>
-      </div>
+    <div className="min-w-0 space-y-1">
+      <Label className="text-xs text-muted-foreground">Vigência</Label>
+      <p className="min-w-0 break-words text-xs font-medium leading-5 text-foreground">
+        {value}
+      </p>
     </div>
   );
 }
