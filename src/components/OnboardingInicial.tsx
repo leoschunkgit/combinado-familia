@@ -104,7 +104,6 @@ export function OnboardingInicial() {
       celular: null,
       idade: null,
       tem_mesada: temMesada,
-      tem_mesada_opcional: temMesada ? true : null,
       valor_mesada: temMesada ? Number(valorMesada.replace(",", ".")) : null,
       cor: corFilho.trim() || null,
       avatar: avatarFilho || null,
@@ -161,7 +160,7 @@ export function OnboardingInicial() {
     }
     setFilhoEmCorrecaoId(filho.id);
     setNomeFilho(filho.nome);
-    const comMesada = filho.tem_mesada_opcional === true && filho.valor_mesada !== null;
+    const comMesada = filho.tem_mesada === true && filho.valor_mesada !== null;
     setTemMesada(comMesada);
     setValorMesada(comMesada && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "");
     setCorFilho(filho.cor ?? "");

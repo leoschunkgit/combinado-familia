@@ -65,7 +65,6 @@ const dadosExtras = (v: FilhoForm) => ({
   cor: v.cor.trim() || null,
   avatar: v.avatar || null,
   tem_mesada: v.tem_mesada,
-  tem_mesada_opcional: v.tem_mesada ? true : null,
   valor_mesada: v.tem_mesada && v.valor_mesada !== "" ? Number(v.valor_mesada.replace(",", ".")) : null,
 });
 
@@ -194,7 +193,7 @@ function FilhosPage() {
 
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
-    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", tem_mesada: filho.tem_mesada_opcional === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
+    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", tem_mesada: filho.tem_mesada === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
   }
 
   async function salvarEdicao(e: FormEvent) {
@@ -281,7 +280,7 @@ function FilhosPage() {
               label="Mesada"
               icon={<WalletCards className="h-3.5 w-3.5" />}
               className="col-span-2 sm:col-span-1"
-              value={f.tem_mesada_opcional === true && f.valor_mesada !== null ? dinheiro(f.valor_mesada) : "Não"}
+              value={f.tem_mesada === true && f.valor_mesada !== null ? dinheiro(f.valor_mesada) : "Não"}
             />
           </div>
 

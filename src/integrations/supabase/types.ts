@@ -440,7 +440,6 @@ export type Database = {
           idade: number | null
           nome: string
           tem_mesada: boolean
-          tem_mesada_opcional: boolean | null
           valor_mesada: number | null
         }
         Insert: {
@@ -454,7 +453,6 @@ export type Database = {
           idade?: number | null
           nome: string
           tem_mesada?: boolean
-          tem_mesada_opcional?: boolean | null
           valor_mesada?: number | null
         }
         Update: {
@@ -468,7 +466,6 @@ export type Database = {
           idade?: number | null
           nome?: string
           tem_mesada?: boolean
-          tem_mesada_opcional?: boolean | null
           valor_mesada?: number | null
         }
         Relationships: [

@@ -179,7 +179,6 @@ function CadastroUnicoPage() {
         celular: null,
         idade: null,
         tem_mesada: filho.tem_mesada,
-        tem_mesada_opcional: filho.tem_mesada ? true : null,
         valor_mesada: filho.valor_mesada,
         cor: filho.cor || null,
         avatar: filho.avatar || null,
