@@ -1525,6 +1525,14 @@ export type Database = {
           ultimo_acesso: string
         }[]
       }
+      admin_limpar_dados_usuario: {
+        Args: { p_email: string }
+        Returns: Json
+      }
+      admin_localizar_usuario_limpeza: {
+        Args: { p_email: string }
+        Returns: Json
+      }
       admin_operacao: { Args: never; Returns: Json }
       admin_registrar_acesso: { Args: never; Returns: undefined }
       admin_resumo: { Args: never; Returns: Json }
