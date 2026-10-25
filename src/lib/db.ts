@@ -37,6 +37,7 @@ export type UsuarioPai = Tables<"t_usuario_pai">;
 export type Filho = Tables<"t_filho">;
 export type Vigencia = Tables<"t_vigencia">;
 export type Tarefa = Tables<"t_tarefa">;
+export type FilhoVigenciaMesada = Tables<"t_filho_vigencia_mesada">;
 export type FilhoTarefa = Tables<"t_filho_tarefa"> & {
   t_filho: Pick<Filho, "nome"> | null;
   t_tarefa: Pick<Tarefa, "nome"> | null;
@@ -75,6 +76,15 @@ export const useTarefas = () =>
   useQuery({
     queryKey: ["tarefas"],
     queryFn: () => unwrap<Tarefa[]>(supabase.from("t_tarefa").select("*").eq("ativo", true).order("nome")),
+  });
+
+export const useFilhoVigenciaMesadas = () =>
+  useQuery({
+    queryKey: ["filho_vigencia_mesadas"],
+    queryFn: () =>
+      unwrap<FilhoVigenciaMesada[]>(
+        supabase.from("t_filho_vigencia_mesada").select("*"),
+      ),
   });
 
 export const FT_SELECT =
