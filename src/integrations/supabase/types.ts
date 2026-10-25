@@ -1322,18 +1322,24 @@ export type Database = {
       }
       t_tarefa: {
         Row: {
+          arquivada_em: string | null
+          ativo: boolean
           created_at: string
           id: number
           id_usuario_pai: number
           nome: string
         }
         Insert: {
+          arquivada_em?: string | null
+          ativo?: boolean
           created_at?: string
           id?: never
           id_usuario_pai?: number
           nome: string
         }
         Update: {
+          arquivada_em?: string | null
+          ativo?: boolean
           created_at?: string
           id?: never
           id_usuario_pai?: number
@@ -1413,6 +1419,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      remover_tarefa_com_regra: {
+        Args: { p_id_tarefa: number }
+        Returns: string
+      }
+      remover_todas_tarefas_com_regra: {
+        Args: never
+        Returns: Json
+      }
       admin_adicionar: { Args: { p_email: string }; Returns: number }
       admin_auditar: {
         Args: {
