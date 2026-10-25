@@ -15,7 +15,7 @@ import { ClonarVigenciaDialog } from "@/components/ClonarVigenciaDialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { BrDateTimeField } from "@/components/BrDateTimeField";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
-import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useOcorrencias, useTarefas, useVigencias, type Vigencia } from "@/lib/db";
+import { fmtVigencia, msgErro, paraCampoDataHoraBrasil, paraIsoDataHoraBrasil, useFilhos, useFilhoTarefas, useFilhoVigenciaMesadas, useOcorrencias, useTarefas, useVigencias, type Vigencia } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
@@ -58,6 +58,7 @@ function VigenciasPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: atribuicoes = [] } = useFilhoTarefas();
+  const { data: mesadasVigencia = [] } = useFilhoVigenciaMesadas();
   const { data: ocorrencias = [] } = useOcorrencias();
   const [form, setForm] = useState<VigenciaForm>(vazio);
   const [modoPeriodoNovo, setModoPeriodoNovo] = useState<PeriodoVigenciaModo>("DATAS");
@@ -184,6 +185,7 @@ function VigenciasPage() {
         filhos,
         atribuicoes,
         ocorrencias,
+        mesadasVigencia,
       });
     } catch (error) {
       toast.error(
