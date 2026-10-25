@@ -101,31 +101,15 @@ function AtribuicoesPage() {
   }, [vigenciaSelecionadaId, vigenciasOrdenadas]);
 
   async function excluir(id: number) {
-    const alvo = existentes.find((item) => item.id === id);
-    if (!alvo) return;
-    const periodo = vigencias.find((v) => v.id === alvo.id_vigencia);
-    if (!periodo) return;
+    const { error } = await supabase.rpc("excluir_atribuicao_com_regra", {
+      p_id_filho_tarefa: id,
+    });
 
-    const agora = Date.now();
-    const futura = new Date(periodo.data_inicio).getTime() > agora;
-    const finalizada = new Date(periodo.data_fim).getTime() < agora;
-
-    if (finalizada) {
-      toast.error("Atribuições de vigências finalizadas não podem ser excluídas");
+    if (error) {
+      toast.error(msgErro(error));
       return;
     }
 
-    if (!futura) {
-      const { count, error: historicoErro } = await supabase
-        .from("t_ocorrencia")
-        .select("id", { count: "exact", head: true })
-        .eq("id_filho_tarefa", alvo.id);
-      if (historicoErro) { toast.error(msgErro(historicoErro)); return; }
-      if (count) { toast.error("Esta atribuição já tem resultados e não pode ser excluída."); return; }
-    }
-
-    const { error } = await supabase.from("t_filho_tarefa").delete().eq("id", id);
-    if (error) { toast.error(msgErro(error)); return; }
     qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
   }
 
