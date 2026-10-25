@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type Tarefa } from "@/lib/db";
+import { msgErro, useFilhos, useTarefas, useVigencias, type Tarefa } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
@@ -36,7 +36,6 @@ function TarefasPage() {
   const { data: tarefas = [] } = useTarefas();
   const { data: filhos = [] } = useFilhos();
   const { data: vigencias = [] } = useVigencias();
-  const { data: atribuicoes = [] } = useFilhoTarefas();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
   const [nome, setNome] = useState("");
   const [lote, setLote] = useState("");
@@ -124,39 +123,21 @@ function TarefasPage() {
   }
 
   async function excluir(id: number) {
-    const { error } = await supabase.from("t_tarefa").delete().eq("id", id);
+    const { error } = await supabase.rpc("remover_tarefa_com_regra", {
+      p_id_tarefa: id,
+    });
     if (error) {
       toast.error(msgErro(error));
       return;
     }
-    qc.invalidateQueries();
+    await qc.invalidateQueries();
+    toast.success("Tarefa excluída");
   }
 
   async function excluirTodas() {
     if (tarefas.length === 0) return;
 
-    const idsTarefas = tarefas.map((tarefa) => tarefa.id);
-    const { count, error: atribuicoesErro } = await supabase
-      .from("t_filho_tarefa")
-      .select("id", { count: "exact", head: true })
-      .in("id_tarefa", idsTarefas);
-
-    if (atribuicoesErro) {
-      toast.error(msgErro(atribuicoesErro));
-      return;
-    }
-
-    if ((count ?? 0) > 0) {
-      setConfirmarExclusaoTodas(false);
-      await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-      toast.error("Não é possível excluir todas: existe pelo menos uma tarefa com atribuição.");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("t_tarefa")
-      .delete()
-      .in("id", idsTarefas);
+    const { error } = await supabase.rpc("remover_todas_tarefas_com_regra");
 
     if (error) {
       toast.error(msgErro(error));
@@ -184,7 +165,7 @@ function TarefasPage() {
   const tarefasFiltradas = tarefas.filter((t) =>
     t.nome.toLocaleLowerCase().includes(busca.trim().toLocaleLowerCase())
   );
-  const podeExcluirTodas = tarefas.length > 0 && atribuicoes.length === 0;
+  const podeExcluirTodas = tarefas.length > 0;
 
   return (
     <>
@@ -329,7 +310,7 @@ function TarefasPage() {
           <div className="space-y-2">
             <p>Tem certeza que deseja excluir todas as tarefas cadastradas?</p>
             <p className="text-sm text-muted-foreground">
-              Esta opção só está disponível quando nenhuma tarefa possui atribuição. A exclusão não poderá ser desfeita.
+              As tarefas deixarão de aparecer e não poderão ser usadas em novas atribuições. Registros históricos existentes serão preservados.
             </p>
           </div>
           <DialogFooter>
@@ -354,7 +335,7 @@ function TarefasPage() {
                 </div>
               ) : null;
             })()}
-            <p className="text-sm text-muted-foreground">As atribuições e os registros de Fez/Não fez vinculados a esta tarefa também serão excluídos.</p>
+            <p className="text-sm text-muted-foreground">A tarefa deixará de aparecer e não poderá ser usada em novas atribuições. Se já existir histórico, ele será preservado.</p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button>
