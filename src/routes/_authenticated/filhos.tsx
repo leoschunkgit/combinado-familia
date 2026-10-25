@@ -203,7 +203,7 @@ function FilhosPage() {
     setSaving(true);
     const { error } = await supabase.from("t_filho").update({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) }).eq("id", editando.id);
     setSaving(false); if (error) { toast.error(msgErro(error)); return; }
-    toast.success("Filho atualizado"); setEditando(null); qc.invalidateQueries({ queryKey: ["filhos"] }); qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+    toast.success("Filho atualizado"); setEditando(null); qc.invalidateQueries({ queryKey: ["filhos"] }); qc.invalidateQueries({ queryKey: ["filho_tarefas"] }); qc.invalidateQueries({ queryKey: ["filho_vigencia_mesadas"] });
   }
 
   const podeExcluirTodos = filhos.length > 0;
