@@ -178,23 +178,6 @@ function FilhosPage() {
     if (filhos.length === 0) return;
 
     const idsFilhos = filhos.map((filho) => filho.id);
-    const { count, error: atribuicoesErro } = await supabase
-      .from("t_filho_tarefa")
-      .select("id", { count: "exact", head: true })
-      .in("id_filho", idsFilhos);
-
-    if (atribuicoesErro) {
-      toast.error(msgErro(atribuicoesErro));
-      return;
-    }
-
-    if ((count ?? 0) > 0) {
-      setConfirmarExclusaoTodos(false);
-      await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-      toast.error("Não é possível excluir todos: existe pelo menos um filho com atribuição.");
-      return;
-    }
-
     const { error } = await supabase
       .from("t_filho")
       .delete()
