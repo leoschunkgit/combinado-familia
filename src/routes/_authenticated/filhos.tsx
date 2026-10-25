@@ -131,7 +131,6 @@ function FilhosPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: vigencias = [] } = useVigencias();
-  const { data: atribuicoes = [] } = useFilhoTarefas();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [novoAberto, setNovoAberto] = useState(false);
