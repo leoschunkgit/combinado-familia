@@ -46,6 +46,7 @@ export function AdminAdministradores() {
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<AdminItem | null>(null);
+  const ehMaster = admins.some((admin) => admin.eh_atual && admin.nivel === "MASTER");
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -111,22 +112,24 @@ export function AdminAdministradores() {
         </p>
       </div>
 
-      <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <UserPlus className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h3 className={uiTypography.secondaryTitle}>Adicionar administrador</h3>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email@exemplo.com" />
-              <Button size="sm" className="shrink-0" onClick={() => void adicionar()} disabled={salvando}>
-                <UserPlus className="h-4 w-4" /> Adicionar
-              </Button>
+      {ehMaster && (
+        <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <UserPlus className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className={uiTypography.secondaryTitle}>Adicionar administrador</h3>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email@exemplo.com" />
+                <Button size="sm" className="shrink-0" onClick={() => void adicionar()} disabled={salvando}>
+                  <UserPlus className="h-4 w-4" /> Adicionar
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
         <h3 className={uiTypography.secondaryTitle}>Acessos administrativos</h3>
@@ -155,22 +158,24 @@ export function AdminAdministradores() {
                   </div>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className={admin.ativo ? "text-destructive hover:text-destructive" : ""}
-                  disabled={salvando || admin.eh_atual || admin.nivel === "MASTER"}
-                  onClick={() => setConfirmacao(admin)}
-                >
-                  {admin.nivel === "MASTER" ? "Protegido" : admin.ativo ? "Desativar" : "Ativar"}
-                </Button>
+                {ehMaster && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={admin.ativo ? "text-destructive hover:text-destructive" : ""}
+                    disabled={salvando || admin.eh_atual || admin.nivel === "MASTER"}
+                    onClick={() => setConfirmacao(admin)}
+                  >
+                    {admin.nivel === "MASTER" ? "Protegido" : admin.ativo ? "Desativar" : "Ativar"}
+                  </Button>
+                )}
               </div>
             ))}
           </div>
         )}
 
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          O MASTER não pode ser removido, desativado nem rebaixado pela Administração. Os demais administradores também não podem desativar o próprio acesso, e o banco impede que o sistema fique sem administrador ativo.
+          O MASTER é intocável. Somente o MASTER pode adicionar, ativar ou desativar administradores.
         </p>
       </section>
 
