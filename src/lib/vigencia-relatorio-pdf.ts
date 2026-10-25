@@ -4,6 +4,7 @@ import {
   fmtVigencia,
   type Filho,
   type FilhoTarefa,
+  type FilhoVigenciaMesada,
   type Ocorrencia,
   type Vigencia,
 } from "@/lib/db";
@@ -58,8 +59,9 @@ export async function extrairPdfVigencia(args: {
   filhos: Filho[];
   atribuicoes: FilhoTarefa[];
   ocorrencias: Ocorrencia[];
+  mesadasVigencia: FilhoVigenciaMesada[];
 }) {
-  const { vigencia, filhos, atribuicoes, ocorrencias } = args;
+  const { vigencia, filhos, atribuicoes, ocorrencias, mesadasVigencia } = args;
 
   if (situacaoVigencia(vigencia) === "futura") {
     throw new Error(
@@ -116,11 +118,20 @@ export async function extrairPdfVigencia(args: {
               registro.t_ocorrencia_consequencia?.tipo === "PENALIDADE" &&
               registro.t_ocorrencia_consequencia.status === "PENDENTE",
           ).length;
-          const temMesada =
-            filho.tem_mesada_opcional === true &&
-            filho.valor_mesada !== null;
+          const snapshotMesada = mesadasVigencia.find(
+            (snapshot) =>
+              snapshot.id_filho === filho.id &&
+              snapshot.id_vigencia === vigencia.id,
+          );
+          const temMesada = snapshotMesada
+            ? snapshotMesada.tem_mesada
+            : filho.tem_mesada_opcional === true &&
+              filho.valor_mesada !== null;
+          const valorMesada = snapshotMesada
+            ? snapshotMesada.valor_mesada
+            : filho.valor_mesada;
           const totalDescontado = totalDescontosAplicados(registros);
-          const saldo = saldoMesada(filho.valor_mesada, totalDescontado);
+          const saldo = saldoMesada(valorMesada, totalDescontado);
 
           return {
             nome: filho.nome,
@@ -133,7 +144,7 @@ export async function extrairPdfVigencia(args: {
               `Não fez: ${totalNaoFez} · Não precisou: ${totalNaoPrecisou} · Penalidades pendentes: ${totalPenalidadesPendentes}`,
             mesada: temMesada
               ? {
-                  valor: reais(filho.valor_mesada ?? 0),
+                  valor: reais(valorMesada ?? 0),
                   descontos: reais(totalDescontado),
                   saldo: reais(saldo ?? 0),
                 }
