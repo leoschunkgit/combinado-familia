@@ -35,8 +35,9 @@ import { AdminSistema } from "@/components/admin/AdminSistema";
 import { AdminAuditoria } from "@/components/admin/AdminAuditoria";
 import { AdminAdministradores } from "@/components/admin/AdminAdministradores";
 import { AdminFeedbacks } from "@/components/admin/AdminFeedbacks";
+import { AdminLimpeza } from "@/components/admin/AdminLimpeza";
 
-type Aba = "visao" | "usuarios" | "feedbacks" | "atencao" | "funil" | "atividade" | "versoes" | "push" | "saude" | "sistema" | "auditoria" | "administradores";
+type Aba = "visao" | "usuarios" | "feedbacks" | "limpeza" | "atencao" | "funil" | "atividade" | "versoes" | "push" | "saude" | "sistema" | "auditoria" | "administradores";
 
 type CategoriaAtencao =
   | "onboarding_pendente"
@@ -373,7 +374,7 @@ function Indicador({
 
 function AdministracaoPage() {
   const ambiente = getAppEnvironment();
-  const [aba, setAba] = useState<Aba>("visao");
+  const [aba, setAba] = useState<Aba>("sistema");
   const [resumo, setResumo] = useState<AdminResumo>(RESUMO_VAZIO);
   const [operacao, setOperacao] = useState<AdminOperacao>(OPERACAO_VAZIA);
   const [diagnostico, setDiagnostico] = useState<AdminDiagnostico>(DIAGNOSTICO_VAZIO);
@@ -479,6 +480,7 @@ function AdministracaoPage() {
     { id: "feedbacks", label: "Feedbacks" },
     { id: "visao", label: "Visão geral" },
     { id: "usuarios", label: "Usuários" },
+    { id: "limpeza", label: "Limpeza" },
     { id: "atencao", label: "Atenção" },
     { id: "funil", label: "Funil" },
     { id: "atividade", label: "Atividade" },
@@ -959,6 +961,8 @@ function AdministracaoPage() {
       )}
 
       {!erro && !carregando && aba === "feedbacks" && <AdminFeedbacks />}
+
+      {!erro && !carregando && aba === "limpeza" && <AdminLimpeza />}
 
       {!erro && !carregando && aba === "sistema" && <AdminSistema />}
 
