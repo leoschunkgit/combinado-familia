@@ -74,7 +74,7 @@ export const useVigencias = () =>
 export const useTarefas = () =>
   useQuery({
     queryKey: ["tarefas"],
-    queryFn: () => unwrap<Tarefa[]>(supabase.from("t_tarefa").select("*").order("nome")),
+    queryFn: () => unwrap<Tarefa[]>(supabase.from("t_tarefa").select("*").eq("ativo", true).order("nome")),
   });
 
 export const FT_SELECT =
