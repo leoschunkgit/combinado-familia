@@ -1,6 +1,7 @@
 export const ANDROID_NOTIFICATION_STYLE = {
   icon: "ic_notification",
   color: "#0C5C3C",
+  channel_id: "combinado_alertas",
 } as const;
 
 export type FirebaseServiceAccount = {
