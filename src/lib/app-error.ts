@@ -76,7 +76,7 @@ export function msgErro(error: unknown): string {
 
   // Regra de negócio deliberadamente lançada pelo PostgreSQL/RPC.
   // A mensagem definida no banco é a fonte de verdade.
-  if (codigo === "P0001" && mensagem) {
+  if ((codigo === "P0001" || codigo === "APP_RULE") && mensagem) {
     return mensagem;
   }
 
@@ -96,4 +96,17 @@ export function msgErro(error: unknown): string {
   }
 
   return "Não foi possível concluir a operação. Tente novamente.";
+}
+
+export function erroRegra(mensagem: string, codigoRegra?: string) {
+  return Object.assign(new Error(mensagem), {
+    code: "APP_RULE",
+    ruleCode: codigoRegra,
+  });
+}
+
+export function codigoRegra(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  const valor = (error as Record<string, unknown>)["ruleCode"];
+  return typeof valor === "string" ? valor : null;
 }
