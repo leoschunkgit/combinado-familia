@@ -264,17 +264,6 @@ function CadastroUnicoPage() {
     return null;
   }
 
-  function conflitaComVigenciaExistente(inicioCampo: string, fimCampo: string, ignorarId?: number) {
-    const inicio = new Date(inicioCampo).getTime();
-    const fim = new Date(fimCampo).getTime();
-    return vigencias.some((v) => {
-      if (ignorarId !== undefined && v.id === ignorarId) return false;
-      const existenteInicio = new Date(v.data_inicio).getTime();
-      const existenteFim = new Date(v.data_fim).getTime();
-      return inicio <= existenteFim && fim >= existenteInicio;
-    });
-  }
-
   async function criarVigencia() {
     const dadosPeriodo =
       modoPeriodoVigencia === "DIAS"
@@ -294,10 +283,6 @@ function CadastroUnicoPage() {
 
     const erro = validarVigencia(draftParaSalvar);
     if (erro) { toast.error(erro); return; }
-    if (conflitaComVigenciaExistente(draftParaSalvar.data_inicio, draftParaSalvar.data_fim)) {
-      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
-      return;
-    }
     const payload = {
       data_inicio: paraIsoDataHoraBrasil(draftParaSalvar.data_inicio),
       data_fim: paraIsoDataHoraBrasil(draftParaSalvar.data_fim),
