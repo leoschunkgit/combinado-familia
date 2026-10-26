@@ -236,7 +236,7 @@ export function OnboardingInicial() {
     const corrigiu = vigenciaEmCorrecaoId !== null;
     if (vigenciaSalva?.id) setVigenciaSelecionada(String(vigenciaSalva.id));
     setVigenciaEmCorrecaoId(null);
-    toast.success(corrigiu ? "Vigência corrigida. Agora conclua a atribuição." : "Vigência cadastrada. Falta só fazer a atribuição.");
+    toast.success(corrigiu ? "Vigência corrigida. Agora faça a atribuição e cadastre a recompensa." : "Vigência cadastrada. Agora faça a atribuição e depois cadastre a recompensa.");
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
@@ -297,8 +297,7 @@ export function OnboardingInicial() {
       return;
     }
 
-    const atribuicaoOnboarding = atribuicoes[0];
-    const idFilho = atribuicaoOnboarding?.id_filho ?? Number(filhoAtual);
+    const idFilho = Number(filhoAtual);
     if (!idFilho) {
       toast.error("Filho não encontrado para cadastrar a recompensa.");
       return;
