@@ -133,6 +133,46 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const erroRegra = async (
+      codigo: string,
+      status: number,
+      extra: Record<string, unknown> = {},
+    ) => {
+      const { data: mensagem } = await admin.rpc("mensagem_codigo_regra_interno", {
+        p_codigo: codigo,
+      });
+
+      return json({
+        ok: false,
+        codigo,
+        mensagem: typeof mensagem === "string"
+          ? mensagem
+          : "Não foi possível concluir a operação. Tente novamente.",
+        ...extra,
+      }, status);
+    };
+
+    const enriquecerErroRegra = async (
+      retorno: Record<string, unknown> | null,
+      codigoPadrao: string,
+    ) => {
+      const codigo = typeof retorno?.codigo === "string"
+        ? retorno.codigo
+        : codigoPadrao;
+      const { data: mensagem } = await admin.rpc("mensagem_codigo_regra_interno", {
+        p_codigo: codigo,
+      });
+
+      return {
+        ...(retorno ?? {}),
+        ok: false,
+        codigo,
+        mensagem: typeof mensagem === "string"
+          ? mensagem
+          : "Não foi possível concluir a operação. Tente novamente.",
+      };
+    };
+
     if (acao === "parear") {
       const chave = typeof body?.chave === "string" ? body.chave.trim() : "";
       const dispositivoNome = typeof body?.dispositivo_nome === "string"
@@ -141,7 +181,7 @@ serve(async (req) => {
       const clienteId = typeof body?.cliente_id === "string" ? body.cliente_id.trim() : "";
 
       if (!/^\d{6}$/.test(chave) || clienteId.length < 16 || clienteId.length > 200) {
-        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+        return await erroRegra("REQUISICAO_INVALIDA", 400);
       }
 
       const ipHash = await sha256Hex(getClientIp(req));
@@ -163,7 +203,7 @@ serve(async (req) => {
       if (!retorno?.ok) {
         const codigo = typeof retorno?.codigo === "string" ? retorno.codigo : "CHAVE_INVALIDA";
         const status = codigo === "BLOQUEADO" ? 429 : 401;
-        return json(retorno ?? { ok: false, codigo }, status);
+        return json(await enriquecerErroRegra(retorno, codigo), status);
       }
 
       const tokenRetorno = typeof retorno.token === "string" ? retorno.token : "";
@@ -215,7 +255,7 @@ serve(async (req) => {
           codigo === "TAREFA_INVALIDA" ? 403 :
           codigo === "JA_MARCADA" || codigo === "VIGENCIA_INATIVA" ? 409 :
           400;
-        return json(retorno ?? { ok: false, codigo }, status);
+        return json(await enriquecerErroRegra(retorno, codigo), status);
       }
 
       const solicitacao =
@@ -297,7 +337,7 @@ serve(async (req) => {
           codigo === "RECOMPENSA_INVALIDA" ? 403 :
           codigo === "RECOMPENSA_INDISPONIVEL" ? 409 :
           400;
-        return json(retorno ?? { ok: false, codigo }, status);
+        return json(await enriquecerErroRegra(retorno, codigo), status);
       }
 
       const recompensa =
@@ -418,14 +458,14 @@ serve(async (req) => {
 
     if (acao === "painel") {
       const token = typeof body?.token === "string" ? body.token.trim().toLowerCase() : "";
-      if (!/^[0-9a-f]{64}$/.test(token)) return json({ ok: false, codigo: "SESSAO_INVALIDA" }, 401);
+      if (!/^[0-9a-f]{64}$/.test(token)) return await erroRegra("SESSAO_INVALIDA", 401);
 
       const { data, error } = await admin.rpc("obter_painel_app_filho_interno", { p_token: token });
       if (error) {
         console.error("Erro ao obter painel do filho:", error);
         return json({ error: "Não foi possível carregar o acompanhamento" }, 500);
       }
-      if (!data) return json({ ok: false, codigo: "SESSAO_INVALIDA" }, 401);
+      if (!data) return await erroRegra("SESSAO_INVALIDA", 401);
 
       return json({ ok: true, painel: data });
     }
