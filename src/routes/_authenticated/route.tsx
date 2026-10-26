@@ -158,7 +158,7 @@ function AuthenticatedLayout() {
       toast.success(`Vigência clonada com ${qtdAtribuicoes} atribuição(ões), todas zeradas`);
       navigate({ to: "/vigencias" });
     } catch (error) {
-      toast.error(msgErro(error instanceof Error ? { message: error.message } : null));
+      toast.error(msgErro(error));
     }
   }
 
