@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
 import type { CicloRecompensaResumo, RecompensaEstrelaResumo, ResumoEstrelas } from "@/lib/estrelas-model";
+import { codigoRegra, erroRegra } from "@/lib/app-error";
 
 const TOKEN_KEY = "combinado-familia.child-app-session";
 const TOKEN_CREDENTIAL_SERVER = "combinado-familia.child-app-session";
@@ -108,6 +109,7 @@ type RespostaRecompensaConcluida = {
 type RespostaErro = {
   ok?: false;
   codigo?: string;
+  mensagem?: string;
   tentar_em_segundos?: number;
   error?: string;
 };
@@ -164,37 +166,16 @@ async function chamarAcessoFilho(body: Record<string, unknown>) {
   const data = await response.json().catch(() => ({})) as RespostaPareamento | RespostaSolicitacao | RespostaRecompensaConcluida | RespostaErro;
 
   if (!response.ok) {
-    const codigo = "codigo" in data ? data.codigo : undefined;
+    const codigo = "codigo" in data && typeof data.codigo === "string"
+      ? data.codigo
+      : undefined;
+    const mensagem = "mensagem" in data && typeof data.mensagem === "string"
+      ? data.mensagem
+      : ("error" in data && typeof data.error === "string"
+          ? data.error
+          : "Não foi possível acessar o painel do filho.");
 
-    if (codigo === "BLOQUEADO") {
-      throw new Error("Muitas tentativas inválidas. Aguarde 30 minutos e tente novamente.");
-    }
-    if (codigo === "CHAVE_INVALIDA") {
-      throw new Error("Chave inválida ou expirada. Peça uma nova chave ao seu responsável.");
-    }
-    if (codigo === "SESSAO_INVALIDA") {
-      throw new Error("Este acesso não está mais ativo.");
-    }
-    if (codigo === "TAREFA_INVALIDA") {
-      throw new Error("Esta tarefa não pertence a este acesso.");
-    }
-    if (codigo === "VIGENCIA_INATIVA") {
-      throw new Error("Só é possível avisar durante a vigência em andamento.");
-    }
-    if (codigo === "JA_MARCADA") {
-      throw new Error("O responsável já marcou esta tarefa hoje.");
-    }
-    if (codigo === "OBSERVACAO_INVALIDA") {
-      throw new Error("A observação deve ter no máximo 120 caracteres.");
-    }
-    if (codigo === "RECOMPENSA_INVALIDA") {
-      throw new Error("Esta recompensa não está disponível neste acesso.");
-    }
-    if (codigo === "RECOMPENSA_INDISPONIVEL") {
-      throw new Error("Esta recompensa ainda não está pronta para ser concluída.");
-    }
-
-    throw new Error(("error" in data && data.error) || "Não foi possível acessar o painel do filho.");
+    throw erroRegra(mensagem, codigo);
   }
 
   return data;
@@ -326,7 +307,7 @@ export async function obterPainelFilhoApp(token: string): Promise<PainelFilho | 
     if (!("ok" in data) || data.ok !== true || !("painel" in data)) return null;
     return data.painel as PainelFilho;
   } catch (error) {
-    if (error instanceof Error && error.message === "Este acesso não está mais ativo.") {
+    if (codigoRegra(error) === "SESSAO_INVALIDA") {
       return null;
     }
     throw error;
