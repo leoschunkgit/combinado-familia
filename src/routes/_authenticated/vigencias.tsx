@@ -144,7 +144,7 @@ function VigenciasPage() {
       toast.success("Vigência excluída");
       qc.invalidateQueries();
     } catch (error) {
-      toast.error(msgErro(error instanceof Error ? { message: error.message } : null));
+      toast.error(msgErro(error));
     }
   }
 
@@ -159,7 +159,7 @@ function VigenciasPage() {
       setConfirmarCloneAberto(false);
       toast.success(`Vigência clonada com ${qtdAtribuicoes} atribuição(ões), todas zeradas`);
     } catch (error) {
-      toast.error(msgErro(error instanceof Error ? { message: error.message } : null));
+      toast.error(msgErro(error));
     }
   }
 
