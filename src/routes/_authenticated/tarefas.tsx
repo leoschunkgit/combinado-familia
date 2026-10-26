@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
@@ -17,6 +19,10 @@ import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
 import { TarefaIcone } from "@/components/TarefaIcone";
+import {
+  normalizarNomeTarefa,
+  TAREFA_SUGESTOES_CATEGORIAS,
+} from "@/lib/tarefa-sugestoes";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [
@@ -40,6 +46,8 @@ function TarefasPage() {
   const [nome, setNome] = useState("");
   const [lote, setLote] = useState("");
   const [novoAberto, setNovoAberto] = useState(false);
+  const [abaNovo, setAbaNovo] = useState<"cadastrar" | "sugestoes">("cadastrar");
+  const [sugestoesSelecionadas, setSugestoesSelecionadas] = useState<string[]>([]);
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<Tarefa | null>(null);
   const [nomeEdicao, setNomeEdicao] = useState("");
@@ -49,53 +57,97 @@ function TarefasPage() {
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
 
-  async function salvar(e: FormEvent) {
-    e.preventDefault();
-    const n = nome.trim();
-    if (n.length < 2 || n.length > 150) { toast.error("Informe um nome entre 2 e 150 caracteres"); return; }
-    const { data: criada, error } = await supabase
-      .from("t_tarefa")
-      .insert({ nome: n })
-      .select("id, nome")
-      .single();
-    if (error || !criada) { toast.error(msgErro(error)); return; }
+  async function cadastrarNomes(nomes: string[]) {
+    const nomesUnicos = [
+      ...new Map(
+        nomes
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((item) => [normalizarNomeTarefa(item), item]),
+      ).values(),
+    ];
 
-    toast.success("Tarefa cadastrada");
+    const { data: criadas, error } = await supabase
+      .from("t_tarefa")
+      .insert(nomesUnicos.map((tarefa) => ({ nome: tarefa })))
+      .select("id, nome");
+
+    if (error || !criadas) {
+      toast.error(msgErro(error));
+      return false;
+    }
+
+    toast.success(
+      criadas.length === 1
+        ? "Tarefa cadastrada"
+        : `${criadas.length} tarefas cadastradas`,
+    );
     setNome("");
+    setLote("");
+    setSugestoesSelecionadas([]);
+    setAbaNovo("cadastrar");
     setNovoAberto(false);
     await qc.invalidateQueries({ queryKey: ["tarefas"] });
 
-    if (filhos.length > 0 && vigenciaAtual) {
-      setTarefasPosCadastro([{ id: criada.id, nome: criada.nome }]);
+    if (filhos.length > 0 && vigenciaAtual && criadas.length > 0) {
+      setTarefasPosCadastro(
+        criadas.map((tarefa) => ({ id: tarefa.id, nome: tarefa.nome })),
+      );
       setPerguntarAtribuicao(true);
     }
+
+    return true;
+  }
+
+  async function salvar(e: FormEvent) {
+    e.preventDefault();
+    const n = nome.trim();
+    if (n.length < 2 || n.length > 150) {
+      toast.error("Informe um nome entre 2 e 150 caracteres");
+      return;
+    }
+
+    await cadastrarNomes([n]);
   }
 
   async function salvarLote(e: FormEvent) {
     e.preventDefault();
     const nomes = [...new Set(lote.split("#").map((item) => item.trim()).filter(Boolean))];
-    if (nomes.length === 0) { toast.error("Informe ao menos uma tarefa separada por #"); return; }
+    if (nomes.length === 0) {
+      toast.error("Informe ao menos uma tarefa separada por #");
+      return;
+    }
     const invalida = nomes.find((item) => item.length < 2 || item.length > 150);
-    if (invalida) { toast.error(`A tarefa "${invalida}" deve ter entre 2 e 150 caracteres`); return; }
-
-    const { data: criadas, error } = await supabase
-      .from("t_tarefa")
-      .insert(nomes.map((tarefa) => ({ nome: tarefa })))
-      .select("id, nome");
-    if (error || !criadas) {
-      toast.error(msgErro(error));
+    if (invalida) {
+      toast.error(`A tarefa "${invalida}" deve ter entre 2 e 150 caracteres`);
       return;
     }
 
-    toast.success(`${nomes.length} tarefa(s) cadastrada(s)`);
-    setLote("");
-    setNovoAberto(false);
-    await qc.invalidateQueries({ queryKey: ["tarefas"] });
+    await cadastrarNomes(nomes);
+  }
 
-    if (filhos.length > 0 && vigenciaAtual && criadas.length > 0) {
-      setTarefasPosCadastro(criadas.map((tarefa) => ({ id: tarefa.id, nome: tarefa.nome })));
-      setPerguntarAtribuicao(true);
+  async function salvarSugestoes() {
+    const existentes = new Set(
+      tarefas.map((tarefa) => normalizarNomeTarefa(tarefa.nome)),
+    );
+    const nomes = sugestoesSelecionadas.filter(
+      (sugestao) => !existentes.has(normalizarNomeTarefa(sugestao)),
+    );
+
+    if (nomes.length === 0) {
+      toast.error("Selecione ao menos uma sugestão que ainda não esteja cadastrada");
+      return;
     }
+
+    await cadastrarNomes(nomes);
+  }
+
+  function alternarSugestao(nomeSugestao: string) {
+    setSugestoesSelecionadas((atuais) =>
+      atuais.includes(nomeSugestao)
+        ? atuais.filter((item) => item !== nomeSugestao)
+        : [...atuais, nomeSugestao],
+    );
   }
 
   async function salvarConformePreenchimento(e: FormEvent) {
@@ -185,7 +237,17 @@ function TarefasPage() {
                 <Trash2 className="h-3.5 w-3.5" /> Excluir todas
               </Button>
             )}
-            <Button size="sm" className="h-8 px-2 text-xs sm:px-2.5" onClick={() => setNovoAberto(true)}><Plus className="h-3.5 w-3.5" /> Adicionar</Button>
+            <Button
+              size="sm"
+              className="h-8 px-2 text-xs sm:px-2.5"
+              onClick={() => {
+                setAbaNovo("cadastrar");
+                setSugestoesSelecionadas([]);
+                setNovoAberto(true);
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" /> Adicionar
+            </Button>
           </div>
         }
       />
@@ -232,50 +294,146 @@ function TarefasPage() {
         </Card>
       </div>
 
-      <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
+      <Dialog
+        open={novoAberto}
+        onOpenChange={(open) => {
+          setNovoAberto(open);
+          if (!open) {
+            setAbaNovo("cadastrar");
+            setSugestoesSelecionadas([]);
+          }
+        }}
+      >
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader><DialogTitle>Adicionar tarefa</DialogTitle></DialogHeader>
-          <form onSubmit={(e) => { void runAction(() => salvarConformePreenchimento(e)); }} className="space-y-5">
-            <div className="space-y-2">
-              <Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label>
-              <Input
-                placeholder="Ex.: Arrumar a cama"
-                value={nome}
-                onChange={(e) => {
-                  setNome(e.target.value);
-                  if (e.target.value) setLote("");
-                }}
-              />
-            </div>
 
-            <div className="border-t pt-5">
-              <div className="space-y-2">
-                <Label htmlFor="tarefas-lote">Cadastrar várias tarefas</Label>
-                <Textarea
-                  id="tarefas-lote"
-                  value={lote}
-                  onChange={(e) => {
-                    setLote(e.target.value);
-                    if (e.target.value) setNome("");
-                  }}
-                  placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
-                  className="min-h-28 resize-y"
-                />
-                <p className="text-xs text-muted-foreground">Separe cada tarefa com #. Os espaços antes e depois serão removidos automaticamente.</p>
+          <Tabs
+            value={abaNovo}
+            onValueChange={(value) => setAbaNovo(value as "cadastrar" | "sugestoes")}
+            className="min-w-0"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="cadastrar">Cadastrar</TabsTrigger>
+              <TabsTrigger value="sugestoes">Sugestões</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="cadastrar" className="mt-5">
+              <form onSubmit={(e) => { void runAction(() => salvarConformePreenchimento(e)); }} className="space-y-5">
+                <div className="space-y-2">
+                  <Label>Nome <span className="text-destructive" aria-hidden="true">*</span></Label>
+                  <Input
+                    placeholder="Ex.: Arrumar a cama"
+                    value={nome}
+                    onChange={(e) => {
+                      setNome(e.target.value);
+                      if (e.target.value) setLote("");
+                    }}
+                  />
+                </div>
+
+                <div className="border-t pt-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="tarefas-lote">Cadastrar várias tarefas</Label>
+                    <Textarea
+                      id="tarefas-lote"
+                      value={lote}
+                      onChange={(e) => {
+                        setLote(e.target.value);
+                        if (e.target.value) setNome("");
+                      }}
+                      placeholder="Arrumar a cama # Lavar a louça # Arrumar o banheiro # Varrer a casa"
+                      className="min-h-28 resize-y"
+                    />
+                    <p className="text-xs text-muted-foreground">Separe cada tarefa com #. Os espaços antes e depois serão removidos automaticamente.</p>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setNovoAberto(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Cadastrar</Button>
+                </DialogFooter>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="sugestoes" className="mt-5 space-y-5">
+              <div>
+                <p className="text-sm font-medium">Escolha tarefas para adicionar</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Você pode selecionar várias sugestões de uma vez. Tarefas já cadastradas ficam indisponíveis.
+                </p>
               </div>
-            </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setNovoAberto(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit">Cadastrar</Button>
-            </DialogFooter>
-          </form>
+              <div className="max-h-[52vh] space-y-5 overflow-y-auto pr-1">
+                {TAREFA_SUGESTOES_CATEGORIAS.map((grupo, grupoIndex) => (
+                  <section key={grupo.categoria} className="space-y-2">
+                    <h3 className="text-sm font-semibold">{grupo.categoria}</h3>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {grupo.sugestoes.map((sugestao, sugestaoIndex) => {
+                        const jaCadastrada = tarefas.some(
+                          (tarefa) =>
+                            normalizarNomeTarefa(tarefa.nome) ===
+                            normalizarNomeTarefa(sugestao),
+                        );
+                        const selecionada = sugestoesSelecionadas.includes(sugestao);
+                        const id = `sugestao-tarefa-${grupoIndex}-${sugestaoIndex}`;
+
+                        return (
+                          <label
+                            key={sugestao}
+                            htmlFor={id}
+                            className={`flex min-w-0 items-start gap-2.5 rounded-xl border p-3 text-sm transition-colors ${
+                              jaCadastrada
+                                ? "cursor-not-allowed bg-muted/35 text-muted-foreground"
+                                : selecionada
+                                  ? "cursor-pointer border-primary/50 bg-primary/5"
+                                  : "cursor-pointer hover:bg-muted/40"
+                            }`}
+                          >
+                            <Checkbox
+                              id={id}
+                              checked={selecionada}
+                              disabled={jaCadastrada}
+                              onCheckedChange={() => alternarSugestao(sugestao)}
+                              aria-label={`Selecionar ${sugestao}`}
+                            />
+                            <span className="flex min-w-0 flex-1 items-start gap-2">
+                              <TarefaIcone nome={sugestao} className="mt-0.5 text-primary" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block whitespace-normal break-words font-medium leading-snug">
+                                  {sugestao}
+                                </span>
+                                {jaCadastrada && (
+                                  <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                                    Já cadastrada
+                                  </span>
+                                )}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setNovoAberto(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  disabled={sugestoesSelecionadas.length === 0}
+                  onClick={() => void runAction(salvarSugestoes)}
+                >
+                  Adicionar selecionadas
+                  {sugestoesSelecionadas.length > 0 && ` (${sugestoesSelecionadas.length})`}
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
