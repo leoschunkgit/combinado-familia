@@ -137,10 +137,12 @@ function formatarData(data: string) {
 }
 
 function formatarDiaSemana(data: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
+  const dia = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     timeZone: "America/Sao_Paulo",
   }).format(new Date(`${data}T12:00:00-03:00`));
+
+  return dia.charAt(0).toLocaleUpperCase("pt-BR") + dia.slice(1);
 }
 
 function primeiroNomeFilho(nome?: string | null) {
@@ -1394,7 +1396,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             <h3
                               className={`truncate tabular-nums ${uiTypography.secondaryTitleStrong}`}
                             >
-                              {formatarData(dataSelecionada)} · {formatarDiaSemana(dataSelecionada)}
+                              <span>{formatarData(dataSelecionada)} · </span>
+                              <span className="font-extrabold">{formatarDiaSemana(dataSelecionada)}</span>
                             </h3>
                           </div>
                           {modo === "pendentes" ? (
