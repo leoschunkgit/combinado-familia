@@ -42,15 +42,6 @@ export const TAREFA_SUGESTOES_CATEGORIAS: readonly CategoriaSugestoesTarefa[] = 
   },
 ] as const;
 
-export const TAREFA_SUGESTOES_ONBOARDING = [
-  "Arrumar a cama",
-  "Escovar os dentes",
-  "Fazer a lição",
-  "Organizar o quarto",
-  "Organizar a mochila",
-  "Alimentar o pet",
-] as const;
-
 export function normalizarNomeTarefa(valor: string) {
   return valor
     .trim()
