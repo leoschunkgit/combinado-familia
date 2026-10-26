@@ -6,6 +6,9 @@ const config: CapacitorConfig = {
   webDir: "dist/client",
   loggingBehavior: "none",
   plugins: {
+    PushNotifications: {
+      presentationOptions: ["sound", "alert"],
+    },
     Keyboard: {
       resize: "native",
       resizeOnFullScreen: true,
