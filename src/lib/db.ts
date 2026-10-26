@@ -142,6 +142,11 @@ export const useOcorrencias = () =>
   });
 
 const ERROS: [RegExp, string][] = [
+  [/Atribuições de vigências finalizadas não podem ser excluídas|Atribuicoes de vigencias finalizadas nao podem ser excluidas/i, "Atribuições de vigências finalizadas não podem ser excluídas"],
+  [/Esta atribuição tem um aviso pendente do filho e não pode ser excluída|Esta atribuicao tem um aviso pendente do filho e nao pode ser excluida/i, "Esta atribuição possui um aviso pendente do filho e não pode ser excluída"],
+  [/Esta atribuição possui histórico de Fez ou Não fez e não pode ser excluída|Esta atribuicao possui historico de Fez ou Nao fez e nao pode ser excluida/i, "Esta atribuição possui histórico de “Fez”/“Não fez” e não pode ser excluída"],
+  [/Atribuição não pode ser excluída|Atribuicao nao pode ser excluida/i, "Esta atribuição não pode ser excluída"],
+  [/Atribuição não encontrada|Atribuicao nao encontrada/i, "Atribuição não encontrada"],
   [/A mesada não pode ser menor que o total de descontos aplicados na vigência atual/i, "A mesada não pode ser menor que o total de descontos aplicados na vigência atual"],
   [/O total de descontos aplicados na vigência não pode ultrapassar a mesada atual/i, "O total de descontos desta vigência não pode ultrapassar o valor da mesada"],
   [/Vigência com resultados ou pedido pendente do filho não pode ser excluída|Vigencia com resultados ou pedido pendente do filho nao pode ser excluida/i, "Esta vigência possui resultados ou pedido pendente do filho e não pode ser excluída"],
