@@ -787,11 +787,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       }
     } catch (error) {
       toast.error(
-        msgErro(
-          error instanceof Error
-            ? { message: error.message }
-            : (error as { message?: string }),
-        ),
+        msgErro(error),
       );
     } finally {
       setBusy(false);
@@ -920,7 +916,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       );
     } catch (error) {
       toast.error(
-        msgErro(error instanceof Error ? { message: error.message } : null),
+        msgErro(error),
       );
     } finally {
       setBusy(false);
@@ -981,7 +977,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       toast.success("“Não precisou” registrado");
     } catch (error) {
       toast.error(
-        msgErro(error instanceof Error ? { message: error.message } : null),
+        msgErro(error),
       );
     } finally {
       setBusy(false);
@@ -1011,11 +1007,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       toast.success("Penalidade marcada como cumprida");
     } catch (error) {
       toast.error(
-        msgErro(
-          error instanceof Error
-            ? { message: error.message }
-            : (error as { message?: string }),
-        ),
+        msgErro(error),
       );
     } finally {
       setBusy(false);
