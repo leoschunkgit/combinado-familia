@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AlertTriangle, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { msgErro } from "@/lib/app-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -80,7 +81,7 @@ export function AdminLimpeza() {
     setLocalizando(false);
 
     if (error) {
-      toast.error(error.message || "Não foi possível localizar o usuário.");
+      toast.error(msgErro(error));
       return;
     }
 
@@ -106,7 +107,7 @@ export function AdminLimpeza() {
     setConfirmacaoAberta(false);
 
     if (error) {
-      toast.error(error.message || "Não foi possível limpar os dados da conta.");
+      toast.error(msgErro(error));
       return;
     }
 
