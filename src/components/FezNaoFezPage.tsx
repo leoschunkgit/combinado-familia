@@ -1679,6 +1679,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                               )}
                                               {registro.tipo === "NAO_FEZ" &&
                                                 !bloqueada &&
+                                                tarefaEstaAtiva(tarefa) &&
                                                 !consequenciaEhPenalidadeCumprida(consequencia) && (
                                                   <DropdownMenuItem
                                                     onSelect={() =>
