@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Flag, Info, Plus, Save, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { msgErro } from "@/lib/app-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,7 +126,7 @@ export function AdminSistema() {
     setSalvandoComunicacao(false);
 
     if (error) {
-      toast.error(error.message || "Não foi possível salvar comunicação e manutenção.");
+      toast.error(msgErro(error));
       return;
     }
 
@@ -157,7 +158,7 @@ export function AdminSistema() {
     setSalvandoVersoes(false);
 
     if (error) {
-      toast.error(error.message || "Não foi possível salvar a versão mínima.");
+      toast.error(msgErro(error));
       return;
     }
 
@@ -175,7 +176,7 @@ export function AdminSistema() {
     });
 
     if (error) {
-      toast.error(error.message || "Não foi possível alterar a funcionalidade.");
+      toast.error(msgErro(error));
       return;
     }
 
@@ -198,7 +199,7 @@ export function AdminSistema() {
     });
 
     if (error) {
-      toast.error(error.message || "Não foi possível criar a funcionalidade.");
+      toast.error(msgErro(error));
       return;
     }
 
