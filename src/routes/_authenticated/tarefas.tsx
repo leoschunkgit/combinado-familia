@@ -20,6 +20,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import {
+  encontrarTarefaEquivalente,
   normalizarNomeTarefa,
   TAREFA_SUGESTOES_CATEGORIAS,
 } from "@/lib/tarefa-sugestoes";
@@ -66,6 +67,14 @@ function TarefasPage() {
           .map((item) => [normalizarNomeTarefa(item), item]),
       ).values(),
     ];
+
+    const duplicada = nomesUnicos.find((item) =>
+      encontrarTarefaEquivalente(tarefas, item),
+    );
+    if (duplicada) {
+      toast.error(`A tarefa "${duplicada}" já está cadastrada`);
+      return false;
+    }
 
     const { data: criadas, error } = await supabase
       .from("t_tarefa")
@@ -206,6 +215,10 @@ function TarefasPage() {
     if (!editando) return;
     const n = nomeEdicao.trim();
     if (n.length < 2 || n.length > 150) { toast.error("Informe um nome entre 2 e 150 caracteres"); return; }
+    if (encontrarTarefaEquivalente(tarefas, n, editando.id)) {
+      toast.error(`A tarefa "${n}" já está cadastrada`);
+      return;
+    }
     const { error } = await supabase.from("t_tarefa").update({ nome: n }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Tarefa atualizada");
