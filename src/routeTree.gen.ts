@@ -18,7 +18,6 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAcessoFilhosRouteImport } from './routes/_authenticated/acesso-filhos'
 import { Route as AuthenticatedAdministracaoRouteImport } from './routes/_authenticated/administracao'
 import { Route as AuthenticatedAtribuicoesRouteImport } from './routes/_authenticated/atribuicoes'
-import { Route as AuthenticatedCadastroUnicoRouteImport } from './routes/_authenticated/cadastro-unico'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFilhosRouteImport } from './routes/_authenticated/filhos'
 import { Route as AuthenticatedEstrelasRouteImport } from './routes/_authenticated/estrelas'
@@ -75,12 +74,6 @@ const AuthenticatedAtribuicoesRoute =
   AuthenticatedAtribuicoesRouteImport.update({
     id: '/atribuicoes',
     path: '/atribuicoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCadastroUnicoRoute =
-  AuthenticatedCadastroUnicoRouteImport.update({
-    id: '/cadastro-unico',
-    path: '/cadastro-unico',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -145,7 +138,6 @@ export interface FileRoutesByFullPath {
   '/acesso-filhos': typeof AuthenticatedAcessoFilhosRoute
   '/administracao': typeof AuthenticatedAdministracaoRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
-  '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/estrelas': typeof AuthenticatedEstrelasRoute
@@ -166,7 +158,6 @@ export interface FileRoutesByTo {
   '/acesso-filhos': typeof AuthenticatedAcessoFilhosRoute
   '/administracao': typeof AuthenticatedAdministracaoRoute
   '/atribuicoes': typeof AuthenticatedAtribuicoesRoute
-  '/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/filhos': typeof AuthenticatedFilhosRoute
   '/estrelas': typeof AuthenticatedEstrelasRoute
@@ -189,7 +180,6 @@ export interface FileRoutesById {
   '/_authenticated/acesso-filhos': typeof AuthenticatedAcessoFilhosRoute
   '/_authenticated/administracao': typeof AuthenticatedAdministracaoRoute
   '/_authenticated/atribuicoes': typeof AuthenticatedAtribuicoesRoute
-  '/_authenticated/cadastro-unico': typeof AuthenticatedCadastroUnicoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/filhos': typeof AuthenticatedFilhosRoute
   '/_authenticated/estrelas': typeof AuthenticatedEstrelasRoute
@@ -212,7 +202,6 @@ export interface FileRouteTypes {
     | '/acesso-filhos'
     | '/administracao'
     | '/atribuicoes'
-    | '/cadastro-unico'
     | '/dashboard'
     | '/filhos'
     | '/estrelas'
@@ -233,7 +222,6 @@ export interface FileRouteTypes {
     | '/acesso-filhos'
     | '/administracao'
     | '/atribuicoes'
-    | '/cadastro-unico'
     | '/dashboard'
     | '/filhos'
     | '/estrelas'
@@ -255,7 +243,6 @@ export interface FileRouteTypes {
     | '/_authenticated/acesso-filhos'
     | '/_authenticated/administracao'
     | '/_authenticated/atribuicoes'
-    | '/_authenticated/cadastro-unico'
     | '/_authenticated/dashboard'
     | '/_authenticated/filhos'
     | '/_authenticated/estrelas'
@@ -342,13 +329,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAtribuicoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/cadastro-unico': {
-      id: '/_authenticated/cadastro-unico'
-      path: '/cadastro-unico'
-      fullPath: '/cadastro-unico'
-      preLoaderRoute: typeof AuthenticatedCadastroUnicoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -427,7 +407,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAcessoFilhosRoute: typeof AuthenticatedAcessoFilhosRoute
   AuthenticatedAdministracaoRoute: typeof AuthenticatedAdministracaoRoute
   AuthenticatedAtribuicoesRoute: typeof AuthenticatedAtribuicoesRoute
-  AuthenticatedCadastroUnicoRoute: typeof AuthenticatedCadastroUnicoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFilhosRoute: typeof AuthenticatedFilhosRoute
   AuthenticatedEstrelasRoute: typeof AuthenticatedEstrelasRoute
@@ -444,7 +423,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAcessoFilhosRoute: AuthenticatedAcessoFilhosRoute,
   AuthenticatedAdministracaoRoute: AuthenticatedAdministracaoRoute,
   AuthenticatedAtribuicoesRoute: AuthenticatedAtribuicoesRoute,
-  AuthenticatedCadastroUnicoRoute: AuthenticatedCadastroUnicoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFilhosRoute: AuthenticatedFilhosRoute,
   AuthenticatedEstrelasRoute: AuthenticatedEstrelasRoute,
