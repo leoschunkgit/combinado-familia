@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { msgErro } from "@/lib/app-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -76,7 +77,7 @@ export function AdminAdministradores() {
     setSalvando(false);
 
     if (error) {
-      toast.error(error.message || "Não foi possível adicionar o administrador.");
+      toast.error(msgErro(error));
       return;
     }
 
@@ -95,7 +96,7 @@ export function AdminAdministradores() {
     setConfirmacao(null);
 
     if (error) {
-      toast.error(error.message || "Não foi possível alterar o administrador.");
+      toast.error(msgErro(error));
       return;
     }
 
