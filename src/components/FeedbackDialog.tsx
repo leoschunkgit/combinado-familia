@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MessageSquareText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { msgErro } from "@/lib/app-error";
 import { obterIdentificacaoApp } from "@/lib/app-telemetry";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,8 +79,7 @@ export function FeedbackDialog({
       onOpenChange(false);
       toast.success("Feedback recebido. Obrigado por contribuir com o Combinado Família.");
     } catch (error) {
-      const mensagemErro = error instanceof Error ? error.message : "";
-      toast.error(mensagemErro || "Não foi possível enviar o feedback. Tente novamente.");
+      toast.error(msgErro(error));
     } finally {
       setEnviando(false);
     }
