@@ -3,5 +3,5 @@
     <string name="app_name">Combinado Família</string>
     <string name="title_activity_main">Combinado Família</string>
     <string name="package_name">app.combinadofamilia</string>
-    <string name="custom_url_scheme">app.combinadofamilia</string>
+    <string name="custom_url_scheme">app.combinadofamilia</string>\n    <string name="default_notification_channel_id">combinado_alertas</string>
 </resources>
