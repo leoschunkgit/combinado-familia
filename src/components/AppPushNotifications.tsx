@@ -4,7 +4,7 @@ import { PushNotifications } from "@capacitor/push-notifications";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { registrarPushToken } from "@/lib/push-notifications";
+import { registrarPushToken } from "@/lib/push-notifications";\nimport { garantirCanalPushAndroid } from "@/lib/push-channel";
 
 export function AppPushNotifications() {
   const navigate = useNavigate();
