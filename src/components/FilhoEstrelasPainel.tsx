@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, EllipsisVertical, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { msgErro } from "@/lib/app-error";
+import { erroRegra, msgErro } from "@/lib/app-error";
 import type { Filho } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -157,13 +157,14 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         const retorno = data as unknown as {
           ok?: boolean;
           codigo?: string;
+          mensagem?: string;
           resumo?: ResumoEstrelas;
         } | null;
         if (!retorno?.ok) {
-          if (retorno?.codigo === "RECOMPENSA_INDISPONIVEL") {
-            throw new Error("Esta recompensa já foi concluída ou não está mais disponível.");
-          }
-          throw new Error("Não foi possível confirmar a recompensa.");
+          throw erroRegra(
+            retorno?.mensagem ?? "Não foi possível confirmar a recompensa.",
+            retorno?.codigo,
+          );
         }
 
         resumoAtualizado = retorno.resumo ?? null;
