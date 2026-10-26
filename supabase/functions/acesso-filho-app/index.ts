@@ -233,7 +233,7 @@ serve(async (req) => {
         idFilhoTarefa <= 0 ||
         (observacao !== null && observacao.length > 120)
       ) {
-        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+        return await erroRegra("REQUISICAO_INVALIDA", 400);
       }
 
       const { data, error } = await admin.rpc("criar_solicitacao_tarefa_filho_interno", {
@@ -314,7 +314,7 @@ serve(async (req) => {
         !Number.isInteger(idRecompensa) ||
         idRecompensa <= 0
       ) {
-        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+        return await erroRegra("REQUISICAO_INVALIDA", 400);
       }
 
       const { data, error } = await admin.rpc("concluir_recompensa_filho_interno", {
@@ -400,7 +400,7 @@ serve(async (req) => {
           : null;
 
       if (!/^[0-9a-f]{64}$/.test(token) || !pushToken || pushToken.length > 4096 || !plataforma) {
-        return json({ ok: false, codigo: "REQUISICAO_INVALIDA" }, 400);
+        return await erroRegra("REQUISICAO_INVALIDA", 400);
       }
 
       const tokenHash = await sha256Hex(token);
@@ -416,7 +416,7 @@ serve(async (req) => {
         return json({ error: "Não foi possível registrar notificações" }, 500);
       }
       if (!acesso) {
-        return json({ ok: false, codigo: "SESSAO_INVALIDA" }, 401);
+        return await erroRegra("SESSAO_INVALIDA", 401);
       }
 
       const agora = new Date().toISOString();
