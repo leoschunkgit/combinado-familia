@@ -54,5 +54,20 @@ export function normalizarNomeTarefa(valor: string) {
   return valor
     .trim()
     .replace(/\s+/g, " ")
-    .toLocaleLowerCase("pt-BR");
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleUpperCase("pt-BR");
+}
+
+export function encontrarTarefaEquivalente<T extends { nome: string }>(
+  tarefas: readonly T[],
+  nome: string,
+  ignorarId?: number,
+) {
+  const normalizado = normalizarNomeTarefa(nome);
+
+  return tarefas.find((tarefa) => {
+    const id = "id" in tarefa && typeof tarefa.id === "number" ? tarefa.id : undefined;
+    return id !== ignorarId && normalizarNomeTarefa(tarefa.nome) === normalizado;
+  });
 }
