@@ -29,6 +29,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { diasDaVigencia, sugerirInicioVigencia } from "@/lib/vigencia-periodo";
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
+import { TAREFA_SUGESTOES_ONBOARDING } from "@/lib/tarefa-sugestoes";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 
@@ -377,6 +378,29 @@ export function OnboardingInicial() {
             <div className="space-y-2">
               <Label htmlFor="onboarding-tarefa">Nome da tarefa *</Label>
               <Input id="onboarding-tarefa" autoFocus value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Ex.: Arrumar a cama" />
+
+              {tarefaEmCorrecaoId === null && (
+                <div className="pt-1">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    Ou escolha uma sugestão:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {TAREFA_SUGESTOES_ONBOARDING.map((sugestao) => (
+                      <Button
+                        key={sugestao}
+                        type="button"
+                        size="sm"
+                        variant={nomeTarefa.trim() === sugestao ? "secondary" : "outline"}
+                        className="h-auto whitespace-normal px-2.5 py-1.5 text-left text-xs"
+                        disabled={salvando}
+                        onClick={() => setNomeTarefa(sugestao)}
+                      >
+                        {sugestao}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirFilho}>
