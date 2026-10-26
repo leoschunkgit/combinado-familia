@@ -11,6 +11,7 @@ export const TAREFA_SUGESTOES_CATEGORIAS: readonly CategoriaSugestoesTarefa[] = 
       "Escovar os dentes",
       "Tomar banho",
       "Guardar o pijama",
+      "Sair na hora para a escola",
     ],
   },
   {
@@ -20,6 +21,7 @@ export const TAREFA_SUGESTOES_CATEGORIAS: readonly CategoriaSugestoesTarefa[] = 
       "Organizar a mochila",
       "Ler por 20 minutos",
       "Estudar para a prova",
+      "Assistir à aula de inglês",
     ],
   },
   {
@@ -29,6 +31,11 @@ export const TAREFA_SUGESTOES_CATEGORIAS: readonly CategoriaSugestoesTarefa[] = 
       "Guardar os brinquedos",
       "Ajudar a pôr a mesa",
       "Guardar as roupas",
+      "Trocar o lixo",
+      "Varrer a casa",
+      "Lavar a louça",
+      "Guardar a louça",
+      "Passar pano na casa",
     ],
   },
   {
@@ -38,6 +45,7 @@ export const TAREFA_SUGESTOES_CATEGORIAS: readonly CategoriaSugestoesTarefa[] = 
       "Guardar o material",
       "Preparar a roupa do dia seguinte",
       "Ajudar a tirar a mesa",
+      "Levar o pet para passear",
     ],
   },
 ] as const;
