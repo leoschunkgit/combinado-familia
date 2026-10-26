@@ -131,7 +131,7 @@ export function AdminLimpeza() {
       <div>
         <h2 className={uiTypography.secondaryTitle}>Limpeza de conta</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Zere os dados funcionais e históricos de uma família sem apagar a conta do responsável nem seu acesso administrativo. Esta função só pode ser executada por ADMIN ativo ou MASTER ativo.
+          Zere os dados funcionais e históricos de uma família sem apagar a conta do responsável nem seu acesso administrativo. Esta função é exclusiva do administrador MASTER ativo.
         </p>
       </div>
 

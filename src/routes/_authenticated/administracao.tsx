@@ -384,6 +384,7 @@ function AdministracaoPage() {
   const [busca, setBusca] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [ehMaster, setEhMaster] = useState(false);
   const abasRef = useRef<HTMLDivElement | null>(null);
   const [podeIrEsquerda, setPodeIrEsquerda] = useState(false);
   const [podeIrDireita, setPodeIrDireita] = useState(false);
@@ -396,7 +397,7 @@ function AdministracaoPage() {
       .then(async (response) => response.ok ? await response.json() as Versao : null)
       .catch(() => null);
 
-    const [resumoResult, usuariosResult, operacaoResult, diagnosticoResult] = await Promise.all([
+    const [resumoResult, usuariosResult, operacaoResult, diagnosticoResult, adminsResult] = await Promise.all([
       supabase.rpc("admin_resumo"),
       supabase.rpc("admin_usuarios"),
       supabase.rpc("admin_operacao"),
@@ -404,9 +405,10 @@ function AdministracaoPage() {
         p_version_name: versaoResult?.versionName ?? null,
         p_version_code: versaoResult?.versionCode ?? null,
       }),
+      supabase.rpc("admin_listar_admins"),
     ]);
 
-    if (resumoResult.error || usuariosResult.error || operacaoResult.error || diagnosticoResult.error) {
+    if (resumoResult.error || usuariosResult.error || operacaoResult.error || diagnosticoResult.error || adminsResult.error) {
       setErro("Não foi possível carregar os dados administrativos.");
       setCarregando(false);
       return;
@@ -416,6 +418,11 @@ function AdministracaoPage() {
     setUsuarios((usuariosResult.data ?? []) as AdminUsuario[]);
     setOperacao(normalizarOperacao(operacaoResult.data));
     setDiagnostico(normalizarDiagnostico(diagnosticoResult.data));
+    setEhMaster(
+      ((adminsResult.data ?? []) as Array<{ eh_atual?: boolean; nivel?: string }>).some(
+        (admin) => admin.eh_atual === true && admin.nivel === "MASTER",
+      ),
+    );
     setVersao(versaoResult);
     setCarregando(false);
   }, []);
@@ -480,7 +487,7 @@ function AdministracaoPage() {
     { id: "feedbacks", label: "Feedbacks" },
     { id: "visao", label: "Visão geral" },
     { id: "usuarios", label: "Usuários" },
-    { id: "limpeza", label: "Limpeza" },
+    ...(ehMaster ? [{ id: "limpeza" as const, label: "Limpeza" }] : []),
     { id: "atencao", label: "Atenção" },
     { id: "funil", label: "Funil" },
     { id: "atividade", label: "Atividade" },
@@ -962,7 +969,7 @@ function AdministracaoPage() {
 
       {!erro && !carregando && aba === "feedbacks" && <AdminFeedbacks />}
 
-      {!erro && !carregando && aba === "limpeza" && <AdminLimpeza />}
+      {!erro && !carregando && ehMaster && aba === "limpeza" && <AdminLimpeza />}
 
       {!erro && !carregando && aba === "sistema" && <AdminSistema />}
 
