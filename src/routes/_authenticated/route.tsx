@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, ListPlus, MessageSquareText, ShieldCheck, Smartphone, Star, Palette } from "lucide-react";
+import { Bell, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Copy, ListTodo, LogOut, Users, Link2, Home, CircleHelp, ArrowRight, ArrowLeft, Menu, UserCog, MessageSquareText, ShieldCheck, Smartphone, Star, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -218,21 +218,6 @@ function AuthenticatedLayout() {
 
   const AtalhosPrincipais = ({ mobile = false }: { mobile?: boolean }) => (
     <div className={mobile ? "mt-5 space-y-2" : "mb-2 mt-7 space-y-1.5"}>
-      <Link
-        to="/cadastro-unico"
-        onClick={() => mobile && setMenuMobileAberto(false)}
-        className={mobile
-          ? "flex items-center gap-2.5 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35 px-2.5 py-2.5 text-sm font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-950/55"
-          : "flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/35 px-1.5 py-1.5 text-[12px] font-semibold text-amber-950 shadow-sm transition hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-950/55"}
-      >
-        <span className={mobile ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/55 dark:text-amber-300" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/55 dark:text-amber-300"}>
-          <ListPlus className={mobile ? "h-5 w-5" : "h-4 w-4"} />
-        </span>
-        <span className="min-w-0">
-          <span className="block">Cadastro Fluxo</span>
-          <span className={mobile ? "block text-[10px] font-medium opacity-75" : "block text-[8px] font-medium leading-tight opacity-75"}>Cadastre tudo em um só fluxo</span>
-        </span>
-      </Link>
       <button
         type="button"
         onClick={() => {
@@ -332,7 +317,7 @@ function AuthenticatedLayout() {
   return (
     <>
       {!saindo && <AppPushNotifications />}
-      {!saindo && pathname !== "/cadastro-unico" && <OnboardingInicial />}
+      {!saindo && <OnboardingInicial />}
       <div className="min-h-screen md:flex">
         <aside
           className={`native-sticky-safe-top sticky top-0 z-30 border-b bg-sidebar transition-[width,border-color] duration-300 ease-out md:sticky md:top-0 md:z-auto md:flex md:h-screen md:shrink-0 md:flex-col md:border-b-0 ${
