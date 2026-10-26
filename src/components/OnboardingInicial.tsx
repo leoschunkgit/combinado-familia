@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +31,7 @@ import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/mod
 import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
 import { encontrarTarefaEquivalente } from "@/lib/tarefa-sugestoes";
 
-const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
+const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição", "Recompensa"] as const;
 
 export function OnboardingInicial() {
   const navigate = useNavigate();
@@ -55,6 +55,10 @@ export function OnboardingInicial() {
 
   const [nomeTarefa, setNomeTarefa] = useState("");
 
+  const [nomeRecompensa, setNomeRecompensa] = useState("");
+  const [descricaoRecompensa, setDescricaoRecompensa] = useState("");
+  const [estrelasRecompensa, setEstrelasRecompensa] = useState("");
+
   const [inicioVigencia, setInicioVigencia] = useState(() => sugerirInicioVigencia([]));
   const [fimVigencia, setFimVigencia] = useState("");
 
@@ -73,7 +77,7 @@ export function OnboardingInicial() {
     tarefas.length === 0 ? 1 :
     vigencias.length === 0 ? 2 :
     atribuicoes.length === 0 ? 3 :
-    -1;
+    4;
   const etapa = filhoEmCorrecaoId !== null ? 0 : tarefaEmCorrecaoId !== null ? 1 : vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
 
   const aberto = !onboardingEncerradoLocalmente && !carregando && usuarioPai?.onboarding_concluido !== true && etapa >= 0;
@@ -283,11 +287,67 @@ export function OnboardingInicial() {
       return;
     }
 
+    await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+    toast.success("Atribuição criada. Falta cadastrar a primeira recompensa.");
+  }
+
+  async function cadastrarRecompensa() {
+    if (!usuarioPai?.id) {
+      toast.error("Não foi possível identificar sua conta para concluir o aprendizado.");
+      return;
+    }
+
+    const atribuicaoOnboarding = atribuicoes[0];
+    const idFilho = atribuicaoOnboarding?.id_filho ?? Number(filhoAtual);
+    if (!idFilho) {
+      toast.error("Filho não encontrado para cadastrar a recompensa.");
+      return;
+    }
+
+    const nome = nomeRecompensa.trim();
+    const descricao = descricaoRecompensa.trim();
+    const quantidade = Number(estrelasRecompensa);
+
+    if (nome.length < 2 || nome.length > 100) {
+      toast.error("Informe uma recompensa entre 2 e 100 caracteres");
+      return;
+    }
+    if (descricao.length > 300) {
+      toast.error("A descrição da recompensa deve ter no máximo 300 caracteres");
+      return;
+    }
+    if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 100000) {
+      toast.error("Informe uma quantidade válida de estrelas");
+      return;
+    }
+
+    setSalvando(true);
+    const { error: erroRecompensa } = await supabase.rpc("salvar_recompensa_estrelas", {
+      p_id_filho: idFilho,
+      p_nome: nome,
+      p_descricao: descricao,
+      p_estrelas_necessarias: quantidade,
+    });
+
+    if (erroRecompensa) {
+      setSalvando(false);
+      toast.error(msgErro(erroRecompensa));
+      return;
+    }
+
+    const { error: erroOnboarding } = await supabase
+      .from("t_usuario_pai")
+      .update({ onboarding_concluido: true })
+      .eq("id", usuarioPai.id);
+    setSalvando(false);
+
+    if (erroOnboarding) {
+      toast.error(msgErro(erroOnboarding));
+      return;
+    }
+
     setOnboardingEncerradoLocalmente(true);
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: ["filho_tarefas"] }),
-      qc.invalidateQueries({ queryKey: ["usuario_pai"] }),
-    ]);
+    await qc.invalidateQueries({ queryKey: ["usuario_pai"] });
     toast.success("Configuração inicial concluída!");
     navigate({ to: "/ocorrencias" });
   }
@@ -322,7 +382,7 @@ export function OnboardingInicial() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-4 gap-1.5" aria-label="Progresso da configuração inicial">
+        <div className="grid grid-cols-5 gap-1.5" aria-label="Progresso da configuração inicial">
           {PASSOS.map((passo, index) => (
             <div key={passo} className="min-w-0">
               <div className={`h-1.5 rounded-full ${index <= etapa ? "bg-primary" : "bg-muted"}`} />
@@ -441,7 +501,7 @@ export function OnboardingInicial() {
             </div>
             <div>
               <h3 className="font-semibold">4. Faça a primeira atribuição</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência. Depois disso, o sistema estará pronto para registrar Fez / Não fez.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência. Depois você cadastrará a primeira recompensa.</p>
             </div>
             <Pick label="Filho" childIcons required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome, cor: f.cor, avatar: f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null }))} />
             <Pick label="Tarefa" taskIcons required value={tarefaAtual} onChange={setTarefaSelecionada} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
@@ -458,7 +518,65 @@ export function OnboardingInicial() {
               </Button>
             </div>
             <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarAssociacao)}>
-              {salvando ? "Salvando..." : "Concluir aprendizado e ir para Fez / Não fez"}
+              {salvando ? "Salvando..." : "Cadastrar atribuição e continuar"}
+            </Button>
+          </div>
+        )}
+
+        {etapa === 4 && (
+          <div className="space-y-4">
+            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span>Filho, tarefa, vigência e atribuição prontos. Agora defina uma recompensa.</span>
+            </div>
+            <div>
+              <h3 className="flex items-center gap-2 font-semibold">
+                <Gift className="h-4 w-4 text-primary" />
+                5. Cadastre a primeira recompensa
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                A recompensa pertence ao filho e será conquistada conforme ele acumular estrelas.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="onboarding-recompensa-nome">Recompensa *</Label>
+              <Input
+                id="onboarding-recompensa-nome"
+                autoFocus
+                value={nomeRecompensa}
+                onChange={(e) => setNomeRecompensa(e.target.value)}
+                maxLength={100}
+                placeholder="Ex.: Ir ao cinema"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="onboarding-recompensa-descricao">
+                Descrição <span className="font-normal text-muted-foreground">(opcional)</span>
+              </Label>
+              <Input
+                id="onboarding-recompensa-descricao"
+                value={descricaoRecompensa}
+                onChange={(e) => setDescricaoRecompensa(e.target.value)}
+                maxLength={300}
+                placeholder="Ex.: Sessão de cinema no fim de semana"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="onboarding-recompensa-estrelas">Estrelas necessárias *</Label>
+              <Input
+                id="onboarding-recompensa-estrelas"
+                type="number"
+                min="1"
+                max="100000"
+                step="1"
+                inputMode="numeric"
+                value={estrelasRecompensa}
+                onChange={(e) => setEstrelasRecompensa(e.target.value)}
+                placeholder="Ex.: 20"
+              />
+            </div>
+            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarRecompensa)}>
+              {salvando ? "Salvando..." : "Cadastrar recompensa e concluir aprendizado"}
             </Button>
           </div>
         )}
