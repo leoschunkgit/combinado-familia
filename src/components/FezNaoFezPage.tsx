@@ -185,6 +185,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
   const filhoDaTarefa = (tarefa?: FilhoTarefa | null) =>
     tarefa ? filhos.find((filho) => filho.id === tarefa.id_filho) : undefined;
+
+  const tarefaEstaAtiva = (tarefa: FilhoTarefa) =>
+    tarefa.t_tarefa?.ativo === true;
+
+  function garantirTarefaAtiva(tarefa: FilhoTarefa) {
+    if (tarefaEstaAtiva(tarefa)) return true;
+    toast.error("Esta tarefa foi excluída e está disponível somente como histórico");
+    return false;
+  }
   const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
@@ -364,7 +373,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     if (data > hoje) return false;
 
     const atribuicoesDaVigencia = atribuicoes.filter(
-      (tarefa) => tarefa.id_vigencia === vigenciaId,
+      (tarefa) =>
+        tarefa.id_vigencia === vigenciaId &&
+        tarefaEstaAtiva(tarefa),
     );
 
     return atribuicoesDaVigencia.some(
@@ -375,6 +386,22 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const datasDaTarefa = (tarefa: FilhoTarefa, vigencia: Vigencia) => {
     if (modo === "pendentes" && !vigenciaEmAndamento(vigencia)) return [];
 
+    const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
+
+    if (!tarefaEstaAtiva(tarefa)) {
+      const registroHistorico = registroNaData(tarefa, dataSelecionada);
+      if (!registroHistorico || modo === "pendentes") return [];
+
+      if (filtro.resultado === "FEZ" && registroHistorico.tipo !== "FEZ") return [];
+      if (filtro.resultado === "NAO_FEZ" && registroHistorico.tipo !== "NAO_FEZ") return [];
+      if (
+        filtro.resultado === "NAO_PRECISOU" &&
+        registroHistorico.tipo !== "NAO_PRECISOU"
+      ) return [];
+
+      return [dataSelecionada];
+    }
+
     const datasGeradas = datasDaVigenciaAteHoje(vigencia, agoraBrasil);
     const datasComRegistro = ocorrenciasDaTarefa(tarefa).map((o) =>
       dataBrasil(o.created_at),
@@ -382,7 +409,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     const datas = [...new Set([...datasGeradas, ...datasComRegistro])].sort(
       (a, b) => a.localeCompare(b),
     );
-    const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
     const datasFiltradas = datas.filter((data) => data === dataSelecionada);
 
     if (modo === "pendentes") {
@@ -524,6 +550,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       if (tarefa.id_vigencia !== vigencia.id || tarefa.id_filho !== idFilho) {
         return false;
       }
+      if (!tarefaEstaAtiva(tarefa) && datasDaTarefa(tarefa, vigencia).length === 0) {
+        return false;
+      }
+
       return (
         filtro.tarefa === "all" ||
         tarefa.id_tarefa === Number(filtro.tarefa)
@@ -636,6 +666,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
+    if (!garantirTarefaAtiva(tarefa)) return;
+
     const vigencia = tarefa.t_vigencia;
     if (!vigencia || !vigenciaEmAndamento(vigencia)) {
       toast.error("Ações só podem ser feitas em uma vigência em andamento");
@@ -694,6 +726,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
   async function salvarNaoFez(draft: NaoFezPageDraft) {
     const { tarefa, data, existente } = draft;
+    if (!garantirTarefaAtiva(tarefa)) return;
+
     const vigencia = tarefa.t_vigencia;
 
     if (!vigencia || !vigenciaEmAndamento(vigencia)) {
@@ -820,6 +854,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
+    if (!garantirTarefaAtiva(tarefa)) return;
+
     if (existente && existente.tipo !== "FEZ") {
       abrirTrocaMarcacao(tarefa, total, data, existente, "FEZ");
       return;
@@ -837,6 +873,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     registro: Ocorrencia,
     alvo: ResultadoOcorrencia,
   ) {
+    if (!garantirTarefaAtiva(tarefa)) return;
     if (registro.tipo === alvo) return;
 
     if (
@@ -864,6 +901,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
   async function salvarFez(draft: FezDraft, existente?: Ocorrencia) {
     const tarefa = draft.tarefa;
+    if (!garantirTarefaAtiva(tarefa)) return;
+
     const vigencia = tarefa.t_vigencia;
 
     if (!vigencia || (!vigenciaEmAndamento(vigencia))) {
@@ -928,6 +967,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     data: string,
     existente?: Ocorrencia,
   ) {
+    if (!garantirTarefaAtiva(tarefa)) return;
+
     const vigencia = tarefa.t_vigencia;
 
     if (!vigencia || (!vigenciaEmAndamento(vigencia))) {
@@ -1459,6 +1500,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             >
                                               {tarefa.t_tarefa?.nome}
                                             </p>
+                                            {!tarefaEstaAtiva(tarefa) && (
+                                              <span className="shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Histórico
+                                              </span>
+                                            )}
                                           </div>
 
                                           {!registro && solicitacao?.status === "PENDENTE" && (
@@ -1519,7 +1565,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                                           </div>
                                         )}
-                                        {!registro && !bloqueada && (
+                                        {!registro && !bloqueada && tarefaEstaAtiva(tarefa) && (
                                           <>
                                             <Button
                                               size="sm"
@@ -1579,6 +1625,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 className="h-8 w-8 shrink-0 rounded-full disabled:cursor-default disabled:opacity-35"
                                                 disabled={
                                                   busy ||
+                                                  !tarefaEstaAtiva(tarefa) ||
                                                   consequenciaEhPenalidadeCumprida(consequencia)
                                                 }
                                                 aria-label={
@@ -1592,6 +1639,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
                                               {!bloqueada &&
+                                                tarefaEstaAtiva(tarefa) &&
                                                 !consequenciaEhPenalidadeCumprida(consequencia) &&
                                                 registro.tipo !== "FEZ" && (
                                                 <DropdownMenuItem
@@ -1604,6 +1652,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 </DropdownMenuItem>
                                               )}
                                               {!bloqueada &&
+                                                tarefaEstaAtiva(tarefa) &&
                                                 !consequenciaEhPenalidadeCumprida(consequencia) &&
                                                 registro.tipo !== "NAO_FEZ" && (
                                                 <DropdownMenuItem
@@ -1616,6 +1665,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 </DropdownMenuItem>
                                               )}
                                               {!bloqueada &&
+                                                tarefaEstaAtiva(tarefa) &&
                                                 !consequenciaEhPenalidadeCumprida(consequencia) &&
                                                 registro.tipo !== "NAO_PRECISOU" && (
                                                 <DropdownMenuItem
@@ -1646,6 +1696,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                                 )}
                                               {registro.tipo === "NAO_FEZ" &&
                                                 !bloqueada &&
+                                                tarefaEstaAtiva(tarefa) &&
                                                 consequenciaEhPenalidadePendente(consequencia) && (
                                                   <DropdownMenuItem
                                                     onSelect={() =>
