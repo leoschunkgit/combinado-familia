@@ -46,7 +46,7 @@ export type FilhoTarefa = Tables<"t_filho_tarefa"> & {
 
 async function unwrap<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>) {
   const { data, error } = await p;
-  if (error) throw new Error(error.message);
+  if (error) throw error;
   return data as T;
 }
 
@@ -141,59 +141,7 @@ export const useOcorrencias = () =>
       ),
   });
 
-type ErroAplicacao = {
-  message?: string;
-  code?: string;
-};
-
-const MENSAGENS_POR_CODIGO: Record<string, string> = {
-  "42501": "Você não tem permissão para esta ação",
-  "23505": "Este registro já existe",
-  "23503": "Este registro está em uso e não pode ser removido",
-  "23502": "Preencha todos os campos obrigatórios",
-  "23514": "Valor inválido para um dos campos",
-  "22P02": "Valor em formato inválido",
-  "22001": "Um dos campos ultrapassou o tamanho máximo",
-  "22003": "Valor fora do intervalo permitido",
-};
-
-const ERROS_TECNICOS: [RegExp, string][] = [
-  [/invalid login credentials/i, "Email ou senha incorretos"],
-  [/email not confirmed/i, "Confirme seu email antes de entrar"],
-  [/user already registered|already been registered/i, "Este email já está cadastrado"],
-  [/password should be at least/i, "A senha deve ter pelo menos 6 caracteres"],
-  [/weak password|password.*(breach|known|compromised)/i, "Senha muito fraca. Escolha outra"],
-  [/unable to validate email|invalid email|email.*invalid/i, "Email inválido"],
-  [/row-level security|permission denied|not authorized|unauthorized/i, "Você não tem permissão para esta ação"],
-  [/does not exist|not found/i, "Registro não encontrado"],
-  [/failed to fetch|network|fetch failed|load failed|econnrefused|timeout/i, "Sem conexão. Verifique sua internet"],
-  [/jwt|token|session/i, "Sua sessão expirou. Entre novamente"],
-  [/rate limit|too many requests|over_email_send_rate/i, "Muitas tentativas. Aguarde um instante"],
-  [/signup.*(disabled|not allowed)|signups/i, "Cadastro temporariamente indisponível"],
-];
-
-export function msgErro(error: ErroAplicacao | null): string {
-  const mensagem = error?.message?.trim() ?? "";
-  const codigo = error?.code?.trim() ?? "";
-
-  // Regra de negócio centralizada no PostgreSQL.
-  // RAISE EXCEPTION sem ERRCODE explícito retorna P0001 no PostgREST/Supabase.
-  // A mensagem deliberadamente definida no banco é a fonte de verdade.
-  if (codigo === "P0001" && mensagem) {
-    return mensagem;
-  }
-
-  const mensagemPorCodigo = MENSAGENS_POR_CODIGO[codigo];
-  if (mensagemPorCodigo) {
-    return mensagemPorCodigo;
-  }
-
-  for (const [padrao, texto] of ERROS_TECNICOS) {
-    if (padrao.test(mensagem)) return texto;
-  }
-
-  return "Não foi possível concluir a operação. Tente novamente.";
-}
+export { msgErro } from "@/lib/app-error";
 
 export const fmtData = (d: string) =>
   new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
