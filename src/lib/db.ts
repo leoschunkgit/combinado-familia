@@ -40,7 +40,7 @@ export type Tarefa = Tables<"t_tarefa">;
 export type FilhoVigenciaMesada = Tables<"t_filho_vigencia_mesada">;
 export type FilhoTarefa = Tables<"t_filho_tarefa"> & {
   t_filho: Pick<Filho, "nome"> | null;
-  t_tarefa: Pick<Tarefa, "nome"> | null;
+  t_tarefa: Pick<Tarefa, "nome" | "ativo"> | null;
   t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim"> | null;
 };
 
@@ -88,7 +88,7 @@ export const useFilhoVigenciaMesadas = () =>
   });
 
 export const FT_SELECT =
-  "*, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim)";
+  "*, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome, ativo), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim)";
 
 export const useFilhoTarefas = () =>
   useQuery({
@@ -120,7 +120,7 @@ export type Ocorrencia = Tables<"t_ocorrencia"> & {
   t_filho_tarefa:
     | (Pick<Tables<"t_filho_tarefa">, "id_filho" | "id_vigencia" | "id_tarefa"> & {
         t_filho: Pick<Filho, "nome"> | null;
-        t_tarefa: Pick<Tarefa, "nome"> | null;
+        t_tarefa: Pick<Tarefa, "nome" | "ativo"> | null;
         t_vigencia: Pick<Vigencia, "data_inicio" | "data_fim"> | null;
       })
     | null;
@@ -135,7 +135,7 @@ export const useOcorrencias = () =>
         supabase
           .from("t_ocorrencia")
           .select(
-            "*, t_ocorrencia_consequencia:t_ocorrencia_consequencia!t_ocorrencia_consequencia_id_ocorrencia_fkey(*), t_filho_tarefa:t_filho_tarefa!t_ocorrencia_id_filho_tarefa_fkey(id_filho, id_vigencia, id_tarefa, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim))",
+            "*, t_ocorrencia_consequencia:t_ocorrencia_consequencia!t_ocorrencia_consequencia_id_ocorrencia_fkey(*), t_filho_tarefa:t_filho_tarefa!t_ocorrencia_id_filho_tarefa_fkey(id_filho, id_vigencia, id_tarefa, t_filho:t_filho!t_filho_tarefa_id_filho_fkey(nome), t_tarefa:t_tarefa!t_filho_tarefa_id_tarefa_fkey(nome, ativo), t_vigencia:t_vigencia!t_filho_tarefa_id_vigencia_fkey(data_inicio, data_fim))",
           )
           .order("created_at", { ascending: false }),
       ),
