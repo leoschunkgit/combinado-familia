@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { lerSessaoFilhoLocal } from "@/lib/child-app-session";
+import { erroRegra } from "@/lib/app-error";
 
 export async function registrarPushFilho(pushToken: string) {
   if (!Capacitor.isNativePlatform() || !pushToken) return;
@@ -34,13 +35,14 @@ export async function registrarPushFilho(pushToken: string) {
   const data = await response.json().catch(() => ({})) as {
     ok?: boolean;
     codigo?: string;
+    mensagem?: string;
     error?: string;
   };
 
   if (!response.ok || data.ok !== true) {
-    if (data.codigo === "SESSAO_INVALIDA") {
-      throw new Error("A sessão do filho não está mais ativa.");
-    }
-    throw new Error(data.error || "Não foi possível registrar as notificações do filho.");
+    throw erroRegra(
+      data.mensagem || data.error || "Não foi possível registrar as notificações do filho.",
+      data.codigo,
+    );
   }
 }
