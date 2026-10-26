@@ -10,6 +10,7 @@ import {
 } from "@/lib/db";
 import {
   reais,
+  resolverMesadaVigencia,
   saldoMesada,
   totalDescontosAplicados,
 } from "@/lib/mesada";
@@ -123,13 +124,8 @@ export async function extrairPdfVigencia(args: {
               snapshot.id_filho === filho.id &&
               snapshot.id_vigencia === vigencia.id,
           );
-          const temMesada = snapshotMesada
-            ? snapshotMesada.tem_mesada
-            : filho.tem_mesada_opcional === true &&
-              filho.valor_mesada !== null;
-          const valorMesada = snapshotMesada
-            ? snapshotMesada.valor_mesada
-            : filho.valor_mesada;
+          const { temMesada, valorMesada } =
+            resolverMesadaVigencia(filho, snapshotMesada);
           const totalDescontado = totalDescontosAplicados(registros);
           const saldo = saldoMesada(valorMesada, totalDescontado);
 

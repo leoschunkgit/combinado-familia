@@ -207,17 +207,6 @@ export function OnboardingInicial() {
       return;
     }
 
-    const conflito = vigencias.some((vigencia) => {
-      if (vigenciaEmCorrecaoId !== null && vigencia.id === vigenciaEmCorrecaoId) return false;
-      const existenteInicio = new Date(vigencia.data_inicio).getTime();
-      const existenteFim = new Date(vigencia.data_fim).getTime();
-      return inicio <= existenteFim && fim >= existenteInicio;
-    });
-    if (conflito) {
-      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
-      return;
-    }
-
     setSalvando(true);
     const payload = {
       data_inicio: paraIsoDataHoraBrasil(inicioVigencia),

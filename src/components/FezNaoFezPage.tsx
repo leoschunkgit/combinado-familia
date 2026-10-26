@@ -50,7 +50,7 @@ import {
   type Ocorrencia,
   type Vigencia,
 } from "@/lib/db";
-import { reais } from "@/lib/mesada";
+import { reais, resolverMesadaVigencia } from "@/lib/mesada";
 import {
   consequenciaEhDescontoAplicado,
   consequenciaEhPenalidadeCumprida,
@@ -654,8 +654,12 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
 
     const consequenciaAtual = existente?.t_ocorrencia_consequencia;
-    const temMesada =
-      filho.tem_mesada_opcional === true && filho.valor_mesada !== null;
+    const snapshotMesada = mesadasVigencia.find(
+      (snapshot) =>
+        snapshot.id_filho === filho.id &&
+        snapshot.id_vigencia === tarefa.id_vigencia,
+    );
+    const { temMesada } = resolverMesadaVigencia(filho, snapshotMesada);
     const tipoAtual: ConsequenciaNaoFezTipo =
       consequenciaAtual?.tipo === "DESCONTO" && temMesada
         ? "DESCONTO"
@@ -1280,13 +1284,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                         snapshot.id_filho === filho.id &&
                         snapshot.id_vigencia === vigencia.id,
                     );
-                    const temMesada = snapshotMesada
-                      ? snapshotMesada.tem_mesada
-                      : filho.tem_mesada_opcional === true &&
-                        filho.valor_mesada !== null;
-                    const valorMesada = snapshotMesada
-                      ? snapshotMesada.valor_mesada
-                      : filho.valor_mesada;
+                    const { temMesada, valorMesada } =
+                      resolverMesadaVigencia(filho, snapshotMesada);
                     const totalDescontado = ocorrenciasFilhoVigencia.reduce(
                       (total, ocorrencia) => {
                         const consequencia = ocorrencia.t_ocorrencia_consequencia;

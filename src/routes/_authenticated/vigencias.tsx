@@ -100,17 +100,6 @@ function VigenciasPage() {
     setForm((atual) => ({ ...atual, data_inicio: sugerirInicioVigencia(vigencias), data_fim: "" }));
   }
 
-  function conflitaComVigenciaExistente(inicioCampo: string, fimCampo: string, ignorarId?: number) {
-    const inicio = new Date(inicioCampo).getTime();
-    const fim = new Date(fimCampo).getTime();
-    return vigencias.some((v) => {
-      if (ignorarId !== undefined && v.id === ignorarId) return false;
-      const existenteInicio = new Date(v.data_inicio).getTime();
-      const existenteFim = new Date(v.data_fim).getTime();
-      return inicio <= existenteFim && fim >= existenteInicio;
-    });
-  }
-
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const dadosPeriodo = modoPeriodoNovo === "DIAS" ? periodoDiasCalculado : { data_inicio: form.data_inicio, data_fim: form.data_fim };
@@ -121,10 +110,6 @@ function VigenciasPage() {
     const formParaSalvar = { ...form, data_inicio: dadosPeriodo.data_inicio, data_fim: dadosPeriodo.data_fim };
     const p = schema.safeParse(formParaSalvar);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
-    if (conflitaComVigenciaExistente(p.data.data_inicio, p.data.data_fim)) {
-      toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo.");
-      return;
-    }
     const { data: criada, error } = await supabase
       .from("t_vigencia")
       .insert({ data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) })
@@ -206,20 +191,6 @@ function VigenciasPage() {
     e.preventDefault(); if (!editando) return;
     const p = schema.safeParse(edicao);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
-    const novoInicio = new Date(p.data.data_inicio).getTime(); const novoFim = new Date(p.data.data_fim).getTime();
-    if (novoFim <= novoInicio) { toast.error("A data/hora fim deve ser posterior à data/hora início"); return; }
-    if (conflitaComVigenciaExistente(p.data.data_inicio, p.data.data_fim, editando.id)) { toast.error("Já existe uma vigência nesse período. As vigências não podem ficar ativas ao mesmo tempo."); return; }
-    const { data: vinculadas, error: buscaErro } = await supabase.from("t_filho_tarefa").select("id, id_filho").eq("id_vigencia", editando.id);
-    if (buscaErro) { toast.error(msgErro(buscaErro)); return; }
-    const idsVinculadas = (vinculadas ?? []).map((item) => item.id);
-    if (idsVinculadas.length) {
-      const { data: registros, error: registrosErro } = await supabase.from("t_ocorrencia").select("id, created_at, tipo, id_filho_tarefa").in("id_filho_tarefa", idsVinculadas);
-      if (registrosErro) { toast.error(msgErro(registrosErro)); return; }
-
-      const novoInicioDia = diaCampo(p.data.data_inicio); const novoFimDia = diaCampo(p.data.data_fim);
-      const fora = (registros ?? []).filter((o) => { const d = diaBrasil(o.created_at); return d < novoInicioDia || d > novoFimDia; });
-      if (fora.length) { toast.error(`Não é possível alterar o período: existem ${fora.length} resultado(s) fora das novas datas. Ajuste ou remova esses registros antes de salvar.`); return; }
-    }
     const { error } = await supabase.from("t_vigencia").update({ data_inicio: paraIso(p.data.data_inicio), data_fim: paraIso(p.data.data_fim) }).eq("id", editando.id);
     if (error) { toast.error(msgErro(error)); return; }
     toast.success("Vigência atualizada"); setEditando(null);
