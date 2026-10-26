@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { toast } from "sonner";
-import { registrarPushFilho } from "@/lib/child-push-notifications";
+import { registrarPushFilho } from "@/lib/child-push-notifications";\nimport { garantirCanalPushAndroid } from "@/lib/push-channel";
 
 export function AppFilhoPushNotifications({
   onAbrir,
