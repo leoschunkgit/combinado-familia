@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, EllipsisVertical, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { msgErro } from "@/lib/app-error";
 import type { Filho } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -51,7 +52,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       setResumo(proximoResumo);
     } catch (error) {
       if (!silencioso) {
-        toast.error(error instanceof Error ? error.message : "Não foi possível carregar as estrelas.");
+        toast.error(msgErro(error));
       }
     } finally {
       if (!silencioso) setCarregando(false);
@@ -134,7 +135,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
       limparForm();
       await carregar();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível salvar a recompensa.");
+      toast.error(msgErro(error));
     } finally {
       setSalvando(false);
     }
@@ -188,7 +189,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
         await carregar();
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível concluir a ação.");
+      toast.error(msgErro(error));
     } finally {
       setSalvando(false);
     }
