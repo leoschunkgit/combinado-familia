@@ -1,6 +1,6 @@
 import { uiTypography } from "@/lib/ui-typography";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BellRing, CalendarRange, CheckCircle2, ClipboardCheck, Link2, ListTodo, Users } from "lucide-react";
+import { ArrowRight, BellRing, CalendarRange, CheckCircle2, ClipboardCheck, Gift, Link2, ListTodo, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFilhoTarefas, useOcorrencias, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
@@ -24,7 +24,8 @@ function Inicio() {
     { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
     { numero: "3", titulo: "Crie uma vigência", texto: "Defina o período em que os combinados ficarão valendo.", to: "/vigencias", icon: CalendarRange },
     { numero: "4", titulo: "Faça as atribuições", texto: "Associe cada filho às tarefas dentro da vigência escolhida.", to: "/atribuicoes", icon: Link2 },
-    { numero: "5", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
+    { numero: "5", titulo: "Cadastre as recompensas", texto: "Defina recompensas para cada filho conquistar com as estrelas.", to: "/estrelas", icon: Gift },
+    { numero: "6", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
   ];
 
   return (
@@ -97,7 +98,7 @@ function Inicio() {
           <h2 className={uiTypography.secondaryTitleLargeDesktop}>Como começar</h2>
           <p className="mt-1 text-sm text-muted-foreground">Siga estes passos para configurar seu primeiro combinado.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {etapas.map(({ numero, titulo, texto, to, icon: Icon }) => (
             <Link key={to} to={to} className="group rounded-xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/30">
               <div className="flex items-start justify-between gap-3">
@@ -118,7 +119,7 @@ function Inicio() {
           <div>
             <h2 className={uiTypography.secondaryTitle}>A primeira ação é cadastrar os filhos</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Depois disso, crie as tarefas, defina a vigência e faça as atribuições. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados.
+              Depois disso, crie as tarefas, defina a vigência, faça as atribuições e cadastre as recompensas de cada filho. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados.
             </p>
           </div>
         </div>
