@@ -141,51 +141,30 @@ export const useOcorrencias = () =>
       ),
   });
 
-const ERROS: [RegExp, string][] = [
-  [/Atribuições de vigências finalizadas não podem ser excluídas|Atribuicoes de vigencias finalizadas nao podem ser excluidas/i, "Atribuições de vigências finalizadas não podem ser excluídas"],
-  [/Esta atribuição tem um aviso pendente do filho e não pode ser excluída|Esta atribuicao tem um aviso pendente do filho e nao pode ser excluida/i, "Esta atribuição possui um aviso pendente do filho e não pode ser excluída"],
-  [/Esta atribuição possui histórico de Fez ou Não fez e não pode ser excluída|Esta atribuicao possui historico de Fez ou Nao fez e nao pode ser excluida/i, "Esta atribuição possui histórico de “Fez”/“Não fez” e não pode ser excluída"],
-  [/Atribuição não pode ser excluída|Atribuicao nao pode ser excluida/i, "Esta atribuição não pode ser excluída"],
-  [/Atribuição não encontrada|Atribuicao nao encontrada/i, "Atribuição não encontrada"],
-  [/A mesada não pode ser menor que o total de descontos aplicados na vigência atual/i, "A mesada não pode ser menor que o total de descontos aplicados na vigência atual"],
-  [/O total de descontos aplicados na vigência não pode ultrapassar a mesada atual/i, "O total de descontos desta vigência não pode ultrapassar o valor da mesada"],
-  [/Vigência com resultados ou pedido pendente do filho não pode ser excluída|Vigencia com resultados ou pedido pendente do filho nao pode ser excluida/i, "Esta vigência possui resultados ou pedido pendente do filho e não pode ser excluída"],
-  [/Atribuicao com resultados nao pode ser excluida diretamente|Atribuição com resultados não pode ser excluída diretamente/i, "Esta atribuição já tem resultados e não pode ser excluída"],
-  [/Atribuicao com resultados nao pode ser editada|Atribuição com resultados não pode ser editada/i, "Esta atribuição já tem resultados e não pode ser alterada"],
-  [/Há resultados fora do novo período da vigência|Ha resultados fora do novo periodo da vigencia/i, "Há resultados fora do novo período. Corrija-os antes de salvar"],
-  [/Resultados só podem ser alterados em vigência em andamento|Resultados so podem ser alterados em vigencia em andamento/i, "Os resultados só podem ser alterados em vigência em andamento"],
-  [/A data do resultado deve estar dentro da vigência|A data do resultado deve estar dentro da vigencia/i, "A data do resultado deve estar dentro da vigência"],
-  [/Não é permitido registrar resultado em data futura|Nao e permitido registrar resultado em data futura/i, "Não é permitido registrar resultado em data futura"],
-  [/Atribuicao com aviso pendente do filho nao pode ser excluida diretamente|Atribuição com aviso pendente do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso pendente do filho e não pode ser excluída"],
-  [/Vigência com Fez\/Não fez ou pedido pendente do filho não pode ser excluída|Vigencia com Fez\/Nao fez ou pedido pendente do filho nao pode ser excluida/i, "Esta vigência possui “Fez”/“Não fez” ou pedido pendente do filho e não pode ser excluída"],
-  [/Atribuicao com aviso do filho nao pode ser excluida diretamente|Atribuição com aviso do filho não pode ser excluída diretamente/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser excluída"],
-  [/Atribuicao com aviso do filho nao pode ser editada|Atribuição com aviso do filho não pode ser editada/i, "Esta atribuição possui um aviso enviado pelo filho e não pode ser alterada"],
-  [/Há avisos do filho fora do novo período da vigência|Ha avisos do filho fora do novo periodo da vigencia/i, "Há avisos enviados pelo filho fora do novo período. Corrija o período antes de salvar"],
-  [/Vigência com histórico de Fez\/Não fez ou aviso do filho não pode ser excluída|Vigencia com historico de Fez\/Nao fez ou aviso do filho nao pode ser excluida/i, "Esta vigência possui histórico de “Fez”/“Não fez” ou aviso do filho e não pode ser excluída"],
-  [/Atribuicao com Fez\/Nao fez nao pode ser excluida diretamente|Atribuição com Fez\/Não fez não pode ser excluída diretamente/i, "Esta atribuição já tem registros de “Fez”/“Não fez” e não pode ser excluída"],
-  [/Atribuicao com Fez\/Nao fez nao pode ser editada|Atribuição com Fez\/Não fez não pode ser editada/i, "Esta atribuição já tem registros de “Fez”/“Não fez” e não pode ser alterada"],
-  [/Vigência com registros de Fez\/Não fez não pode ser excluída|Vigencia com registros de Fez\/Nao fez nao pode ser excluida/i, "Esta vigência possui registros de “Fez”/“Não fez” e não pode ser excluída"],
-  [/Vigência em andamento com atribuições não pode ser excluída|Vigencia em andamento com atribuicoes nao pode ser excluida/i, "Esta vigência está em andamento e tem atribuições, por isso não pode ser excluída"],
-  [/Vigência com atribuições não pode ser excluída|Vigencia com atribuicoes nao pode ser excluida/i, "Esta vigência tem atribuições e não pode ser excluída"],
-  [/Há registros de Fez\/Não fez fora do novo período da vigência|Ha registros de Fez\/Nao fez fora do novo periodo da vigencia/i, "Há registros de “Fez”/“Não fez” fora do novo período. Corrija-os antes de salvar"],
-  [/Já existe uma vigência nesse período|Ja existe uma vigencia nesse periodo/i, "Já existe uma vigência nesse período. As vigências não podem se sobrepor"],
-  [/Fez\/Não fez só pode ser alterado em vigência em andamento|Fez\/Nao fez so pode ser alterado em vigencia em andamento/i, "“Fez”/“Não fez” só pode ser alterado em vigência em andamento"],
-  [/A data do Fez\/Não fez deve estar dentro da vigência|A data do Fez\/Nao fez deve estar dentro da vigencia/i, "A data do “Fez”/“Não fez” deve estar dentro da vigência"],
-  [/Não é permitido registrar Fez\/Não fez em data futura|Nao e permitido registrar Fez\/Nao fez em data futura/i, "Não é permitido registrar “Fez”/“Não fez” em data futura"],
+type ErroAplicacao = {
+  message?: string;
+  code?: string;
+};
+
+const MENSAGENS_POR_CODIGO: Record<string, string> = {
+  "42501": "Você não tem permissão para esta ação",
+  "23505": "Este registro já existe",
+  "23503": "Este registro está em uso e não pode ser removido",
+  "23502": "Preencha todos os campos obrigatórios",
+  "23514": "Valor inválido para um dos campos",
+  "22P02": "Valor em formato inválido",
+  "22001": "Um dos campos ultrapassou o tamanho máximo",
+  "22003": "Valor fora do intervalo permitido",
+};
+
+const ERROS_TECNICOS: [RegExp, string][] = [
   [/invalid login credentials/i, "Email ou senha incorretos"],
   [/email not confirmed/i, "Confirme seu email antes de entrar"],
   [/user already registered|already been registered/i, "Este email já está cadastrado"],
   [/password should be at least/i, "A senha deve ter pelo menos 6 caracteres"],
   [/weak password|password.*(breach|known|compromised)/i, "Senha muito fraca. Escolha outra"],
   [/unable to validate email|invalid email|email.*invalid/i, "Email inválido"],
-  [/duplicate key|already exists|unique constraint/i, "Este registro já existe"],
-  [/violates foreign key|foreign key/i, "Este registro está em uso e não pode ser removido"],
   [/row-level security|permission denied|not authorized|unauthorized/i, "Você não tem permissão para esta ação"],
-  [/violates not-null|null value/i, "Preencha todos os campos obrigatórios"],
-  [/violates check|check constraint/i, "Valor inválido para um dos campos"],
-  [/invalid input syntax/i, "Valor em formato inválido"],
-  [/value too long/i, "Um dos campos ultrapassou o tamanho máximo"],
-  [/out of range/i, "Valor fora do intervalo permitido"],
   [/does not exist|not found/i, "Registro não encontrado"],
   [/failed to fetch|network|fetch failed|load failed|econnrefused|timeout/i, "Sem conexão. Verifique sua internet"],
   [/jwt|token|session/i, "Sua sessão expirou. Entre novamente"],
@@ -193,9 +172,26 @@ const ERROS: [RegExp, string][] = [
   [/signup.*(disabled|not allowed)|signups/i, "Cadastro temporariamente indisponível"],
 ];
 
-export function msgErro(error: { message?: string } | null): string {
-  const m = error?.message ?? "";
-  for (const [re, msg] of ERROS) if (re.test(m)) return msg;
+export function msgErro(error: ErroAplicacao | null): string {
+  const mensagem = error?.message?.trim() ?? "";
+  const codigo = error?.code?.trim() ?? "";
+
+  // Regra de negócio centralizada no PostgreSQL.
+  // RAISE EXCEPTION sem ERRCODE explícito retorna P0001 no PostgREST/Supabase.
+  // A mensagem deliberadamente definida no banco é a fonte de verdade.
+  if (codigo === "P0001" && mensagem) {
+    return mensagem;
+  }
+
+  const mensagemPorCodigo = MENSAGENS_POR_CODIGO[codigo];
+  if (mensagemPorCodigo) {
+    return mensagemPorCodigo;
+  }
+
+  for (const [padrao, texto] of ERROS_TECNICOS) {
+    if (padrao.test(mensagem)) return texto;
+  }
+
   return "Não foi possível concluir a operação. Tente novamente.";
 }
 
