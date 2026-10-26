@@ -167,7 +167,7 @@ function FilhosPage() {
   }
 
   async function excluir(id: number) {
-    const { error } = await supabase.from("t_filho").delete().eq("id", id);
+    const { error } = await supabase.rpc("excluir_filho_com_regra", { p_id_filho: id });
     if (error) { toast.error(msgErro(error)); return; }
     await qc.invalidateQueries();
   }
@@ -175,11 +175,7 @@ function FilhosPage() {
   async function excluirTodos() {
     if (filhos.length === 0) return;
 
-    const idsFilhos = filhos.map((filho) => filho.id);
-    const { error } = await supabase
-      .from("t_filho")
-      .delete()
-      .in("id", idsFilhos);
+    const { error } = await supabase.rpc("excluir_todos_filhos_com_regra");
 
     if (error) {
       toast.error(msgErro(error));

@@ -1686,6 +1686,14 @@ export type Database = {
         Args: { p_id_filho_tarefa: number }
         Returns: Json
       }
+      excluir_filho_com_regra: {
+        Args: { p_id_filho: number }
+        Returns: Json
+      }
+      excluir_todos_filhos_com_regra: {
+        Args: never
+        Returns: Json
+      }
       excluir_recompensa_estrelas: {
         Args: { p_id_recompensa: number }
         Returns: boolean
