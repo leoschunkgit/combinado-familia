@@ -29,6 +29,7 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { diasDaVigencia, sugerirInicioVigencia } from "@/lib/vigencia-periodo";
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
+import { encontrarTarefaEquivalente } from "@/lib/tarefa-sugestoes";
 
 const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 
@@ -130,6 +131,11 @@ export function OnboardingInicial() {
     const nome = nomeTarefa.trim();
     if (nome.length < 2 || nome.length > 150) {
       toast.error("Informe um nome de tarefa entre 2 e 150 caracteres");
+      return;
+    }
+
+    if (encontrarTarefaEquivalente(tarefas, nome, tarefaEmCorrecaoId ?? undefined)) {
+      toast.error(`A tarefa "${nome}" já está cadastrada`);
       return;
     }
 
