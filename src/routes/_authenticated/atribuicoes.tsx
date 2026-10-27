@@ -229,41 +229,42 @@ function AtribuicoesPage() {
       ) : (
         <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           {vigenciaSelecionada && (
-            <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border/60 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
-              <span className="h-7 w-7" aria-hidden="true" />
+            <div className="border-b border-border/60 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
+              <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2">
+                <span className="h-7 w-7" aria-hidden="true" />
 
-              <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
-                <button
-                  type="button"
-                  onClick={() => navegarVigencia(-1)}
-                  disabled={indiceVigenciaSelecionada <= 0}
-                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label="Ir para a vigência anterior"
-                >
-                  <ChevronLeft className="h-4 w-4" strokeWidth={3} />
-                </button>
+                <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
+                  <button
+                    type="button"
+                    onClick={() => navegarVigencia(-1)}
+                    disabled={indiceVigenciaSelecionada <= 0}
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label="Ir para a vigência anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" strokeWidth={3} />
+                  </button>
 
-                <div className="min-w-0 text-center">
-                  <p className="truncate whitespace-nowrap text-sm font-extrabold tabular-nums">
+                  <p className="min-w-0 truncate whitespace-nowrap text-center text-sm font-extrabold tabular-nums">
                     {periodoCurto(vigenciaSelecionada)}
                   </p>
-                  <div className="mt-1.5 flex justify-center">
-                    <VigenciaStatus vigencia={vigenciaSelecionada} />
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navegarVigencia(1)}
+                    disabled={indiceVigenciaSelecionada < 0 || indiceVigenciaSelecionada >= vigenciasOrdenadas.length - 1}
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label="Ir para a próxima vigência"
+                  >
+                    <ChevronRight className="h-4 w-4" strokeWidth={3} />
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => navegarVigencia(1)}
-                  disabled={indiceVigenciaSelecionada < 0 || indiceVigenciaSelecionada >= vigenciasOrdenadas.length - 1}
-                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label="Ir para a próxima vigência"
-                >
-                  <ChevronRight className="h-4 w-4" strokeWidth={3} />
-                </button>
+                <span className="h-7 w-7" aria-hidden="true" />
               </div>
 
-              <span className="h-7 w-7" aria-hidden="true" />
+              <div className="mt-2 flex justify-center">
+                <VigenciaStatus vigencia={vigenciaSelecionada} />
+              </div>
             </div>
           )}
 
