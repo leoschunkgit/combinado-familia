@@ -9,11 +9,10 @@ import { Hint } from "@/components/Hint";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { cadastrarAtribuicoes, prepararAtribuicoes, type AtribuicaoItem, type PoliticaVigenciaAtribuicao } from "@/lib/atribuicoes";
-import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
+import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { TarefaIcone } from "@/components/TarefaIcone";
 
@@ -145,13 +144,7 @@ export function AtribuicaoDialog({
     status: situacaoVigencia(v),
   });
 
-  const filhoPorId = (id: number) => filhos.find((f) => f.id === id);
-  const nomeF = (id: number) => filhoInicial?.id === id ? filhoInicial.nome : filhoPorId(id)?.nome ?? "";
   const nomeT = (id: number) => tarefasIniciais.find((t) => t.id === id)?.nome ?? tarefas.find((t) => t.id === id)?.nome ?? "";
-  const nomeV = (id: number) => {
-    const v = vigencias.find((x) => x.id === id);
-    return v ? fmtVigencia(v) : "";
-  };
 
   function alternarTarefa(id: number) {
     setTarefasSelecionadas((atuais) => atuais.includes(id) ? atuais.filter((x) => x !== id) : [...atuais, id]);
@@ -378,119 +371,30 @@ export function AtribuicaoDialog({
                 {vigenciaSelecionadaFutura && <p className="text-xs text-muted-foreground">Esta vigência ainda vai começar. Você pode preparar e ajustar as atribuições normalmente.</p>}
 
                 {itens.length > 0 && (
-                  <>
-                    <div className="space-y-2 md:hidden">
-                      {itens.map((it, i) => {
-                        const filhoItem = filhoInicial?.id === it.id_filho ? filhoInicial : filhoPorId(it.id_filho);
-                        const vigenciaItem = vigencias.find((v) => v.id === it.id_vigencia);
-
-                        return (
-                          <div key={`${it.id_vigencia}-${it.id_filho}-${it.id_tarefa}`} className="min-w-0 rounded-xl border bg-card p-3">
-                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3">
-                              <div className="min-w-0 space-y-2">
-                                <div className="min-w-0">
-                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
-                                  <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-                                    {filhoItem && (
-                                      <FilhoAvatar
-                                        nome={filhoItem.nome}
-                                        cor={filhoItem.cor}
-                                        avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null}
-                                        className="h-5 w-5"
-                                      />
-                                    )}
-                                    <span className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">{nomeF(it.id_filho)}</span>
-                                  </div>
-                                </div>
-
-                                <div className="min-w-0">
-                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Tarefa</p>
-                                  <div className="mt-0.5 flex min-w-0 items-start gap-2">
-                                    <TarefaIcone nome={nomeT(it.id_tarefa)} className="mt-0.5" />
-                                    <p className="min-w-0 whitespace-normal break-words font-medium [overflow-wrap:anywhere]">{nomeT(it.id_tarefa)}</p>
-                                  </div>
-                                </div>
-
-                                <div className="min-w-0">
-                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Vigência</p>
-                                  <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
-                                    <span className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">{nomeV(it.id_vigencia)}</span>
-                                    {vigenciaItem && <VigenciaStatus vigencia={vigenciaItem} />}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <Hint content="Remover">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-8 w-8 shrink-0 rounded-md"
-                                  onClick={() => setItens((atuais) => atuais.filter((_, j) => j !== i))}
-                                  aria-label="Remover"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </Hint>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="hidden min-w-0 rounded-xl border md:block">
-                      <Table className="table-fixed">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[22%]">Filho</TableHead>
-                            <TableHead className="w-[34%]">Tarefa</TableHead>
-                            <TableHead className="w-[34%]">Vigência</TableHead>
-                            <TableHead className="w-[10%]" />
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {itens.map((it, i) => (
-                            <TableRow key={`${it.id_vigencia}-${it.id_filho}-${it.id_tarefa}`}>
-                              <TableCell className="min-w-0 font-medium">
-                                <span className="flex min-w-0 items-start gap-1.5">
-                                  {(() => {
-                                    const filhoItem = filhoInicial?.id === it.id_filho ? filhoInicial : filhoPorId(it.id_filho);
-                                    return filhoItem ? (
-                                      <FilhoAvatar
-                                        nome={filhoItem.nome}
-                                        cor={filhoItem.cor}
-                                        avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null}
-                                        className="h-5 w-5"
-                                      />
-                                    ) : null;
-                                  })()}
-                                  <span className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">{nomeF(it.id_filho)}</span>
-                                </span>
-                              </TableCell>
-                              <TableCell className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">
-                                <span className="flex min-w-0 items-start gap-2">
-                                  <TarefaIcone nome={nomeT(it.id_tarefa)} className="mt-0.5" />
-                                  <span className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">{nomeT(it.id_tarefa)}</span>
-                                </span>
-                              </TableCell>
-                              <TableCell className="min-w-0">
-                                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                  <span className="min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]">{nomeV(it.id_vigencia)}</span>
-                                  {vigencias.find((v) => v.id === it.id_vigencia) && <VigenciaStatus vigencia={vigencias.find((v) => v.id === it.id_vigencia)!} />}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Hint content="Remover">
-                                  <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setItens((atuais) => atuais.filter((_, j) => j !== i))} aria-label="Remover">
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </Hint>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </>
+                  <div className="space-y-2">
+                    {itens.map((it, i) => (
+                      <div
+                        key={`${it.id_vigencia}-${it.id_filho}-${it.id_tarefa}`}
+                        className="flex min-w-0 items-center gap-2 rounded-lg border bg-card px-3 py-2"
+                      >
+                        <TarefaIcone nome={nomeT(it.id_tarefa)} />
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                          {nomeT(it.id_tarefa)}
+                        </span>
+                        <Hint content="Remover">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => setItens((atuais) => atuais.filter((_, j) => j !== i))}
+                            aria-label="Remover"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </Hint>
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 <DialogFooter>
