@@ -94,7 +94,7 @@ Exemplos futuros:
 - `MESADA.HABILITADA`
 - `NOTIFICACOES.AVANCADAS`
 
-Os recursos definitivos ainda não foram cadastrados.
+Os recursos comerciais iniciais foram cadastrados e estão documentados na seção “Catálogo comercial definido”.
 
 ---
 
@@ -107,7 +107,7 @@ Exemplo conceitual:
 | Plano | Recurso | Valor |
 | --- | --- | --- |
 | FREE | FILHOS.LIMITE | 1 |
-| PREMIUM | FILHOS.LIMITE | 10 |
+| PREMIUM | FILHOS.LIMITE | -1 |
 | FREE | MESADA.HABILITADA | false |
 | PREMIUM | MESADA.HABILITADA | true |
 
@@ -310,6 +310,52 @@ Responsabilidades esperadas:
 - nunca conhecer detalhes do Google Play.
 
 Componentes e páginas não consultarão assinatura diretamente.
+
+---
+
+## Catálogo comercial definido
+
+A primeira matriz comercial ficou definida assim:
+
+| Recurso | FREE | PREMIUM |
+| --- | --- | --- |
+| Filhos | 1 | Ilimitado |
+| Recompensas | 1 | Ilimitado |
+| Tarefas | 3 | Ilimitado |
+| Vigência | Habilitada | Habilitada |
+| Clonar vigência | Não | Sim |
+| App do filho — “Terminei” | Não | Sim |
+| Mesada | Não | Sim |
+| PDF do histórico | Não | Sim |
+| Acessos do app do filho | 1 | Ilimitado |
+| Sugestões de tarefas | Não | Sim |
+
+Convenção adotada para recursos do tipo `LIMITE_INTEIRO`:
+
+```
+-1 = ilimitado
+```
+
+O link público não faz parte do catálogo porque não existe mais no produto.
+
+O valor comercial informado para o PREMIUM é **R$ 9,99**, mas ainda não foi criada uma `billing.oferta`, pois a periodicidade (mensal, anual etc.) ainda não foi definida. O preço permanece separado do plano e dos direitos.
+
+Chaves oficiais atuais:
+
+```
+FILHOS.LIMITE
+RECOMPENSAS.LIMITE
+TAREFAS.LIMITE
+VIGENCIAS.HABILITADA
+VIGENCIAS.CLONAR
+APP_FILHO.TERMINEI
+MESADA.HABILITADA
+HISTORICO.PDF
+APP_FILHO.ACESSOS.LIMITE
+TAREFAS.SUGESTOES
+```
+
+Nesta fase, essas regras existem apenas no domínio `billing`. Nenhuma tela ou operação do aplicativo foi bloqueada.
 
 ---
 
