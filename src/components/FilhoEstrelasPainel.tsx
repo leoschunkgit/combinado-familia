@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { erroRegra, msgErro } from "@/lib/app-error";
 import { useFilhoTarefas, useOcorrencias, useVigencias, type Filho } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   const [salvando, setSalvando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
   const [abaForm, setAbaForm] = useState<"cadastrar" | "sugestoes">("cadastrar");
+  const [sugestaoSelecionada, setSugestaoSelecionada] = useState<string | null>(null);
   const [editando, setEditando] = useState<RecompensaEstrelaResumo | null>(null);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -108,6 +110,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setEstrelas("");
     setFormAberto(false);
     setAbaForm("cadastrar");
+    setSugestaoSelecionada(null);
     setRecompensasAbertas(!somenteRecompensas);
     setConfirmacao(null);
     void carregar();
@@ -125,6 +128,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao("");
     setEstrelas("");
     setAbaForm("cadastrar");
+    setSugestaoSelecionada(null);
     setFormAberto(false);
   }
 
@@ -134,6 +138,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao("");
     setEstrelas("");
     setAbaForm("cadastrar");
+    setSugestaoSelecionada(null);
     setFormAberto(true);
   }
 
@@ -148,6 +153,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao(recompensa.descricao ?? "");
     setEstrelas(String(recompensa.estrelas_necessarias));
     setAbaForm("cadastrar");
+    setSugestaoSelecionada(null);
     setFormAberto(true);
   }
 
@@ -501,48 +507,88 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                 </form>
               </TabsContent>
 
-              <TabsContent value="sugestoes" className="mt-5 space-y-4">
+              <TabsContent value="sugestoes" className="mt-5 space-y-5">
                 <div>
-                  <p className="text-sm font-medium">Escolha uma recompensa</p>
+                  <p className="text-sm font-medium">Escolha uma recompensa para adicionar</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    A sugestão apenas preenche o nome. Depois você define as estrelas e cadastra normalmente.
+                    Selecione uma sugestão. Recompensas já cadastradas para este filho ficam indisponíveis.
                   </p>
                 </div>
 
-                <div className="max-h-[48vh] space-y-4 overflow-y-auto pr-1">
-                  {RECOMPENSA_SUGESTOES_CATEGORIAS.map((grupo) => (
-                    <div key={grupo.categoria}>
-                      <p className="mb-2 text-sm font-semibold">{grupo.categoria}</p>
+                <div className="max-h-[52vh] space-y-5 overflow-y-auto pr-1">
+                  {RECOMPENSA_SUGESTOES_CATEGORIAS.map((grupo, grupoIndex) => (
+                    <section key={grupo.categoria} className="space-y-2">
+                      <h3 className="text-sm font-semibold">{grupo.categoria}</h3>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {grupo.sugestoes.map((sugestao) => {
+                        {grupo.sugestoes.map((sugestao, sugestaoIndex) => {
                           const jaCadastrada = resumo.recompensas.some(
                             (recompensa) =>
                               normalizarNomeRecompensa(recompensa.nome) ===
                               normalizarNomeRecompensa(sugestao.nome),
                           );
+                          const selecionada = sugestaoSelecionada === sugestao.nome;
+                          const id = `sugestao-recompensa-${grupoIndex}-${sugestaoIndex}`;
 
                           return (
-                            <Button
+                            <label
                               key={sugestao.nome}
-                              type="button"
-                              variant="outline"
-                              className="h-auto min-h-10 w-full justify-start whitespace-normal px-3 py-2 text-left text-xs font-medium"
-                              disabled={jaCadastrada}
-                              title={jaCadastrada ? "Já cadastrada para este filho" : undefined}
-                              onClick={() => {
-                                setNome(sugestao.nome);
-                                setAbaForm("cadastrar");
-                              }}
+                              htmlFor={id}
+                              className={`flex min-w-0 items-start gap-2.5 rounded-xl border p-3 text-sm transition-colors ${
+                                jaCadastrada
+                                  ? "cursor-not-allowed bg-muted/35 text-muted-foreground"
+                                  : selecionada
+                                    ? "cursor-pointer border-primary/50 bg-primary/5"
+                                    : "cursor-pointer hover:bg-muted/40"
+                              }`}
                             >
-                              <IconeSugestaoRecompensa icone={sugestao.icone} />
-                              <span className="min-w-0 flex-1 break-words">{sugestao.nome}</span>
-                            </Button>
+                              <Checkbox
+                                id={id}
+                                checked={selecionada}
+                                disabled={jaCadastrada}
+                                onCheckedChange={() =>
+                                  setSugestaoSelecionada((atual) =>
+                                    atual === sugestao.nome ? null : sugestao.nome,
+                                  )
+                                }
+                                aria-label={`Selecionar ${sugestao.nome}`}
+                              />
+                              <span className="flex min-w-0 flex-1 items-start gap-2">
+                                <IconeSugestaoRecompensa icone={sugestao.icone} />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block whitespace-normal break-words font-medium leading-snug">
+                                    {sugestao.nome}
+                                  </span>
+                                  {jaCadastrada && (
+                                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                                      Já cadastrada
+                                    </span>
+                                  )}
+                                </span>
+                              </span>
+                            </label>
                           );
                         })}
                       </div>
-                    </div>
+                    </section>
                   ))}
                 </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={limparForm}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={!sugestaoSelecionada}
+                    onClick={() => {
+                      if (!sugestaoSelecionada) return;
+                      setNome(sugestaoSelecionada);
+                      setAbaForm("cadastrar");
+                    }}
+                  >
+                    Usar sugestão
+                  </Button>
+                </DialogFooter>
               </TabsContent>
             </Tabs>
           )}
