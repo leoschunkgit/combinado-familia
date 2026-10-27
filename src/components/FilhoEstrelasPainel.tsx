@@ -326,7 +326,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           {!somenteRecompensas && seletorFilho}
 
           {!somenteRecompensas && seletorFilho && (
-            <div className="flex min-w-0 items-center justify-end gap-2 border-b border-border/60 px-3 py-2.5 sm:px-4">
+            <div className="flex min-w-0 items-center justify-end gap-2 px-3 py-2.5 sm:px-4">
               <span
                 className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
                 aria-label={`${resumo.total_conquistado} estrelas conquistadas`}
