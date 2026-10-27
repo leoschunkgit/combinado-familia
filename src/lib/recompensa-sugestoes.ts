@@ -82,3 +82,16 @@ export function normalizarNomeRecompensa(valor: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleUpperCase("pt-BR");
 }
+
+export function obterIconeRecompensaPorNome(nome: string): IconeSugestaoRecompensa | null {
+  const nomeNormalizado = normalizarNomeRecompensa(nome);
+
+  for (const grupo of RECOMPENSA_SUGESTOES_CATEGORIAS) {
+    const sugestao = grupo.sugestoes.find(
+      (item) => normalizarNomeRecompensa(item.nome) === nomeNormalizado,
+    );
+    if (sugestao) return sugestao.icone;
+  }
+
+  return null;
+}
