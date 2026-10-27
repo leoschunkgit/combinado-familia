@@ -277,7 +277,7 @@ function AtribuicoesPage() {
                   : "Nenhuma atribuição encontrada para esta vigência e filtros."}
               </EmptyState>
             ) : (
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4 sm:space-y-5">
                 {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
                   const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
                   const temAtribuicoes = atribuicoesFilho.length > 0;
