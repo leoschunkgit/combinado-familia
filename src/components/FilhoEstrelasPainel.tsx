@@ -13,6 +13,7 @@ import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
 import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas } from "@/lib/estrelas-model";
 import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
+import { normalizarNomeRecompensa, RECOMPENSA_SUGESTOES_CATEGORIAS } from "@/lib/recompensa-sugestoes";
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -396,6 +397,45 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
             <div className="space-y-1.5">
               <Label htmlFor="recompensa-nome">Recompensa *</Label>
               <Input id="recompensa-nome" value={nome} onChange={(evento) => setNome(evento.target.value)} maxLength={100} placeholder="Ex.: Ir ao cinema" autoFocus />
+
+              {!editando && (
+                <div className="pt-2">
+                  <p className="text-xs font-medium text-muted-foreground">Sugestões</p>
+                  <div className="mt-2 space-y-3">
+                    {RECOMPENSA_SUGESTOES_CATEGORIAS.map((grupo) => (
+                      <div key={grupo.categoria}>
+                        <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">
+                          {grupo.categoria}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {grupo.sugestoes.map((sugestao) => {
+                            const jaCadastrada = resumo.recompensas.some(
+                              (recompensa) =>
+                                normalizarNomeRecompensa(recompensa.nome) ===
+                                normalizarNomeRecompensa(sugestao),
+                            );
+
+                            return (
+                              <Button
+                                key={sugestao}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 rounded-full px-2.5 text-[11px] font-medium"
+                                disabled={jaCadastrada}
+                                title={jaCadastrada ? "Já cadastrada para este filho" : undefined}
+                                onClick={() => setNome(sugestao)}
+                              >
+                                {sugestao}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
