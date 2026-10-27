@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
@@ -48,7 +47,6 @@ export function OnboardingInicial() {
   const [onboardingEncerradoLocalmente, setOnboardingEncerradoLocalmente] = useState(false);
 
   const [nomeFilho, setNomeFilho] = useState("");
-  const [temMesada, setTemMesada] = useState(false);
   const [valorMesada, setValorMesada] = useState("");
   const [corFilho, setCorFilho] = useState("");
   const [avatarFilho, setAvatarFilho] = useState<FilhoAvatarOpcao>("");
@@ -93,7 +91,7 @@ export function OnboardingInicial() {
       return;
     }
 
-    if (temMesada && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
+    if (valorMesada.trim() !== "" && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
       toast.error("Informe um valor de mesada válido");
       return;
     }
@@ -106,8 +104,8 @@ export function OnboardingInicial() {
     const payload = {
       nome,
       idade: null,
-      tem_mesada: temMesada,
-      valor_mesada: temMesada ? Number(valorMesada.replace(",", ".")) : null,
+      tem_mesada: valorMesada.trim() !== "",
+      valor_mesada: valorMesada.trim() !== "" ? Number(valorMesada.replace(",", ".")) : null,
       cor: corFilho.trim() || null,
       avatar: avatarFilho || null,
     };
@@ -169,7 +167,6 @@ export function OnboardingInicial() {
     setFilhoEmCorrecaoId(filho.id);
     setNomeFilho(filho.nome);
     const comMesada = filho.tem_mesada === true && filho.valor_mesada !== null;
-    setTemMesada(comMesada);
     setValorMesada(comMesada && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "");
     setCorFilho(filho.cor ?? "");
     setAvatarFilho(filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "");
@@ -401,16 +398,11 @@ export function OnboardingInicial() {
               <Label htmlFor="onboarding-filho">Nome *</Label>
               <Input id="onboarding-filho" autoFocus value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" />
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox id="onboarding-mesada" checked={temMesada} onCheckedChange={(checked) => setTemMesada(checked === true)} />
-              <Label htmlFor="onboarding-mesada">Tem mesada</Label>
+            <div className="space-y-2">
+              <Label htmlFor="onboarding-valor-mesada">Mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
+              <p className="text-xs text-muted-foreground">Se informado, o valor será usado como base para os descontos de “Não fez”.</p>
             </div>
-            {temMesada && (
-              <div className="space-y-2">
-                <Label htmlFor="onboarding-valor-mesada">Valor da mesada (R$) *</Label>
-                <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
-              </div>
-            )}
             <div className="border-t pt-3">
               <FilhoPersonalizacao
                 nome={nomeFilho}
