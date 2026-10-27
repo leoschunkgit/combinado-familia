@@ -1188,10 +1188,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               }));
                               definirFilhoSelecionadoCompartilhado(filho.id);
                             }}
-                            className={`shrink-0 snap-start rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                            className={`shrink-0 snap-start rounded-lg px-3 py-1.5 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
-                                ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
-                                : "border-b-2 border-transparent bg-transparent text-foreground hover:bg-transparent"
+                                ? "border-b-2 border-muted-foreground/80 bg-transparent font-bold text-foreground"
+                                : "border-b-2 border-transparent bg-transparent font-medium text-foreground hover:bg-transparent"
                             }`}
                             style={
                               selecionado && filho.cor?.trim()
