@@ -1047,7 +1047,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     <>
       <PageHeader
         title="Fez / Não fez"
-        description="Marque “Fez”, “Não fez” ou “Não precisou”"
+        description="Faça a marcação do dia."
         icon={<ClipboardCheck className="h-6 w-6" />}
       />
 
