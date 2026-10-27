@@ -247,7 +247,7 @@ function AtribuicoesPage() {
                   <p className="truncate whitespace-nowrap text-sm font-extrabold tabular-nums">
                     {periodoCurto(vigenciaSelecionada)}
                   </p>
-                  <div className="mt-1 flex justify-center">
+                  <div className="mt-1.5 flex justify-center">
                     <VigenciaStatus vigencia={vigenciaSelecionada} />
                   </div>
                 </div>
