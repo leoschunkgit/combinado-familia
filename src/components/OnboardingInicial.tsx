@@ -98,7 +98,7 @@ export function OnboardingInicial() {
       return;
     }
 
-    if (valorMesada.trim() !== "" && (!/^\\d+(?:[,.]\\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
+    if (valorMesada.trim() !== "" && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
       toast.error("Informe um valor de mesada válido");
       return;
     }
