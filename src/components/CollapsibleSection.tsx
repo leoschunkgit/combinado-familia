@@ -15,6 +15,7 @@ export function CollapsibleSection({
   className,
   contentClassName,
   contentDivider = true,
+  alignFirstRow = false,
 }: {
   title: ReactNode;
   description?: ReactNode;
@@ -27,6 +28,7 @@ export function CollapsibleSection({
   className?: string;
   contentClassName?: string;
   contentDivider?: boolean;
+  alignFirstRow?: boolean;
 }) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const open = controlledOpen ?? internalOpen;
@@ -41,13 +43,18 @@ export function CollapsibleSection({
       <div className="flex items-start">
         <button
           type="button"
-          className="group flex min-w-0 flex-1 items-center gap-3 px-4 py-4 text-left sm:px-5"
+          className={cn(
+            "group flex min-w-0 flex-1 gap-3 px-4 py-4 text-left sm:px-5",
+            alignFirstRow ? "items-start" : "items-center",
+          )}
           onClick={() => alterarAbertura(!open)}
           aria-expanded={open}
         >
-          <CollapseChevron open={open} />
+          <div className={cn(alignFirstRow && "mt-1.5")}>
+            <CollapseChevron open={open} />
+          </div>
           <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2">
+            <div className={cn("flex min-w-0 items-center gap-2", alignFirstRow && "min-h-8")}>
               <h2 className="min-w-0 break-words text-sm font-semibold sm:text-base">{title}</h2>
               {typeof count === "number" && (
                 <Badge variant="secondary" className="h-5 shrink-0 px-1.5 py-0 text-[10px]">
