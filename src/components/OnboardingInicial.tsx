@@ -105,8 +105,6 @@ export function OnboardingInicial() {
     setSalvando(true);
     const payload = {
       nome,
-      email: null,
-      celular: null,
       idade: null,
       tem_mesada: temMesada,
       valor_mesada: temMesada ? Number(valorMesada.replace(",", ".")) : null,
