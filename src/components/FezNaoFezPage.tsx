@@ -327,19 +327,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         s.status === "PENDENTE",
     );
 
-  const diaTemPendencia = (vigenciaId: number, data: string) => {
-    if (data > hoje) return false;
 
-    const atribuicoesDaVigencia = atribuicoes.filter(
-      (tarefa) =>
-        tarefa.id_vigencia === vigenciaId &&
-        tarefaEstaAtiva(tarefa),
-    );
-
-    return atribuicoesDaVigencia.some(
-      (tarefa) => !registroNaData(tarefa, data),
-    );
-  };
 
   const datasDaTarefa = (tarefa: FilhoTarefa, vigencia: Vigencia) => {
     if (modo === "pendentes" && !vigenciaEmAndamento(vigencia)) return [];
@@ -1293,12 +1281,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             >
                               <span>{formatarDataCurta(dataSelecionada)} </span>
                               <span className="font-extrabold">{formatarDiaSemana(dataSelecionada)}</span>
-                              {diaTemPendencia(vigencia.id, dataSelecionada) && (
-                                <span
-                                  className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle"
-                                  aria-label="Há pendências nesta data"
-                                />
-                              )}
                             </h3>
 
                             <button
