@@ -210,25 +210,23 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   return (
     <>
       <div className={somenteRecompensas ? "space-y-3" : "space-y-5"}>
-        {!somenteRecompensas && <section className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl border bg-card px-3 py-3.5">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
-              <span className="text-[11px] font-medium">Hoje</span>
-            </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.hoje}</p>
-          </div>
-          <div className="rounded-xl border bg-card px-3 py-3.5">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
-              <span className="text-[11px] font-medium">Total de estrelas</span>
-            </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.total_conquistado}</p>
-          </div>
-        </section>}
-
         <div className={!somenteRecompensas && seletorFilho ? "overflow-hidden rounded-2xl border bg-card" : ""}>
           {!somenteRecompensas && seletorFilho}
+
+          {!somenteRecompensas && (
+            <div className="grid grid-cols-2 border-b border-border/60 bg-white dark:bg-background">
+              <div className="flex items-center justify-center gap-2 border-r border-border/60 px-3 py-2.5">
+                <Estrela className="h-4 w-4" />
+                <strong className="text-base font-bold tabular-nums">{resumo.hoje}</strong>
+                <span className="text-xs font-medium text-muted-foreground">Hoje</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 px-3 py-2.5">
+                <Estrela className="h-4 w-4" />
+                <strong className="text-base font-bold tabular-nums">{resumo.total_conquistado}</strong>
+                <span className="text-xs font-medium text-muted-foreground">Total</span>
+              </div>
+            </div>
+          )}
 
         <CollapsibleSection
           className={!somenteRecompensas && seletorFilho ? "rounded-none border-0 bg-clean-surface" : "bg-clean-surface"}
