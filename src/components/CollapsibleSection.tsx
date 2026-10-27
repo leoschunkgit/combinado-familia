@@ -14,6 +14,7 @@ export function CollapsibleSection({
   action,
   className,
   contentClassName,
+  contentDivider = true,
 }: {
   title: ReactNode;
   description?: ReactNode;
@@ -25,6 +26,7 @@ export function CollapsibleSection({
   action?: ReactNode;
   className?: string;
   contentClassName?: string;
+  contentDivider?: boolean;
 }) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const open = controlledOpen ?? internalOpen;
@@ -58,7 +60,7 @@ export function CollapsibleSection({
         </button>
         {action && <div className="flex shrink-0 items-center gap-2 py-4 pr-4 sm:pr-5">{action}</div>}
       </div>
-      {open && <div className={cn("border-t", contentClassName)}>{children}</div>}
+      {open && <div className={cn(contentDivider && "border-t", contentClassName)}>{children}</div>}
     </section>
   );
 }
