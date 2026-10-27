@@ -83,6 +83,17 @@ export function normalizarNomeRecompensa(valor: string) {
     .toLocaleUpperCase("pt-BR");
 }
 
+const RECOMPENSA_ICONES_ALIASES: Readonly<Record<string, IconeSugestaoRecompensa>> = {
+  [normalizarNomeRecompensa("Ir ao cinema")]: "FILM",
+  [normalizarNomeRecompensa("Passeio especial")]: "MAP_PIN",
+  [normalizarNomeRecompensa("Escolher o jantar")]: "UTENSILS",
+  [normalizarNomeRecompensa("Escolher o filme")]: "FILM",
+  [normalizarNomeRecompensa("Escolher uma sobremesa")]: "STAR",
+  [normalizarNomeRecompensa("Dormir mais tarde")]: "MOON",
+  [normalizarNomeRecompensa("Dia de videogame")]: "GAMEPAD",
+  [normalizarNomeRecompensa("Ganhar um brinquedo")]: "GIFT",
+} as const;
+
 export function obterIconeRecompensaPorNome(nome: string): IconeSugestaoRecompensa | null {
   const nomeNormalizado = normalizarNomeRecompensa(nome);
 
@@ -93,5 +104,5 @@ export function obterIconeRecompensaPorNome(nome: string): IconeSugestaoRecompen
     if (sugestao) return sugestao.icone;
   }
 
-  return null;
+  return RECOMPENSA_ICONES_ALIASES[nomeNormalizado] ?? null;
 }
