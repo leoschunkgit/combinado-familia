@@ -29,10 +29,10 @@ export function FilhoPersonalizacao({
   const corPicker = /^#[0-9a-f]{6}$/i.test(cor.trim()) ? cor.trim() : "#0C5C3C";
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <div className="space-y-1.5">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+      <div className="min-w-0 space-y-1.5">
         <Label>Avatar <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {([
             { valor: "" as const, label: "Iniciais" },
             { valor: "menino" as const, label: "Menino" },
@@ -43,11 +43,11 @@ export function FilhoPersonalizacao({
               type="button"
               aria-pressed={avatar === opcao.valor}
               onClick={() => onAvatarChange(opcao.valor)}
-              className={`flex h-9 items-center gap-1.5 rounded-md border px-2 text-xs font-medium transition-colors ${
+              className={`flex h-8 items-center gap-1 rounded-md border px-1.5 text-[11px] font-medium transition-colors ${
                 avatar === opcao.valor ? "border-primary bg-primary/5 text-primary" : "bg-background text-muted-foreground hover:bg-muted/40"
               }`}
             >
-              <FilhoAvatar nome={nome || "Filho"} cor={cor || null} avatar={opcao.valor || null} className="h-6 w-6" />
+              <FilhoAvatar nome={nome || "Filho"} cor={cor || null} avatar={opcao.valor || null} className="h-5 w-5" />
               <span>{opcao.label}</span>
             </button>
           ))}
@@ -55,13 +55,13 @@ export function FilhoPersonalizacao({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${prefix}-cor`}>Cor <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+        <Label htmlFor={`${prefix}-cor`}>Cor</Label>
         <input
           id={`${prefix}-cor`}
           type="color"
           value={corPicker}
           onChange={(event) => onCorChange(event.target.value)}
-          className="h-10 w-14 cursor-pointer rounded-md border bg-background p-1"
+          className="h-8 w-12 cursor-pointer rounded-md border bg-background p-1"
           aria-label="Escolher cor do filho"
         />
       </div>
