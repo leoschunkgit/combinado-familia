@@ -83,6 +83,7 @@ import {
   useDataBrasilAtual,
 } from "@/lib/notificacoes";
 import { notificarRespostaFilho } from "@/lib/child-response-notifications";
+import { definirFilhoSelecionadoCompartilhado, obterFilhoSelecionadoCompartilhado } from "@/lib/filho-selecionado-contexto";
 import {
   rotuloResultado,
   type ResultadoOcorrencia,
@@ -458,6 +459,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       ...atual,
       [vigencia.id]: atribuicao.id_filho,
     }));
+    definirFilhoSelecionadoCompartilhado(atribuicao.id_filho);
     ultimoFocoAplicado.current = chaveFoco;
   }, [
     atribuicoes,
@@ -488,6 +490,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   );
 
   function alterarFilhoFiltro(filho: string) {
+    if (filho !== "all") {
+      definirFilhoSelecionadoCompartilhado(Number(filho));
+    }
+
     const atribuicoesDoFilho = filho === "all"
       ? atribuicoesRascunho
       : atribuicoesRascunho.filter((item) => item.id_filho === Number(filho));
@@ -548,6 +554,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     .join("|");
 
   useEffect(() => {
+    const filhoCompartilhado = obterFilhoSelecionadoCompartilhado();
+
     setFilhosSelecionados((atual) => {
       const proximo = { ...atual };
       const vigenciasComFilhos = new Set(grupos.map(({ vigencia }) => vigencia.id));
@@ -565,7 +573,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
         const selecionado = proximo[vigencia.id];
 
         if (!selecionado || !idsFilhos.has(selecionado)) {
-          proximo[vigencia.id] = gruposFilhos[0].filho.id;
+          proximo[vigencia.id] =
+            filhoCompartilhado && idsFilhos.has(filhoCompartilhado)
+              ? filhoCompartilhado
+              : gruposFilhos[0].filho.id;
           mudou = true;
         }
       }
@@ -1170,12 +1181,13 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             type="button"
                             role="tab"
                             aria-selected={selecionado}
-                            onClick={() =>
+                            onClick={() => {
                               setFilhosSelecionados((atual) => ({
                                 ...atual,
                                 [vigencia.id]: filho.id,
-                              }))
-                            }
+                              }));
+                              definirFilhoSelecionadoCompartilhado(filho.id);
+                            }}
                             className={`shrink-0 snap-start rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
                                 ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
