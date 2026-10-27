@@ -223,20 +223,20 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     <>
       <div className={somenteRecompensas ? "space-y-3" : "space-y-4"}>
         {!somenteRecompensas && (
-          <div className="flex flex-wrap items-center justify-start gap-2 px-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs font-semibold">
             <span
-              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[11px] font-semibold tabular-nums text-muted-foreground"
+              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 tabular-nums text-muted-foreground"
               aria-label={`${resumo.total_conquistado} estrelas conquistadas`}
             >
               <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
-              <span className="text-foreground">{resumo.total_conquistado}</span>
+              <span>{resumo.total_conquistado}</span>
             </span>
             <span
-              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[11px] font-semibold tabular-nums text-muted-foreground"
+              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 tabular-nums text-muted-foreground"
               aria-label={`${totalNaoFezVigencia} não fez na vigência`}
             >
               <ThumbsDown className="animate-notification-bell h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
-              <span className="text-foreground">{totalNaoFezVigencia}</span>
+              <span>{totalNaoFezVigencia}</span>
             </span>
           </div>
         )}
