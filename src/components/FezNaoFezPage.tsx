@@ -1153,7 +1153,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     : "Nenhum resultado encontrado para esta data e filtros."}
                 </EmptyState>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="flex items-center gap-1 border-t pt-2 pb-0">
                     <button
                       type="button"
@@ -1265,7 +1265,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     ).length;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     return (
-                      <div key={filho.id} className="space-y-2.5">
+                      <div key={filho.id} className="space-y-4">
                         {temMesada && (
                           <div className="bg-muted/15 px-2 py-1.5 sm:hidden">
                             <div className="grid grid-cols-3 divide-x overflow-hidden rounded-md border bg-background text-center tabular-nums">
