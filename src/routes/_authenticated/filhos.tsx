@@ -67,9 +67,18 @@ const dadosExtras = (v: FilhoForm) => ({
 function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange: (v: FilhoForm) => void; prefix: string }) {
   const corPicker = /^#[0-9a-f]{6}$/i.test(value.cor.trim()) ? value.cor.trim() : "#0C5C3C";
   return <>
-    <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
+    <div className="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-3">
+      <div className="space-y-2">
+        <Label htmlFor={`${prefix}-idade`}>Idade <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+        <Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} />
+      </div>
 
-    <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} placeholder="R$ 100,00" /><p className="text-xs text-muted-foreground">Se informado, o valor será usado como base para os descontos de “Não fez”.</p></div>
+      <div className="space-y-2">
+        <Label htmlFor={`${prefix}-valor`}>Mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+        <CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} placeholder="R$ 100,00" />
+      </div>
+    </div>
+    <p className="-mt-1 text-xs text-muted-foreground">Se informado, o valor da mesada será usado como base para os descontos de “Não fez”.</p>
 
     <div className="space-y-2 pt-1">
       <Label>Avatar <span className="text-muted-foreground font-normal">(opcional)</span></Label>
