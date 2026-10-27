@@ -198,7 +198,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
   const [filhosSelecionados, setFilhosSelecionados] = useState<Record<number, number>>({});
-  const [paginasTarefas, setPaginasTarefas] = useState<Record<string, number>>({});
   const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
@@ -1209,21 +1208,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                   {grupoFilhoSelecionado &&
                     [grupoFilhoSelecionado].map(({ filho, tarefas: tarefasDoFilho }) => {
-                    const chavePagina = `${vigencia.id}-${filho.id}`;
-                    const tarefasPorPagina = 5;
-                    const totalPaginas = Math.max(
-                      1,
-                      Math.ceil(tarefasDoFilho.length / tarefasPorPagina),
-                    );
-                    const paginaAtual = Math.min(
-                      paginasTarefas[chavePagina] ?? 1,
-                      totalPaginas,
-                    );
-                    const inicioPagina = (paginaAtual - 1) * tarefasPorPagina;
-                    const tarefasPaginadas = tarefasDoFilho.slice(
-                      inicioPagina,
-                      inicioPagina + tarefasPorPagina,
-                    );
                     const ocorrenciasFilhoVigencia = ocorrencias.filter(
                       (ocorrencia) =>
                         ocorrencia.t_filho_tarefa?.id_filho === filho.id &&
@@ -1397,7 +1381,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               </div>
 
                               <div className="divide-y divide-border/60">
-                                {tarefasPaginadas.map((tarefa) => {
+                                {tarefasDoFilho.map((tarefa) => {
                                   const registro = registroNaData(tarefa, dataSelecionada);
                                   const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
                                   const filho = filhos.find((item) => item.id === tarefa.id_filho);
@@ -1648,49 +1632,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                 })}
                               </div>
 
-                              {totalPaginas > 1 && (
-                                <nav
-                                  className="flex items-center justify-center gap-3 border-t border-border/60 px-1 pt-3"
-                                  aria-label="Paginação das tarefas"
-                                >
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setPaginasTarefas((atual) => ({
-                                        ...atual,
-                                        [chavePagina]: Math.max(1, paginaAtual - 1),
-                                      }))
-                                    }
-                                    disabled={paginaAtual === 1}
-                                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                                    aria-label="Página anterior"
-                                  >
-                                    <ChevronLeft className="h-4 w-4" />
-                                  </button>
 
-                                  <span className="min-w-20 text-center text-xs font-semibold tabular-nums text-muted-foreground">
-                                    Página {paginaAtual} de {totalPaginas}
-                                  </span>
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setPaginasTarefas((atual) => ({
-                                        ...atual,
-                                        [chavePagina]: Math.min(
-                                          totalPaginas,
-                                          paginaAtual + 1,
-                                        ),
-                                      }))
-                                    }
-                                    disabled={paginaAtual === totalPaginas}
-                                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                                    aria-label="Próxima página"
-                                  >
-                                    <ChevronRight className="h-4 w-4" />
-                                  </button>
-                                </nav>
-                              )}
                             </div>
                           </div>
                         </article>
