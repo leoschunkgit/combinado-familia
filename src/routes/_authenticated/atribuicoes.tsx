@@ -298,10 +298,7 @@ function AtribuicoesPage() {
                         >
                           {temAtribuicoes ? <CollapseChevron open={aberto} /> : <span className="h-5 w-5 shrink-0" aria-hidden="true" />}
                           <FilhoAvatar nome={filhoItem.nome} cor={filhoItem.cor} avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null} className="h-7 w-7" />
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
-                            <p className="truncate font-bold">{filhoItem.nome}</p>
-                          </div>
+                          <p className="min-w-0 truncate font-bold">{filhoItem.nome}</p>
                         </button>
 
                         <Button
