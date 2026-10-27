@@ -244,7 +244,7 @@ function AtribuicoesPage() {
                     <ChevronLeft className="h-4 w-4" strokeWidth={3} />
                   </button>
 
-                  <p className="min-w-0 truncate whitespace-nowrap text-center text-sm font-extrabold tabular-nums">
+                  <p className="min-w-0 truncate whitespace-nowrap text-center text-base font-bold tabular-nums">
                     {periodoCurto(vigenciaSelecionada)}
                   </p>
 
