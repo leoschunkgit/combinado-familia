@@ -5,6 +5,7 @@ import { FilhoAppAccessManager } from "@/components/FilhoAppAccessDialog";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { useFilhos } from "@/lib/db";
+import { definirFilhoSelecionadoCompartilhado, obterFilhoSelecionadoCompartilhado } from "@/lib/filho-selecionado-contexto";
 
 type AcessoFilhosSearch = {
   filho?: number;
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/acesso-filhos")({
 function AcessoFilhosPage() {
   const { data: filhos = [] } = useFilhos();
   const { filho: filhoFocado } = Route.useSearch();
-  const [filhoSelecionadoId, setFilhoSelecionadoId] = useState<number | null>(null);
+  const [filhoSelecionadoId, setFilhoSelecionadoId] = useState<number | null>(() => obterFilhoSelecionadoCompartilhado());
 
   useEffect(() => {
     setFilhoSelecionadoId((atual) => {
@@ -37,7 +38,9 @@ function AcessoFilhosPage() {
         return atual;
       }
 
-      return filhos[0]?.id ?? null;
+      const idInicial = filhos[0]?.id ?? null;
+      if (idInicial) definirFilhoSelecionadoCompartilhado(idInicial);
+      return idInicial;
     });
   }, [filhoFocado, filhos]);
 
@@ -50,7 +53,10 @@ function AcessoFilhosPage() {
   function navegarFilho(direcao: -1 | 1) {
     if (indiceFilhoSelecionado < 0) return;
     const proximo = filhos[indiceFilhoSelecionado + direcao];
-    if (proximo) setFilhoSelecionadoId(proximo.id);
+    if (proximo) {
+      setFilhoSelecionadoId(proximo.id);
+      definirFilhoSelecionadoCompartilhado(proximo.id);
+    }
   }
 
   return (
