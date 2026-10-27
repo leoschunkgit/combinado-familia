@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { CheckCircle2, EllipsisVertical, Loader2, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,7 @@ function Estrela({ className = "" }: { className?: string }) {
   );
 }
 
-export function FilhoEstrelasPainel({ filho, modo = "completo" }: { filho: Filho; modo?: "completo" | "recompensas" }) {
+export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: { filho: Filho; modo?: "completo" | "recompensas"; seletorFilho?: ReactNode }) {
   const somenteRecompensas = modo === "recompensas";
   const [resumo, setResumo] = useState<ResumoEstrelas>(resumoEstrelasVazio);
   const [carregando, setCarregando] = useState(false);
@@ -226,6 +226,8 @@ export function FilhoEstrelasPainel({ filho, modo = "completo" }: { filho: Filho
             <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.total_conquistado}</p>
           </div>
         </section>}
+
+        {!somenteRecompensas && seletorFilho}
 
         <CollapsibleSection
           className="bg-clean-surface"
