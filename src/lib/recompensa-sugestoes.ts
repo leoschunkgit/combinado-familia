@@ -1,35 +1,75 @@
+export type IconeSugestaoRecompensa =
+  | "UTENSILS"
+  | "PIZZA"
+  | "FILM"
+  | "GAMEPAD"
+  | "MOON"
+  | "SUN"
+  | "MAP_PIN"
+  | "GIFT"
+  | "SHOPPING_BAG"
+  | "MUSIC"
+  | "TV"
+  | "CROWN"
+  | "STAR";
+
+export type SugestaoRecompensa = {
+  nome: string;
+  icone: IconeSugestaoRecompensa;
+};
+
 export type CategoriaSugestoesRecompensa = {
   categoria: string;
-  sugestoes: readonly string[];
+  sugestoes: readonly SugestaoRecompensa[];
 };
 
 export const RECOMPENSA_SUGESTOES_CATEGORIAS: readonly CategoriaSugestoesRecompensa[] = [
   {
-    categoria: "Passeios e experiências",
+    categoria: "Comidinhas",
     sugestoes: [
-      "Ir ao cinema",
-      "Passeio especial",
+      { nome: "Escolhe seu lanche!", icone: "UTENSILS" },
+      { nome: "Escolhe a pizza!", icone: "PIZZA" },
+      { nome: "Escolhe o jantar!", icone: "UTENSILS" },
+      { nome: "Escolhe a sobremesa!", icone: "STAR" },
+      { nome: "Partiu comer fora!", icone: "UTENSILS" },
+      { nome: "Escolhe um doce!", icone: "STAR" },
+      { nome: "Partiu sorvete!", icone: "STAR" },
+      { nome: "Escolhe sua bebida favorita!", icone: "STAR" },
     ],
   },
   {
-    categoria: "Escolhas",
+    categoria: "Passeios e diversão",
     sugestoes: [
-      "Escolher o jantar",
-      "Escolher o filme",
-      "Escolher uma sobremesa",
+      { nome: "Partiu cinema!", icone: "FILM" },
+      { nome: "Partiu passeio especial!", icone: "MAP_PIN" },
+      { nome: "Escolhe o passeio!", icone: "MAP_PIN" },
+      { nome: "Dia de videogame!", icone: "GAMEPAD" },
+      { nome: "Escolhe o jogo de hoje!", icone: "GAMEPAD" },
     ],
   },
   {
-    categoria: "Tempo livre",
+    categoria: "Tempo livre e escolhas",
     sugestoes: [
-      "Dormir mais tarde",
-      "Dia de videogame",
+      { nome: "Escolhe o filme!", icone: "FILM" },
+      { nome: "Hoje pode dormir mais tarde!", icone: "MOON" },
+      { nome: "Pode acordar mais tarde!", icone: "SUN" },
+      { nome: "Escolhe a música no carro!", icone: "MUSIC" },
+      { nome: "Escolhe o que vamos assistir!", icone: "TV" },
+      { nome: "Hoje você escolhe o programa!", icone: "CROWN" },
     ],
   },
   {
-    categoria: "Presentes",
+    categoria: "Presentes e brindes",
     sugestoes: [
-      "Ganhar um brinquedo",
+      { nome: "Escolhe um presente de até R$ 10!", icone: "GIFT" },
+      { nome: "Escolhe um presente de até R$ 20!", icone: "GIFT" },
+      { nome: "Escolhe um presente de até R$ 30!", icone: "GIFT" },
+      { nome: "Escolhe um presente de até R$ 40!", icone: "GIFT" },
+      { nome: "Escolhe um presente de até R$ 50!", icone: "GIFT" },
+      { nome: "Ganhou um brinde de R$ 10!", icone: "GIFT" },
+      { nome: "Ganhou um brinde de R$ 20!", icone: "GIFT" },
+      { nome: "Escolhe uma lembrancinha!", icone: "SHOPPING_BAG" },
+      { nome: "Dia de recompensa especial!", icone: "CROWN" },
     ],
   },
 ] as const;
