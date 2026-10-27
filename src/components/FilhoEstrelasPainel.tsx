@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, EllipsisVertical, Loader2, Pencil, Plus, Star, ThumbsDown, Trash2, X } from "lucide-react";
+import { CheckCircle2, Crown, EllipsisVertical, Film, Gamepad2, Gift, Loader2, MapPin, Moon, Music, Pencil, Pizza, Plus, ShoppingBag, Star, Sun, ThumbsDown, Trash2, Tv, Utensils, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { erroRegra, msgErro } from "@/lib/app-error";
@@ -13,7 +13,7 @@ import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
 import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas } from "@/lib/estrelas-model";
 import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
-import { normalizarNomeRecompensa, RECOMPENSA_SUGESTOES_CATEGORIAS } from "@/lib/recompensa-sugestoes";
+import { normalizarNomeRecompensa, RECOMPENSA_SUGESTOES_CATEGORIAS, type IconeSugestaoRecompensa } from "@/lib/recompensa-sugestoes";
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -22,6 +22,39 @@ function Estrela({ className = "" }: { className?: string }) {
       className={`h-3.5 w-3.5 fill-amber-400 text-amber-500 ${className}`}
     />
   );
+}
+
+function IconeSugestaoRecompensa({ icone }: { icone: IconeSugestaoRecompensa }) {
+  const className = "h-3.5 w-3.5 shrink-0";
+
+  switch (icone) {
+    case "UTENSILS":
+      return <Utensils className={className} />;
+    case "PIZZA":
+      return <Pizza className={className} />;
+    case "FILM":
+      return <Film className={className} />;
+    case "GAMEPAD":
+      return <Gamepad2 className={className} />;
+    case "MOON":
+      return <Moon className={className} />;
+    case "SUN":
+      return <Sun className={className} />;
+    case "MAP_PIN":
+      return <MapPin className={className} />;
+    case "GIFT":
+      return <Gift className={className} />;
+    case "SHOPPING_BAG":
+      return <ShoppingBag className={className} />;
+    case "MUSIC":
+      return <Music className={className} />;
+    case "TV":
+      return <Tv className={className} />;
+    case "CROWN":
+      return <Crown className={className} />;
+    default:
+      return <Star className={className} />;
+  }
 }
 
 export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: { filho: Filho; modo?: "completo" | "recompensas"; seletorFilho?: ReactNode }) {
@@ -401,7 +434,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
               {!editando && (
                 <div className="pt-2">
                   <p className="text-xs font-medium text-muted-foreground">Sugestões</p>
-                  <div className="mt-2 space-y-3">
+                  <div className="mt-2 max-h-[38vh] space-y-3 overflow-y-auto pr-1">
                     {RECOMPENSA_SUGESTOES_CATEGORIAS.map((grupo) => (
                       <div key={grupo.categoria}>
                         <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">
@@ -412,21 +445,22 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                             const jaCadastrada = resumo.recompensas.some(
                               (recompensa) =>
                                 normalizarNomeRecompensa(recompensa.nome) ===
-                                normalizarNomeRecompensa(sugestao),
+                                normalizarNomeRecompensa(sugestao.nome),
                             );
 
                             return (
                               <Button
-                                key={sugestao}
+                                key={sugestao.nome}
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="h-7 rounded-full px-2.5 text-[11px] font-medium"
+                                className="h-auto min-h-7 max-w-full rounded-full px-2.5 py-1 text-left text-[11px] font-medium"
                                 disabled={jaCadastrada}
                                 title={jaCadastrada ? "Já cadastrada para este filho" : undefined}
-                                onClick={() => setNome(sugestao)}
+                                onClick={() => setNome(sugestao.nome)}
                               >
-                                {sugestao}
+                                <IconeSugestaoRecompensa icone={sugestao.icone} />
+                                <span className="whitespace-normal break-words">{sugestao.nome}</span>
                               </Button>
                             );
                           })}
