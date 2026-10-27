@@ -236,7 +236,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           open={recompensasAbertas}
           onOpenChange={setRecompensasAbertas}
           contentDivider={false}
-          contentClassName="bg-clean-surface p-3.5 sm:p-4"
+          contentClassName="bg-clean-surface px-3.5 pb-3.5 pt-2 sm:px-4 sm:pb-4 sm:pt-2.5"
           action={
             <Button type="button" size="sm" className="h-8 shrink-0 px-2.5 text-xs" onClick={novaRecompensa}>
               <Plus className="h-3.5 w-3.5" /> Nova
