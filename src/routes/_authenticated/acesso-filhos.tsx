@@ -63,6 +63,7 @@ function AcessoFilhosPage() {
     <>
       <PageHeader
         title="Acesso dos filhos"
+        description="Gerencie o acesso dos seus filhos ao app."
         icon={<Smartphone className="h-6 w-6" />}
       />
 
