@@ -1327,7 +1327,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                             <CollapseChevron open={filhoAberto} />
                           </button>
 
-                          <div className="flex min-w-0 items-center justify-center gap-1 sm:gap-2">
+                          <div className="flex min-w-0 items-center justify-center gap-3 sm:gap-4">
                             <button
                               type="button"
                               onClick={() => navegarDia(vigencia, -1)}
