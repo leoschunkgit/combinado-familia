@@ -48,6 +48,7 @@ export function OnboardingInicial() {
   const [onboardingEncerradoLocalmente, setOnboardingEncerradoLocalmente] = useState(false);
 
   const [nomeFilho, setNomeFilho] = useState("");
+  const [idadeFilho, setIdadeFilho] = useState("");
   const [valorMesada, setValorMesada] = useState("");
   const [corFilho, setCorFilho] = useState("");
   const [avatarFilho, setAvatarFilho] = useState<FilhoAvatarOpcao>("");
@@ -98,6 +99,11 @@ export function OnboardingInicial() {
       return;
     }
 
+    if (idadeFilho.trim() !== "" && (!/^\d+$/.test(idadeFilho) || Number(idadeFilho) > 150)) {
+      toast.error("Informe uma idade inteira entre 0 e 150");
+      return;
+    }
+
     if (valorMesada.trim() !== "" && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
       toast.error("Informe um valor de mesada válido");
       return;
@@ -117,6 +123,7 @@ export function OnboardingInicial() {
       return;
     }
 
+    const idadeNumero = idadeFilho.trim() !== "" ? Number(idadeFilho) : null;
     const valorMesadaNumero = valorMesada.trim() !== "" ? Number(valorMesada.replace(",", ".")) : null;
 
     setSalvando(true);
@@ -129,7 +136,7 @@ export function OnboardingInicial() {
         .from("t_filho")
         .update({
           nome,
-          idade: null,
+          idade: idadeNumero,
           tem_mesada: valorMesadaNumero !== null,
           valor_mesada: valorMesadaNumero,
           cor: corFilho.trim() || null,
@@ -144,7 +151,7 @@ export function OnboardingInicial() {
     } else {
       const resultado = await supabase.rpc("cadastrar_filho_com_recompensas", {
         p_nome: nome,
-        p_idade: null,
+        p_idade: idadeNumero,
         p_cor: corFilho.trim() || null,
         p_avatar: avatarFilho || null,
         p_valor_mesada: valorMesadaNumero,
@@ -217,6 +224,7 @@ export function OnboardingInicial() {
     }
     setFilhoEmCorrecaoId(filho.id);
     setNomeFilho(filho.nome);
+    setIdadeFilho(filho.idade === null ? "" : String(filho.idade));
     const comMesada = filho.tem_mesada === true && filho.valor_mesada !== null;
     setValorMesada(comMesada && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "");
     setCorFilho(filho.cor ?? "");
@@ -414,11 +422,25 @@ export function OnboardingInicial() {
               <Label htmlFor="onboarding-filho">Nome *</Label>
               <Input id="onboarding-filho" autoFocus value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="onboarding-valor-mesada">Mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-              <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
-              <p className="text-xs text-muted-foreground">Se informado, o valor será usado como base para os descontos de “Não fez”.</p>
+            <div className="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="onboarding-idade">Idade <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                <Input
+                  id="onboarding-idade"
+                  type="number"
+                  min="0"
+                  max="150"
+                  step="1"
+                  value={idadeFilho}
+                  onChange={(e) => setIdadeFilho(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="onboarding-valor-mesada">Mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
+              </div>
             </div>
+            <p className="-mt-1 text-xs text-muted-foreground">Se informado, o valor da mesada será usado como base para os descontos de “Não fez”.</p>
             {filhoEmCorrecaoId === null && (
               <div className="border-t pt-3">
                 <RecompensasRapidas value={recompensasFilho} onChange={setRecompensasFilho} prefix="onboarding-filho" />
