@@ -1,6 +1,7 @@
-import { CheckCircle2, Gift, RefreshCcw, Sparkles, Star, Trophy } from "lucide-react";
+import { CheckCircle2, RefreshCcw, Sparkles, Star, Trophy } from "lucide-react";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { InfoTile } from "@/components/InfoTile";
+import { RecompensaIcone } from "@/components/RecompensaIcone";
 import type { CicloRecompensaResumo } from "@/lib/estrelas-model";
 
 const dataHora = (valor: string) => new Intl.DateTimeFormat("pt-BR", {
@@ -44,7 +45,7 @@ export function RecompensasAproveitadasSection({
           <article key={resgate.id} className="rounded-xl bg-clean-surface p-2.5 sm:p-3">
             <div className="space-y-1.5">
               <div className="flex min-w-0 items-center gap-2 px-2.5 py-1.5">
-                <Gift className="h-4 w-4 shrink-0 text-primary" />
+                <RecompensaIcone nome={resgate.nome_exibicao} className="h-4 w-4 text-primary" />
                 <p className="min-w-0 break-words text-sm font-bold leading-tight sm:text-base">
                   {resgate.nome_exibicao}
                 </p>
