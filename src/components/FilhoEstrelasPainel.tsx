@@ -234,7 +234,6 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
         <CollapsibleSection
           className="bg-clean-surface"
           title="Recompensas"
-          description="Cadastre o prêmio e defina quantas estrelas são necessárias."
           count={resumo.recompensas.length}
           open={recompensasAbertas}
           onOpenChange={setRecompensasAbertas}
