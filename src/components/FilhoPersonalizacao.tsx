@@ -54,7 +54,7 @@ export function FilhoPersonalizacao({
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 pl-1">
         <Label htmlFor={`${prefix}-cor`}>Cor</Label>
         <input
           id={`${prefix}-cor`}
