@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Pencil, Plus, Smartphone, Trash2, Users, WalletCards } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { AtribuicaoDialog } from "@/components/AtribuicaoDialog";
@@ -47,23 +46,20 @@ const schema = z.object({
   idade: z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 150), "Informe uma idade inteira entre 0 e 150"),
   cor: z.string().trim().max(50).refine(corValida, "Use uma cor hexadecimal ou RGB válida"),
   avatar: z.union([z.literal(""), z.literal("menino"), z.literal("menina")]),
-  tem_mesada: z.boolean(),
   valor_mesada: z.string(),
-}).refine((v) => !v.tem_mesada || v.valor_mesada.trim() !== "", {
-  message: "Informe o valor da mesada ao marcar ‘Tem mesada’", path: ["valor_mesada"],
-}).refine((v) => !v.tem_mesada || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_mesada) && Number(v.valor_mesada.replace(",", ".")) > 0 && Number(v.valor_mesada.replace(",", ".")) <= 9999999999.99), {
-  message: "Informe um valor maior que zero, com até duas casas decimais", path: ["valor_mesada"],
+}).refine((v) => v.valor_mesada.trim() === "" || (/^\d+(?:[,.]\d{1,2})?$/.test(v.valor_mesada) && Number(v.valor_mesada.replace(",", ".")) > 0 && Number(v.valor_mesada.replace(",", ".")) <= 9999999999.99), {
+  message: "Informe um valor de mesada válido, maior que zero e com até duas casas decimais", path: ["valor_mesada"],
 });
 
 type FilhoForm = z.input<typeof schema>;
-const vazio: FilhoForm = { nome: "", idade: "", cor: "", avatar: "", tem_mesada: false, valor_mesada: "" };
+const vazio: FilhoForm = { nome: "", idade: "", cor: "", avatar: "", valor_mesada: "" };
 const dinheiro = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dadosExtras = (v: FilhoForm) => ({
   idade: v.idade === "" ? null : Number(v.idade),
   cor: v.cor.trim() || null,
   avatar: v.avatar || null,
-  tem_mesada: v.tem_mesada,
-  valor_mesada: v.tem_mesada && v.valor_mesada !== "" ? Number(v.valor_mesada.replace(",", ".")) : null,
+  tem_mesada: v.valor_mesada.trim() !== "",
+  valor_mesada: v.valor_mesada.trim() !== "" ? Number(v.valor_mesada.replace(",", ".")) : null,
 });
 
 function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange: (v: FilhoForm) => void; prefix: string }) {
@@ -71,8 +67,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
   return <>
     <div className="space-y-2"><Label htmlFor={`${prefix}-idade`}>Idade (opcional)</Label><Input id={`${prefix}-idade`} type="number" min="0" max="150" step="1" value={value.idade} onChange={(e) => onChange({ ...value, idade: e.target.value })} /></div>
 
-    <div className="flex items-center gap-1.5"><Checkbox id={`${prefix}-mesada`} checked={value.tem_mesada} onCheckedChange={(checked) => onChange({ ...value, tem_mesada: checked === true, valor_mesada: checked === true ? value.valor_mesada : "" })} /><Label htmlFor={`${prefix}-mesada`}>Tem mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label></div>
-    {value.tem_mesada && <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Valor da mesada (R$) <span className="text-destructive" aria-hidden="true">*</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} /><p className="text-xs text-muted-foreground">Com mesada cadastrada, o responsável poderá escolher um desconto como consequência de cada “Não fez”.</p></div>}
+    <div className="space-y-2"><Label htmlFor={`${prefix}-valor`}>Mesada <span className="text-muted-foreground font-normal">(opcional)</span></Label><CurrencyInput id={`${prefix}-valor`} value={value.valor_mesada} onValueChange={(valor_mesada) => onChange({ ...value, valor_mesada })} placeholder="R$ 100,00" /><p className="text-xs text-muted-foreground">Se informado, o valor será usado como base para os descontos de “Não fez”.</p></div>
 
     <div className="space-y-2 pt-1">
       <Label>Avatar <span className="text-muted-foreground font-normal">(opcional)</span></Label>
@@ -187,7 +182,7 @@ function FilhosPage() {
 
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
-    setEdicao({ nome: filho.nome, idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", tem_mesada: filho.tem_mesada === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
+    setEdicao({ nome: filho.nome, idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", valor_mesada: filho.tem_mesada === true && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "" });
   }
 
   async function salvarEdicao(e: FormEvent) {
