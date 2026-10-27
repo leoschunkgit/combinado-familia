@@ -30,7 +30,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CollapseChevron } from "@/components/CollapseChevron";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Pick } from "@/components/Pick";
@@ -199,15 +198,14 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
   const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
   const [filhosSelecionados, setFilhosSelecionados] = useState<Record<number, number>>({});
+  const [paginasTarefas, setPaginasTarefas] = useState<Record<string, number>>({});
   const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
   const [filtro, setFiltro] = useState(f);
   const [busy, setBusy] = useState(false);
   const [troca, setTroca] = useState<Troca | null>(null);
   const [naoFez, setNaoFez] = useState<NaoFezPageDraft | null>(null);
-  const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
   const [totaisEstrelas, setTotaisEstrelas] = useState<Record<number, number>>({});
   const [agora, setAgora] = useState(() => Date.now());
-  const aberturaInicialAplicada = useRef(false);
   const ultimoFocoAplicado = useRef<string | null>(null);
 
   useEffect(() => {
@@ -461,11 +459,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       ...atual,
       [vigencia.id]: atribuicao.id_filho,
     }));
-    setFilhosAbertos((atual) => ({
-      ...atual,
-      [`${vigencia.id}-${atribuicao.id_filho}`]: true,
-    }));
-
     ultimoFocoAplicado.current = chaveFoco;
   }, [
     atribuicoes,
@@ -605,23 +598,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
     return () => window.cancelAnimationFrame(frame);
   }, [filhosSelecionados, vigenciasOperacionais]);
-
-  useEffect(() => {
-    if (isLoading || aberturaInicialAplicada.current || grupos.length === 0) return;
-
-    setFilhosAbertos((atual) =>
-      Object.fromEntries(
-        grupos.flatMap(({ vigencia, filhos: gruposFilhos }) =>
-          gruposFilhos.map(({ filho }) => {
-            const chave = `${vigencia.id}-${filho.id}`;
-            return [chave, atual[chave] === true];
-          }),
-        ),
-      ),
-    );
-
-    aberturaInicialAplicada.current = true;
-  }, [isLoading, grupos]);
 
   function dataValida(tarefa: FilhoTarefa, data: string) {
     const vigencia = tarefa.t_vigencia;
@@ -1194,8 +1170,21 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
                   {grupoFilhoSelecionado &&
                     [grupoFilhoSelecionado].map(({ filho, tarefas: tarefasDoFilho }) => {
-                    const chave = `${vigencia.id}-${filho.id}`;
-                    const filhoAberto = filhosAbertos[chave] === true;
+                    const chavePagina = `${vigencia.id}-${filho.id}`;
+                    const tarefasPorPagina = 5;
+                    const totalPaginas = Math.max(
+                      1,
+                      Math.ceil(tarefasDoFilho.length / tarefasPorPagina),
+                    );
+                    const paginaAtual = Math.min(
+                      paginasTarefas[chavePagina] ?? 1,
+                      totalPaginas,
+                    );
+                    const inicioPagina = (paginaAtual - 1) * tarefasPorPagina;
+                    const tarefasPaginadas = tarefasDoFilho.slice(
+                      inicioPagina,
+                      inicioPagina + tarefasPorPagina,
+                    );
                     const ocorrenciasFilhoVigencia = ocorrencias.filter(
                       (ocorrencia) =>
                         ocorrencia.t_filho_tarefa?.id_filho === filho.id &&
@@ -1312,20 +1301,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                           className="overflow-hidden rounded-xl border bg-background"
                         >
                         <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFilhosAbertos((atual) => ({
-                                ...atual,
-                                [chave]: !filhoAberto,
-                              }))
-                            }
-                            className="flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                            aria-label={filhoAberto ? "Recolher tarefas" : "Expandir tarefas"}
-                            aria-expanded={filhoAberto}
-                          >
-                            <CollapseChevron open={filhoAberto} />
-                          </button>
+                          <span className="h-7 w-7" aria-hidden="true" />
 
                           <div className="flex min-w-0 items-center justify-center gap-3 sm:gap-4">
                             <button
@@ -1372,12 +1348,11 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               </span>
                             </div>
                           ) : (
-                            <span className="h-9 w-9" aria-hidden="true" />
+                            <span className="h-7 w-7" aria-hidden="true" />
                           )}
                         </div>
 
-                        {filhoAberto && (
-                          <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
+                        <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
                             {penalidadesPendentes > 0 && (
                               <div className="mb-4 rounded-lg border bg-muted/20 px-3 py-2 text-sm font-medium">
                                 {penalidadesPendentes} {penalidadesPendentes === 1 ? "penalidade pendente" : "penalidades pendentes"}
@@ -1397,7 +1372,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               </div>
 
                               <div className="divide-y divide-border/60">
-                                {tarefasDoFilho.map((tarefa) => {
+                                {tarefasPaginadas.map((tarefa) => {
                                   const registro = registroNaData(tarefa, dataSelecionada);
                                   const solicitacao = solicitacaoNaData(tarefa, dataSelecionada);
                                   const filho = filhos.find((item) => item.id === tarefa.id_filho);
@@ -1647,9 +1622,52 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   );
                                 })}
                               </div>
+
+                              {totalPaginas > 1 && (
+                                <nav
+                                  className="flex items-center justify-center gap-3 border-t border-border/60 px-1 pt-3"
+                                  aria-label="Paginação das tarefas"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPaginasTarefas((atual) => ({
+                                        ...atual,
+                                        [chavePagina]: Math.max(1, paginaAtual - 1),
+                                      }))
+                                    }
+                                    disabled={paginaAtual === 1}
+                                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                    aria-label="Página anterior"
+                                  >
+                                    <ChevronLeft className="h-4 w-4" />
+                                  </button>
+
+                                  <span className="min-w-20 text-center text-xs font-semibold tabular-nums text-muted-foreground">
+                                    Página {paginaAtual} de {totalPaginas}
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPaginasTarefas((atual) => ({
+                                        ...atual,
+                                        [chavePagina]: Math.min(
+                                          totalPaginas,
+                                          paginaAtual + 1,
+                                        ),
+                                      }))
+                                    }
+                                    disabled={paginaAtual === totalPaginas}
+                                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                    aria-label="Próxima página"
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </button>
+                                </nav>
+                              )}
                             </div>
                           </div>
-                        )}
                         </article>
                       </div>
                     );
