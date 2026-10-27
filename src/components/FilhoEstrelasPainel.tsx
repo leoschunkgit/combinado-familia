@@ -209,27 +209,30 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
 
   return (
     <>
-      <div className={somenteRecompensas ? "space-y-3" : "space-y-5"}>
-        <div className={!somenteRecompensas && seletorFilho ? "overflow-hidden rounded-2xl border bg-card" : ""}>
-          {!somenteRecompensas && seletorFilho}
+      <div className={somenteRecompensas ? "space-y-3" : "space-y-4"}>
+        {!somenteRecompensas && seletorFilho && (
+          <div className="overflow-hidden rounded-2xl border bg-card">
+            {seletorFilho}
+          </div>
+        )}
 
-          {!somenteRecompensas && (
-            <div className="flex flex-wrap items-center justify-start gap-2 border-b border-border/60 px-3 py-2">
-              <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[11px] text-muted-foreground">
-                <Estrela className="h-3.5 w-3.5" />
-                <span>Hoje</span>
-                <strong className="font-semibold tabular-nums text-foreground">{resumo.hoje}</strong>
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[11px] text-muted-foreground">
-                <Estrela className="h-3.5 w-3.5" />
-                <span>Total</span>
-                <strong className="font-semibold tabular-nums text-foreground">{resumo.total_conquistado}</strong>
-              </span>
-            </div>
-          )}
+        {!somenteRecompensas && (
+          <div className="flex flex-wrap items-center justify-start gap-2 px-1">
+            <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[11px] text-muted-foreground">
+              <Estrela className="h-3.5 w-3.5" />
+              <span>Hoje</span>
+              <strong className="font-semibold tabular-nums text-foreground">{resumo.hoje}</strong>
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[11px] text-muted-foreground">
+              <Estrela className="h-3.5 w-3.5" />
+              <span>Total</span>
+              <strong className="font-semibold tabular-nums text-foreground">{resumo.total_conquistado}</strong>
+            </span>
+          </div>
+        )}
 
         <CollapsibleSection
-          className={!somenteRecompensas && seletorFilho ? "mt-2 rounded-none border-0 bg-clean-surface" : "bg-clean-surface"}
+          className="bg-clean-surface"
           title="Recompensas"
           description="Cadastre o prêmio e defina quantas estrelas são necessárias."
           count={resumo.recompensas.length}
@@ -348,7 +351,6 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
             {resumo.recompensas.length === 0 && <p className="rounded-xl border border-dashed bg-background px-4 py-5 text-center text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
           </div>
         </CollapsibleSection>
-        </div>
 
         {!somenteRecompensas && <RecompensasAproveitadasSection resgates={resumo.resgates} />}
 
