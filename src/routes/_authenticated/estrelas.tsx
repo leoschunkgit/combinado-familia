@@ -45,7 +45,7 @@ function EstrelasPage() {
     <>
       <PageHeader
         title="Estrelas e recompensas"
-        description="Acompanhe o mérito de cada filho e configure suas recompensas."
+        description="Cadastre recompensas e defina quantas estrelas são necessárias. Acompanhe."
         icon={<Star className="h-6 w-6" />}
       />
 
@@ -57,10 +57,6 @@ function EstrelasPage() {
         <EmptyState>Cadastre um filho antes de configurar estrelas e recompensas.</EmptyState>
       ) : (
         <div className="space-y-5">
-          <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
-            O primeiro “Fez” de cada tarefa em cada dia concede 1 estrela. As estrelas conquistadas são permanentes e continuam com o filho mesmo quando a vigência termina.
-          </p>
-
           {filhoSelecionado && (
             <FilhoEstrelasPainel
               filho={filhoSelecionado}
