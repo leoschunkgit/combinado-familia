@@ -22,7 +22,8 @@ function Estrela({ className = "" }: { className?: string }) {
   );
 }
 
-export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
+export function FilhoEstrelasPainel({ filho, modo = "completo" }: { filho: Filho; modo?: "completo" | "recompensas" }) {
+  const somenteRecompensas = modo === "recompensas";
   const [resumo, setResumo] = useState<ResumoEstrelas>(resumoEstrelasVazio);
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -66,7 +67,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     setDescricao("");
     setEstrelas("");
     setFormAberto(false);
-    setRecompensasAbertas(false);
+    setRecompensasAbertas(somenteRecompensas);
     setConfirmacao(null);
     void carregar();
 
@@ -75,7 +76,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
     }, 5_000);
 
     return () => window.clearInterval(intervalo);
-  }, [filho.id]);
+  }, [filho.id, somenteRecompensas]);
 
   function limparForm() {
     setEditando(null);
@@ -200,7 +201,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
   if (carregando) {
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-2xl border bg-card">
+      <div className={somenteRecompensas ? "flex min-h-24 items-center justify-center" : "flex min-h-64 items-center justify-center rounded-2xl border bg-card"}>
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -208,8 +209,8 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
 
   return (
     <>
-      <div className="space-y-5">
-        <section className="grid grid-cols-2 gap-2">
+      <div className={somenteRecompensas ? "space-y-3" : "space-y-5"}>
+        {!somenteRecompensas && <section className="grid grid-cols-2 gap-2">
           <div className="rounded-xl border bg-card px-3 py-3.5">
             <div className="flex items-center gap-2 text-muted-foreground">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted/50"><Estrela /></span>
@@ -224,7 +225,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
             </div>
             <p className="mt-2 text-2xl font-bold tabular-nums">{resumo.total_conquistado}</p>
           </div>
-        </section>
+        </section>}
 
         <CollapsibleSection
           className="bg-clean-surface"
@@ -323,7 +324,7 @@ export function FilhoEstrelasPainel({ filho }: { filho: Filho }) {
           </div>
         </CollapsibleSection>
 
-        <RecompensasAproveitadasSection resgates={resumo.resgates} />
+        {!somenteRecompensas && <RecompensasAproveitadasSection resgates={resumo.resgates} />}
 
       </div>
 
