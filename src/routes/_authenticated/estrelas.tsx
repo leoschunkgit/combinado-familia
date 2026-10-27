@@ -65,7 +65,7 @@ function EstrelasPage() {
             <FilhoEstrelasPainel
               filho={filhoSelecionado}
               seletorFilho={
-                <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-y border-border/60 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
+                <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border/60 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
                   <button
                     type="button"
                     onClick={() => navegarFilho(-1)}
