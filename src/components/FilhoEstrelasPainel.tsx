@@ -32,7 +32,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [estrelas, setEstrelas] = useState("");
-  const [recompensasAbertas, setRecompensasAbertas] = useState(false);
+  const [recompensasAbertas, setRecompensasAbertas] = useState(!somenteRecompensas);
   const [confirmacao, setConfirmacao] = useState<
     | { tipo: "APROVEITOU"; recompensa: RecompensaEstrelaResumo }
     | { tipo: "DESATIVAR"; recompensa: RecompensaEstrelaResumo }
@@ -67,7 +67,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao("");
     setEstrelas("");
     setFormAberto(false);
-    setRecompensasAbertas(false);
+    setRecompensasAbertas(!somenteRecompensas);
     setConfirmacao(null);
     void carregar();
 
