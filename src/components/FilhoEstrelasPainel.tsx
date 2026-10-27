@@ -214,17 +214,18 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           {!somenteRecompensas && seletorFilho}
 
           {!somenteRecompensas && (
-            <div className="grid grid-cols-2 border-b border-border/60 bg-white dark:bg-background">
-              <div className="flex items-center justify-center gap-1.5 border-r border-border/60 px-3 py-2.5">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 border-b border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <Estrela className="h-3.5 w-3.5 opacity-80" />
-                <strong className="text-sm font-semibold tabular-nums">{resumo.hoje}</strong>
-                <span className="text-[11px] font-normal text-muted-foreground">Hoje</span>
-              </div>
-              <div className="flex items-center justify-center gap-1.5 px-3 py-2.5">
+                <span>Hoje</span>
+                <strong className="font-semibold tabular-nums text-foreground">{resumo.hoje}</strong>
+              </span>
+              <span className="text-border" aria-hidden="true">•</span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <Estrela className="h-3.5 w-3.5 opacity-80" />
-                <strong className="text-sm font-semibold tabular-nums">{resumo.total_conquistado}</strong>
-                <span className="text-[11px] font-normal text-muted-foreground">Total</span>
-              </div>
+                <span>Total</span>
+                <strong className="font-semibold tabular-nums text-foreground">{resumo.total_conquistado}</strong>
+              </span>
             </div>
           )}
 
