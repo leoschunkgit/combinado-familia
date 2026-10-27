@@ -65,38 +65,44 @@ function EstrelasPage() {
             <FilhoEstrelasPainel
               filho={filhoSelecionado}
               seletorFilho={
-                <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-border/60 bg-white px-3.5 py-3.5 dark:bg-background sm:px-5 sm:py-4">
-                  <button
-                    type="button"
-                    onClick={() => navegarFilho(-1)}
-                    disabled={indiceFilhoSelecionado <= 0}
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                    aria-label="Ir para o filho anterior"
-                  >
-                    <ChevronLeft className="h-4 w-4" strokeWidth={3} />
-                  </button>
+                <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border/60 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
+                  <span className="h-7 w-7" aria-hidden="true" />
 
-                  <div className="flex min-w-0 items-center justify-center gap-2">
-                    <FilhoAvatar
-                      nome={filhoSelecionado.nome}
-                      cor={filhoSelecionado.cor}
-                      avatar={filhoSelecionado.avatar === "menino" || filhoSelecionado.avatar === "menina" ? filhoSelecionado.avatar : null}
-                      className="h-6 w-6 shrink-0"
-                    />
-                    <span className="truncate text-center text-sm font-extrabold">
-                      {filhoSelecionado.nome}
-                    </span>
+                  <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
+                    <button
+                      type="button"
+                      onClick={() => navegarFilho(-1)}
+                      disabled={indiceFilhoSelecionado <= 0}
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      aria-label="Ir para o filho anterior"
+                    >
+                      <ChevronLeft className="h-4 w-4" strokeWidth={3} />
+                    </button>
+
+                    <div className="flex min-w-0 items-center justify-center gap-2">
+                      <FilhoAvatar
+                        nome={filhoSelecionado.nome}
+                        cor={filhoSelecionado.cor}
+                        avatar={filhoSelecionado.avatar === "menino" || filhoSelecionado.avatar === "menina" ? filhoSelecionado.avatar : null}
+                        className="h-6 w-6 shrink-0"
+                      />
+                      <span className="truncate whitespace-nowrap text-center text-sm font-extrabold">
+                        {filhoSelecionado.nome}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => navegarFilho(1)}
+                      disabled={indiceFilhoSelecionado < 0 || indiceFilhoSelecionado >= filhos.length - 1}
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      aria-label="Ir para o próximo filho"
+                    >
+                      <ChevronRight className="h-4 w-4" strokeWidth={3} />
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => navegarFilho(1)}
-                    disabled={indiceFilhoSelecionado < 0 || indiceFilhoSelecionado >= filhos.length - 1}
-                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                    aria-label="Ir para o próximo filho"
-                  >
-                    <ChevronRight className="h-4 w-4" strokeWidth={3} />
-                  </button>
+                  <span className="h-7 w-7" aria-hidden="true" />
                 </div>
               }
             />
