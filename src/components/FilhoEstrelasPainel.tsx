@@ -67,7 +67,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo" }: { filho: Filho
     setDescricao("");
     setEstrelas("");
     setFormAberto(false);
-    setRecompensasAbertas(somenteRecompensas);
+    setRecompensasAbertas(false);
     setConfirmacao(null);
     void carregar();
 
