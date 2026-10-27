@@ -1662,6 +1662,7 @@ export type Database = {
           qtd_atribuicoes: number
         }[]
       }
+      entitlements_obter: { Args: never; Returns: Json }
       enviar_feedback: {
         Args: {
           p_assunto: string
@@ -1686,18 +1687,12 @@ export type Database = {
         Args: { p_id_filho_tarefa: number }
         Returns: Json
       }
-      excluir_filho_com_regra: {
-        Args: { p_id_filho: number }
-        Returns: Json
-      }
-      excluir_todos_filhos_com_regra: {
-        Args: never
-        Returns: Json
-      }
+      excluir_filho_com_regra: { Args: { p_id_filho: number }; Returns: Json }
       excluir_recompensa_estrelas: {
         Args: { p_id_recompensa: number }
         Returns: boolean
       }
+      excluir_todos_filhos_com_regra: { Args: never; Returns: Json }
       excluir_vigencia_com_regra: {
         Args: { p_id_vigencia: number }
         Returns: boolean
@@ -1749,6 +1744,10 @@ export type Database = {
           p_id_usuario_pai: number
         }
         Returns: number
+      }
+      mensagem_codigo_regra_interno: {
+        Args: { p_codigo: string }
+        Returns: string
       }
       montar_painel_app_filho: {
         Args: { p_id_filho: number; p_id_usuario_pai: number }
