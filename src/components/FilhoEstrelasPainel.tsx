@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, Crown, EllipsisVertical, Film, Gamepad2, Gift, Loader2, MapPin, Moon, Music, Pencil, Pizza, Plus, ShoppingBag, Star, Sun, ThumbsDown, Trash2, Tv, Utensils, X } from "lucide-react";
+import { CheckCircle2, EllipsisVertical, Loader2, Pencil, Plus, Star, ThumbsDown, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { erroRegra, msgErro } from "@/lib/app-error";
@@ -15,7 +15,8 @@ import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
 import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas } from "@/lib/estrelas-model";
 import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
-import { normalizarNomeRecompensa, RECOMPENSA_SUGESTOES_CATEGORIAS, type IconeSugestaoRecompensa } from "@/lib/recompensa-sugestoes";
+import { normalizarNomeRecompensa, RECOMPENSA_SUGESTOES_CATEGORIAS } from "@/lib/recompensa-sugestoes";
+import { RecompensaIcone } from "@/components/RecompensaIcone";
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -26,38 +27,6 @@ function Estrela({ className = "" }: { className?: string }) {
   );
 }
 
-function IconeSugestaoRecompensa({ icone }: { icone: IconeSugestaoRecompensa }) {
-  const className = "h-3.5 w-3.5 shrink-0";
-
-  switch (icone) {
-    case "UTENSILS":
-      return <Utensils className={className} />;
-    case "PIZZA":
-      return <Pizza className={className} />;
-    case "FILM":
-      return <Film className={className} />;
-    case "GAMEPAD":
-      return <Gamepad2 className={className} />;
-    case "MOON":
-      return <Moon className={className} />;
-    case "SUN":
-      return <Sun className={className} />;
-    case "MAP_PIN":
-      return <MapPin className={className} />;
-    case "GIFT":
-      return <Gift className={className} />;
-    case "SHOPPING_BAG":
-      return <ShoppingBag className={className} />;
-    case "MUSIC":
-      return <Music className={className} />;
-    case "TV":
-      return <Tv className={className} />;
-    case "CROWN":
-      return <Crown className={className} />;
-    default:
-      return <Star className={className} />;
-  }
-}
 
 export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: { filho: Filho; modo?: "completo" | "recompensas"; seletorFilho?: ReactNode }) {
   const somenteRecompensas = modo === "recompensas";
@@ -327,9 +296,12 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
               return (
                 <article key={recompensa.id} className="rounded-xl border bg-clean-surface p-3 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words text-sm font-semibold">{recompensa.nome_exibicao}</p>
-                      {recompensa.descricao_exibicao && <p className="mt-0.5 break-words text-xs text-muted-foreground">{recompensa.descricao_exibicao}</p>}
+                    <div className="flex min-w-0 flex-1 items-start gap-2">
+                      <RecompensaIcone nome={recompensa.nome_exibicao} className="mt-0.5 h-4 w-4 text-primary" />
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-semibold">{recompensa.nome_exibicao}</p>
+                        {recompensa.descricao_exibicao && <p className="mt-0.5 break-words text-xs text-muted-foreground">{recompensa.descricao_exibicao}</p>}
+                      </div>
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1">
@@ -553,7 +525,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                                 aria-label={`Selecionar ${sugestao.nome}`}
                               />
                               <span className="flex min-w-0 flex-1 items-start gap-2">
-                                <IconeSugestaoRecompensa icone={sugestao.icone} />
+                                <RecompensaIcone icone={sugestao.icone} className="mt-0.5 h-4 w-4 text-primary" />
                                 <span className="min-w-0 flex-1">
                                   <span className="block whitespace-normal break-words font-medium leading-snug">
                                     {sugestao.nome}
