@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
 import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas } from "@/lib/estrelas-model";
@@ -66,6 +67,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
+  const [abaForm, setAbaForm] = useState<"cadastrar" | "sugestoes">("cadastrar");
   const [editando, setEditando] = useState<RecompensaEstrelaResumo | null>(null);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -105,6 +107,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao("");
     setEstrelas("");
     setFormAberto(false);
+    setAbaForm("cadastrar");
     setRecompensasAbertas(!somenteRecompensas);
     setConfirmacao(null);
     void carregar();
@@ -121,6 +124,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setNome("");
     setDescricao("");
     setEstrelas("");
+    setAbaForm("cadastrar");
     setFormAberto(false);
   }
 
@@ -129,6 +133,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setNome("");
     setDescricao("");
     setEstrelas("");
+    setAbaForm("cadastrar");
     setFormAberto(true);
   }
 
@@ -142,6 +147,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setNome(recompensa.nome);
     setDescricao(recompensa.descricao ?? "");
     setEstrelas(String(recompensa.estrelas_necessarias));
+    setAbaForm("cadastrar");
     setFormAberto(true);
   }
 
@@ -426,73 +432,120 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
             <DialogTitle>{editando ? "Editar recompensa" : "Nova recompensa"}</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={(evento) => void salvarRecompensa(evento)} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="recompensa-nome">Recompensa *</Label>
-              <Input id="recompensa-nome" value={nome} onChange={(evento) => setNome(evento.target.value)} maxLength={100} placeholder="Ex.: Ir ao cinema" autoFocus />
-
-              {!editando && (
-                <div className="pt-2">
-                  <p className="text-xs font-medium text-muted-foreground">Sugestões</p>
-                  <div className="mt-2 max-h-[38vh] space-y-3 overflow-y-auto pr-1">
-                    {RECOMPENSA_SUGESTOES_CATEGORIAS.map((grupo) => (
-                      <div key={grupo.categoria}>
-                        <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">
-                          {grupo.categoria}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {grupo.sugestoes.map((sugestao) => {
-                            const jaCadastrada = resumo.recompensas.some(
-                              (recompensa) =>
-                                normalizarNomeRecompensa(recompensa.nome) ===
-                                normalizarNomeRecompensa(sugestao.nome),
-                            );
-
-                            return (
-                              <Button
-                                key={sugestao.nome}
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-auto min-h-7 max-w-full rounded-full px-2.5 py-1 text-left text-[11px] font-medium"
-                                disabled={jaCadastrada}
-                                title={jaCadastrada ? "Já cadastrada para este filho" : undefined}
-                                onClick={() => setNome(sugestao.nome)}
-                              >
-                                <IconeSugestaoRecompensa icone={sugestao.icone} />
-                                <span className="whitespace-normal break-words">{sugestao.nome}</span>
-                              </Button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="recompensa-descricao">Descrição <span className="font-normal text-muted-foreground">(opcional)</span></Label>
-              <Input id="recompensa-descricao" value={descricao} onChange={(evento) => setDescricao(evento.target.value)} maxLength={300} placeholder="Ex.: Sessão de cinema no fim de semana" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="recompensa-estrelas">Estrelas necessárias *</Label>
-              <div className="relative max-w-40">
-                <Input id="recompensa-estrelas" type="number" min="1" max="100000" step="1" inputMode="numeric" value={estrelas} onChange={(evento) => setEstrelas(evento.target.value)} className="pr-9" />
-                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center"><Estrela /></span>
+          {editando ? (
+            <form onSubmit={(evento) => void salvarRecompensa(evento)} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="recompensa-nome">Recompensa *</Label>
+                <Input id="recompensa-nome" value={nome} onChange={(evento) => setNome(evento.target.value)} maxLength={100} placeholder="Ex.: Ir ao cinema" autoFocus />
               </div>
-            </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
-              <Button type="submit" disabled={salvando}>
-                {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
-                {editando ? "Salvar alterações" : "Cadastrar"}
-              </Button>
-            </DialogFooter>
-          </form>
+              <div className="space-y-1.5">
+                <Label htmlFor="recompensa-descricao">Descrição <span className="font-normal text-muted-foreground">(opcional)</span></Label>
+                <Input id="recompensa-descricao" value={descricao} onChange={(evento) => setDescricao(evento.target.value)} maxLength={300} placeholder="Ex.: Sessão de cinema no fim de semana" />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="recompensa-estrelas">Estrelas necessárias *</Label>
+                <div className="relative max-w-40">
+                  <Input id="recompensa-estrelas" type="number" min="1" max="100000" step="1" inputMode="numeric" value={estrelas} onChange={(evento) => setEstrelas(evento.target.value)} className="pr-9" />
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center"><Estrela /></span>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
+                <Button type="submit" disabled={salvando}>
+                  {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Salvar alterações
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <Tabs
+              value={abaForm}
+              onValueChange={(value) => setAbaForm(value as "cadastrar" | "sugestoes")}
+              className="min-w-0"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="cadastrar">Cadastrar</TabsTrigger>
+                <TabsTrigger value="sugestoes">Sugestões</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="cadastrar" className="mt-5">
+                <form onSubmit={(evento) => void salvarRecompensa(evento)} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="recompensa-nome">Recompensa *</Label>
+                    <Input id="recompensa-nome" value={nome} onChange={(evento) => setNome(evento.target.value)} maxLength={100} placeholder="Ex.: Partiu cinema!" autoFocus />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="recompensa-descricao">Descrição <span className="font-normal text-muted-foreground">(opcional)</span></Label>
+                    <Input id="recompensa-descricao" value={descricao} onChange={(evento) => setDescricao(evento.target.value)} maxLength={300} placeholder="Ex.: Sessão de cinema no fim de semana" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="recompensa-estrelas">Estrelas necessárias *</Label>
+                    <div className="relative max-w-40">
+                      <Input id="recompensa-estrelas" type="number" min="1" max="100000" step="1" inputMode="numeric" value={estrelas} onChange={(evento) => setEstrelas(evento.target.value)} className="pr-9" />
+                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center"><Estrela /></span>
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
+                    <Button type="submit" disabled={salvando}>
+                      {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Cadastrar
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="sugestoes" className="mt-5 space-y-4">
+                <div>
+                  <p className="text-sm font-medium">Escolha uma recompensa</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    A sugestão apenas preenche o nome. Depois você define as estrelas e cadastra normalmente.
+                  </p>
+                </div>
+
+                <div className="max-h-[48vh] space-y-4 overflow-y-auto pr-1">
+                  {RECOMPENSA_SUGESTOES_CATEGORIAS.map((grupo) => (
+                    <div key={grupo.categoria}>
+                      <p className="mb-2 text-sm font-semibold">{grupo.categoria}</p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {grupo.sugestoes.map((sugestao) => {
+                          const jaCadastrada = resumo.recompensas.some(
+                            (recompensa) =>
+                              normalizarNomeRecompensa(recompensa.nome) ===
+                              normalizarNomeRecompensa(sugestao.nome),
+                          );
+
+                          return (
+                            <Button
+                              key={sugestao.nome}
+                              type="button"
+                              variant="outline"
+                              className="h-auto min-h-10 w-full justify-start whitespace-normal px-3 py-2 text-left text-xs font-medium"
+                              disabled={jaCadastrada}
+                              title={jaCadastrada ? "Já cadastrada para este filho" : undefined}
+                              onClick={() => {
+                                setNome(sugestao.nome);
+                                setAbaForm("cadastrar");
+                              }}
+                            >
+                              <IconeSugestaoRecompensa icone={sugestao.icone} />
+                              <span className="min-w-0 flex-1 break-words">{sugestao.nome}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
         </DialogContent>
       </Dialog>
 
