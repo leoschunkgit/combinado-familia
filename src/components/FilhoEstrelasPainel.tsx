@@ -47,7 +47,6 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   const [recompensasAbertas, setRecompensasAbertas] = useState(!somenteRecompensas);
   const [confirmacao, setConfirmacao] = useState<
     | { tipo: "APROVEITOU"; recompensa: RecompensaEstrelaResumo }
-    | { tipo: "DESATIVAR"; recompensa: RecompensaEstrelaResumo }
     | { tipo: "EXCLUIR"; recompensa: RecompensaEstrelaResumo }
     | null
   >(null);
@@ -269,12 +268,6 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
 
         resumoAtualizado = retorno.resumo ?? null;
         toast.success("Recompensa marcada como aproveitada");
-      } else if (confirmacao.tipo === "DESATIVAR") {
-        const { error } = await supabase.rpc("desativar_recompensa_estrelas", {
-          p_id_recompensa: confirmacao.recompensa.id,
-        });
-        if (error) throw error;
-        toast.success("Recompensa desativada");
       } else if (confirmacao.tipo === "EXCLUIR") {
         const { error } = await supabase.rpc("excluir_recompensa_estrelas", {
           p_id_recompensa: confirmacao.recompensa.id,
@@ -399,13 +392,6 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                             onSelect={() => editarRecompensa(recompensa)}
                           >
                             <Pencil className="h-4 w-4" />Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!recompensa.pode_desativar}
-                            title={!recompensa.pode_desativar ? "Aguarde o filho confirmar que aproveitou a recompensa." : undefined}
-                            onSelect={() => setConfirmacao({ tipo: "DESATIVAR", recompensa })}
-                          >
-                            <X className="h-4 w-4" />Desativar
                           </DropdownMenuItem>
                           {recompensa.pode_excluir && (
                             <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setConfirmacao({ tipo: "EXCLUIR", recompensa })}>
@@ -728,17 +714,13 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
             <DialogTitle>
               {confirmacao?.tipo === "APROVEITOU"
                 ? "Já aproveitou?"
-                : confirmacao?.tipo === "DESATIVAR"
-                  ? "Desativar recompensa?"
-                  : "Excluir recompensa?"}
+                : "Excluir recompensa?"}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             {confirmacao?.tipo === "APROVEITOU"
               ? `Confirme que ${filho.nome} já aproveitou “${confirmacao.recompensa.nome_exibicao}”. A nova contagem começa a partir das próximas estrelas.`
-              : confirmacao?.tipo === "DESATIVAR"
-                ? "A recompensa deixa de aparecer nos próximos ciclos. O histórico já existente permanece."
-                : "Esta recompensa será excluída. As estrelas já conquistadas e o histórico existente serão preservados."}
+              : "Esta recompensa será excluída. As estrelas já conquistadas e o histórico existente serão preservados."}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmacao(null)}>Voltar</Button>
