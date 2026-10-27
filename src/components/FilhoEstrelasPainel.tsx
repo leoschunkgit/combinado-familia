@@ -3,7 +3,7 @@ import { CheckCircle2, EllipsisVertical, Loader2, Pencil, Plus, Star, ThumbsDown
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { erroRegra, msgErro } from "@/lib/app-error";
-import { useOcorrencias, type Filho } from "@/lib/db";
+import { useFilhoTarefas, useOcorrencias, useVigencias, type Filho } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
 import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas } from "@/lib/estrelas-model";
-import { situacaoVigencia } from "@/components/VigenciaStatus";
+import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -26,6 +26,8 @@ function Estrela({ className = "" }: { className?: string }) {
 export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: { filho: Filho; modo?: "completo" | "recompensas"; seletorFilho?: ReactNode }) {
   const somenteRecompensas = modo === "recompensas";
   const { data: ocorrencias = [] } = useOcorrencias();
+  const { data: vigencias = [] } = useVigencias();
+  const { data: atribuicoes = [] } = useFilhoTarefas();
   const [resumo, setResumo] = useState<ResumoEstrelas>(resumoEstrelasVazio);
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -201,15 +203,25 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
 
   const recompensasOrdenadas = [...resumo.recompensas].sort((a, b) => a.id - b.id);
   const agora = Date.now();
-  const totalNaoFezVigencia = ocorrencias.filter((ocorrencia) => {
-    const atribuicao = ocorrencia.t_filho_tarefa;
-    const vigencia = atribuicao?.t_vigencia;
-    return (
-      ocorrencia.tipo === "NAO_FEZ" &&
-      atribuicao?.id_filho === filho.id &&
-      Boolean(vigencia && situacaoVigencia(vigencia, agora) === "andamento")
+  const vigenciaResumo = [...vigencias]
+    .sort(compararVigencias)
+    .find(
+      (vigencia) =>
+        situacaoVigencia(vigencia, agora) === "andamento" &&
+        atribuicoes.some(
+          (atribuicao) =>
+            atribuicao.id_vigencia === vigencia.id &&
+            atribuicao.id_filho === filho.id,
+        ),
     );
-  }).length;
+  const totalNaoFezVigencia = vigenciaResumo
+    ? ocorrencias.filter(
+        (ocorrencia) =>
+          ocorrencia.tipo === "NAO_FEZ" &&
+          ocorrencia.t_filho_tarefa?.id_filho === filho.id &&
+          ocorrencia.t_filho_tarefa?.id_vigencia === vigenciaResumo.id,
+      ).length
+    : 0;
 
   if (carregando) {
     return (
@@ -223,20 +235,20 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     <>
       <div className={somenteRecompensas ? "space-y-3" : "space-y-4"}>
         {!somenteRecompensas && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs font-semibold">
+          <div className="flex min-w-0 items-center gap-2 px-1">
             <span
-              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 tabular-nums text-muted-foreground"
+              className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
               aria-label={`${resumo.total_conquistado} estrelas conquistadas`}
             >
-              <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
-              <span>{resumo.total_conquistado}</span>
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+              {resumo.total_conquistado}
             </span>
             <span
-              className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 tabular-nums text-muted-foreground"
-              aria-label={`${totalNaoFezVigencia} não fez na vigência`}
+              className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
+              aria-label={`${totalNaoFezVigencia} não fez`}
             >
-              <ThumbsDown className="animate-notification-bell h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
-              <span>{totalNaoFezVigencia}</span>
+              <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+              {totalNaoFezVigencia}
             </span>
           </div>
         )}
