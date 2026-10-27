@@ -82,7 +82,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
 
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 pt-1">
       <div className="min-w-0 space-y-2">
-        <Label>Avatar <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+        <Label>Avatar</Label>
         <div className="flex flex-wrap gap-1">
           {([
             { valor: "" as const, label: "Iniciais" },
@@ -112,7 +112,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
           type="color"
           value={corPicker}
           onChange={(e) => onChange({ ...value, cor: e.target.value })}
-          className="h-8 w-12 cursor-pointer rounded-md border bg-background p-1"
+          className="h-8 w-12 cursor-pointer rounded-md border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
           aria-label="Escolher cor do filho"
         />
       </div>
