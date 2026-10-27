@@ -259,6 +259,7 @@ function VigenciasPage() {
               </span>
             }
             description={<VigenciaStatus vigencia={v} />}
+            alignFirstRow
             open={aberto}
             onOpenChange={(open) => setVigenciasAbertas((atuais) => ({ ...atuais, [v.id]: open }))}
             action={
