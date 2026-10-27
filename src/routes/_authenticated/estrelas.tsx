@@ -61,7 +61,7 @@ function EstrelasPage() {
             <FilhoEstrelasPainel
               filho={filhoSelecionado}
               seletorFilho={
-                <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border/60 px-3 py-2.5 sm:px-4 sm:py-3">
+                <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border/60 px-3 py-4 sm:px-4">
                   <span className="h-7 w-7" aria-hidden="true" />
 
                   <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
