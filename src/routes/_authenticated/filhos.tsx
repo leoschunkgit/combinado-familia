@@ -255,7 +255,7 @@ function FilhosPage() {
         </div>
       }
     />
-    <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
+    <div className="min-w-0 max-w-full space-y-4 sm:space-y-5">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
         const aberto = filhoAbertoId === f.id;
         const temIdade = f.idade !== null;
         const temMesada = f.tem_mesada === true && f.valor_mesada !== null;
