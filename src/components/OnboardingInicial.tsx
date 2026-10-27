@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Gift } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -29,8 +29,9 @@ import { diasDaVigencia, sugerirInicioVigencia } from "@/lib/vigencia-periodo";
 import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/modal-close";
 import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
 import { encontrarTarefaEquivalente } from "@/lib/tarefa-sugestoes";
+import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
 
-const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição", "Recompensa"] as const;
+const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 
 export function OnboardingInicial() {
   const navigate = useNavigate();
@@ -50,12 +51,9 @@ export function OnboardingInicial() {
   const [valorMesada, setValorMesada] = useState("");
   const [corFilho, setCorFilho] = useState("");
   const [avatarFilho, setAvatarFilho] = useState<FilhoAvatarOpcao>("");
+  const [recompensasFilho, setRecompensasFilho] = useState(criarRecompensasRapidasVazias);
 
   const [nomeTarefa, setNomeTarefa] = useState("");
-
-  const [nomeRecompensa, setNomeRecompensa] = useState("");
-  const [descricaoRecompensa, setDescricaoRecompensa] = useState("");
-  const [estrelasRecompensa, setEstrelasRecompensa] = useState("");
 
   const [inicioVigencia, setInicioVigencia] = useState(() => sugerirInicioVigencia([]));
   const [fimVigencia, setFimVigencia] = useState("");
@@ -74,14 +72,23 @@ export function OnboardingInicial() {
     filhos.length === 0 ? 0 :
     tarefas.length === 0 ? 1 :
     vigencias.length === 0 ? 2 :
-    atribuicoes.length === 0 ? 3 :
-    4;
+    3;
   const etapa = filhoEmCorrecaoId !== null ? 0 : tarefaEmCorrecaoId !== null ? 1 : vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
 
   const aberto = !onboardingEncerradoLocalmente && !carregando && usuarioPai?.onboarding_concluido !== true && etapa >= 0;
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
   const tarefaAtual = tarefaSelecionada || (tarefas[0] ? String(tarefas[0].id) : "");
   const vigenciaAtual = vigenciaSelecionada || (vigenciasAtivas[0] ? String(vigenciasAtivas[0].id) : "");
+  const atribuicaoAtualExiste = Boolean(
+    filhoAtual &&
+    tarefaAtual &&
+    vigenciaAtual &&
+    atribuicoes.some((atribuicao) =>
+      atribuicao.id_filho === Number(filhoAtual) &&
+      atribuicao.id_tarefa === Number(tarefaAtual) &&
+      atribuicao.id_vigencia === Number(vigenciaAtual)
+    ),
+  );
 
 
   async function cadastrarFilho() {
@@ -91,7 +98,7 @@ export function OnboardingInicial() {
       return;
     }
 
-    if (valorMesada.trim() !== "" && (!/^\d+(?:[,.]\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
+    if (valorMesada.trim() !== "" && (!/^\\d+(?:[,.]\\d{1,2})?$/.test(valorMesada) || Number(valorMesada.replace(",", ".")) <= 0 || Number(valorMesada.replace(",", ".")) > 9999999999.99)) {
       toast.error("Informe um valor de mesada válido");
       return;
     }
@@ -100,30 +107,74 @@ export function OnboardingInicial() {
       return;
     }
 
+    const corrigindo = filhoEmCorrecaoId !== null;
+    const recompensasPreparadas = corrigindo
+      ? { ok: true as const, recompensas: [] }
+      : prepararRecompensasRapidas(recompensasFilho);
+
+    if (!recompensasPreparadas.ok) {
+      toast.error(recompensasPreparadas.mensagem);
+      return;
+    }
+
+    const valorMesadaNumero = valorMesada.trim() !== "" ? Number(valorMesada.replace(",", ".")) : null;
+
     setSalvando(true);
-    const payload = {
-      nome,
-      idade: null,
-      tem_mesada: valorMesada.trim() !== "",
-      valor_mesada: valorMesada.trim() !== "" ? Number(valorMesada.replace(",", ".")) : null,
-      cor: corFilho.trim() || null,
-      avatar: avatarFilho || null,
-    };
-    const resultado = filhoEmCorrecaoId === null
-      ? await supabase.from("t_filho").insert(payload).select("id").single()
-      : await supabase.from("t_filho").update(payload).eq("id", filhoEmCorrecaoId).select("id").single();
-    const { data: criado, error } = resultado;
+
+    let criado: { id?: number; qtd_recompensas?: number } | null = null;
+    let error: unknown = null;
+
+    if (corrigindo) {
+      const resultado = await supabase
+        .from("t_filho")
+        .update({
+          nome,
+          idade: null,
+          tem_mesada: valorMesadaNumero !== null,
+          valor_mesada: valorMesadaNumero,
+          cor: corFilho.trim() || null,
+          avatar: avatarFilho || null,
+        })
+        .eq("id", filhoEmCorrecaoId)
+        .select("id")
+        .single();
+
+      criado = resultado.data;
+      error = resultado.error;
+    } else {
+      const resultado = await supabase.rpc("cadastrar_filho_com_recompensas", {
+        p_nome: nome,
+        p_idade: null,
+        p_cor: corFilho.trim() || null,
+        p_avatar: avatarFilho || null,
+        p_valor_mesada: valorMesadaNumero,
+        p_recompensas: recompensasPreparadas.recompensas,
+      });
+
+      criado = resultado.data as unknown as { id?: number; qtd_recompensas?: number } | null;
+      error = resultado.error;
+    }
+
     setSalvando(false);
 
-    if (error) {
+    if (error || !criado?.id) {
       toast.error(msgErro(error));
       return;
     }
 
-    const corrigiu = filhoEmCorrecaoId !== null;
-    if (criado?.id) setFilhoSelecionado(String(criado.id));
+    if (!corrigindo) {
+      setRecompensasFilho(criarRecompensasRapidasVazias());
+    }
+
+    setFilhoSelecionado(String(criado.id));
     setFilhoEmCorrecaoId(null);
-    toast.success(corrigiu ? "Filho atualizado. Vamos continuar." : "Filho cadastrado. Vamos para a próxima etapa.");
+    toast.success(
+      corrigindo
+        ? "Filho atualizado. Vamos continuar."
+        : criado.qtd_recompensas
+          ? `Filho e ${criado.qtd_recompensas} recompensa${criado.qtd_recompensas === 1 ? "" : "s"} cadastrados. Vamos para a próxima etapa.`
+          : "Filho cadastrado. Vamos para a próxima etapa.",
+    );
     await qc.invalidateQueries({ queryKey: ["filhos"] });
   }
 
@@ -265,67 +316,31 @@ export function OnboardingInicial() {
     }
 
     setSalvando(true);
-    const resultado = await cadastrarAtribuicoes({
-      candidatos: [{
-        id_filho: Number(filhoAtual),
-        id_tarefa: Number(tarefaAtual),
-        id_vigencia: Number(vigenciaAtual),
-      }],
-      existentes: atribuicoes,
-      vigencias,
-      politica: "SOMENTE_ATUAL",
-    });
-    setSalvando(false);
 
-    if (!resultado.ok) {
-      toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
-      return;
+    if (!atribuicaoAtualExiste) {
+      const resultado = await cadastrarAtribuicoes({
+        candidatos: [{
+          id_filho: Number(filhoAtual),
+          id_tarefa: Number(tarefaAtual),
+          id_vigencia: Number(vigenciaAtual),
+        }],
+        existentes: atribuicoes,
+        vigencias,
+        politica: "SOMENTE_ATUAL",
+      });
+
+      if (!resultado.ok) {
+        setSalvando(false);
+        toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+        return;
+      }
+
+      await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
     }
 
-    await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    toast.success("Atribuição criada. Falta cadastrar a primeira recompensa.");
-  }
-
-  async function cadastrarRecompensa() {
     if (!usuarioPai?.id) {
-      toast.error("Não foi possível identificar sua conta para concluir o aprendizado.");
-      return;
-    }
-
-    const idFilho = Number(filhoAtual);
-    if (!idFilho) {
-      toast.error("Filho não encontrado para cadastrar a recompensa.");
-      return;
-    }
-
-    const nome = nomeRecompensa.trim();
-    const descricao = descricaoRecompensa.trim();
-    const quantidade = Number(estrelasRecompensa);
-
-    if (nome.length < 2 || nome.length > 100) {
-      toast.error("Informe uma recompensa entre 2 e 100 caracteres");
-      return;
-    }
-    if (descricao.length > 300) {
-      toast.error("A descrição da recompensa deve ter no máximo 300 caracteres");
-      return;
-    }
-    if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 100000) {
-      toast.error("Informe uma quantidade válida de estrelas");
-      return;
-    }
-
-    setSalvando(true);
-    const { error: erroRecompensa } = await supabase.rpc("salvar_recompensa_estrelas", {
-      p_id_filho: idFilho,
-      p_nome: nome,
-      p_descricao: descricao,
-      p_estrelas_necessarias: quantidade,
-    });
-
-    if (erroRecompensa) {
       setSalvando(false);
-      toast.error(msgErro(erroRecompensa));
+      toast.error("Não foi possível identificar sua conta para concluir o aprendizado.");
       return;
     }
 
@@ -333,6 +348,7 @@ export function OnboardingInicial() {
       .from("t_usuario_pai")
       .update({ onboarding_concluido: true })
       .eq("id", usuarioPai.id);
+
     setSalvando(false);
 
     if (erroOnboarding) {
@@ -376,7 +392,7 @@ export function OnboardingInicial() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-5 gap-1.5" aria-label="Progresso da configuração inicial">
+        <div className="grid grid-cols-4 gap-1.5" aria-label="Progresso da configuração inicial">
           {PASSOS.map((passo, index) => (
             <div key={passo} className="min-w-0">
               <div className={`h-1.5 rounded-full ${index <= etapa ? "bg-primary" : "bg-muted"}`} />
@@ -403,6 +419,11 @@ export function OnboardingInicial() {
               <CurrencyInput id="onboarding-valor-mesada" value={valorMesada} onValueChange={setValorMesada} placeholder="R$ 100,00" />
               <p className="text-xs text-muted-foreground">Se informado, o valor será usado como base para os descontos de “Não fez”.</p>
             </div>
+            {filhoEmCorrecaoId === null && (
+              <div className="border-t pt-3">
+                <RecompensasRapidas value={recompensasFilho} onChange={setRecompensasFilho} prefix="onboarding-filho" />
+              </div>
+            )}
             <div className="border-t pt-3">
               <FilhoPersonalizacao
                 nome={nomeFilho}
@@ -490,7 +511,7 @@ export function OnboardingInicial() {
             </div>
             <div>
               <h3 className="font-semibold">4. Faça a primeira atribuição</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência. Depois você cadastrará a primeira recompensa.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência para começar a acompanhar o combinado.</p>
             </div>
             <Pick label="Filho" childIcons required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome, cor: f.cor, avatar: f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null }))} />
             <Pick label="Tarefa" taskIcons required value={tarefaAtual} onChange={setTarefaSelecionada} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
@@ -507,68 +528,11 @@ export function OnboardingInicial() {
               </Button>
             </div>
             <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarAssociacao)}>
-              {salvando ? "Salvando..." : "Cadastrar atribuição e continuar"}
+              {salvando ? "Salvando..." : atribuicaoAtualExiste ? "Concluir configuração" : "Cadastrar atribuição e concluir"}
             </Button>
           </div>
         )}
 
-        {etapa === 4 && (
-          <div className="space-y-4">
-            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Filho, tarefa, vigência e atribuição prontos. Agora defina uma recompensa.</span>
-            </div>
-            <div>
-              <h3 className="flex items-center gap-2 font-semibold">
-                <Gift className="h-4 w-4 text-primary" />
-                5. Cadastre a primeira recompensa
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                A recompensa pertence ao filho e será conquistada conforme ele acumular estrelas.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="onboarding-recompensa-nome">Recompensa *</Label>
-              <Input
-                id="onboarding-recompensa-nome"
-                autoFocus
-                value={nomeRecompensa}
-                onChange={(e) => setNomeRecompensa(e.target.value)}
-                maxLength={100}
-                placeholder="Ex.: Ir ao cinema"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="onboarding-recompensa-descricao">
-                Descrição <span className="font-normal text-muted-foreground">(opcional)</span>
-              </Label>
-              <Input
-                id="onboarding-recompensa-descricao"
-                value={descricaoRecompensa}
-                onChange={(e) => setDescricaoRecompensa(e.target.value)}
-                maxLength={300}
-                placeholder="Ex.: Sessão de cinema no fim de semana"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="onboarding-recompensa-estrelas">Estrelas necessárias *</Label>
-              <Input
-                id="onboarding-recompensa-estrelas"
-                type="number"
-                min="1"
-                max="100000"
-                step="1"
-                inputMode="numeric"
-                value={estrelasRecompensa}
-                onChange={(e) => setEstrelasRecompensa(e.target.value)}
-                placeholder="Ex.: 20"
-              />
-            </div>
-            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarRecompensa)}>
-              {salvando ? "Salvando..." : "Cadastrar recompensa e concluir aprendizado"}
-            </Button>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
 
