@@ -272,6 +272,13 @@ function FilhosPage() {
           onOpenChange={(open) => setFilhosAbertos((atuais) => ({ ...atuais, [f.id]: open }))}
           action={
             <>
+              <Hint content="Gerenciar acesso">
+                <Button asChild variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md">
+                  <Link to="/acesso-filhos" search={{ filho: f.id }} aria-label={`Gerenciar acesso de ${f.nome}`}>
+                    <Smartphone className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </Hint>
               <Hint content="Editar filho">
                 <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => abrirEdicao(f)} aria-label={`Editar ${f.nome}`}>
                   <Pencil className="h-4 w-4" />
@@ -303,20 +310,6 @@ function FilhosPage() {
               )}
             </div>
           )}
-
-          <div className={temResumo ? "mt-3 border-t pt-3" : "border-t pt-3"}>
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="w-full justify-center sm:w-auto"
-            >
-              <Link to="/acesso-filhos" search={{ filho: f.id }}>
-                <Smartphone className="h-3.5 w-3.5" />
-                Gerenciar acesso
-              </Link>
-            </Button>
-          </div>
 
           {aberto && (
             <div className="mt-3 border-t pt-3">
