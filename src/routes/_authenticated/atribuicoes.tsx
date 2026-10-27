@@ -17,6 +17,7 @@ import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/component
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { TarefaIcone } from "@/components/TarefaIcone";
+import { definirFilhoSelecionadoCompartilhado, obterFilhoSelecionadoCompartilhado } from "@/lib/filho-selecionado-contexto";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -49,8 +50,10 @@ function AtribuicoesPage() {
   const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
     vigencia ? Number(vigencia) : null,
   );
-  const [filtrosRascunho, setFiltrosRascunho] = useState({ filho: "all", tarefa: "all" });
-  const [filtrosAplicados, setFiltrosAplicados] = useState({ filho: "all", tarefa: "all" });
+  const filhoCompartilhadoInicial = obterFilhoSelecionadoCompartilhado();
+  const filtroFilhoInicial = filhoCompartilhadoInicial ? String(filhoCompartilhadoInicial) : "all";
+  const [filtrosRascunho, setFiltrosRascunho] = useState({ filho: filtroFilhoInicial, tarefa: "all" });
+  const [filtrosAplicados, setFiltrosAplicados] = useState({ filho: filtroFilhoInicial, tarefa: "all" });
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
   const vigenciaAtiva = vigenciasOrdenadas.find(
@@ -217,7 +220,7 @@ function AtribuicoesPage() {
           }}
           renderFilters={() => (
             <>
-              <Pick label="Filho" childIcons value={filtrosRascunho.filho} onChange={(filho) => setFiltrosRascunho((atual) => ({ ...atual, filho }))} allLabel="Todos" options={filhosDisponiveis.map((filho) => ({ value: String(filho.id), label: filho.nome, cor: filho.cor, avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null }))} />
+              <Pick label="Filho" childIcons value={filtrosRascunho.filho} onChange={(filho) => { setFiltrosRascunho((atual) => ({ ...atual, filho })); if (filho !== "all") definirFilhoSelecionadoCompartilhado(Number(filho)); }} allLabel="Todos" options={filhosDisponiveis.map((filho) => ({ value: String(filho.id), label: filho.nome, cor: filho.cor, avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null }))} />
               <Pick label="Tarefa" taskIcons value={filtrosRascunho.tarefa} onChange={(tarefa) => setFiltrosRascunho((atual) => ({ ...atual, tarefa }))} allLabel="Todas" options={tarefasDisponiveis.map((tarefa) => ({ value: String(tarefa.id), label: tarefa.nome }))} />
             </>
           )}
