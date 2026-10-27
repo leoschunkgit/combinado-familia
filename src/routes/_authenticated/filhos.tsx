@@ -20,6 +20,7 @@ import { Hint } from "@/components/Hint";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { InfoTile } from "@/components/InfoTile";
+import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -129,6 +130,7 @@ function FilhosPage() {
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Filho | null>(null);
   const [edicao, setEdicao] = useState<FilhoForm>(vazio);
+  const [recompensasNovo, setRecompensasNovo] = useState(criarRecompensasRapidasVazias);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [confirmarExclusaoTodos, setConfirmarExclusaoTodos] = useState(false);
   const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string; cor: string | null; avatar: string | null } | null>(null);
@@ -139,22 +141,56 @@ function FilhosPage() {
     e.preventDefault();
     const p = schema.safeParse(form);
     if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
-    setSaving(true);
-    const { data: criado, error } = await supabase
-      .from("t_filho")
-      .insert({ nome: p.data.nome, ...dadosExtras(p.data) })
-      .select("id, nome, cor, avatar")
-      .single();
-    setSaving(false);
-    if (error || !criado) { toast.error(msgErro(error)); return; }
 
-    toast.success("Filho cadastrado");
+    const recompensasPreparadas = prepararRecompensasRapidas(recompensasNovo);
+    if (!recompensasPreparadas.ok) {
+      toast.error(recompensasPreparadas.mensagem);
+      return;
+    }
+
+    const extras = dadosExtras(p.data);
+
+    setSaving(true);
+    const { data, error } = await supabase.rpc("cadastrar_filho_com_recompensas", {
+      p_nome: p.data.nome,
+      p_idade: extras.idade,
+      p_cor: extras.cor,
+      p_avatar: extras.avatar,
+      p_valor_mesada: extras.valor_mesada,
+      p_recompensas: recompensasPreparadas.recompensas,
+    });
+    setSaving(false);
+
+    const criado = data as unknown as {
+      id?: number;
+      nome?: string;
+      cor?: string | null;
+      avatar?: string | null;
+      qtd_recompensas?: number;
+    } | null;
+
+    if (error || !criado?.id) { toast.error(msgErro(error)); return; }
+
+    toast.success(
+      criado.qtd_recompensas
+        ? `Filho cadastrado com ${criado.qtd_recompensas} recompensa${criado.qtd_recompensas === 1 ? "" : "s"}`
+        : "Filho cadastrado",
+    );
     setForm(vazio);
+    setRecompensasNovo(criarRecompensasRapidasVazias());
     setNovoAberto(false);
-    await qc.invalidateQueries({ queryKey: ["filhos"] });
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["filhos"] }),
+      qc.invalidateQueries({ queryKey: ["resumo_estrelas_filho"] }),
+    ]);
 
     if (tarefas.length > 0 && vigenciaAtual) {
-      setFilhoPosCadastro({ id: criado.id, nome: criado.nome, cor: criado.cor, avatar: criado.avatar });
+      setFilhoPosCadastro({
+        id: criado.id,
+        nome: criado.nome ?? p.data.nome,
+        cor: criado.cor ?? extras.cor,
+        avatar: criado.avatar ?? extras.avatar,
+      });
       setPerguntarAtribuicao(true);
     }
   }
@@ -273,14 +309,17 @@ function FilhosPage() {
           </div>
         </CollapsibleSection>;
       })}</div>
-    <Dialog open={novoAberto} onOpenChange={(open) => { setNovoAberto(open); if (!open) setForm(vazio); }}>
+    <Dialog open={novoAberto} onOpenChange={(open) => { setNovoAberto(open); if (!open) { setForm(vazio); setRecompensasNovo(criarRecompensasRapidasVazias()); } }}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>Adicionar filho</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
           <div className="space-y-2"><Label>Nome <span className="text-destructive">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
           <CamposExtras value={form} onChange={setForm} prefix="novo-filho" />
+          <div className="border-t pt-3">
+            <RecompensasRapidas value={recompensasNovo} onChange={setRecompensasNovo} prefix="novo-filho" />
+          </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => { setNovoAberto(false); setForm(vazio); }}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => { setNovoAberto(false); setForm(vazio); setRecompensasNovo(criarRecompensasRapidasVazias()); }}>Cancelar</Button>
             <Button type="submit" disabled={saving}>Cadastrar</Button>
           </DialogFooter>
         </form>
