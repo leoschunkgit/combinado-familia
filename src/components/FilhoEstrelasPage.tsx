@@ -3,6 +3,7 @@ import { CheckCircle2, Gift, Loader2, PartyPopper, Star } from "lucide-react";
 import { EmptyState } from "@/components/PageHeader";
 import { FilhoAppPageHeader } from "@/components/FilhoAppPageHeader";
 import { RecompensasAproveitadasSection } from "@/components/RecompensasAproveitadasSection";
+import { RecompensaIcone } from "@/components/RecompensaIcone";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EstrelasFilho, RecompensaEstrelaFilho } from "@/lib/child-app-session";
@@ -94,7 +95,7 @@ export function FilhoEstrelasPage({
             >
               <div className="flex items-start gap-4">
                 <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border bg-amber-50 dark:bg-amber-950/35">
-                  <Estrela className="h-8 w-8" />
+                  <RecompensaIcone nome={nomeExibido} className="h-8 w-8 text-primary" />
                 </span>
 
                 <div className="min-w-0 flex-1">
