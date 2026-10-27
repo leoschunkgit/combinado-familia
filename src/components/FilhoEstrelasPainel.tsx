@@ -227,10 +227,11 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           </div>
         </section>}
 
-        {!somenteRecompensas && seletorFilho}
+        <div className={!somenteRecompensas && seletorFilho ? "overflow-hidden rounded-2xl border bg-card" : ""}>
+          {!somenteRecompensas && seletorFilho}
 
         <CollapsibleSection
-          className="bg-clean-surface"
+          className={!somenteRecompensas && seletorFilho ? "rounded-none border-0 bg-clean-surface" : "bg-clean-surface"}
           title="Recompensas"
           description="Cadastre o prêmio e defina quantas estrelas são necessárias."
           count={resumo.recompensas.length}
@@ -348,6 +349,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
             {resumo.recompensas.length === 0 && <p className="rounded-xl border border-dashed bg-background px-4 py-5 text-center text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
           </div>
         </CollapsibleSection>
+        </div>
 
         {!somenteRecompensas && <RecompensasAproveitadasSection resgates={resumo.resgates} />}
 
