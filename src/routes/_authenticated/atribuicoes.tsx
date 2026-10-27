@@ -45,7 +45,7 @@ function AtribuicoesPage() {
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filhoContextoId, setFilhoContextoId] = useState<number | null>(null);
-  const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>({});
+  const [filhoAbertoChave, setFilhoAbertoChave] = useState<string | null>(null);
   const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
     vigencia ? Number(vigencia) : null,
   );
@@ -146,6 +146,7 @@ function AtribuicoesPage() {
     });
 
     setVigenciaSelecionadaId(id);
+    setFilhoAbertoChave(null);
     setFiltrosRascunho(ajustar);
     setFiltrosAplicados(ajustar);
   }
@@ -280,7 +281,7 @@ function AtribuicoesPage() {
                 {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
                   const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
                   const temAtribuicoes = atribuicoesFilho.length > 0;
-                  const aberto = temAtribuicoes && filhosAbertos[chave] === true;
+                  const aberto = temAtribuicoes && filhoAbertoChave === chave;
 
                   return (
                     <section key={filhoItem.id} className="overflow-hidden rounded-xl border bg-card">
@@ -290,10 +291,7 @@ function AtribuicoesPage() {
                           className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
                           onClick={() => {
                             if (!temAtribuicoes) return;
-                            setFilhosAbertos((atual) => ({
-                              ...atual,
-                              [chave]: !aberto,
-                            }));
+                            setFilhoAbertoChave(aberto ? null : chave);
                           }}
                           aria-expanded={temAtribuicoes ? aberto : undefined}
                           aria-label={temAtribuicoes ? `${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}` : undefined}
