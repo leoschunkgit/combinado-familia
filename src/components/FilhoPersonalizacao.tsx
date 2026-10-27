@@ -1,5 +1,4 @@
 import { FilhoAvatar } from "@/components/FilhoAvatar";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export type FilhoAvatarOpcao = "" | "menino" | "menina";
@@ -56,25 +55,15 @@ export function FilhoPersonalizacao({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${prefix}-cor-texto`}>Cor <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-        <div className="flex items-center gap-2">
-          <input
-            id={`${prefix}-cor`}
-            type="color"
-            value={corPicker}
-            onChange={(event) => onCorChange(event.target.value)}
-            className="h-9 w-11 shrink-0 cursor-pointer rounded-md border bg-background p-1"
-            aria-label="Escolher cor do filho"
-          />
-          <Input
-            id={`${prefix}-cor-texto`}
-            value={cor}
-            onChange={(event) => onCorChange(event.target.value)}
-            placeholder="#0C5C3C ou rgb(12, 92, 60)"
-            maxLength={50}
-            className="h-9"
-          />
-        </div>
+        <Label htmlFor={`${prefix}-cor`}>Cor <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+        <input
+          id={`${prefix}-cor`}
+          type="color"
+          value={corPicker}
+          onChange={(event) => onCorChange(event.target.value)}
+          className="h-10 w-14 cursor-pointer rounded-md border bg-background p-1"
+          aria-label="Escolher cor do filho"
+        />
       </div>
     </div>
   );
