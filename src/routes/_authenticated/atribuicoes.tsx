@@ -328,7 +328,7 @@ function AtribuicoesPage() {
                         onClick={() => setFilhoContextoId(filhoItem.id)}
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        Adicionar
+                        Add tarefa
                       </Button>
                     </div>
 
