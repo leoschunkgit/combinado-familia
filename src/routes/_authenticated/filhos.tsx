@@ -256,6 +256,9 @@ function FilhosPage() {
     />
     <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
         const aberto = filhosAbertos[f.id] === true;
+        const temIdade = f.idade !== null;
+        const temMesada = f.tem_mesada === true && f.valor_mesada !== null;
+        const temResumo = temIdade || temMesada;
         return <CollapsibleSection
           key={f.id}
           title={
@@ -282,20 +285,25 @@ function FilhosPage() {
           }
           contentClassName="p-4"
         >
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <InfoTile
-              label="Idade"
-              value={f.idade !== null ? `${f.idade} anos` : "Não informada"}
-            />
-            <InfoTile
-              label="Mesada"
-              icon={<WalletCards className="h-3.5 w-3.5" />}
-              className="col-span-2 sm:col-span-1"
-              value={f.tem_mesada === true && f.valor_mesada !== null ? dinheiro(f.valor_mesada) : "Não"}
-            />
-          </div>
+          {temResumo && (
+            <div className={`grid gap-2 text-sm ${temIdade && temMesada ? "grid-cols-2" : "grid-cols-1"}`}>
+              {temIdade && (
+                <InfoTile
+                  label="Idade"
+                  value={`${f.idade} anos`}
+                />
+              )}
+              {temMesada && (
+                <InfoTile
+                  label="Mesada"
+                  icon={<WalletCards className="h-3.5 w-3.5" />}
+                  value={dinheiro(f.valor_mesada)}
+                />
+              )}
+            </div>
+          )}
 
-          <div className="mt-3 border-t pt-3">
+          <div className={temResumo ? "mt-3 border-t pt-3" : "border-t pt-3"}>
             <Button
               asChild
               size="sm"
@@ -308,6 +316,12 @@ function FilhosPage() {
               </Link>
             </Button>
           </div>
+
+          {aberto && (
+            <div className="mt-3 border-t pt-3">
+              <FilhoEstrelasPainel filho={f} modo="recompensas" />
+            </div>
+          )}
         </CollapsibleSection>;
       })}</div>
     <Dialog open={novoAberto} onOpenChange={(open) => { setNovoAberto(open); if (!open) { setForm(vazio); setRecompensasNovo(criarRecompensasRapidasVazias()); } }}>
@@ -379,9 +393,6 @@ function FilhosPage() {
               <Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} />
             </div>
             <CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" />
-            <div className="border-t pt-3">
-              <FilhoEstrelasPainel filho={editando} modo="recompensas" />
-            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
               <Button type="submit" disabled={saving}>Salvar alterações</Button>
