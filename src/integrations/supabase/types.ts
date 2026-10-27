@@ -1607,6 +1607,17 @@ export type Database = {
         Returns: boolean
       }
       app_config_publico: { Args: never; Returns: Json }
+      cadastrar_filho_com_recompensas: {
+        Args: {
+          p_avatar?: string | null
+          p_cor?: string | null
+          p_idade?: number | null
+          p_nome: string
+          p_recompensas?: Json
+          p_valor_mesada?: number | null
+        }
+        Returns: Json
+      }
       classificar_exclusao_atribuicao_interno: {
         Args: { p_id_filho_tarefa: number; p_id_usuario_pai: number }
         Returns: string
