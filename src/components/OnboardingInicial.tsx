@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,7 +13,6 @@ import { Pick } from "@/components/Pick";
 import {
   fmtVigencia,
   msgErro,
-  paraCampoDataHoraBrasil,
   paraIsoDataHoraBrasil,
   useFilhos,
   useFilhoTarefas,
@@ -62,9 +60,6 @@ export function OnboardingInicial() {
   const [filhoSelecionado, setFilhoSelecionado] = useState("");
   const [tarefaSelecionada, setTarefaSelecionada] = useState("");
   const [vigenciaSelecionada, setVigenciaSelecionada] = useState("");
-  const [filhoEmCorrecaoId, setFilhoEmCorrecaoId] = useState<number | null>(null);
-  const [tarefaEmCorrecaoId, setTarefaEmCorrecaoId] = useState<number | null>(null);
-  const [vigenciaEmCorrecaoId, setVigenciaEmCorrecaoId] = useState<number | null>(null);
 
   const carregando = carregandoFilhos || carregandoTarefas || carregandoVigencias || carregandoAtribuicoes || carregandoUsuarioPai;
   const vigenciasAtivas = vigencias.filter(vigenciaEmAndamento);
@@ -74,7 +69,7 @@ export function OnboardingInicial() {
     tarefas.length === 0 ? 1 :
     vigencias.length === 0 ? 2 :
     3;
-  const etapa = filhoEmCorrecaoId !== null ? 0 : tarefaEmCorrecaoId !== null ? 1 : vigenciaEmCorrecaoId !== null ? 2 : etapaBase;
+  const etapa = etapaBase;
 
   const aberto = !onboardingEncerradoLocalmente && !carregando && usuarioPai?.onboarding_concluido !== true && etapa >= 0;
   const filhoAtual = filhoSelecionado || (filhos[0] ? String(filhos[0].id) : "");
@@ -113,10 +108,7 @@ export function OnboardingInicial() {
       return;
     }
 
-    const corrigindo = filhoEmCorrecaoId !== null;
-    const recompensasPreparadas = corrigindo
-      ? { ok: true as const, recompensas: [] }
-      : prepararRecompensasRapidas(recompensasFilho);
+    const recompensasPreparadas = prepararRecompensasRapidas(recompensasFilho);
 
     if (!recompensasPreparadas.ok) {
       toast.error(recompensasPreparadas.mensagem);
@@ -128,40 +120,17 @@ export function OnboardingInicial() {
 
     setSalvando(true);
 
-    let criado: { id?: number; qtd_recompensas?: number } | null = null;
-    let error: unknown = null;
+    const resultado = await supabase.rpc("cadastrar_filho_com_recompensas", {
+      p_nome: nome,
+      p_idade: idadeNumero,
+      p_cor: corFilho.trim() || null,
+      p_avatar: avatarFilho || null,
+      p_valor_mesada: valorMesadaNumero,
+      p_recompensas: recompensasPreparadas.recompensas,
+    });
 
-    if (corrigindo) {
-      const resultado = await supabase
-        .from("t_filho")
-        .update({
-          nome,
-          idade: idadeNumero,
-          tem_mesada: valorMesadaNumero !== null,
-          valor_mesada: valorMesadaNumero,
-          cor: corFilho.trim() || null,
-          avatar: avatarFilho || null,
-        })
-        .eq("id", filhoEmCorrecaoId)
-        .select("id")
-        .single();
-
-      criado = resultado.data;
-      error = resultado.error;
-    } else {
-      const resultado = await supabase.rpc("cadastrar_filho_com_recompensas", {
-        p_nome: nome,
-        p_idade: idadeNumero,
-        p_cor: corFilho.trim() || null,
-        p_avatar: avatarFilho || null,
-        p_valor_mesada: valorMesadaNumero,
-        p_recompensas: recompensasPreparadas.recompensas,
-      });
-
-      criado = resultado.data as unknown as { id?: number; qtd_recompensas?: number } | null;
-      error = resultado.error;
-    }
-
+    const criado = resultado.data as unknown as { id?: number; qtd_recompensas?: number } | null;
+    const error = resultado.error;
     setSalvando(false);
 
     if (error || !criado?.id) {
@@ -169,19 +138,9 @@ export function OnboardingInicial() {
       return;
     }
 
-    if (!corrigindo) {
-      setRecompensasFilho(criarRecompensasRapidasVazias());
-    }
-
+    setRecompensasFilho(criarRecompensasRapidasVazias());
     setFilhoSelecionado(String(criado.id));
-    setFilhoEmCorrecaoId(null);
-    toast.success(
-      corrigindo
-        ? "Filho atualizado. Vamos continuar."
-        : criado.qtd_recompensas
-          ? `Filho e ${criado.qtd_recompensas} recompensa${criado.qtd_recompensas === 1 ? "" : "s"} cadastrados. Vamos para a próxima etapa.`
-          : "Filho cadastrado. Vamos para a próxima etapa.",
-    );
+    toast.success(criado.qtd_recompensas ? "Filho e recompensas cadastrados" : "Filho cadastrado");
     await qc.invalidateQueries({ queryKey: ["filhos"] });
   }
 
@@ -192,16 +151,13 @@ export function OnboardingInicial() {
       return;
     }
 
-    if (encontrarTarefaEquivalente(tarefas, nome, tarefaEmCorrecaoId ?? undefined)) {
+    if (encontrarTarefaEquivalente(tarefas, nome)) {
       toast.error(`A tarefa "${nome}" já está cadastrada`);
       return;
     }
 
     setSalvando(true);
-    const resultado = tarefaEmCorrecaoId === null
-      ? await supabase.from("t_tarefa").insert({ nome }).select("id").single()
-      : await supabase.from("t_tarefa").update({ nome }).eq("id", tarefaEmCorrecaoId).select("id").single();
-    const { data: criada, error } = resultado;
+    const { data: criada, error } = await supabase.from("t_tarefa").insert({ nome }).select("id").single();
     setSalvando(false);
 
     if (error) {
@@ -209,48 +165,9 @@ export function OnboardingInicial() {
       return;
     }
 
-    const corrigiu = tarefaEmCorrecaoId !== null;
     if (criada?.id) setTarefaSelecionada(String(criada.id));
-    setTarefaEmCorrecaoId(null);
-    toast.success(corrigiu ? "Tarefa atualizada. Vamos continuar." : "Tarefa cadastrada. Vamos para a próxima etapa.");
+    toast.success("Tarefa cadastrada");
     await qc.invalidateQueries({ queryKey: ["tarefas"] });
-  }
-
-  function voltarParaCorrigirFilho() {
-    const filho = filhos.find((f) => String(f.id) === filhoAtual);
-    if (!filho) {
-      toast.error("Selecione um filho para corrigir.");
-      return;
-    }
-    setFilhoEmCorrecaoId(filho.id);
-    setNomeFilho(filho.nome);
-    setIdadeFilho(filho.idade === null ? "" : String(filho.idade));
-    const comMesada = filho.tem_mesada === true && filho.valor_mesada !== null;
-    setValorMesada(comMesada && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "");
-    setCorFilho(filho.cor ?? "");
-    setAvatarFilho(filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "");
-  }
-
-  function voltarParaCorrigirTarefa() {
-    const tarefa = tarefas.find((t) => String(t.id) === tarefaAtual);
-    if (!tarefa) {
-      toast.error("Selecione uma tarefa para corrigir.");
-      return;
-    }
-    setTarefaEmCorrecaoId(tarefa.id);
-    setNomeTarefa(tarefa.nome);
-  }
-
-  function voltarParaCorrigirVigencia() {
-    const vigencia = vigencias.find((v) => String(v.id) === vigenciaAtual);
-    if (!vigencia) {
-      toast.error("Selecione uma vigência para corrigir.");
-      return;
-    }
-
-    setVigenciaEmCorrecaoId(vigencia.id);
-    setInicioVigencia(paraCampoDataHoraBrasil(vigencia.data_inicio));
-    setFimVigencia(paraCampoDataHoraBrasil(vigencia.data_fim));
   }
 
   async function cadastrarVigencia() {
@@ -276,10 +193,7 @@ export function OnboardingInicial() {
       data_inicio: paraIsoDataHoraBrasil(inicioVigencia),
       data_fim: paraIsoDataHoraBrasil(fimVigencia),
     };
-    const resultado = vigenciaEmCorrecaoId === null
-      ? await supabase.from("t_vigencia").insert(payload).select("id").single()
-      : await supabase.from("t_vigencia").update(payload).eq("id", vigenciaEmCorrecaoId).select("id").single();
-    const { data: vigenciaSalva, error } = resultado;
+    const { data: vigenciaSalva, error } = await supabase.from("t_vigencia").insert(payload).select("id").single();
     setSalvando(false);
 
     if (error) {
@@ -287,10 +201,8 @@ export function OnboardingInicial() {
       return;
     }
 
-    const corrigiu = vigenciaEmCorrecaoId !== null;
     if (vigenciaSalva?.id) setVigenciaSelecionada(String(vigenciaSalva.id));
-    setVigenciaEmCorrecaoId(null);
-    toast.success(corrigiu ? "Vigência corrigida. Agora faça a atribuição e cadastre a recompensa." : "Vigência cadastrada. Agora faça a atribuição e depois cadastre a recompensa.");
+    toast.success("Vigência cadastrada");
     await qc.invalidateQueries({ queryKey: ["vigencias"] });
   }
 
@@ -391,13 +303,11 @@ export function OnboardingInicial() {
           </button>
         </div>
         <DialogHeader>
-          <div className="mb-2 inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            Primeiros passos · aprendizado do sistema
+          <div className="mb-1 inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            Primeiros passos
           </div>
-          <DialogTitle>Aprenda o Combinado Família configurando seu primeiro combinado</DialogTitle>
-          <DialogDescription>
-            Este passo a passo ensina, na prática, como o sistema funciona. Você fará os cadastros essenciais na ordem correta e, ao terminar, seguirá direto para Fez / Não fez.
-          </DialogDescription>
+          <DialogTitle>Configure seu primeiro combinado</DialogTitle>
+          <DialogDescription>Quatro passos rápidos para começar.</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-4 gap-1.5" aria-label="Progresso da configuração inicial">
@@ -415,8 +325,7 @@ export function OnboardingInicial() {
         {etapa === 0 && (
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold">{filhoEmCorrecaoId !== null ? "1. Corrija o filho" : "1. Cadastre seu primeiro filho"}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">O filho é a base para depois associar tarefas e acompanhar os combinados.</p>
+              <h3 className="font-semibold">1. Filho</h3>
             </div>
             <div className="space-y-2">
               <Label htmlFor="onboarding-filho">Nome *</Label>
@@ -441,11 +350,9 @@ export function OnboardingInicial() {
               </div>
             </div>
             <p className="-mt-1 text-xs text-muted-foreground">Se informado, o valor da mesada será usado como base para os descontos de “Não fez”.</p>
-            {filhoEmCorrecaoId === null && (
-              <div className="border-t pt-3">
-                <RecompensasRapidas value={recompensasFilho} onChange={setRecompensasFilho} prefix="onboarding-filho" />
-              </div>
-            )}
+            <div className="border-t pt-3">
+              <RecompensasRapidas value={recompensasFilho} onChange={setRecompensasFilho} prefix="onboarding-filho" />
+            </div>
             <div className="border-t pt-3">
               <FilhoPersonalizacao
                 nome={nomeFilho}
@@ -457,100 +364,50 @@ export function OnboardingInicial() {
               />
             </div>
             <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarFilho)}>
-              {salvando ? "Salvando..." : filhoEmCorrecaoId !== null ? "Salvar correção e continuar" : "Cadastrar filho e continuar"}
+              {salvando ? "Salvando..." : "Salvar e continuar"}
             </Button>
           </div>
         )}
 
         {etapa === 1 && (
           <div className="space-y-4">
-            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Filho cadastrado. Agora você vai aprender a criar uma tarefa.</span>
-            </div>
-            <div>
-              <h3 className="font-semibold">{tarefaEmCorrecaoId !== null ? "2. Corrija a tarefa" : "2. Cadastre uma tarefa"}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">A tarefa representa o que será combinado com o filho.</p>
-            </div>
+            <h3 className="font-semibold">2. Tarefa</h3>
             <div className="space-y-2">
               <Label htmlFor="onboarding-tarefa">Nome da tarefa *</Label>
               <Input id="onboarding-tarefa" autoFocus value={nomeTarefa} onChange={(e) => setNomeTarefa(e.target.value)} placeholder="Ex.: Arrumar a cama" />
-
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirFilho}>
-                <ArrowLeft className="h-4 w-4" /> Corrigir filho
-              </Button>
-              <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarTarefa)}>
-                {salvando ? "Salvando..." : tarefaEmCorrecaoId !== null ? "Salvar correção e continuar" : "Cadastrar tarefa e continuar"}
-              </Button>
-            </div>
+            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarTarefa)}>
+              {salvando ? "Salvando..." : "Salvar e continuar"}
+            </Button>
           </div>
         )}
 
         {etapa === 2 && (
           <div className="space-y-4">
-            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Filho e tarefa prontos. Agora defina o período do combinado.</span>
-            </div>
-            <div>
-              <h3 className="font-semibold">{vigenciaEmCorrecaoId !== null ? "3. Corrija a vigência" : "3. Crie uma vigência"}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Para seguir direto até Fez / Não fez, crie uma vigência que já esteja em andamento.</p>
-            </div>
+            <h3 className="font-semibold">3. Vigência</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label>Início *</Label><BrDateTimeField id="onboarding-inicio-vigencia" value={inicioVigencia} onChange={setInicioVigencia} /></div>
               <div className="space-y-2"><Label>Fim *</Label><BrDateTimeField id="onboarding-fim-vigencia" value={fimVigencia} min={inicioVigencia} onChange={setFimVigencia} /></div>
             </div>
-            <div className="w-full rounded-lg border bg-muted/30 p-3">
-              <div className="space-y-1.5">
-                {diasDaVigencia(inicioVigencia, fimVigencia) !== null && (
-                  <p className="text-sm font-semibold">
-                    Sua vigência tem {diasDaVigencia(inicioVigencia, fimVigencia)} {diasDaVigencia(inicioVigencia, fimVigencia) === 1 ? "dia" : "dias"}.
-                  </p>
-                )}
-                <p className="text-sm text-muted-foreground">
-                  A vigência define somente o período. Ao registrar um “Não fez”, você escolhe a consequência daquele registro: nada, desconto da mesada (quando houver) ou penalidade.
-                </p>
-              </div>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirTarefa}>
-                <ArrowLeft className="h-4 w-4" /> Corrigir tarefa
-              </Button>
-              <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarVigencia)}>
-                {salvando ? "Salvando..." : vigenciaEmCorrecaoId !== null ? "Salvar correção e voltar para atribuição" : "Cadastrar vigência e continuar"}
-              </Button>
-            </div>
+            {diasDaVigencia(inicioVigencia, fimVigencia) !== null && (
+              <p className="text-xs font-medium text-muted-foreground">
+                {diasDaVigencia(inicioVigencia, fimVigencia)} {diasDaVigencia(inicioVigencia, fimVigencia) === 1 ? "dia" : "dias"}
+              </p>
+            )}
+            <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarVigencia)}>
+              {salvando ? "Salvando..." : "Salvar e continuar"}
+            </Button>
           </div>
         )}
 
         {etapa === 3 && (
           <div className="space-y-4">
-            <div className="flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-sm">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>Você já aprendeu a criar filho, tarefa e vigência. Agora vamos ligar tudo.</span>
-            </div>
-            <div>
-              <h3 className="font-semibold">4. Faça a primeira atribuição</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Associe um filho a uma tarefa dentro da vigência para começar a acompanhar o combinado.</p>
-            </div>
+            <h3 className="font-semibold">4. Atribuição</h3>
             <Pick label="Filho" childIcons required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome, cor: f.cor, avatar: f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null }))} />
             <Pick label="Tarefa" taskIcons required value={tarefaAtual} onChange={setTarefaSelecionada} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
             <Pick label="Vigência" required value={vigenciaAtual} onChange={setVigenciaSelecionada} options={vigenciasAtivas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: "andamento" as const }))} />
-            <div className="grid gap-2 sm:grid-cols-3">
-              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirFilho}>
-                <ArrowLeft className="h-4 w-4" /> Filho
-              </Button>
-              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirTarefa}>
-                <ArrowLeft className="h-4 w-4" /> Tarefa
-              </Button>
-              <Button type="button" variant="outline" disabled={salvando} onClick={voltarParaCorrigirVigencia}>
-                <ArrowLeft className="h-4 w-4" /> Vigência
-              </Button>
-            </div>
             <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarAssociacao)}>
-              {salvando ? "Salvando..." : atribuicaoAtualExiste ? "Concluir configuração" : "Cadastrar atribuição e concluir"}
+              {salvando ? "Salvando..." : "Concluir configuração"}
             </Button>
           </div>
         )}
@@ -566,15 +423,11 @@ export function OnboardingInicial() {
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Pular aprendizado inicial?</DialogTitle>
-          <DialogDescription>
-            Essa etapa é importante para você aprender a usar o Combinado Família. Tem certeza de que não deseja fazer o aprendizado agora?
-          </DialogDescription>
+          <DialogTitle>Pular configuração inicial?</DialogTitle>
+          <DialogDescription>Você poderá cadastrar tudo depois pelas telas do sistema.</DialogDescription>
         </DialogHeader>
 
-        <p className="text-sm text-muted-foreground">
-          O que você já cadastrou será mantido. Ao pular, o aprendizado será marcado como concluído e não aparecerá novamente automaticamente.
-        </p>
+        <p className="text-sm text-muted-foreground">O que já foi cadastrado será mantido.</p>
 
         <DialogFooter>
           <Button
@@ -583,14 +436,14 @@ export function OnboardingInicial() {
             disabled={salvando}
             onClick={() => void runAction(pularOnboarding)}
           >
-            {salvando ? "Salvando..." : "Pular aprendizado"}
+            {salvando ? "Salvando..." : "Pular configuração"}
           </Button>
           <Button
             type="button"
             disabled={salvando}
             onClick={() => setConfirmarPularAberto(false)}
           >
-            Continuar aprendizado
+            Continuar configuração
           </Button>
         </DialogFooter>
       </DialogContent>
