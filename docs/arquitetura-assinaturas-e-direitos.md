@@ -395,9 +395,58 @@ Ainda sem bloquear o app.
 
 ### Fase 3 — API de entitlements
 
-Criar interface server-side controlada e contrato TypeScript.
+#### 3A — Backend central
 
-O app poderá ler direitos, mas continuará com todos os recursos liberados enquanto validamos.
+Status: concluída no DEV.
+
+Foi criada a RPC pública controlada:
+
+```
+public.entitlements_obter()
+```
+
+Características:
+
+- não recebe `id_usuario_pai` nem qualquer identificador de conta;
+- usa `auth.uid()` da sessão autenticada;
+- resolve internamente o responsável correspondente;
+- retorna somente `versao_contrato` e o mapa de direitos efetivos;
+- não retorna status de assinatura, provedor, purchase token, preço ou detalhes de cobrança;
+- `anon` e `PUBLIC` não possuem EXECUTE;
+- `authenticated` pode executar a RPC;
+- `authenticated` não possui SELECT direto nas tabelas `billing`;
+- a função privilegiada fica no schema privado `billing`;
+- o wrapper no schema `public` é `SECURITY INVOKER`.
+
+Contrato atual:
+
+```json
+{
+  "versao_contrato": 1,
+  "direitos": {
+    "FILHOS.LIMITE": 1,
+    "RECOMPENSAS.LIMITE": 1,
+    "TAREFAS.LIMITE": 3,
+    "VIGENCIAS.HABILITADA": true,
+    "VIGENCIAS.CLONAR": false,
+    "APP_FILHO.TERMINEI": false,
+    "MESADA.HABILITADA": false,
+    "HISTORICO.PDF": false,
+    "APP_FILHO.ACESSOS.LIMITE": 1,
+    "TAREFAS.SUGESTOES": false
+  }
+}
+```
+
+A API foi validada para FREE e PREMIUM de forma transacional.
+
+**Nenhuma tela, fluxo ou regra de negócio do aplicativo consome essa RPC nesta etapa.**
+
+#### 3B — Contrato TypeScript
+
+Ainda não iniciada.
+
+Será criado o módulo central de frontend para consumir a API sem espalhar regras comerciais pela aplicação.
 
 ### Fase 4 — Administração e testes
 
