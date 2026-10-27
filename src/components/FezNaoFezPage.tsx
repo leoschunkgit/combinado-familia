@@ -1001,6 +1001,25 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }
   }
 
+  const grupoResumoMobile = grupos[0];
+  const vigenciaResumoMobile = grupoResumoMobile?.vigencia;
+  const filhosResumoMobile = grupoResumoMobile?.filhos ?? [];
+  const filhoResumoMobileId = vigenciaResumoMobile
+    ? filhosSelecionados[vigenciaResumoMobile.id] ?? filhosResumoMobile[0]?.filho.id
+    : undefined;
+  const estrelasResumoMobile = filhoResumoMobileId
+    ? totaisEstrelas[filhoResumoMobileId] ?? 0
+    : 0;
+  const naoFezResumoMobile =
+    vigenciaResumoMobile && filhoResumoMobileId
+      ? ocorrencias.filter(
+          (ocorrencia) =>
+            ocorrencia.tipo === "NAO_FEZ" &&
+            ocorrencia.t_filho_tarefa?.id_filho === filhoResumoMobileId &&
+            ocorrencia.t_filho_tarefa?.id_vigencia === vigenciaResumoMobile.id,
+        ).length
+      : 0;
+
   const filtrosAtivos =
     filtro.filho !== "all" ||
     filtro.tarefa !== "all" ||
@@ -1024,6 +1043,26 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
 
       <ResponsiveFilters
         desktopClassName={modo === "todos" ? "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" : "md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"}
+        mobileActions={
+          filhoResumoMobileId ? (
+            <div className="mr-auto flex min-w-0 items-center gap-2">
+              <span
+                className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
+                aria-label={`${estrelasResumoMobile} estrelas conquistadas`}
+              >
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                {estrelasResumoMobile}
+              </span>
+              <span
+                className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
+                aria-label={`${naoFezResumoMobile} não fez`}
+              >
+                <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                {naoFezResumoMobile}
+              </span>
+            </div>
+          ) : undefined
+        }
         onApply={() => setFiltro(f)}
         hasActiveFilters={filtrosAtivos}
         onClear={() => {
@@ -1231,23 +1270,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     return (
                       <div key={filho.id} className="space-y-1">
-                        <div className="bg-muted/15 px-2 py-1.5 sm:hidden">
-                          <div className="grid grid-cols-2 items-center gap-2 text-xs font-semibold">
-                            <span
-                              className="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
-                              aria-label={`${totaisEstrelas[filho.id] ?? 0} estrelas conquistadas`}
-                            >
-                              <Star className="animate-notification-bell h-3.5 w-3.5 fill-amber-400 text-amber-500" aria-hidden="true" />
-                              <span>{totaisEstrelas[filho.id] ?? 0} estrelas</span>
-                            </span>
-                            <span className="inline-flex items-center justify-end gap-1 tabular-nums text-muted-foreground">
-                              <ThumbsDown className="animate-notification-bell h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
-                              <span>Não fez: {totalNaoFez}</span>
-                            </span>
-                          </div>
-
-                          {temMesada && (
-                            <div className="mt-1.5 grid grid-cols-3 divide-x overflow-hidden rounded-md border bg-background text-center tabular-nums">
+                        {temMesada && (
+                          <div className="bg-muted/15 px-2 py-1.5 sm:hidden">
+                            <div className="grid grid-cols-3 divide-x overflow-hidden rounded-md border bg-background text-center tabular-nums">
                               <div className="min-w-0 px-1.5 py-1.5">
                                 <p className="text-[9px] leading-none text-muted-foreground">Mesada</p>
                                 <p className="mt-1 truncate text-[11px] font-semibold">{reais(valorMesada ?? 0)}</p>
@@ -1261,8 +1286,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                 <p className="mt-1 truncate text-[11px] font-semibold text-primary">{reais(saldoMesada)}</p>
                               </div>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         <div className="hidden rounded-lg border bg-muted/20 px-2.5 py-1.5 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3 sm:gap-y-2">
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
