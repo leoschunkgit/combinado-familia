@@ -229,7 +229,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           {!somenteRecompensas && seletorFilho}
 
         <CollapsibleSection
-          className={!somenteRecompensas && seletorFilho ? "rounded-none border-0 bg-clean-surface" : "bg-clean-surface"
+          className={!somenteRecompensas && seletorFilho ? "rounded-none border-0 bg-clean-surface" : "bg-clean-surface"}
           title="Recompensas"
           count={resumo.recompensas.length}
           open={recompensasAbertas}
