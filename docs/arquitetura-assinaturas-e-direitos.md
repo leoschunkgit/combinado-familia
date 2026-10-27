@@ -444,9 +444,52 @@ A API foi validada para FREE e PREMIUM de forma transacional.
 
 #### 3B — Contrato TypeScript
 
-Ainda não iniciada.
+Status: concluída na `dev`, ainda sem integração funcional.
 
-Será criado o módulo central de frontend para consumir a API sem espalhar regras comerciais pela aplicação.
+Foi criado o módulo:
+
+```
+src/lib/entitlements/
+├── contract.ts
+├── service.ts
+└── index.ts
+```
+
+Responsabilidades:
+
+- contrato runtime com Zod;
+- versão explícita do contrato (`versao_contrato = 1`);
+- chaves oficiais tipadas;
+- separação entre direitos booleanos e limites;
+- convenção central `-1 = ilimitado`;
+- chamada única à RPC `entitlements_obter()`;
+- validação da resposta antes de disponibilizar direitos ao restante do app;
+- helpers puros para uso futuro.
+
+API de aplicação preparada:
+
+```ts
+const entitlements = await obterEntitlements();
+
+entitlements.pode("MESADA.HABILITADA");
+entitlements.pode("VIGENCIAS.CLONAR");
+
+entitlements.limite("FILHOS.LIMITE");
+entitlements.ilimitado("TAREFAS.LIMITE");
+entitlements.permiteQuantidade("FILHOS.LIMITE", quantidadeAtual);
+```
+
+A tipagem impede misturar categorias. Por exemplo, um limite não pode ser passado para `pode(...)`.
+
+O contrato aceita novas chaves adicionais dentro da mesma versão para preservar compatibilidade progressiva, mas rejeita mudanças incompatíveis de `versao_contrato`.
+
+Os tipos Supabase do DEV foram regenerados e reconhecem:
+
+```
+entitlements_obter: { Args: never; Returns: Json }
+```
+
+**Nenhuma tela, componente ou fluxo atual importa ou executa esse módulo. Nenhuma trava foi ativada.**
 
 ### Fase 4 — Administração e testes
 
