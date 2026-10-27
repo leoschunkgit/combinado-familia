@@ -1136,7 +1136,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                       className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                       aria-label="Ver filhos anteriores"
                     >
-                      <ChevronLeft className="h-5 w-5" />
+                      <ChevronLeft className="h-5 w-5" strokeWidth={3} />
                     </button>
 
                     <div
@@ -1188,7 +1188,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                       className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                       aria-label="Ver próximos filhos"
                     >
-                      <ChevronRight className="h-5 w-5" />
+                      <ChevronRight className="h-5 w-5" strokeWidth={3} />
                     </button>
                   </div>
 
