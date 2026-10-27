@@ -105,7 +105,7 @@ function CamposExtras({ value, onChange, prefix }: { value: FilhoForm; onChange:
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 pl-1">
         <Label htmlFor={`${prefix}-cor`}>Cor</Label>
         <input
           id={`${prefix}-cor`}
