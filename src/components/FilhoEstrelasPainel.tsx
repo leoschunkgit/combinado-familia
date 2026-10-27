@@ -210,12 +210,6 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   return (
     <>
       <div className={somenteRecompensas ? "space-y-3" : "space-y-4"}>
-        {!somenteRecompensas && seletorFilho && (
-          <div className="overflow-hidden rounded-2xl border bg-card">
-            {seletorFilho}
-          </div>
-        )}
-
         {!somenteRecompensas && (
           <div className="flex flex-wrap items-center justify-start gap-2 px-1">
             <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[11px] text-muted-foreground">
@@ -231,8 +225,11 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           </div>
         )}
 
+        <div className={!somenteRecompensas && seletorFilho ? "overflow-hidden rounded-2xl border bg-card" : ""}>
+          {!somenteRecompensas && seletorFilho}
+
         <CollapsibleSection
-          className="bg-clean-surface"
+          className={!somenteRecompensas && seletorFilho ? "rounded-none border-0 bg-clean-surface" : "bg-clean-surface"
           title="Recompensas"
           count={resumo.recompensas.length}
           open={recompensasAbertas}
@@ -350,6 +347,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
             {resumo.recompensas.length === 0 && <p className="rounded-xl border border-dashed bg-background px-4 py-5 text-center text-sm text-muted-foreground">Nenhuma recompensa cadastrada.</p>}
           </div>
         </CollapsibleSection>
+        </div>
 
         {!somenteRecompensas && <RecompensasAproveitadasSection resgates={resumo.resgates} />}
 
