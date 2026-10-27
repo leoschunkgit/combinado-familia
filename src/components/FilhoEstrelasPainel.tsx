@@ -215,12 +215,12 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
 
           {!somenteRecompensas && (
             <div className="grid grid-cols-2 border-b border-border/60 bg-white dark:bg-background">
-              <div className="flex items-center justify-center gap-2 border-r border-border/60 px-3 py-2.5">
+              <div className="flex items-center justify-center gap-2.5 border-r border-border/60 px-3.5 py-3.5">
                 <Estrela className="h-4 w-4" />
                 <strong className="text-base font-bold tabular-nums">{resumo.hoje}</strong>
                 <span className="text-xs font-medium text-muted-foreground">Hoje</span>
               </div>
-              <div className="flex items-center justify-center gap-2 px-3 py-2.5">
+              <div className="flex items-center justify-center gap-2.5 px-3.5 py-3.5">
                 <Estrela className="h-4 w-4" />
                 <strong className="text-base font-bold tabular-nums">{resumo.total_conquistado}</strong>
                 <span className="text-xs font-medium text-muted-foreground">Total</span>
@@ -235,14 +235,14 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           count={resumo.recompensas.length}
           open={recompensasAbertas}
           onOpenChange={setRecompensasAbertas}
-          contentClassName="bg-clean-surface p-2.5 sm:p-3"
+          contentClassName="bg-clean-surface p-3.5 sm:p-4"
           action={
             <Button type="button" size="sm" className="h-8 shrink-0 px-2.5 text-xs" onClick={novaRecompensa}>
               <Plus className="h-3.5 w-3.5" /> Nova
             </Button>
           }
         >
-          <div className="space-y-2.5">
+          <div className="space-y-3.5">
             {recompensasOrdenadas.map((recompensa) => {
               const metaExibida = recompensa.meta_exibicao;
               const progressoExibido = recompensa.progresso_exibicao;
