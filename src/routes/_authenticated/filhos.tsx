@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Mail, Pencil, Phone, Plus, Smartphone, Trash2, Users, WalletCards } from "lucide-react";
+import { Pencil, Plus, Smartphone, Trash2, Users, WalletCards } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, PageHeader } from "@/components/PageHeader";
-import { maskCelular, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type Filho } from "@/lib/db";
+import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias, type Filho } from "@/lib/db";
 import { vigenciaEmAndamento } from "@/components/VigenciaStatus";
 import { useActionLoading } from "@/components/ActionLoading";
 import { Hint } from "@/components/Hint";
@@ -44,8 +44,6 @@ const corValida = (valor: string) => {
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Informe o nome").max(100),
-  email: z.union([z.literal(""), z.string().trim().email("Email inválido").max(255)]),
-  celular: z.string().refine((v) => v === "" || v.replace(/\D/g, "").length >= 10, "Celular inválido"),
   idade: z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 150), "Informe uma idade inteira entre 0 e 150"),
   cor: z.string().trim().max(50).refine(corValida, "Use uma cor hexadecimal ou RGB válida"),
   avatar: z.union([z.literal(""), z.literal("menino"), z.literal("menina")]),
@@ -58,7 +56,7 @@ const schema = z.object({
 });
 
 type FilhoForm = z.input<typeof schema>;
-const vazio: FilhoForm = { nome: "", email: "", celular: "", idade: "", cor: "", avatar: "", tem_mesada: false, valor_mesada: "" };
+const vazio: FilhoForm = { nome: "", idade: "", cor: "", avatar: "", tem_mesada: false, valor_mesada: "" };
 const dinheiro = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const dadosExtras = (v: FilhoForm) => ({
   idade: v.idade === "" ? null : Number(v.idade),
@@ -149,7 +147,7 @@ function FilhosPage() {
     setSaving(true);
     const { data: criado, error } = await supabase
       .from("t_filho")
-      .insert({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) })
+      .insert({ nome: p.data.nome, ...dadosExtras(p.data) })
       .select("id, nome, cor, avatar")
       .single();
     setSaving(false);
@@ -189,14 +187,14 @@ function FilhosPage() {
 
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
-    setEdicao({ nome: filho.nome, email: filho.email ?? "", celular: filho.celular ? maskCelular(filho.celular) : "", idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", tem_mesada: filho.tem_mesada === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
+    setEdicao({ nome: filho.nome, idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", tem_mesada: filho.tem_mesada === true && filho.valor_mesada !== null, valor_mesada: filho.valor_mesada === null ? "" : filho.valor_mesada.toFixed(2).replace(".", ",") });
   }
 
   async function salvarEdicao(e: FormEvent) {
     e.preventDefault(); if (!editando) return;
     const p = schema.safeParse(edicao); if (!p.success) { toast.error(p.error.issues[0]?.message ?? "Dados inválidos"); return; }
     setSaving(true);
-    const { error } = await supabase.from("t_filho").update({ nome: p.data.nome, email: p.data.email || null, celular: p.data.celular.replace(/\D/g, "") || null, ...dadosExtras(p.data) }).eq("id", editando.id);
+    const { error } = await supabase.from("t_filho").update({ nome: p.data.nome, ...dadosExtras(p.data) }).eq("id", editando.id);
     setSaving(false); if (error) { toast.error(msgErro(error)); return; }
     toast.success("Filho atualizado"); setEditando(null); qc.invalidateQueries({ queryKey: ["filhos"] }); qc.invalidateQueries({ queryKey: ["filho_tarefas"] }); qc.invalidateQueries({ queryKey: ["filho_vigencia_mesadas"] });
   }
@@ -254,21 +252,6 @@ function FilhosPage() {
         >
           <div className="grid grid-cols-2 gap-2 text-sm">
             <InfoTile
-              label="Email"
-              icon={<Mail className="h-3.5 w-3.5" />}
-              className="col-span-2 sm:col-span-1"
-              value={
-                <Hint content={f.email ?? undefined}>
-                  <p className="truncate">{f.email || "Não informado"}</p>
-                </Hint>
-              }
-            />
-            <InfoTile
-              label="Celular"
-              icon={<Phone className="h-3.5 w-3.5" />}
-              value={<p className="whitespace-nowrap">{f.celular ? maskCelular(f.celular) : "Não informado"}</p>}
-            />
-            <InfoTile
               label="Idade"
               value={f.idade !== null ? `${f.idade} anos` : "Não informada"}
             />
@@ -300,8 +283,6 @@ function FilhosPage() {
         <DialogHeader><DialogTitle>Adicionar filho</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
           <div className="space-y-2"><Label>Nome <span className="text-destructive">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
-          <div className="space-y-2"><Label>Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-          <div className="space-y-2"><Label>Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input type="tel" placeholder="(00) 00000-0000" value={form.celular} onChange={(e) => setForm({ ...form, celular: maskCelular(e.target.value) })} /></div>
           <CamposExtras value={form} onChange={setForm} prefix="novo-filho" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { setNovoAberto(false); setForm(vazio); }}>Cancelar</Button>
@@ -353,7 +334,7 @@ function FilhosPage() {
       </DialogContent>
     </Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2">{(() => { const filho = filhos.find((f) => f.id === confirmarExclusao); return filho ? <div className="flex items-center gap-2 text-sm font-semibold"><FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" /><span>{filho.nome}</span></div> : null; })()}<p>Tem certeza que deseja excluir este filho?</p><p className="text-sm text-muted-foreground">As atribuições, resultados, consequências, estrelas, recompensas, solicitações, acessos e histórico deste filho também serão excluídos. As tarefas e vigências permanecem.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader><form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4"><div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome *</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-email">Email <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-email" type="email" value={edicao.email} onChange={(e) => setEdicao({ ...edicao, email: e.target.value })} /></div><div className="space-y-2"><Label htmlFor="editar-filho-celular">Celular <span className="text-muted-foreground font-normal">(opcional)</span></Label><Input id="editar-filho-celular" type="tel" value={edicao.celular} onChange={(e) => setEdicao({ ...edicao, celular: maskCelular(e.target.value) })} /></div><CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" /><DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" disabled={saving}>Salvar alterações</Button></DialogFooter></form></DialogContent></Dialog>
+    <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader><form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4"><div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome *</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div><CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" /><DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" disabled={saving}>Salvar alterações</Button></DialogFooter></form></DialogContent></Dialog>
 
   </>;
 }
