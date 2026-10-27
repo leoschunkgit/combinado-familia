@@ -1332,10 +1332,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               type="button"
                               onClick={() => navegarDia(vigencia, -1)}
                               disabled={!podeVoltarData}
-                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-transparent text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-border/60 disabled:hover:bg-transparent disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                               aria-label="Ir para o dia anterior"
                             >
-                              <ChevronLeft className="h-5 w-5" strokeWidth={3} />
+                              <ChevronLeft className="h-4 w-4" strokeWidth={3} />
                             </button>
 
                             <h3
@@ -1355,10 +1355,10 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               type="button"
                               onClick={() => navegarDia(vigencia, 1)}
                               disabled={!podeAvancarData}
-                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-transparent text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-border/60 disabled:hover:bg-transparent disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                               aria-label="Ir para o próximo dia"
                             >
-                              <ChevronRight className="h-5 w-5" strokeWidth={3} />
+                              <ChevronRight className="h-4 w-4" strokeWidth={3} />
                             </button>
                           </div>
 
