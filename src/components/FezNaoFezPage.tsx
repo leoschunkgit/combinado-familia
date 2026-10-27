@@ -1104,8 +1104,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     : "Nenhum resultado encontrado para esta data e filtros."}
                 </EmptyState>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-1 border-t pt-3 pb-1">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1 border-t pt-2 pb-0">
                     <button
                       type="button"
                       onClick={() => rolarFilhos(vigencia.id, "esquerda")}
@@ -1138,7 +1138,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                 [vigencia.id]: filho.id,
                               }))
                             }
-                            className={`shrink-0 snap-start rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                            className={`shrink-0 snap-start rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                               selecionado
                                 ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
                                 : "border-b-2 border-transparent bg-transparent text-foreground hover:bg-transparent"
@@ -1230,8 +1230,8 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                     ).length;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     return (
-                      <div key={filho.id} className="space-y-2">
-                        <div className="bg-muted/15 px-2 py-2 sm:hidden">
+                      <div key={filho.id} className="space-y-1">
+                        <div className="bg-muted/15 px-2 py-1.5 sm:hidden">
                           <div className="grid grid-cols-2 items-center gap-2 text-xs font-semibold">
                             <span
                               className="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
@@ -1264,7 +1264,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                           )}
                         </div>
 
-                        <div className="hidden rounded-lg border bg-muted/20 px-2.5 py-2 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3 sm:gap-y-2">
+                        <div className="hidden rounded-lg border bg-muted/20 px-2.5 py-1.5 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3 sm:gap-y-2">
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
                             <span
                               className="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
@@ -1380,7 +1380,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                                   return (
                                     <div
                                       key={tarefa.id}
-                                      className="grid min-h-14 grid-cols-[minmax(0,1fr)_10.5rem] items-center gap-1 px-1 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3"
+                                      className="grid min-h-12 grid-cols-[minmax(0,1fr)_10.5rem] items-center gap-1 px-1 py-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3"
                                     >
                                       <div className="flex min-w-0 items-center gap-2">
                                         <div
