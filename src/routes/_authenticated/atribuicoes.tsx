@@ -63,6 +63,9 @@ function AtribuicoesPage() {
   const vigenciaSelecionadaFinalizada = Boolean(
     vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada",
   );
+  const vigenciaSelecionadaAceitaAtribuicoes = Boolean(
+    vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) !== "finalizada",
+  );
   const filhoContexto = filhoContextoId === null
     ? null
     : filhos.find((filho) => filho.id === filhoContextoId) ?? null;
@@ -134,9 +137,9 @@ function AtribuicoesPage() {
     atribuicoesDaVigenciaSelecionada.map((item) => item.id_tarefa),
   );
 
-  const filhosDisponiveis = filhos.filter((filho) =>
-    idsFilhosDisponiveis.has(filho.id),
-  );
+  const filhosDisponiveis = vigenciaSelecionadaAceitaAtribuicoes
+    ? filhos
+    : filhos.filter((filho) => idsFilhosDisponiveis.has(filho.id));
   const tarefasDisponiveis = tarefas.filter((tarefa) =>
     idsTarefasDisponiveis.has(tarefa.id),
   );
@@ -145,10 +148,17 @@ function AtribuicoesPage() {
     const atribuicoesAlvo = existentes.filter((item) => item.id_vigencia === id);
     const filhosAlvo = new Set(atribuicoesAlvo.map((item) => item.id_filho));
     const tarefasAlvo = new Set(atribuicoesAlvo.map((item) => item.id_tarefa));
+    const vigenciaAlvo = vigenciasOrdenadas.find((item) => item.id === id) ?? null;
+    const aceitaNovasAtribuicoes = Boolean(
+      vigenciaAlvo && situacaoVigencia(vigenciaAlvo) !== "finalizada",
+    );
 
     const ajustar = (atual: { filho: string; tarefa: string }) => ({
       filho:
-        atual.filho === "all" || filhosAlvo.has(Number(atual.filho))
+        atual.filho === "all"
+        || (aceitaNovasAtribuicoes
+          ? filhos.some((filho) => filho.id === Number(atual.filho))
+          : filhosAlvo.has(Number(atual.filho)))
           ? atual.filho
           : "all",
       tarefa:
@@ -167,6 +177,9 @@ function AtribuicoesPage() {
     : filtradas.filter((item) => item.id_vigencia === vigenciaSelecionadaId);
 
   const gruposFilhos = filhos
+    .filter((filhoItem) =>
+      filtrosAplicados.filho === "all" || filhoItem.id === Number(filtrosAplicados.filho)
+    )
     .map((filhoItem) => ({
       filho: filhoItem,
       atribuicoes: atribuicoesVigenciaSelecionada
@@ -179,7 +192,11 @@ function AtribuicoesPage() {
           ),
         ),
     }))
-    .filter((grupo) => grupo.atribuicoes.length > 0);
+    .filter((grupo) =>
+      vigenciaSelecionadaAceitaAtribuicoes && filtrosAplicados.tarefa === "all"
+        ? true
+        : grupo.atribuicoes.length > 0
+    );
 
   const formatadorDataCurta = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -229,9 +246,7 @@ function AtribuicoesPage() {
         />
       )}
 
-      {existentes.length === 0 ? (
-        <EmptyState>Nenhuma atribuição ainda.</EmptyState>
-      ) : vigenciasOrdenadas.length === 0 ? (
+      {vigenciasOrdenadas.length === 0 ? (
         <EmptyState>Nenhuma vigência cadastrada.</EmptyState>
       ) : (
         <>
@@ -289,12 +304,17 @@ function AtribuicoesPage() {
           </section>
 
           {gruposFilhos.length === 0 ? (
-            <EmptyState>Nenhuma atribuição encontrada para esta vigência e filtros.</EmptyState>
+            <EmptyState>
+              {vigenciaSelecionadaAceitaAtribuicoes && filhos.length === 0
+                ? "Nenhum filho cadastrado."
+                : "Nenhuma atribuição encontrada para esta vigência e filtros."}
+            </EmptyState>
           ) : (
             <div className="space-y-4 md:space-y-5">
               {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
                 const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
-                const aberto = filhosAbertos[chave] === true;
+                const temAtribuicoes = atribuicoesFilho.length > 0;
+                const aberto = temAtribuicoes && filhosAbertos[chave] === true;
 
                 return (
                   <section key={filhoItem.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -302,16 +322,17 @@ function AtribuicoesPage() {
                       <button
                         type="button"
                         className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
-                        onClick={() =>
+                        onClick={() => {
+                          if (!temAtribuicoes) return;
                           setFilhosAbertos((atual) => ({
                             ...atual,
                             [chave]: !aberto,
-                          }))
-                        }
-                        aria-expanded={aberto}
-                        aria-label={`${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}`}
+                          }));
+                        }}
+                        aria-expanded={temAtribuicoes ? aberto : undefined}
+                        aria-label={temAtribuicoes ? `${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}` : undefined}
                       >
-                        <CollapseChevron open={aberto} />
+                        {temAtribuicoes ? <CollapseChevron open={aberto} /> : <span className="h-5 w-5 shrink-0" aria-hidden="true" />}
                         <FilhoAvatar nome={filhoItem.nome} cor={filhoItem.cor} avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null} className="h-7 w-7" />
                         <div className="min-w-0">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
@@ -332,7 +353,7 @@ function AtribuicoesPage() {
                       </Button>
                     </div>
 
-                    {aberto && (
+                    {temAtribuicoes && aberto && (
                       <div className="bg-muted/10 p-2.5 sm:p-3">
                         <div className="space-y-2">
                           {atribuicoesFilho.map((e) => (
