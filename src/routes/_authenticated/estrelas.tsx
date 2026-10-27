@@ -5,6 +5,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { FilhoEstrelasPainel } from "@/components/FilhoEstrelasPainel";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { useFilhos } from "@/lib/db";
+import { definirFilhoSelecionadoCompartilhado, obterFilhoSelecionadoCompartilhado } from "@/lib/filho-selecionado-contexto";
 
 export const Route = createFileRoute("/_authenticated/estrelas")({
   head: () => ({ meta: [
@@ -16,7 +17,10 @@ export const Route = createFileRoute("/_authenticated/estrelas")({
 
 function EstrelasPage() {
   const { data: filhos = [], isLoading } = useFilhos();
-  const [filhoId, setFilhoId] = useState("");
+  const [filhoId, setFilhoId] = useState(() => {
+    const compartilhado = obterFilhoSelecionadoCompartilhado();
+    return compartilhado ? String(compartilhado) : "";
+  });
 
   useEffect(() => {
     if (filhos.length === 0) {
@@ -25,7 +29,9 @@ function EstrelasPage() {
     }
 
     if (!filhos.some((filho) => String(filho.id) === filhoId)) {
-      setFilhoId(String(filhos[0].id));
+      const idInicial = filhos[0].id;
+      setFilhoId(String(idInicial));
+      definirFilhoSelecionadoCompartilhado(idInicial);
     }
   }, [filhos, filhoId]);
 
@@ -39,6 +45,7 @@ function EstrelasPage() {
     const destino = filhos[indiceFilhoSelecionado + direcao];
     if (!destino) return;
     setFilhoId(String(destino.id));
+    definirFilhoSelecionadoCompartilhado(destino.id);
   }
 
   return (
