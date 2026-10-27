@@ -21,6 +21,7 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { InfoTile } from "@/components/InfoTile";
 import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
+import { FilhoEstrelasPainel } from "@/components/FilhoEstrelasPainel";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -368,7 +369,27 @@ function FilhosPage() {
       </DialogContent>
     </Dialog>
     <Dialog open={confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><div className="space-y-2">{(() => { const filho = filhos.find((f) => f.id === confirmarExclusao); return filho ? <div className="flex items-center gap-2 text-sm font-semibold"><FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" /><span>{filho.nome}</span></div> : null; })()}<p>Tem certeza que deseja excluir este filho?</p><p className="text-sm text-muted-foreground">As atribuições, resultados, consequências, estrelas, recompensas, solicitações, acessos e histórico deste filho também serão excluídos. As tarefas e vigências permanecem.</p></div><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent><DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader><form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4"><div className="space-y-2"><Label htmlFor="editar-filho-nome">Nome *</Label><Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} /></div><CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" /><DialogFooter><Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button><Button type="submit" disabled={saving}>Salvar alterações</Button></DialogFooter></form></DialogContent></Dialog>
+    <Dialog open={Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader><DialogTitle>Editar filho</DialogTitle></DialogHeader>
+        {editando && (
+          <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="editar-filho-nome">Nome *</Label>
+              <Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} />
+            </div>
+            <CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" />
+            <div className="border-t pt-3">
+              <FilhoEstrelasPainel filho={editando} modo="recompensas" />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
+              <Button type="submit" disabled={saving}>Salvar alterações</Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
 
   </>;
 }
