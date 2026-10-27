@@ -252,13 +252,13 @@ function VigenciasPage() {
           const aberto = vigenciasAbertas[v.id] === true;
           return <CollapsibleSection
             key={v.id}
-            title={<VigenciaStatus vigencia={v} />}
-            description={
-              <span className="flex min-w-0 items-start gap-1.5 text-[13px] font-semibold leading-relaxed tracking-tight text-foreground sm:text-sm">
-                <CalendarRange className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            title={
+              <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold tracking-tight text-foreground sm:text-sm">
+                <CalendarRange className="h-4 w-4 shrink-0 text-primary" />
                 <span className="min-w-0 break-words">{fmtVigencia(v)}</span>
               </span>
             }
+            description={<VigenciaStatus vigencia={v} />}
             open={aberto}
             onOpenChange={(open) => setVigenciasAbertas((atuais) => ({ ...atuais, [v.id]: open }))}
             action={
