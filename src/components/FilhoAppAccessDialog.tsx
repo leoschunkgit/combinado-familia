@@ -186,10 +186,7 @@ export function FilhoAppAccessManager({ filho }: { filho: Filho }) {
             <div className="min-w-0">
               <h3 className="text-sm font-semibold">Chave de acesso</h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Gere uma chave de 6 dígitos para {filho.nome} parear um aparelho. A chave vale por 15 minutos e é de uso único.
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Depois do pareamento, o acesso permanece ativo nesse aparelho até ser revogado ou o filho escolher sair.
+                Gere uma chave de 6 dígitos. Válida por 15 minutos e de uso único.
               </p>
             </div>
           </div>
@@ -223,7 +220,7 @@ export function FilhoAppAccessManager({ filho }: { filho: Filho }) {
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold">Aparelhos conectados</h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Veja os aparelhos que ainda podem acessar o app e revogue somente quando quiser encerrar aquele acesso.
+                  Veja e revogue aparelhos com acesso.
                 </p>
               </div>
             </div>
