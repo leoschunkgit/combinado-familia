@@ -1312,7 +1312,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                         <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
                           <span className="h-7 w-7" aria-hidden="true" />
 
-                          <div className="flex min-w-0 items-center justify-center gap-3 sm:gap-4">
+                          <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
                             <button
                               type="button"
                               onClick={() => navegarDia(vigencia, -1)}
