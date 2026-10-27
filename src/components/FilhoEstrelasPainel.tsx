@@ -378,7 +378,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1">
-                      <span className="inline-flex items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold"><Estrela />{metaExibida}</span>
+                      <span className="inline-flex items-center gap-1.5 rounded-md border bg-muted/20 px-2 py-1 text-xs font-semibold">{somenteRecompensas && <span>Meta:</span>}<Estrela />{metaExibida}</span>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button type="button" variant="ghost" size="icon" className="h-7 w-7 rounded-full" disabled={salvando} aria-label={`Mais ações para ${recompensa.nome_exibicao}`}>
