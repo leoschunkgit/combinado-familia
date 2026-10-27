@@ -290,23 +290,20 @@ function AuthenticatedLayout() {
         className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <div className="flex w-max min-w-full items-stretch justify-center gap-1 px-2 py-1.5">
+        <div className="flex w-max min-w-full items-center justify-center gap-1 px-2 py-2">
           {NAV_ITENS.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
               title={label}
               aria-label={label}
-              className="relative flex min-h-14 w-[72px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-center text-muted-foreground transition-colors active:scale-95"
+              className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors active:scale-95"
               activeProps={{ className: "!bg-primary/10 !text-primary" }}
             >
-              <Icon className="h-5 w-5 shrink-0" />
-              <span className="max-w-full text-[9px] font-medium leading-[1.05]">
-                {label}
-              </span>
+              <Icon className="h-5 w-5" />
               {to === "/ocorrencias" && quantidadeNotificacoes > 0 && (
                 <span
-                  className="absolute right-2 top-1.5 flex h-2.5 min-w-2.5 items-center justify-center rounded-full bg-destructive"
+                  className="absolute right-1 top-1 flex h-2.5 min-w-2.5 items-center justify-center rounded-full bg-destructive"
                   aria-label={`${quantidadeNotificacoes} notificações pendentes`}
                 />
               )}
