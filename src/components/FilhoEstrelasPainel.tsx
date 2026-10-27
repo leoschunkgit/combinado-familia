@@ -322,27 +322,27 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   return (
     <>
       <div className={somenteRecompensas ? "space-y-3" : "space-y-4"}>
-        {!somenteRecompensas && (
-          <div className="flex min-w-0 items-center gap-2 px-1">
-            <span
-              className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
-              aria-label={`${resumo.total_conquistado} estrelas conquistadas`}
-            >
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-              {resumo.total_conquistado}
-            </span>
-            <span
-              className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
-              aria-label={`${totalNaoFezVigencia} não fez`}
-            >
-              <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-              {totalNaoFezVigencia}
-            </span>
-          </div>
-        )}
-
         <div className={!somenteRecompensas && seletorFilho ? "overflow-hidden rounded-2xl border bg-card" : ""}>
           {!somenteRecompensas && seletorFilho}
+
+          {!somenteRecompensas && seletorFilho && (
+            <div className="flex min-w-0 items-center gap-2 border-b border-border/60 px-3 py-2.5 sm:px-4">
+              <span
+                className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
+                aria-label={`${resumo.total_conquistado} estrelas conquistadas`}
+              >
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                {resumo.total_conquistado}
+              </span>
+              <span
+                className="animate-subtle-shake inline-flex h-9 items-center gap-1.5 rounded-full border bg-background px-2.5 text-xs font-bold"
+                aria-label={`${totalNaoFezVigencia} não fez`}
+              >
+                <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                {totalNaoFezVigencia}
+              </span>
+            </div>
+          )}
 
         <CollapsibleSection
           className={!somenteRecompensas && seletorFilho ? "mt-1.5 rounded-none border-0 bg-clean-surface" : "bg-clean-surface"}
