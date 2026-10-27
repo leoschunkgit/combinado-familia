@@ -138,7 +138,7 @@ function FilhosPage() {
   const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string; cor: string | null; avatar: string | null } | null>(null);
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
-  const [filhosAbertos, setFilhosAbertos] = useState<Record<number, boolean>>({});
+  const [filhoAbertoId, setFilhoAbertoId] = useState<number | null>(null);
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
@@ -256,7 +256,7 @@ function FilhosPage() {
       }
     />
     <div className="min-w-0 max-w-full space-y-3">{filhos.length === 0 && <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>}{filhos.map((f) => {
-        const aberto = filhosAbertos[f.id] === true;
+        const aberto = filhoAbertoId === f.id;
         const temIdade = f.idade !== null;
         const temMesada = f.tem_mesada === true && f.valor_mesada !== null;
         const temResumo = temIdade || temMesada;
@@ -269,7 +269,7 @@ function FilhosPage() {
             </span>
           }
           open={aberto}
-          onOpenChange={(open) => setFilhosAbertos((atuais) => ({ ...atuais, [f.id]: open }))}
+          onOpenChange={(open) => setFilhoAbertoId(open ? f.id : null)}
           action={
             <>
               <Hint content="Gerenciar acesso">
