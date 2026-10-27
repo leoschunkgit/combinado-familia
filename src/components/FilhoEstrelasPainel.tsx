@@ -290,17 +290,40 @@ export function FilhoEstrelasPainel({ filho, modo = "completo" }: { filho: Filho
                     </div>
                   </div>
 
-                  <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progresso}%` }} />
-                  </div>
-                  <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <span className="inline-flex items-center gap-1 text-muted-foreground">{progressoExibido} de {metaExibida}<Estrela className="h-3 w-3" /></span>
-                    <div className="flex items-center gap-2">
-                      <span className={recompensa.conquistada ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
-                        {recompensa.conquistada
-                          ? "Conquistada"
-                          : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam_exibicao}<Estrela className="h-3 w-3" /></span>}
-                      </span>
+                  {!somenteRecompensas ? (
+                    <>
+                      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progresso}%` }} />
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">{progressoExibido} de {metaExibida}<Estrela className="h-3 w-3" /></span>
+                        <div className="flex items-center gap-2">
+                          <span className={recompensa.conquistada ? "font-semibold text-amber-700 dark:text-amber-300" : "text-muted-foreground"}>
+                            {recompensa.conquistada
+                              ? "Conquistada"
+                              : <span className="inline-flex items-center gap-1">Faltam {recompensa.faltam_exibicao}<Estrela className="h-3 w-3" /></span>}
+                          </span>
+                          {recompensa.pode_confirmar_aproveitada && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 text-[11px] font-semibold"
+                              onClick={() => setConfirmacao({ tipo: "APROVEITOU", recompensa })}
+                              disabled={salvando}
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Já aproveitou
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (recompensa.conquistada || recompensa.pode_confirmar_aproveitada) ? (
+                    <div className="mt-2 flex flex-wrap items-center justify-end gap-2 text-xs">
+                      {recompensa.conquistada && (
+                        <span className="font-semibold text-amber-700 dark:text-amber-300">Conquistada</span>
+                      )}
                       {recompensa.pode_confirmar_aproveitada && (
                         <Button
                           type="button"
@@ -315,7 +338,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo" }: { filho: Filho
                         </Button>
                       )}
                     </div>
-                  </div>
+                  ) : null}
 
                 </article>
               );
