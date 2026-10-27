@@ -89,7 +89,7 @@ function EstrelasPage() {
                         avatar={filhoSelecionado.avatar === "menino" || filhoSelecionado.avatar === "menina" ? filhoSelecionado.avatar : null}
                         className="h-6 w-6 shrink-0"
                       />
-                      <span className="truncate whitespace-nowrap text-center text-sm font-extrabold">
+                      <span className="truncate whitespace-nowrap text-center text-base font-bold">
                         {filhoSelecionado.nome}
                       </span>
                     </div>
