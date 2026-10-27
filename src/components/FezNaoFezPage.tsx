@@ -196,7 +196,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     toast.error("Esta tarefa foi excluída e está disponível somente como histórico");
     return false;
   }
-  const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
   const [filhosSelecionados, setFilhosSelecionados] = useState<Record<number, number>>({});
   const [f, setF] = useState({ filho: "all", tarefa: "all", resultado: "all" });
@@ -304,15 +303,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     }));
   }
 
-  function rolarFilhos(vigenciaId: number, direcao: "esquerda" | "direita") {
-    const area = filhosScrollRefs.current[vigenciaId];
-    if (!area) return;
-    const distancia = Math.max(area.clientWidth * 0.75, 220);
-    area.scrollBy({
-      left: direcao === "direita" ? distancia : -distancia,
-      behavior: "smooth",
-    });
-  }
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -585,29 +575,7 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     });
   }, [assinaturaGruposFilhos]);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      for (const vigencia of vigenciasOperacionais) {
-        const filhoSelecionado = filhosSelecionados[vigencia.id];
-        const area = filhosScrollRefs.current[vigencia.id];
-        if (!filhoSelecionado || !area) continue;
 
-        const alvo = area.querySelector<HTMLElement>(
-          `[data-filho="${filhoSelecionado}"]`,
-        );
-        if (!alvo) continue;
-
-        const destino =
-          alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
-        area.scrollTo({
-          left: Math.max(0, destino),
-          behavior: "smooth",
-        });
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [filhosSelecionados, vigenciasOperacionais]);
 
   function dataValida(tarefa: FilhoTarefa, data: string) {
     const vigencia = tarefa.t_vigencia;
@@ -1137,6 +1105,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
           const grupoFilhoSelecionado =
             gruposFilhos.find(({ filho }) => filho.id === filhoSelecionadoId) ??
             gruposFilhos[0];
+          const indiceFilhoSelecionado = gruposFilhos.findIndex(
+            ({ filho }) => filho.id === filhoSelecionadoId,
+          );
           const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
           const datasSelecionaveis = datasSelecionaveisDaVigencia(vigencia);
           const indiceDataSelecionada = datasSelecionaveis.indexOf(dataSelecionada);
@@ -1154,68 +1125,70 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                 </EmptyState>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-1 border-t pt-2 pb-0">
-                    <button
-                      type="button"
-                      onClick={() => rolarFilhos(vigencia.id, "esquerda")}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                      aria-label="Ver filhos anteriores"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
+                  <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-y border-border/60 px-3 py-[18px] sm:px-4">
+                    <span className="h-7 w-7" aria-hidden="true" />
 
-                    <div
-                      ref={(elemento) => {
-                        filhosScrollRefs.current[vigencia.id] = elemento;
-                      }}
-                      className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                      role="tablist"
-                      aria-label={`Selecionar filho da vigência ${fmtVigencia(vigencia)}`}
-                    >
-                      {gruposFilhos.map(({ filho }) => {
-                        const selecionado = filho.id === filhoSelecionadoId;
-                        return (
-                          <button
-                            key={filho.id}
-                            data-filho={filho.id}
-                            type="button"
-                            role="tab"
-                            aria-selected={selecionado}
-                            onClick={() => {
-                              setFilhosSelecionados((atual) => ({
-                                ...atual,
-                                [vigencia.id]: filho.id,
-                              }));
-                              definirFilhoSelecionadoCompartilhado(filho.id);
-                            }}
-                            className={`shrink-0 snap-start rounded-lg px-3 py-1.5 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                              selecionado
-                                ? "border-b-2 border-muted-foreground/80 bg-transparent font-bold text-foreground"
-                                : "border-b-2 border-transparent bg-transparent font-medium text-foreground hover:bg-transparent"
-                            }`}
-                            style={
-                              selecionado && filho.cor?.trim()
-                                ? { borderBottomColor: filho.cor.trim() }
-                                : undefined
-                            }
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <FilhoAvatar nome={filho.nome} cor={filho.cor} avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null} className="h-5 w-5" />
-                              <span>{filho.nome}</span>
-                            </span>
-                          </button>
-                        );
-                      })}
+                    <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (indiceFilhoSelecionado <= 0) return;
+                          const destino = gruposFilhos[indiceFilhoSelecionado - 1]?.filho;
+                          if (!destino) return;
+                          setFilhosSelecionados((atual) => ({
+                            ...atual,
+                            [vigencia.id]: destino.id,
+                          }));
+                          definirFilhoSelecionadoCompartilhado(destino.id);
+                        }}
+                        disabled={indiceFilhoSelecionado <= 0}
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                        aria-label="Ir para o filho anterior"
+                      >
+                        <ChevronLeft className="h-4 w-4" strokeWidth={3} />
+                      </button>
+
+                      {grupoFilhoSelecionado && (
+                        <div className="flex min-w-0 items-center justify-center gap-2">
+                          <FilhoAvatar
+                            nome={grupoFilhoSelecionado.filho.nome}
+                            cor={grupoFilhoSelecionado.filho.cor}
+                            avatar={grupoFilhoSelecionado.filho.avatar === "menino" || grupoFilhoSelecionado.filho.avatar === "menina" ? grupoFilhoSelecionado.filho.avatar : null}
+                            className="h-6 w-6 shrink-0"
+                          />
+                          <span className="truncate whitespace-nowrap text-center text-base font-bold">
+                            {grupoFilhoSelecionado.filho.nome}
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            indiceFilhoSelecionado < 0 ||
+                            indiceFilhoSelecionado >= gruposFilhos.length - 1
+                          ) return;
+                          const destino = gruposFilhos[indiceFilhoSelecionado + 1]?.filho;
+                          if (!destino) return;
+                          setFilhosSelecionados((atual) => ({
+                            ...atual,
+                            [vigencia.id]: destino.id,
+                          }));
+                          definirFilhoSelecionadoCompartilhado(destino.id);
+                        }}
+                        disabled={
+                          indiceFilhoSelecionado < 0 ||
+                          indiceFilhoSelecionado >= gruposFilhos.length - 1
+                        }
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                        aria-label="Ir para o próximo filho"
+                      >
+                        <ChevronRight className="h-4 w-4" strokeWidth={3} />
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => rolarFilhos(vigencia.id, "direita")}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                      aria-label="Ver próximos filhos"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
+                    <span className="h-7 w-7" aria-hidden="true" />
                   </div>
 
                   {grupoFilhoSelecionado &&
