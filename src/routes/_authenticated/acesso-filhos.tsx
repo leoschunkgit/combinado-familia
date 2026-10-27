@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Smartphone } from "lucide-react";
 import { FilhoAppAccessManager } from "@/components/FilhoAppAccessDialog";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
@@ -25,7 +25,6 @@ export const Route = createFileRoute("/_authenticated/acesso-filhos")({
 function AcessoFilhosPage() {
   const { data: filhos = [] } = useFilhos();
   const { filho: filhoFocado } = Route.useSearch();
-  const filhosScrollRef = useRef<HTMLDivElement | null>(null);
   const [filhoSelecionadoId, setFilhoSelecionadoId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -42,133 +41,69 @@ function AcessoFilhosPage() {
     });
   }, [filhoFocado, filhos]);
 
-  useEffect(() => {
-    const area = filhosScrollRef.current;
-    if (!area || !filhoSelecionadoId) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      const alvo = area.querySelector<HTMLElement>(
-        `[data-filho="${filhoSelecionadoId}"]`,
-      );
-      if (!alvo) return;
-
-      const destino =
-        alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
-
-      area.scrollTo({
-        left: Math.max(0, destino),
-        behavior: "smooth",
-      });
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [filhoSelecionadoId]);
-
-  function rolarFilhos(direcao: "esquerda" | "direita") {
-    const area = filhosScrollRef.current;
-    if (!area) return;
-
-    const distancia = Math.max(area.clientWidth * 0.75, 220);
-    area.scrollBy({
-      left: direcao === "direita" ? distancia : -distancia,
-      behavior: "smooth",
-    });
-  }
-
   const filhoSelecionado =
     filhos.find((filho) => filho.id === filhoSelecionadoId) ?? null;
+  const indiceFilhoSelecionado = filhoSelecionado
+    ? filhos.findIndex((filho) => filho.id === filhoSelecionado.id)
+    : -1;
+
+  function navegarFilho(direcao: -1 | 1) {
+    if (indiceFilhoSelecionado < 0) return;
+    const proximo = filhos[indiceFilhoSelecionado + direcao];
+    if (proximo) setFilhoSelecionadoId(proximo.id);
+  }
 
   return (
     <>
       <PageHeader
         title="Acesso dos filhos"
-        description="Gere chaves de acesso, veja os aparelhos vinculados e revogue acessos quando necessário."
         icon={<Smartphone className="h-6 w-6" />}
       />
 
       {filhos.length === 0 ? (
         <EmptyState>Nenhum filho cadastrado ainda.</EmptyState>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center gap-1 border-t pt-3 pb-1">
-            <button
-              type="button"
-              onClick={() => rolarFilhos("esquerda")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              aria-label="Ver filhos anteriores"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-
-            <div
-              ref={filhosScrollRef}
-              className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              role="tablist"
-              aria-label="Selecionar filho para gerenciar acesso"
-            >
-              {filhos.map((filho) => {
-                const selecionado = filho.id === filhoSelecionadoId;
-
-                return (
-                  <button
-                    key={filho.id}
-                    data-filho={filho.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={selecionado}
-                    onClick={() => setFilhoSelecionadoId(filho.id)}
-                    className={`shrink-0 snap-start rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                      selecionado
-                        ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
-                        : "border-b-2 border-transparent bg-transparent text-foreground hover:bg-transparent"
-                    }`}
-                    style={
-                      selecionado && filho.cor?.trim()
-                        ? { borderBottomColor: filho.cor.trim() }
-                        : undefined
-                    }
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <FilhoAvatar
-                        nome={filho.nome}
-                        cor={filho.cor}
-                        avatar={filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : null}
-                        className="h-5 w-5"
-                      />
-                      <span>{filho.nome}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => rolarFilhos("direita")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              aria-label="Ver próximos filhos"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-
+        <div>
           {filhoSelecionado && (
             <section className="overflow-hidden rounded-2xl border bg-card">
-              <div className="flex min-w-0 items-center gap-2.5 border-b px-4 py-4 sm:px-5">
-                <FilhoAvatar
-                  nome={filhoSelecionado.nome}
-                  cor={filhoSelecionado.cor}
-                  avatar={filhoSelecionado.avatar === "menino" || filhoSelecionado.avatar === "menina" ? filhoSelecionado.avatar : null}
-                  className="h-8 w-8"
-                />
-                <div className="min-w-0">
-                  <h2 className="break-words text-sm font-semibold sm:text-base">
-                    {filhoSelecionado.nome}
-                  </h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Chave de acesso e aparelhos vinculados
-                  </p>
+              <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border/60 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
+                <span className="h-7 w-7" aria-hidden="true" />
+
+                <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
+                  <button
+                    type="button"
+                    onClick={() => navegarFilho(-1)}
+                    disabled={indiceFilhoSelecionado <= 0}
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label="Ir para o filho anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" strokeWidth={3} />
+                  </button>
+
+                  <div className="flex min-w-0 items-center justify-center gap-2">
+                    <FilhoAvatar
+                      nome={filhoSelecionado.nome}
+                      cor={filhoSelecionado.cor}
+                      avatar={filhoSelecionado.avatar === "menino" || filhoSelecionado.avatar === "menina" ? filhoSelecionado.avatar : null}
+                      className="h-6 w-6 shrink-0"
+                    />
+                    <span className="truncate whitespace-nowrap text-center text-sm font-extrabold">
+                      {filhoSelecionado.nome}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navegarFilho(1)}
+                    disabled={indiceFilhoSelecionado < 0 || indiceFilhoSelecionado >= filhos.length - 1}
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label="Ir para o próximo filho"
+                  >
+                    <ChevronRight className="h-4 w-4" strokeWidth={3} />
+                  </button>
                 </div>
+
+                <span className="h-7 w-7" aria-hidden="true" />
               </div>
 
               <div className="p-4 sm:p-5">
