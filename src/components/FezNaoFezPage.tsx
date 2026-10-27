@@ -140,7 +140,9 @@ function formatarDiaSemana(data: string) {
   const dia = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     timeZone: "America/Sao_Paulo",
-  }).format(new Date(`${data}T12:00:00-03:00`));
+  })
+    .format(new Date(`${data}T12:00:00-03:00`))
+    .replace(/-feira$/i, "");
 
   return dia.charAt(0).toLocaleUpperCase("pt-BR") + dia.slice(1);
 }
@@ -194,7 +196,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     toast.error("Esta tarefa foi excluída e está disponível somente como histórico");
     return false;
   }
-  const diasScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const filhosScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [diasSelecionados, setDiasSelecionados] = useState<Record<number, string>>({});
   const [filhosSelecionados, setFilhosSelecionados] = useState<Record<number, number>>({});
@@ -286,32 +287,23 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
     });
   }, [hoje, vigenciasOperacionais]);
 
-  function datasDoPeriodoDaVigencia(vigencia: Vigencia) {
-    const inicio = dataBrasil(vigencia.data_inicio);
-    const fim = dataBrasil(vigencia.data_fim);
-    const datas: string[] = [];
-    let cursor = new Date(`${inicio}T12:00:00-03:00`);
-    const limite = new Date(`${fim}T12:00:00-03:00`);
-
-    while (cursor.getTime() <= limite.getTime()) {
-      const ano = cursor.getFullYear();
-      const mes = String(cursor.getMonth() + 1).padStart(2, "0");
-      const dia = String(cursor.getDate()).padStart(2, "0");
-      datas.push(`${ano}-${mes}-${dia}`);
-      cursor.setDate(cursor.getDate() + 1);
-    }
-
-    return datas;
+  function datasSelecionaveisDaVigencia(vigencia: Vigencia) {
+    return datasDaVigenciaAteHoje(vigencia, agoraBrasil);
   }
 
-  function rolarDias(vigenciaId: number, direcao: "esquerda" | "direita") {
-    const area = diasScrollRefs.current[vigenciaId];
-    if (!area) return;
-    const distancia = Math.max(area.clientWidth * 0.75, 220);
-    area.scrollBy({
-      left: direcao === "direita" ? distancia : -distancia,
-      behavior: "smooth",
-    });
+  function navegarDia(vigencia: Vigencia, direcao: -1 | 1) {
+    const datas = datasSelecionaveisDaVigencia(vigencia);
+    const selecionada = diasSelecionados[vigencia.id] ?? hoje;
+    const indiceAtual = datas.indexOf(selecionada);
+    if (indiceAtual < 0) return;
+
+    const destino = datas[indiceAtual + direcao];
+    if (!destino) return;
+
+    setDiasSelecionados((atual) => ({
+      ...atual,
+      [vigencia.id]: destino,
+    }));
   }
 
   function rolarFilhos(vigenciaId: number, direcao: "esquerda" | "direita") {
@@ -323,28 +315,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
       behavior: "smooth",
     });
   }
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      for (const vigencia of vigenciasOperacionais) {
-        const dataSelecionada = diasSelecionados[vigencia.id];
-        const area = diasScrollRefs.current[vigencia.id];
-        if (!dataSelecionada || !area) continue;
-
-        const alvo = area.querySelector<HTMLElement>(`[data-dia="${dataSelecionada}"]`);
-        if (!alvo) continue;
-
-        const destino =
-          alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
-        area.scrollTo({
-          left: Math.max(0, destino),
-          behavior: "smooth",
-        });
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [diasSelecionados, vigenciasOperacionais]);
 
   const ocorrenciasDaTarefa = (tarefa: FilhoTarefa) =>
     ocorrencias
@@ -1142,87 +1112,15 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
           const grupoFilhoSelecionado =
             gruposFilhos.find(({ filho }) => filho.id === filhoSelecionadoId) ??
             gruposFilhos[0];
-          const corFilhoSelecionado =
-            grupoFilhoSelecionado?.filho.cor?.trim() || null;
+          const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
+          const datasSelecionaveis = datasSelecionaveisDaVigencia(vigencia);
+          const indiceDataSelecionada = datasSelecionaveis.indexOf(dataSelecionada);
+          const podeVoltarData = indiceDataSelecionada > 0;
+          const podeAvancarData =
+            indiceDataSelecionada >= 0 &&
+            indiceDataSelecionada < datasSelecionaveis.length - 1;
           return (
             <section key={vigencia.id} className="space-y-3">
-              <div className="pb-1">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => rolarDias(vigencia.id, "esquerda")}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                    aria-label="Ver dias anteriores"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-
-                  <div
-                    ref={(elemento) => {
-                      diasScrollRefs.current[vigencia.id] = elemento;
-                    }}
-                    className="flex min-w-0 flex-1 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                    role="tablist"
-                    aria-label={`Selecionar dia da vigência ${fmtVigencia(vigencia)}`}
-                  >
-                    {datasDoPeriodoDaVigencia(vigencia).map((data) => {
-                      const selecionada = diasSelecionados[vigencia.id] === data;
-                      const futura = data > hoje;
-                      const comPendencia =
-                        vigenciaEmAndamento(vigencia) &&
-                        !futura &&
-                        diaTemPendencia(vigencia.id, data);
-                      return (
-                        <button
-                          key={data}
-                          data-dia={data}
-                          type="button"
-                          role="tab"
-                          aria-selected={selecionada}
-                          disabled={futura}
-                          onClick={() =>
-                            !futura &&
-                            setDiasSelecionados((atual) => ({
-                              ...atual,
-                              [vigencia.id]: data,
-                            }))
-                          }
-                          className={`relative shrink-0 snap-start rounded-lg px-2.5 py-2 text-xs font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                            futura
-                              ? "cursor-not-allowed border-b-2 border-transparent bg-transparent text-muted-foreground/40"
-                              : selecionada
-                                ? "border-b-2 border-muted-foreground/80 bg-transparent text-foreground"
-                                : "border-b-2 border-transparent bg-transparent text-foreground hover:bg-transparent"
-                          }`}
-                          style={
-                            selecionada && !futura && corFilhoSelecionado
-                              ? { borderBottomColor: corFilhoSelecionado }
-                              : undefined
-                          }
-                        >
-                          {formatarDataCurta(data)}
-                          {comPendencia && (
-                            <span
-                              aria-hidden="true"
-                              className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-red-500"
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => rolarDias(vigencia.id, "direita")}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                    aria-label="Ver próximos dias"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-
               {gruposFilhos.length === 0 ? (
                 <EmptyState>
                   {modo === "pendentes"
@@ -1341,7 +1239,6 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                           ocorrencia.t_ocorrencia_consequencia,
                         ),
                     ).length;
-                    const dataSelecionada = diasSelecionados[vigencia.id] ?? hoje;
                     const bloqueada = !vigenciaEmAndamento(vigencia);
                     return (
                       <div key={filho.id} className="space-y-2">
@@ -1414,25 +1311,57 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                         <article
                           className="overflow-hidden rounded-xl border bg-background"
                         >
-                        <button
-                          type="button"
-                          className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 bg-white px-4 py-3 text-left dark:bg-background"
-                          onClick={() =>
-                            setFilhosAbertos((atual) => ({
-                              ...atual,
-                              [chave]: !filhoAberto,
-                            }))
-                          }
-                        >
-                          <CollapseChevron open={filhoAberto} />
-                          <div className="min-w-0">
-                            <h3
-                              className={`truncate tabular-nums ${uiTypography.secondaryTitleStrong}`}
+                        <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilhosAbertos((atual) => ({
+                                ...atual,
+                                [chave]: !filhoAberto,
+                              }))
+                            }
+                            className="flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                            aria-label={filhoAberto ? "Recolher tarefas" : "Expandir tarefas"}
+                            aria-expanded={filhoAberto}
+                          >
+                            <CollapseChevron open={filhoAberto} />
+                          </button>
+
+                          <div className="flex min-w-0 items-center justify-center gap-1 sm:gap-2">
+                            <button
+                              type="button"
+                              onClick={() => navegarDia(vigencia, -1)}
+                              disabled={!podeVoltarData}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                              aria-label="Ir para o dia anterior"
                             >
-                              <span>{formatarData(dataSelecionada)} · </span>
+                              <ChevronLeft className="h-5 w-5" />
+                            </button>
+
+                            <h3
+                              className={`min-w-0 truncate whitespace-nowrap text-center tabular-nums ${uiTypography.secondaryTitleStrong}`}
+                            >
+                              <span>{formatarDataCurta(dataSelecionada)} </span>
                               <span className="font-extrabold">{formatarDiaSemana(dataSelecionada)}</span>
+                              {diaTemPendencia(vigencia.id, dataSelecionada) && (
+                                <span
+                                  className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle"
+                                  aria-label="Há pendências nesta data"
+                                />
+                              )}
                             </h3>
+
+                            <button
+                              type="button"
+                              onClick={() => navegarDia(vigencia, 1)}
+                              disabled={!podeAvancarData}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                              aria-label="Ir para o próximo dia"
+                            >
+                              <ChevronRight className="h-5 w-5" />
+                            </button>
                           </div>
+
                           {modo === "pendentes" ? (
                             <div className="flex shrink-0 flex-col items-end justify-center gap-1 text-sm">
                               <span className="font-semibold text-primary tabular-nums">
@@ -1443,9 +1372,9 @@ export function FezNaoFezPage({ modo, focoSolicitacao }: FezNaoFezPageProps) {
                               </span>
                             </div>
                           ) : (
-                            <span aria-hidden="true" />
+                            <span className="h-9 w-9" aria-hidden="true" />
                           )}
-                        </button>
+                        </div>
 
                         {filhoAberto && (
                           <div className="border-t bg-white p-3 dark:bg-background sm:p-4">
