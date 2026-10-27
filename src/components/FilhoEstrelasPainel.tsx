@@ -38,7 +38,8 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   const [salvando, setSalvando] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
   const [abaForm, setAbaForm] = useState<"cadastrar" | "sugestoes">("cadastrar");
-  const [sugestaoSelecionada, setSugestaoSelecionada] = useState<string | null>(null);
+  const [sugestoesSelecionadas, setSugestoesSelecionadas] = useState<string[]>([]);
+  const [estrelasSugestoes, setEstrelasSugestoes] = useState<Record<string, string>>({});
   const [editando, setEditando] = useState<RecompensaEstrelaResumo | null>(null);
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -79,7 +80,8 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setEstrelas("");
     setFormAberto(false);
     setAbaForm("cadastrar");
-    setSugestaoSelecionada(null);
+    setSugestoesSelecionadas([]);
+    setEstrelasSugestoes({});
     setRecompensasAbertas(!somenteRecompensas);
     setConfirmacao(null);
     void carregar();
@@ -97,7 +99,8 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao("");
     setEstrelas("");
     setAbaForm("cadastrar");
-    setSugestaoSelecionada(null);
+    setSugestoesSelecionadas([]);
+    setEstrelasSugestoes({});
     setFormAberto(false);
   }
 
@@ -107,7 +110,8 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao("");
     setEstrelas("");
     setAbaForm("cadastrar");
-    setSugestaoSelecionada(null);
+    setSugestoesSelecionadas([]);
+    setEstrelasSugestoes({});
     setFormAberto(true);
   }
 
@@ -122,8 +126,84 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setDescricao(recompensa.descricao ?? "");
     setEstrelas(String(recompensa.estrelas_necessarias));
     setAbaForm("cadastrar");
-    setSugestaoSelecionada(null);
+    setSugestoesSelecionadas([]);
+    setEstrelasSugestoes({});
     setFormAberto(true);
+  }
+
+  function alternarSugestaoRecompensa(nomeSugestao: string) {
+    setSugestoesSelecionadas((atuais) =>
+      atuais.includes(nomeSugestao)
+        ? atuais.filter((item) => item !== nomeSugestao)
+        : [...atuais, nomeSugestao],
+    );
+  }
+
+  function prepararSugestoesParaCadastro() {
+    setEstrelasSugestoes((atuais) =>
+      Object.fromEntries(
+        sugestoesSelecionadas.map((item) => [item, atuais[item] ?? ""]),
+      ),
+    );
+    setAbaForm("cadastrar");
+  }
+
+  async function salvarSugestoesSelecionadas(evento: FormEvent) {
+    evento.preventDefault();
+
+    const recompensas = sugestoesSelecionadas.map((nomeSugestao) => ({
+      nome: nomeSugestao,
+      estrelas: Number(estrelasSugestoes[nomeSugestao] ?? ""),
+    }));
+
+    const invalida = recompensas.find(
+      (recompensa) =>
+        !Number.isInteger(recompensa.estrelas) ||
+        recompensa.estrelas < 1 ||
+        recompensa.estrelas > 100000,
+    );
+
+    if (invalida) {
+      toast.error(`Informe uma quantidade válida de estrelas para “${invalida.nome}”.`);
+      return;
+    }
+
+    setSalvando(true);
+    let cadastradas = 0;
+
+    try {
+      for (const recompensa of recompensas) {
+        const { error } = await supabase.rpc("salvar_recompensa_estrelas", {
+          p_id_filho: filho.id,
+          p_nome: recompensa.nome,
+          p_descricao: "",
+          p_estrelas_necessarias: recompensa.estrelas,
+        });
+
+        if (error) throw error;
+        cadastradas += 1;
+      }
+
+      toast.success(
+        cadastradas === 1
+          ? "Recompensa cadastrada"
+          : `${cadastradas} recompensas cadastradas`,
+      );
+      limparForm();
+      await carregar();
+    } catch (error) {
+      if (cadastradas > 0) {
+        toast.error(
+          `${cadastradas} recompensa${cadastradas === 1 ? "" : "s"} cadastrada${cadastradas === 1 ? "" : "s"} antes do erro. ${msgErro(error)}`,
+        );
+        limparForm();
+        await carregar();
+      } else {
+        toast.error(msgErro(error));
+      }
+    } finally {
+      setSalvando(false);
+    }
   }
 
   async function salvarRecompensa(evento: FormEvent) {
@@ -450,40 +530,120 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
               </TabsList>
 
               <TabsContent value="cadastrar" className="mt-5">
-                <form onSubmit={(evento) => void salvarRecompensa(evento)} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="recompensa-nome">Recompensa *</Label>
-                    <Input id="recompensa-nome" value={nome} onChange={(evento) => setNome(evento.target.value)} maxLength={100} placeholder="Ex.: Partiu cinema!" autoFocus />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="recompensa-descricao">Descrição <span className="font-normal text-muted-foreground">(opcional)</span></Label>
-                    <Input id="recompensa-descricao" value={descricao} onChange={(evento) => setDescricao(evento.target.value)} maxLength={300} placeholder="Ex.: Sessão de cinema no fim de semana" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="recompensa-estrelas">Estrelas necessárias *</Label>
-                    <div className="relative max-w-40">
-                      <Input id="recompensa-estrelas" type="number" min="1" max="100000" step="1" inputMode="numeric" value={estrelas} onChange={(evento) => setEstrelas(evento.target.value)} className="pr-9" />
-                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center"><Estrela /></span>
+                {sugestoesSelecionadas.length > 0 ? (
+                  <form onSubmit={(evento) => void salvarSugestoesSelecionadas(evento)} className="space-y-5">
+                    <div>
+                      <p className="text-sm font-medium">Recompensas selecionadas</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Informe quantas estrelas são necessárias para cada recompensa.
+                      </p>
                     </div>
-                  </div>
 
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
-                    <Button type="submit" disabled={salvando}>
-                      {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
-                      Cadastrar
-                    </Button>
-                  </DialogFooter>
-                </form>
+                    <div className="max-h-[48vh] space-y-2 overflow-y-auto pr-1">
+                      {sugestoesSelecionadas.map((nomeSugestao, index) => (
+                        <div
+                          key={nomeSugestao}
+                          className="flex min-w-0 items-center gap-2 rounded-xl border p-3"
+                        >
+                          <RecompensaIcone
+                            nome={nomeSugestao}
+                            className="h-4 w-4 text-primary"
+                          />
+                          <span className="min-w-0 flex-1 break-words text-sm font-medium leading-snug">
+                            {nomeSugestao}
+                          </span>
+                          <div className="relative w-24 shrink-0">
+                            <Input
+                              id={`recompensa-sugestao-estrelas-${index}`}
+                              type="number"
+                              min="1"
+                              max="100000"
+                              step="1"
+                              inputMode="numeric"
+                              value={estrelasSugestoes[nomeSugestao] ?? ""}
+                              onChange={(evento) =>
+                                setEstrelasSugestoes((atuais) => ({
+                                  ...atuais,
+                                  [nomeSugestao]: evento.target.value,
+                                }))
+                              }
+                              className="pr-8 text-center"
+                              aria-label={`Estrelas necessárias para ${nomeSugestao}`}
+                            />
+                            <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                              <Estrela />
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9 shrink-0"
+                            onClick={() => {
+                              setSugestoesSelecionadas((atuais) =>
+                                atuais.filter((item) => item !== nomeSugestao),
+                              );
+                              setEstrelasSugestoes((atuais) => {
+                                const proximas = { ...atuais };
+                                delete proximas[nomeSugestao];
+                                return proximas;
+                              });
+                            }}
+                            aria-label={`Remover ${nomeSugestao}`}
+                            title="Remover"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={limparForm}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={salvando}>
+                        {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Cadastrar selecionadas ({sugestoesSelecionadas.length})
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                ) : (
+                  <form onSubmit={(evento) => void salvarRecompensa(evento)} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="recompensa-nome">Recompensa *</Label>
+                      <Input id="recompensa-nome" value={nome} onChange={(evento) => setNome(evento.target.value)} maxLength={100} placeholder="Ex.: Partiu cinema!" autoFocus />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="recompensa-descricao">Descrição <span className="font-normal text-muted-foreground">(opcional)</span></Label>
+                      <Input id="recompensa-descricao" value={descricao} onChange={(evento) => setDescricao(evento.target.value)} maxLength={300} placeholder="Ex.: Sessão de cinema no fim de semana" />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="recompensa-estrelas">Estrelas necessárias *</Label>
+                      <div className="relative max-w-40">
+                        <Input id="recompensa-estrelas" type="number" min="1" max="100000" step="1" inputMode="numeric" value={estrelas} onChange={(evento) => setEstrelas(evento.target.value)} className="pr-9" />
+                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center"><Estrela /></span>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={limparForm}>Cancelar</Button>
+                      <Button type="submit" disabled={salvando}>
+                        {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Cadastrar
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                )}
               </TabsContent>
 
               <TabsContent value="sugestoes" className="mt-5 space-y-5">
                 <div>
-                  <p className="text-sm font-medium">Escolha uma recompensa para adicionar</p>
+                  <p className="text-sm font-medium">Escolha recompensas para adicionar</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Selecione uma sugestão. Recompensas já cadastradas para este filho ficam indisponíveis.
+                    Você pode selecionar várias sugestões de uma vez. Recompensas já cadastradas para este filho ficam indisponíveis.
                   </p>
                 </div>
 
@@ -498,7 +658,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                               normalizarNomeRecompensa(recompensa.nome) ===
                               normalizarNomeRecompensa(sugestao.nome),
                           );
-                          const selecionada = sugestaoSelecionada === sugestao.nome;
+                          const selecionada = sugestoesSelecionadas.includes(sugestao.nome);
                           const id = `sugestao-recompensa-${grupoIndex}-${sugestaoIndex}`;
 
                           return (
@@ -518,9 +678,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                                 checked={selecionada}
                                 disabled={jaCadastrada}
                                 onCheckedChange={() =>
-                                  setSugestaoSelecionada((atual) =>
-                                    atual === sugestao.nome ? null : sugestao.nome,
-                                  )
+                                  alternarSugestaoRecompensa(sugestao.nome)
                                 }
                                 aria-label={`Selecionar ${sugestao.nome}`}
                               />
@@ -551,14 +709,11 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
                   </Button>
                   <Button
                     type="button"
-                    disabled={!sugestaoSelecionada}
-                    onClick={() => {
-                      if (!sugestaoSelecionada) return;
-                      setNome(sugestaoSelecionada);
-                      setAbaForm("cadastrar");
-                    }}
+                    disabled={sugestoesSelecionadas.length === 0}
+                    onClick={prepararSugestoesParaCadastro}
                   >
-                    Usar sugestão
+                    Adicionar selecionadas
+                    {sugestoesSelecionadas.length > 0 && ` (${sugestoesSelecionadas.length})`}
                   </Button>
                 </DialogFooter>
               </TabsContent>
