@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Link2, Plus, Trash2 } from "lucide-react";
@@ -42,7 +42,6 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
-  const vigenciasScrollRef = useRef<HTMLDivElement>(null);
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filhoContextoId, setFilhoContextoId] = useState<number | null>(null);
@@ -81,27 +80,6 @@ function AtribuicoesPage() {
 
     setVigenciaSelecionadaId(vigenciaAtiva?.id ?? vigenciasOrdenadas[0]?.id ?? null);
   }, [vigenciaAtiva?.id, vigenciaSelecionadaId, vigenciasOrdenadas]);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const area = vigenciasScrollRef.current;
-      if (!area || vigenciaSelecionadaId === null) return;
-
-      const alvo = area.querySelector<HTMLElement>(
-        `[data-vigencia="${vigenciaSelecionadaId}"]`,
-      );
-      if (!alvo) return;
-
-      const destino =
-        alvo.offsetLeft - (area.clientWidth - alvo.clientWidth) / 2;
-      area.scrollTo({
-        left: Math.max(0, destino),
-        behavior: "smooth",
-      });
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [vigenciaSelecionadaId, vigenciasOrdenadas]);
 
   async function excluir(id: number) {
     const { error } = await supabase.rpc("excluir_atribuicao_com_regra", {
@@ -208,14 +186,14 @@ function AtribuicoesPage() {
   const periodoCurto = (item: (typeof vigencias)[number]) =>
     `${formatadorDataCurta.format(new Date(item.data_inicio))} à ${formatadorDataCurta.format(new Date(item.data_fim))}`;
 
-  function rolarVigencias(direcao: "esquerda" | "direita") {
-    const area = vigenciasScrollRef.current;
-    if (!area) return;
-    const distancia = Math.max(area.clientWidth * 0.75, 220);
-    area.scrollBy({
-      left: direcao === "direita" ? distancia : -distancia,
-      behavior: "smooth",
-    });
+  const indiceVigenciaSelecionada = vigenciaSelecionada
+    ? vigenciasOrdenadas.findIndex((item) => item.id === vigenciaSelecionada.id)
+    : -1;
+
+  function navegarVigencia(direcao: -1 | 1) {
+    if (indiceVigenciaSelecionada < 0) return;
+    const proxima = vigenciasOrdenadas[indiceVigenciaSelecionada + direcao];
+    if (proxima) selecionarVigencia(proxima.id);
   }
 
   return (
@@ -249,137 +227,125 @@ function AtribuicoesPage() {
       {vigenciasOrdenadas.length === 0 ? (
         <EmptyState>Nenhuma vigência cadastrada.</EmptyState>
       ) : (
-        <>
-          <section className="mb-5 border-t pt-3 pb-1 md:border-t-0">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => rolarVigencias("esquerda")}
-                className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                aria-label="Ver vigências anteriores"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
+        <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+          {vigenciaSelecionada && (
+            <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-border/60 bg-white px-3 py-2.5 dark:bg-background sm:px-4 sm:py-3">
+              <span className="h-7 w-7" aria-hidden="true" />
 
-              <div
-                ref={vigenciasScrollRef}
-                className="flex min-w-0 flex-1 snap-x snap-mandatory gap-3.5 overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                role="tablist"
-                aria-label="Selecionar vigência"
-              >
-                {vigenciasOrdenadas.map((item) => {
-                  const selecionada = item.id === vigenciaSelecionadaId;
+              <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
+                <button
+                  type="button"
+                  onClick={() => navegarVigencia(-1)}
+                  disabled={indiceVigenciaSelecionada <= 0}
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  aria-label="Ir para a vigência anterior"
+                >
+                  <ChevronLeft className="h-4 w-4" strokeWidth={3} />
+                </button>
+
+                <div className="min-w-0 text-center">
+                  <p className="truncate whitespace-nowrap text-sm font-extrabold tabular-nums">
+                    {periodoCurto(vigenciaSelecionada)}
+                  </p>
+                  <div className="mt-1 flex justify-center">
+                    <VigenciaStatus vigencia={vigenciaSelecionada} />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navegarVigencia(1)}
+                  disabled={indiceVigenciaSelecionada < 0 || indiceVigenciaSelecionada >= vigenciasOrdenadas.length - 1}
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  aria-label="Ir para a próxima vigência"
+                >
+                  <ChevronRight className="h-4 w-4" strokeWidth={3} />
+                </button>
+              </div>
+
+              <span className="h-7 w-7" aria-hidden="true" />
+            </div>
+          )}
+
+          <div className="p-3 sm:p-4">
+            {gruposFilhos.length === 0 ? (
+              <EmptyState>
+                {vigenciaSelecionadaAceitaAtribuicoes && filhos.length === 0
+                  ? "Nenhum filho cadastrado."
+                  : "Nenhuma atribuição encontrada para esta vigência e filtros."}
+              </EmptyState>
+            ) : (
+              <div className="space-y-3 sm:space-y-4">
+                {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
+                  const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
+                  const temAtribuicoes = atribuicoesFilho.length > 0;
+                  const aberto = temAtribuicoes && filhosAbertos[chave] === true;
+
                   return (
-                    <button
-                      key={item.id}
-                      data-vigencia={item.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={selecionada}
-                      onClick={() => selecionarVigencia(item.id)}
-                      className={`min-w-[126px] shrink-0 snap-start rounded-lg border-b-2 px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 sm:min-w-[138px] ${selecionada ? "border-muted-foreground/80 bg-transparent text-foreground" : "border-transparent bg-transparent text-foreground hover:bg-transparent"}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium tabular-nums text-foreground">
-                          {periodoCurto(item)}
-                        </span>
+                    <section key={filhoItem.id} className="overflow-hidden rounded-xl border bg-card">
+                      <div className="flex w-full items-center justify-between gap-4 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
+                        <button
+                          type="button"
+                          className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
+                          onClick={() => {
+                            if (!temAtribuicoes) return;
+                            setFilhosAbertos((atual) => ({
+                              ...atual,
+                              [chave]: !aberto,
+                            }));
+                          }}
+                          aria-expanded={temAtribuicoes ? aberto : undefined}
+                          aria-label={temAtribuicoes ? `${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}` : undefined}
+                        >
+                          {temAtribuicoes ? <CollapseChevron open={aberto} /> : <span className="h-5 w-5 shrink-0" aria-hidden="true" />}
+                          <FilhoAvatar nome={filhoItem.nome} cor={filhoItem.cor} avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null} className="h-7 w-7" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
+                            <p className="truncate font-bold">{filhoItem.nome}</p>
+                          </div>
+                        </button>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 shrink-0 gap-1.5 px-2.5 text-xs"
+                          disabled={vigenciaSelecionadaFinalizada}
+                          onClick={() => setFilhoContextoId(filhoItem.id)}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Add tarefa
+                        </Button>
                       </div>
-                      <div className="mt-1.5">
-                        <VigenciaStatus vigencia={item} />
-                      </div>
-                    </button>
+
+                      {temAtribuicoes && aberto && (
+                        <div className="bg-muted/10 p-2.5 sm:p-3">
+                          <div className="space-y-2">
+                            {atribuicoesFilho.map((e) => (
+                              <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-white px-3 py-2.5 dark:bg-card sm:px-4 sm:py-3">
+                                <div className="flex min-w-0 items-start gap-2">
+                                  <TarefaIcone nome={e.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
+                                  <p className="min-w-0 break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-0.5">
+                                  <Hint content="Excluir atribuição">
+                                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </Hint>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </section>
                   );
                 })}
               </div>
-
-              <button
-                type="button"
-                onClick={() => rolarVigencias("direita")}
-                className="flex h-9 w-9 shrink-0 items-center justify-center bg-transparent p-0 text-muted-foreground transition-colors hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                aria-label="Ver próximas vigências"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </section>
-
-          {gruposFilhos.length === 0 ? (
-            <EmptyState>
-              {vigenciaSelecionadaAceitaAtribuicoes && filhos.length === 0
-                ? "Nenhum filho cadastrado."
-                : "Nenhuma atribuição encontrada para esta vigência e filtros."}
-            </EmptyState>
-          ) : (
-            <div className="space-y-4 md:space-y-5">
-              {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
-                const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
-                const temAtribuicoes = atribuicoesFilho.length > 0;
-                const aberto = temAtribuicoes && filhosAbertos[chave] === true;
-
-                return (
-                  <section key={filhoItem.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-                    <div className="flex w-full items-center justify-between gap-4 border-b bg-muted/15 px-4 py-3.5 text-left sm:px-5 sm:py-4">
-                      <button
-                        type="button"
-                        className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
-                        onClick={() => {
-                          if (!temAtribuicoes) return;
-                          setFilhosAbertos((atual) => ({
-                            ...atual,
-                            [chave]: !aberto,
-                          }));
-                        }}
-                        aria-expanded={temAtribuicoes ? aberto : undefined}
-                        aria-label={temAtribuicoes ? `${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}` : undefined}
-                      >
-                        {temAtribuicoes ? <CollapseChevron open={aberto} /> : <span className="h-5 w-5 shrink-0" aria-hidden="true" />}
-                        <FilhoAvatar nome={filhoItem.nome} cor={filhoItem.cor} avatar={filhoItem.avatar === "menino" || filhoItem.avatar === "menina" ? filhoItem.avatar : null} className="h-7 w-7" />
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Filho</p>
-                          <p className="truncate font-bold">{filhoItem.nome}</p>
-                        </div>
-                      </button>
-
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-8 shrink-0 gap-1.5 px-2.5 text-xs"
-                        disabled={vigenciaSelecionadaFinalizada}
-                        onClick={() => setFilhoContextoId(filhoItem.id)}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        Add tarefa
-                      </Button>
-                    </div>
-
-                    {temAtribuicoes && aberto && (
-                      <div className="bg-muted/10 p-2.5 sm:p-3">
-                        <div className="space-y-2">
-                          {atribuicoesFilho.map((e) => (
-                            <div key={e.id} className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border bg-white px-3 py-2.5 dark:bg-card sm:px-4 sm:py-3">
-                              <div className="flex min-w-0 items-start gap-2">
-                                <TarefaIcone nome={e.t_tarefa?.nome ?? "Tarefa"} className="mt-0.5" />
-                                <p className="min-w-0 break-words text-sm font-medium leading-tight">{e.t_tarefa?.nome}</p>
-                              </div>
-                              <div className="flex shrink-0 items-center gap-0.5">
-                                <Hint content="Excluir atribuição">
-                                  <Button variant="outline" size="icon" className="h-8 w-8 shrink-0 rounded-md" onClick={() => setConfirmarExclusao(e.id)} aria-label={`Excluir atribuição de ${e.t_tarefa?.nome ?? "tarefa"}`}>
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </Hint>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </section>
-                );
-              })}
-            </div>
-          )}
-        </>
+            )}
+          </div>
+        </section>
       )}
 
       <AtribuicaoDialog
