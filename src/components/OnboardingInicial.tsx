@@ -268,54 +268,56 @@ export function OnboardingInicial() {
 
     setSalvando(true);
 
-    if (!atribuicaoAtualExiste) {
-      const resultado = await cadastrarAtribuicoes({
-        candidatos: [{
-          id_filho: Number(filhoAtual),
-          id_tarefa: Number(tarefaAtual),
-          ...(vigenciaAutomaticaAtiva
-            ? {}
-            : { id_vigencia: Number(vigenciaAtual) }),
-        }],
-        existentes: atribuicoes,
-        vigencias,
-        politica: "SOMENTE_ATUAL",
-      });
+    try {
+      if (!atribuicaoAtualExiste) {
+        const resultado = await cadastrarAtribuicoes({
+          candidatos: [{
+            id_filho: Number(filhoAtual),
+            id_tarefa: Number(tarefaAtual),
+            ...(vigenciaAutomaticaAtiva
+              ? {}
+              : { id_vigencia: Number(vigenciaAtual) }),
+          }],
+          existentes: atribuicoes,
+          vigencias,
+          politica: "SOMENTE_ATUAL",
+        });
 
-      if (!resultado.ok) {
-        setSalvando(false);
-        toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+        if (!resultado.ok) {
+          toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+          return;
+        }
+
+        await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+        if (resultado.modo === "AUTOMATICA") {
+          await qc.invalidateQueries({ queryKey: ["vigencias"] });
+        }
+      }
+
+      if (!usuarioPai?.id) {
+        toast.error("Não foi possível identificar sua conta para concluir o aprendizado.");
         return;
       }
 
-      await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-      if (resultado.modo === "AUTOMATICA") {
-        await qc.invalidateQueries({ queryKey: ["vigencias"] });
+      const { error: erroOnboarding } = await supabase
+        .from("t_usuario_pai")
+        .update({ onboarding_concluido: true })
+        .eq("id", usuarioPai.id);
+
+      if (erroOnboarding) {
+        toast.error(msgErro(erroOnboarding));
+        return;
       }
-    }
 
-    if (!usuarioPai?.id) {
+      setOnboardingEncerradoLocalmente(true);
+      await qc.invalidateQueries({ queryKey: ["usuario_pai"] });
+      toast.success("Configuração inicial concluída!");
+      navigate({ to: "/ocorrencias" });
+    } catch (erro) {
+      toast.error(msgErro(erro));
+    } finally {
       setSalvando(false);
-      toast.error("Não foi possível identificar sua conta para concluir o aprendizado.");
-      return;
     }
-
-    const { error: erroOnboarding } = await supabase
-      .from("t_usuario_pai")
-      .update({ onboarding_concluido: true })
-      .eq("id", usuarioPai.id);
-
-    setSalvando(false);
-
-    if (erroOnboarding) {
-      toast.error(msgErro(erroOnboarding));
-      return;
-    }
-
-    setOnboardingEncerradoLocalmente(true);
-    await qc.invalidateQueries({ queryKey: ["usuario_pai"] });
-    toast.success("Configuração inicial concluída!");
-    navigate({ to: "/ocorrencias" });
   }
 
   return (
