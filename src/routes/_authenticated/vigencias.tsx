@@ -79,6 +79,7 @@ function VigenciasPage() {
   const paraIso = paraIsoDataHoraBrasil;
 
   const periodoDiasCalculado = calcularPeriodoPorDias(quantidadeDias, inicioPeriodoDias);
+  const gerenciamentoManualDisponivel = !carregandoVigenciaAutomatica && !vigenciaAutomaticaAtiva;
 
   useEffect(() => {
     if (!vigenciaAutomaticaAtiva) return;
@@ -92,6 +93,10 @@ function VigenciasPage() {
   }, [vigenciaAutomaticaAtiva]);
 
   function bloquearGerenciamentoManual() {
+    if (carregandoVigenciaAutomatica) {
+      toast.info("Aguarde a configuração de vigência ser carregada.");
+      return true;
+    }
     if (!vigenciaAutomaticaAtiva) return false;
     toast.info(MENSAGEM_VIGENCIA_AUTOMATICA_GERENCIAMENTO);
     return true;
@@ -249,7 +254,7 @@ function VigenciasPage() {
       description={vigenciaAutomaticaAtiva ? "Períodos gerenciados automaticamente" : "Defina os períodos"}
       icon={<CalendarRange className="h-6 w-6" />}
       action={
-        !carregandoVigenciaAutomatica && !vigenciaAutomaticaAtiva ? (
+        gerenciamentoManualDisponivel ? (
           <div className="flex items-center gap-1.5">
             {ultimaVigencia && (
               <Button size="sm" variant="outline" className="h-8 px-2 text-xs sm:px-2.5" onClick={() => setConfirmarCloneAberto(true)}>
@@ -280,7 +285,7 @@ function VigenciasPage() {
       <span className="shrink-0 font-medium whitespace-nowrap">Legenda:</span>
       <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-green-300" />Em andamento</span>
       <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-300" />Finalizada</span>
-      {!vigenciaAutomaticaAtiva && (
+      {gerenciamentoManualDisponivel && (
         <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Irá começar</span>
       )}
     </div>
@@ -327,14 +332,14 @@ function VigenciasPage() {
                     Ver filhos vinculados
                   </DropdownMenuItem>
 
-                  {!vigenciaAutomaticaAtiva && emAndamento && (
+                  {gerenciamentoManualDisponivel && emAndamento && (
                     <DropdownMenuItem onSelect={() => setConfirmarFinalizacao(v.id)}>
                       <CircleStop className="h-4 w-4" />
                       Finalizar vigência
                     </DropdownMenuItem>
                   )}
 
-                  {!vigenciaAutomaticaAtiva && (
+                  {gerenciamentoManualDisponivel && (
                     <DropdownMenuItem
                       disabled={finalizada}
                       onSelect={() => {
@@ -360,7 +365,7 @@ function VigenciasPage() {
                     </DropdownMenuItem>
                   )}
 
-                  {!vigenciaAutomaticaAtiva && (
+                  {gerenciamentoManualDisponivel && (
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
                       onSelect={() => setConfirmarExclusao(v.id)}
@@ -414,7 +419,7 @@ function VigenciasPage() {
       </DialogContent>
     </Dialog>
 
-    <Dialog open={!vigenciaAutomaticaAtiva && novoAberto} onOpenChange={setNovoAberto}>
+    <Dialog open={gerenciamentoManualDisponivel && novoAberto} onOpenChange={setNovoAberto}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>Adicionar vigência</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
@@ -469,12 +474,12 @@ function VigenciasPage() {
     </Dialog>
 
     <ClonarVigenciaDialog
-      open={!vigenciaAutomaticaAtiva && confirmarCloneAberto}
+      open={gerenciamentoManualDisponivel && confirmarCloneAberto}
       onOpenChange={setConfirmarCloneAberto}
       onConfirm={() => void runAction(confirmarClone)}
     />
 
-    <Dialog open={!vigenciaAutomaticaAtiva && vigenciaParaAtribuir !== null} onOpenChange={(open) => !open && setVigenciaParaAtribuir(null)}>
+    <Dialog open={gerenciamentoManualDisponivel && vigenciaParaAtribuir !== null} onOpenChange={(open) => !open && setVigenciaParaAtribuir(null)}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader><DialogTitle>Fazer atribuições agora?</DialogTitle></DialogHeader>
         <p className="text-sm text-muted-foreground">
@@ -498,9 +503,9 @@ function VigenciasPage() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <Dialog open={!vigenciaAutomaticaAtiva && confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}><DialogContent><DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader><p>Tem certeza que deseja finalizar esta vigência?</p><p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button><Button onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={!vigenciaAutomaticaAtiva && confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir esta vigência?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog open={!vigenciaAutomaticaAtiva && Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent className="max-h-[92vh] overflow-y-auto p-4 sm:max-w-lg sm:p-5"><DialogHeader className="space-y-0.5"><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
+    <Dialog open={gerenciamentoManualDisponivel && confirmarFinalizacao !== null} onOpenChange={(open) => !open && setConfirmarFinalizacao(null)}><DialogContent><DialogHeader><DialogTitle>Finalizar vigência</DialogTitle></DialogHeader><p>Tem certeza que deseja finalizar esta vigência?</p><p className="text-sm text-muted-foreground">A data e hora de fim serão alteradas para agora.</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarFinalizacao(null)}>Cancelar</Button><Button onClick={() => { if (confirmarFinalizacao !== null) void runAction(() => finalizar(confirmarFinalizacao)); setConfirmarFinalizacao(null); }}>Finalizar vigência</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={gerenciamentoManualDisponivel && confirmarExclusao !== null} onOpenChange={(open) => !open && setConfirmarExclusao(null)}><DialogContent><DialogHeader><DialogTitle>Confirmar exclusão</DialogTitle></DialogHeader><p>Tem certeza que deseja excluir esta vigência?</p><DialogFooter><Button variant="outline" onClick={() => setConfirmarExclusao(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (confirmarExclusao !== null) void runAction(() => excluir(confirmarExclusao)); setConfirmarExclusao(null); }}>Excluir</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={gerenciamentoManualDisponivel && Boolean(editando)} onOpenChange={(open) => !open && setEditando(null)}><DialogContent className="max-h-[92vh] overflow-y-auto p-4 sm:max-w-lg sm:p-5"><DialogHeader className="space-y-0.5"><DialogTitle>Editar vigência</DialogTitle></DialogHeader>
       <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-3">
         <div className="space-y-1.5"><Label htmlFor="editar-inicio" className="text-sm">Data início <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-inicio" value={edicao.data_inicio} onChange={(data_inicio) => setEdicao({ ...edicao, data_inicio })} /></div>
         <div className="space-y-1.5"><Label htmlFor="editar-fim" className="text-sm">Fim <span className="text-destructive" aria-hidden="true">*</span></Label><BrDateTimeField id="editar-fim" value={edicao.data_fim} min={edicao.data_inicio} onChange={(data_fim) => setEdicao({ ...edicao, data_fim })} /></div>
