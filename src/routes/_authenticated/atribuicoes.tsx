@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/atribuicoes")({
   component: AtribuicoesPage,
 });
 
-const CHAVE_ACCORDIONS_ATRIBUICOES = "combinado.ui.atribuicoes.accordions.v1";
+const CHAVE_ACCORDIONS_ATRIBUICOES = "combinado.ui.atribuicoes.accordions.v2";
 
 function AtribuicoesPage() {
   const { adicionar, vigencia } = Route.useSearch();
@@ -50,8 +50,8 @@ function AtribuicoesPage() {
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filhoContextoId, setFilhoContextoId] = useState<number | null>(null);
-  const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>(
-    () => lerPreferenciaLocal<Record<string, boolean>>(CHAVE_ACCORDIONS_ATRIBUICOES, {}),
+  const [filhoAbertoPorVigencia, setFilhoAbertoPorVigencia] = useState<Record<string, number | null>>(
+    () => lerPreferenciaLocal<Record<string, number | null>>(CHAVE_ACCORDIONS_ATRIBUICOES, {}),
   );
   const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
     vigencia ? Number(vigencia) : null,
@@ -107,9 +107,12 @@ function AtribuicoesPage() {
     ultimaVigenciaAtivaIdRef.current = vigenciaAtivaId;
   }, [vigenciaAtiva?.id, vigenciaAutomaticaAtiva, vigenciaSelecionadaId]);
 
-  function alterarFilhoAberto(chave: string, aberto: boolean) {
-    setFilhosAbertos((atual) => {
-      const proximo = { ...atual, [chave]: aberto };
+  function alterarFilhoAberto(idVigencia: number, idFilho: number, aberto: boolean) {
+    setFilhoAbertoPorVigencia((atual) => {
+      const proximo = {
+        ...atual,
+        [String(idVigencia)]: aberto ? idFilho : null,
+      };
       salvarPreferenciaLocal(CHAVE_ACCORDIONS_ATRIBUICOES, proximo);
       return proximo;
     });
@@ -309,9 +312,12 @@ function AtribuicoesPage() {
             ) : (
               <div className="space-y-4 sm:space-y-5">
                 {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
-                  const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
                   const temAtribuicoes = atribuicoesFilho.length > 0;
-                  const aberto = temAtribuicoes && filhosAbertos[chave] === true;
+                  const aberto = Boolean(
+                    temAtribuicoes
+                    && vigenciaSelecionadaId !== null
+                    && filhoAbertoPorVigencia[String(vigenciaSelecionadaId)] === filhoItem.id,
+                  );
 
                   return (
                     <section key={filhoItem.id} className="overflow-hidden rounded-xl border bg-card">
@@ -321,7 +327,7 @@ function AtribuicoesPage() {
                           className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
                           onClick={() => {
                             if (!temAtribuicoes) return;
-                            alterarFilhoAberto(chave, !aberto);
+                            if (vigenciaSelecionadaId !== null) alterarFilhoAberto(vigenciaSelecionadaId, filhoItem.id, !aberto);
                           }}
                           aria-expanded={temAtribuicoes ? aberto : undefined}
                           aria-label={temAtribuicoes ? `${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}` : undefined}
