@@ -314,7 +314,7 @@ function FilhosPage() {
           )}
 
           {aberto && (
-            <div className={temResumo ? "mt-3 border-t pt-3" : "mt-1"}>
+            <div className="mt-3">
               <FilhoEstrelasPainel filho={f} modo="recompensas" />
             </div>
           )}
