@@ -108,7 +108,7 @@ function Inicio() {
           <h2 className={uiTypography.secondaryTitleLargeDesktop}>Como começar</h2>
           <p className="mt-1 text-sm text-muted-foreground">Siga estes passos para configurar seu primeiro combinado.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className={`grid gap-4 md:grid-cols-2 lg:grid-cols-3 ${vigenciaAutomaticaAtiva ? "xl:grid-cols-5" : "xl:grid-cols-6"}`}>
           {etapas.map(({ numero, titulo, texto, to, icon: Icon }) => (
             <Link key={to} to={to} className="group rounded-xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/30">
               <div className="flex items-start justify-between gap-3">
