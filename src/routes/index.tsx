@@ -35,11 +35,11 @@ export const Route = createFileRoute("/")({
 });
 
 const REGRAS_SENHA = [
-  { id: "tam", label: "Pelo menos 8 caracteres", ok: (s: string) => s.length >= 8 },
-  { id: "min", label: "Uma letra minúscula", ok: (s: string) => /[a-z]/.test(s) },
-  { id: "mai", label: "Uma letra maiúscula", ok: (s: string) => /[A-Z]/.test(s) },
-  { id: "num", label: "Um número", ok: (s: string) => /\d/.test(s) },
-  { id: "especial", label: "Um caractere especial (ex.: !, @ ou #)", ok: (s: string) => /[^\p{L}\p{N}\s]/u.test(s) },
+  { id: "tam", label: "8 caracteres", ok: (s: string) => s.length >= 8 },
+  { id: "min", label: "1 minúscula", ok: (s: string) => /[a-z]/.test(s) },
+  { id: "mai", label: "1 maiúscula", ok: (s: string) => /[A-Z]/.test(s) },
+  { id: "num", label: "1 número", ok: (s: string) => /\d/.test(s) },
+  { id: "especial", label: "1 especial (! @ #)", ok: (s: string) => /[^\p{L}\p{N}\s]/u.test(s) },
 ] as const;
 const senhaValida = (s: string) => REGRAS_SENHA.every((r) => r.ok(s));
 const cadastroSchema = z.object({
@@ -443,7 +443,7 @@ function Index() {
                   <>
                 <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" className="h-12 text-base" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" className="h-12 text-base" type="email" autoComplete="email" inputMode="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
-                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" className="h-12 text-base" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 text-[11px] sm:text-xs" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={ok ? "text-success" : "text-destructive"}>{r.label}</li>; })}</ul></div>
+                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" className="h-12 text-base" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><p className="flex flex-wrap items-center gap-x-1 pt-1 text-[10px] leading-4 sm:flex-nowrap sm:text-[11px]" aria-live="polite">{REGRAS_SENHA.map((r, index) => { const ok = r.ok(cad.senha); return <span key={r.id} className={ok ? "text-success" : "text-muted-foreground"}>{index > 0 && <span className="text-muted-foreground"> · </span>}{r.label}</span>; })}</p></div>
                 <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" className="h-12 text-base" autoComplete="new-password" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
                   </>
                 )}
