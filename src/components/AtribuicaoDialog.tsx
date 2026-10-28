@@ -11,10 +11,11 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Label } from "@/components/ui/label";
 import { Pick } from "@/components/Pick";
 import { fmtVigencia, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
-import { cadastrarAtribuicoes, prepararAtribuicoes, type AtribuicaoItem, type PoliticaVigenciaAtribuicao } from "@/lib/atribuicoes";
+import { cadastrarAtribuicoes, prepararAtribuicoes, type AtribuicaoCandidato, type AtribuicaoItem, type PoliticaVigenciaAtribuicao } from "@/lib/atribuicoes";
 import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { TarefaIcone } from "@/components/TarefaIcone";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 
 export type AtribuicaoDialogMode = "NORMAL" | "POS_CADASTRO_FILHO" | "POS_CADASTRO_TAREFA" | "CONTEXTO_FILHO_VIGENCIA";
 
@@ -70,12 +71,13 @@ export function AtribuicaoDialog({
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
+  const { ativa: vigenciaAutomaticaAtiva, carregando: carregandoVigenciaAutomatica } = useVigenciaAutomatica();
 
   const [vig, setVig] = useState("");
   const [filho, setFilho] = useState("");
   const [filhosSelecionados, setFilhosSelecionados] = useState<number[]>([]);
   const [tarefasSelecionadas, setTarefasSelecionadas] = useState<number[]>([]);
-  const [itens, setItens] = useState<AtribuicaoItem[]>([]);
+  const [itens, setItens] = useState<AtribuicaoCandidato[]>([]);
   const [saving, setSaving] = useState(false);
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
@@ -105,7 +107,7 @@ export function AtribuicaoDialog({
     setFilho(filhoInicial ? String(filhoInicial.id) : "");
     setFilhosSelecionados([]);
     setTarefasSelecionadas(mode === "POS_CADASTRO_TAREFA" ? tarefasIniciais.map((t) => t.id) : []);
-  }, [open, mode, vigenciaInicialId, vigenciaAtiva?.id, vigenciasSelecionaveis, filhoInicial?.id, tarefasIniciais.map((t) => t.id).join(",")]);
+  }, [open, mode, vigenciaInicialId, vigenciaAtiva?.id, vigenciasSelecionaveis, filhoInicial?.id, tarefasIniciais.map((t) => t.id).join(","), vigenciaAutomaticaAtiva]);
 
   useEffect(() => {
     if (
@@ -121,12 +123,14 @@ export function AtribuicaoDialog({
   }, [open, mode, vigenciaInicialId, vig, vigenciaAtiva?.id]);
 
   const vigenciaSelecionada = vigencias.find((v) => v.id === Number(vig));
-  const vigenciaSelecionadaFinalizada = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada");
-  const vigenciaSelecionadaFutura = Boolean(vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "futura");
+  const vigenciaSelecionadaFinalizada = Boolean(!vigenciaAutomaticaAtiva && vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "finalizada");
+  const vigenciaSelecionadaFutura = Boolean(!vigenciaAutomaticaAtiva && vigenciaSelecionada && situacaoVigencia(vigenciaSelecionada) === "futura");
   const semVigencias = vigenciasSelecionaveis.length === 0;
   const semFilhos = filhos.length === 0;
   const semTarefas = tarefas.length === 0;
-  const faltamCadastrosNormal = semVigencias || semFilhos || semTarefas;
+  const faltamCadastrosNormal = vigenciaAutomaticaAtiva
+    ? semFilhos || semTarefas
+    : semVigencias || semFilhos || semTarefas;
   const tarefasParaSelecionar = mode === "CONTEXTO_FILHO_VIGENCIA" && vigenciaInicialId && filhoInicial
     ? tarefas.filter((tarefa) =>
         !existentes.some((item) =>
@@ -155,19 +159,53 @@ export function AtribuicaoDialog({
   }
 
   function adicionarNormal() {
-    if (!vig || !filho || tarefasSelecionadas.length === 0) {
-      toast.error("Selecione vigência, filho e ao menos uma tarefa");
+    if (!filho || tarefasSelecionadas.length === 0 || (!vigenciaAutomaticaAtiva && !vig)) {
+      toast.error(
+        vigenciaAutomaticaAtiva
+          ? "Selecione o filho e ao menos uma tarefa"
+          : "Selecione vigência, filho e ao menos uma tarefa",
+      );
       return;
     }
 
-    const candidatos = tarefasSelecionadas.map((id_tarefa) => ({
+    if (vigenciaAutomaticaAtiva) {
+      const candidatos = tarefasSelecionadas.map((id_tarefa) => ({
+        id_filho: Number(filho),
+        id_tarefa,
+      }));
+
+      const novos = candidatos.filter((item) =>
+        !itens.some((existente) =>
+          existente.id_filho === item.id_filho
+          && existente.id_tarefa === item.id_tarefa
+        )
+      );
+
+      if (novos.length === 0) {
+        toast.error("As atribuições selecionadas já foram adicionadas");
+        return;
+      }
+
+      if (novos.length < candidatos.length) {
+        toast.info("As atribuições repetidas não foram adicionadas");
+      }
+
+      setItens((atuais) => [...atuais, ...novos]);
+      setTarefasSelecionadas([]);
+      return;
+    }
+
+    const candidatos: AtribuicaoItem[] = tarefasSelecionadas.map((id_tarefa) => ({
       id_vigencia: Number(vig),
       id_filho: Number(filho),
       id_tarefa,
     }));
+    const itensManuais = itens.filter(
+      (item): item is AtribuicaoItem => typeof item.id_vigencia === "number",
+    );
 
     const preparado = prepararAtribuicoes({
-      candidatos: [...itens, ...candidatos],
+      candidatos: [...itensManuais, ...candidatos],
       existentes,
       vigencias,
       politica: "ATUAL_OU_FUTURA",
@@ -179,10 +217,10 @@ export function AtribuicaoDialog({
     }
 
     const novos = preparado.itens.filter((item) =>
-      !itens.some((existente) =>
-        existente.id_vigencia === item.id_vigencia &&
-        existente.id_filho === item.id_filho &&
-        existente.id_tarefa === item.id_tarefa
+      !itensManuais.some((existente) =>
+        existente.id_vigencia === item.id_vigencia
+        && existente.id_filho === item.id_filho
+        && existente.id_tarefa === item.id_tarefa
       )
     );
 
@@ -200,7 +238,7 @@ export function AtribuicaoDialog({
   }
 
   async function salvarItens(
-    itensParaSalvar: AtribuicaoItem[],
+    itensParaSalvar: AtribuicaoCandidato[],
     politica: PoliticaVigenciaAtribuicao,
   ) {
     setSaving(true);
@@ -226,13 +264,16 @@ export function AtribuicaoDialog({
     setFilhosSelecionados([]);
     setTarefasSelecionadas([]);
     await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+    if (resultado.modo === "AUTOMATICA") {
+      await qc.invalidateQueries({ queryKey: ["vigencias"] });
+    }
     onOpenChange(false);
     onSaved?.();
     return true;
   }
 
   async function cadastrarContextual() {
-    if (!vigenciaInicialId) {
+    if (!vigenciaAutomaticaAtiva && !vigenciaInicialId) {
       toast.error("Vigência atual não encontrada");
       return;
     }
@@ -242,8 +283,8 @@ export function AtribuicaoDialog({
         toast.error("Selecione ao menos uma tarefa");
         return;
       }
-      const candidatos = tarefasSelecionadas.map((id_tarefa) => ({
-        id_vigencia: vigenciaInicialId,
+      const candidatos: AtribuicaoCandidato[] = tarefasSelecionadas.map((id_tarefa) => ({
+        ...(vigenciaAutomaticaAtiva ? {} : { id_vigencia: vigenciaInicialId as number }),
         id_filho: filhoInicial.id,
         id_tarefa,
       }));
@@ -258,9 +299,9 @@ export function AtribuicaoDialog({
       toast.error("Selecione ao menos um filho");
       return;
     }
-    const candidatos = filhosSelecionados.flatMap((id_filho) =>
+    const candidatos: AtribuicaoCandidato[] = filhosSelecionados.flatMap((id_filho) =>
       tarefasIniciais.map((tarefa) => ({
-        id_vigencia: vigenciaInicialId,
+        ...(vigenciaAutomaticaAtiva ? {} : { id_vigencia: vigenciaInicialId as number }),
         id_filho,
         id_tarefa: tarefa.id,
       }))
@@ -289,15 +330,17 @@ export function AtribuicaoDialog({
             {mode === "NORMAL" ? (
               <>
                 <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-end">
-                  <Pick
-                    required
-                    label="Vigência"
-                    value={vig}
-                    onChange={setVig}
-                    options={vigenciasSelecionaveis.map(statusVigencia)}
-                    placeholder={semVigencias ? "Nenhuma vigência cadastrada" : "Selecione"}
-                    disabled={semVigencias}
-                  />
+                  {!vigenciaAutomaticaAtiva && (
+                    <Pick
+                      required
+                      label="Vigência"
+                      value={vig}
+                      onChange={setVig}
+                      options={vigenciasSelecionaveis.map(statusVigencia)}
+                      placeholder={semVigencias ? "Nenhuma vigência cadastrada" : "Selecione"}
+                      disabled={semVigencias}
+                    />
+                  )}
                   <Pick
                     required
                     label="Filho"
@@ -356,7 +399,7 @@ export function AtribuicaoDialog({
                     className="w-full md:w-fit"
                     variant="secondary"
                     onClick={adicionarNormal}
-                    disabled={!vig || !filho || tarefasSelecionadas.length === 0 || vigenciaSelecionadaFinalizada || faltamCadastrosNormal}
+                    disabled={carregandoVigenciaAutomatica || !filho || tarefasSelecionadas.length === 0 || (!vigenciaAutomaticaAtiva && !vig) || vigenciaSelecionadaFinalizada || faltamCadastrosNormal}
                   >
                     <Plus className="h-4 w-4" /> Adicionar
                   </Button>
@@ -364,7 +407,9 @@ export function AtribuicaoDialog({
 
                 {faltamCadastrosNormal && (
                   <p className="text-xs text-muted-foreground">
-                    Para fazer uma atribuição, cadastre uma vigência, ao menos um filho e ao menos uma tarefa.
+                    {vigenciaAutomaticaAtiva
+                      ? "Para fazer uma atribuição, cadastre ao menos um filho e ao menos uma tarefa."
+                      : "Para fazer uma atribuição, cadastre uma vigência, ao menos um filho e ao menos uma tarefa."}
                   </p>
                 )}
                 {vigenciaSelecionadaFinalizada && <p className="text-xs text-destructive">Não é possível fazer atribuições para uma vigência finalizada.</p>}
@@ -409,7 +454,7 @@ export function AtribuicaoDialog({
                   <Button
                     type="button"
                     onClick={() => void runAction(() => salvarItens(itens, "ATUAL_OU_FUTURA"))}
-                    disabled={saving || itens.length === 0}
+                    disabled={saving || carregandoVigenciaAutomatica || itens.length === 0}
                   >
                     Cadastrar {itens.length > 0 && `(${itens.length})`}
                   </Button>
@@ -418,7 +463,7 @@ export function AtribuicaoDialog({
             ) : (
               <>
                 <div className="space-y-4">
-                  <FixedCurrentValidity value={vigenciaAtualTexto} />
+                  {!vigenciaAutomaticaAtiva && <FixedCurrentValidity value={vigenciaAtualTexto} />}
 
                   <div className="grid gap-4 md:grid-cols-2">
                   {mode === "POS_CADASTRO_FILHO" || mode === "CONTEXTO_FILHO_VIGENCIA" ? (
@@ -535,7 +580,11 @@ export function AtribuicaoDialog({
                   </div>
                 </div>
 
-                {mode !== "CONTEXTO_FILHO_VIGENCIA" && (
+                {vigenciaAutomaticaAtiva ? (
+                  <p className="text-xs text-muted-foreground">
+                    A vigência será definida automaticamente ao salvar a atribuição.
+                  </p>
+                ) : mode !== "CONTEXTO_FILHO_VIGENCIA" && (
                   <p className="text-xs text-muted-foreground">
                     Este atalho usa somente a vigência em andamento. Para preparar atribuições de uma vigência futura, use a página Atribuições.
                   </p>
@@ -546,7 +595,7 @@ export function AtribuicaoDialog({
                   <Button
                     type="button"
                     onClick={() => void runAction(cadastrarContextual)}
-                    disabled={saving || ((mode === "POS_CADASTRO_FILHO" || mode === "CONTEXTO_FILHO_VIGENCIA") ? semTarefasSelecionaveis || tarefasSelecionadas.length === 0 : semFilhos || filhosSelecionados.length === 0)}
+                    disabled={saving || carregandoVigenciaAutomatica || ((mode === "POS_CADASTRO_FILHO" || mode === "CONTEXTO_FILHO_VIGENCIA") ? semTarefasSelecionaveis || tarefasSelecionadas.length === 0 : semFilhos || filhosSelecionados.length === 0)}
                   >
                     Cadastrar atribuição
                   </Button>
