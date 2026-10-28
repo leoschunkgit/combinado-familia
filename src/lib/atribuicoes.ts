@@ -5,10 +5,14 @@ import { obterVigenciaAutomaticaAtiva } from "@/lib/vigencia-automatica";
 
 export type ModoVigenciaAtribuicao = "MANUAL" | "AUTOMATICA";
 
-export type AtribuicaoItem = {
-  id_vigencia: number;
+export type AtribuicaoCandidato = {
+  id_vigencia?: number;
   id_filho: number;
   id_tarefa: number;
+};
+
+export type AtribuicaoItem = AtribuicaoCandidato & {
+  id_vigencia: number;
 };
 
 export type PoliticaVigenciaAtribuicao = "ATUAL_OU_FUTURA" | "SOMENTE_ATUAL";
@@ -102,10 +106,12 @@ export function prepararAtribuicoes({
   };
 }
 
-type CadastrarArgs = PrepararArgs;
+type CadastrarArgs = Omit<PrepararArgs, "candidatos"> & {
+  candidatos: AtribuicaoCandidato[];
+};
 
 async function cadastrarAtribuicoesAutomaticas(
-  candidatos: AtribuicaoItem[],
+  candidatos: AtribuicaoCandidato[],
 ): Promise<ResultadoCadastroAtribuicoes> {
   if (candidatos.length === 0) {
     return { ok: false, mensagem: "Adicione ao menos uma atribuição" };
@@ -160,7 +166,24 @@ async function cadastrarAtribuicoesAutomaticas(
 async function cadastrarAtribuicoesManuais(
   args: CadastrarArgs,
 ): Promise<ResultadoCadastroAtribuicoes> {
-  const preparado = prepararAtribuicoes(args);
+  const candidatosManuais: AtribuicaoItem[] = [];
+
+  for (const candidato of args.candidatos) {
+    if (typeof candidato.id_vigencia !== "number") {
+      return { ok: false, mensagem: "Vigência não encontrada" };
+    }
+
+    candidatosManuais.push({
+      id_vigencia: candidato.id_vigencia,
+      id_filho: candidato.id_filho,
+      id_tarefa: candidato.id_tarefa,
+    });
+  }
+
+  const preparado = prepararAtribuicoes({
+    ...args,
+    candidatos: candidatosManuais,
+  });
   if (!preparado.ok) return preparado;
 
   if (preparado.itens.length === 0) {
