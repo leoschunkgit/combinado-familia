@@ -261,7 +261,6 @@ function FilhosPage() {
         const aberto = filhoAbertoId === f.id;
         const temIdade = f.idade !== null;
         const temMesada = f.tem_mesada === true && f.valor_mesada !== null;
-        const temResumo = temIdade || temMesada;
         return <CollapsibleSection
           key={f.id}
           title={
@@ -295,23 +294,17 @@ function FilhosPage() {
           }
           contentClassName="p-4"
         >
-          {temResumo && (
-            <div className={`grid gap-2 text-sm ${temIdade && temMesada ? "grid-cols-2" : "grid-cols-1"}`}>
-              {temIdade && (
-                <InfoTile
-                  label="Idade"
-                  value={`${f.idade} anos`}
-                />
-              )}
-              {temMesada && (
-                <InfoTile
-                  label="Mesada"
-                  icon={<WalletCards className="h-3.5 w-3.5" />}
-                  value={dinheiro(f.valor_mesada)}
-                />
-              )}
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <InfoTile
+              label="Idade"
+              value={temIdade ? `${f.idade} anos` : "Não informada"}
+            />
+            <InfoTile
+              label="Mesada"
+              icon={<WalletCards className="h-3.5 w-3.5" />}
+              value={temMesada ? dinheiro(f.valor_mesada) : "Sem mesada"}
+            />
+          </div>
 
           {aberto && (
             <div className="mt-3">
