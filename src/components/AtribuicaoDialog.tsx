@@ -131,10 +131,13 @@ export function AtribuicaoDialog({
   const faltamCadastrosNormal = vigenciaAutomaticaAtiva
     ? semFilhos || semTarefas
     : semVigencias || semFilhos || semTarefas;
-  const tarefasParaSelecionar = mode === "CONTEXTO_FILHO_VIGENCIA" && vigenciaInicialId && filhoInicial
+  const vigenciaDuplicidadeId = vigenciaAutomaticaAtiva
+    ? vigenciaAtiva?.id ?? null
+    : vigenciaInicialId;
+  const tarefasParaSelecionar = mode === "CONTEXTO_FILHO_VIGENCIA" && vigenciaDuplicidadeId && filhoInicial
     ? tarefas.filter((tarefa) =>
         !existentes.some((item) =>
-          item.id_vigencia === vigenciaInicialId
+          item.id_vigencia === vigenciaDuplicidadeId
           && item.id_filho === filhoInicial.id
           && item.id_tarefa === tarefa.id
         )
