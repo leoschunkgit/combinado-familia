@@ -6,6 +6,7 @@ import { msgErro } from "@/lib/app-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { uiTypography } from "@/lib/ui-typography";
@@ -25,6 +26,26 @@ type SistemaData = {
   config: AppConfigPublico;
   funcionalidades: FeatureFlag[];
 };
+
+type ImpactoVigenciaAutomatica = {
+  vigenciasFuturas: number;
+  atribuicoesFuturas: number;
+  responsaveisAfetados: number;
+};
+
+function normalizarImpactoVigenciaAutomatica(data: unknown): ImpactoVigenciaAutomatica {
+  const raiz = data && typeof data === "object" ? data as Record<string, unknown> : {};
+  const numero = (valor: unknown) => {
+    const n = Number(valor);
+    return Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0;
+  };
+
+  return {
+    vigenciasFuturas: numero(raiz["vigencias_futuras"]),
+    atribuicoesFuturas: numero(raiz["atribuicoes_futuras"]),
+    responsaveisAfetados: numero(raiz["responsaveis_afetados"]),
+  };
+}
 
 type FormConfig = {
   mensagemGlobalAtiva: boolean;
@@ -83,6 +104,12 @@ export function AdminSistema() {
   const [novaChave, setNovaChave] = useState("");
   const [novoNome, setNovoNome] = useState("");
   const [novaDescricao, setNovaDescricao] = useState("");
+  const [salvandoFeatureChave, setSalvandoFeatureChave] = useState<string | null>(null);
+  const [consultandoImpactoVigencia, setConsultandoImpactoVigencia] = useState(false);
+  const [confirmacaoVigenciaAutomatica, setConfirmacaoVigenciaAutomatica] = useState<{
+    feature: FeatureFlag;
+    impacto: ImpactoVigenciaAutomatica;
+  } | null>(null);
 
   const aplicarDados = useCallback((novo: SistemaData) => {
     setDados(novo);
@@ -167,7 +194,9 @@ export function AdminSistema() {
     await carregar();
   }
 
-  async function salvarFeature(feature: FeatureFlag, ativo: boolean) {
+  async function salvarFeatureDireto(feature: FeatureFlag, ativo: boolean) {
+    setSalvandoFeatureChave(feature.chave);
+
     const { error } = await supabase.rpc("admin_feature_salvar", {
       p_chave: feature.chave,
       p_nome: feature.nome,
@@ -175,14 +204,60 @@ export function AdminSistema() {
       p_ativo: ativo,
     });
 
+    setSalvandoFeatureChave(null);
+
     if (error) {
       toast.error(msgErro(error));
-      return;
+      return false;
     }
 
     toast.success(`${feature.nome} ${ativo ? "ativada" : "desativada"}`);
     window.dispatchEvent(new Event("app-config-updated"));
     await carregar();
+    return true;
+  }
+
+  async function salvarFeature(feature: FeatureFlag, ativo: boolean) {
+    const ativandoVigenciaAutomatica =
+      feature.chave === "vigencia_automatica"
+      && feature.ativo === false
+      && ativo === true;
+
+    if (!ativandoVigenciaAutomatica) {
+      await salvarFeatureDireto(feature, ativo);
+      return;
+    }
+
+    setConsultandoImpactoVigencia(true);
+    const { data, error } = await supabase.rpc("admin_vigencia_automatica_impacto");
+    setConsultandoImpactoVigencia(false);
+
+    if (error) {
+      toast.error(msgErro(error));
+      return;
+    }
+
+    const impacto = normalizarImpactoVigenciaAutomatica(data);
+
+    if (impacto.vigenciasFuturas > 0 || impacto.atribuicoesFuturas > 0) {
+      setConfirmacaoVigenciaAutomatica({ feature, impacto });
+      return;
+    }
+
+    await salvarFeatureDireto(feature, true);
+  }
+
+  async function confirmarAtivacaoVigenciaAutomatica() {
+    if (!confirmacaoVigenciaAutomatica) return;
+
+    const concluido = await salvarFeatureDireto(
+      confirmacaoVigenciaAutomatica.feature,
+      true,
+    );
+
+    if (concluido) {
+      setConfirmacaoVigenciaAutomatica(null);
+    }
   }
 
   async function adicionarFeature() {
@@ -344,7 +419,15 @@ export function AdminSistema() {
                       <p className="truncate text-sm font-semibold">{feature.nome}</p>
                       <p className="truncate text-xs text-muted-foreground">{feature.chave}{feature.descricao ? ` · ${feature.descricao}` : ""}</p>
                     </div>
-                    <Switch checked={feature.ativo} onCheckedChange={(checked) => void salvarFeature(feature, checked)} aria-label={`${feature.ativo ? "Desativar" : "Ativar"} ${feature.nome}`} />
+                    <Switch
+                      checked={feature.ativo}
+                      disabled={
+                        salvandoFeatureChave === feature.chave
+                        || (feature.chave === "vigencia_automatica" && consultandoImpactoVigencia)
+                      }
+                      onCheckedChange={(checked) => void salvarFeature(feature, checked)}
+                      aria-label={`${feature.ativo ? "Desativar" : "Ativar"} ${feature.nome}`}
+                    />
                   </div>
                 ))
               )}
@@ -369,6 +452,78 @@ export function AdminSistema() {
           </div>
         </div>
       </section>
+
+      <Dialog
+        open={confirmacaoVigenciaAutomatica !== null}
+        onOpenChange={(open) => {
+          if (!open && salvandoFeatureChave !== "vigencia_automatica") {
+            setConfirmacaoVigenciaAutomatica(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Ativar vigência automática?</DialogTitle>
+            <DialogDescription>
+              A ativação passa a deixar os próximos ciclos sob controle automático do sistema.
+            </DialogDescription>
+          </DialogHeader>
+
+          {confirmacaoVigenciaAutomatica && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                <p className="text-sm font-semibold text-destructive">
+                  Existem vigências futuras cadastradas.
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Ao continuar, todas as vigências futuras e todas as atribuições vinculadas a elas serão excluídas.
+                  A vigência em andamento e as vigências finalizadas serão preservadas.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg border bg-muted/20 p-2">
+                  <p className="text-lg font-bold">{confirmacaoVigenciaAutomatica.impacto.vigenciasFuturas}</p>
+                  <p className="text-[11px] text-muted-foreground">vigências futuras</p>
+                </div>
+                <div className="rounded-lg border bg-muted/20 p-2">
+                  <p className="text-lg font-bold">{confirmacaoVigenciaAutomatica.impacto.atribuicoesFuturas}</p>
+                  <p className="text-[11px] text-muted-foreground">atribuições</p>
+                </div>
+                <div className="rounded-lg border bg-muted/20 p-2">
+                  <p className="text-lg font-bold">{confirmacaoVigenciaAutomatica.impacto.responsaveisAfetados}</p>
+                  <p className="text-[11px] text-muted-foreground">responsáveis</p>
+                </div>
+              </div>
+
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Esta funcionalidade é global. A limpeza das vigências futuras ocorre antes da ativação e faz parte da mesma operação no banco. Se a operação falhar, a vigência automática não será ativada.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={salvandoFeatureChave === "vigencia_automatica"}
+              onClick={() => setConfirmacaoVigenciaAutomatica(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={salvandoFeatureChave === "vigencia_automatica"}
+              onClick={() => void confirmarAtivacaoVigenciaAutomatica()}
+            >
+              {salvandoFeatureChave === "vigencia_automatica"
+                ? "Ativando..."
+                : "Excluir futuras e ativar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-muted/20 p-4">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
