@@ -314,7 +314,7 @@ function FilhosPage() {
           )}
 
           {aberto && (
-            <div className={temMesada ? "mt-3 border-t pt-3" : "mt-1"}>
+            <div className={temResumo ? "mt-3 border-t pt-3" : "mt-1"}>
               <FilhoEstrelasPainel filho={f} modo="recompensas" />
             </div>
           )}
