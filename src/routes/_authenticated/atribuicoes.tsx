@@ -18,6 +18,7 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { TarefaIcone } from "@/components/TarefaIcone";
 import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
+import { lerPreferenciaLocal, salvarPreferenciaLocal } from "@/lib/preferencias-ui";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -35,6 +36,8 @@ export const Route = createFileRoute("/_authenticated/atribuicoes")({
   component: AtribuicoesPage,
 });
 
+const CHAVE_ACCORDIONS_ATRIBUICOES = "combinado.ui.atribuicoes.accordions.v1";
+
 function AtribuicoesPage() {
   const { adicionar, vigencia } = Route.useSearch();
   const qc = useQueryClient();
@@ -47,7 +50,9 @@ function AtribuicoesPage() {
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filhoContextoId, setFilhoContextoId] = useState<number | null>(null);
-  const [filhoAbertoChave, setFilhoAbertoChave] = useState<string | null>(null);
+  const [filhosAbertos, setFilhosAbertos] = useState<Record<string, boolean>>(
+    () => lerPreferenciaLocal<Record<string, boolean>>(CHAVE_ACCORDIONS_ATRIBUICOES, {}),
+  );
   const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
     vigencia ? Number(vigencia) : null,
   );
@@ -97,11 +102,18 @@ function AtribuicoesPage() {
       && vigenciaSelecionadaId === vigenciaAtivaAnteriorId
     ) {
       setVigenciaSelecionadaId(vigenciaAtivaId);
-      setFilhoAbertoChave(null);
     }
 
     ultimaVigenciaAtivaIdRef.current = vigenciaAtivaId;
   }, [vigenciaAtiva?.id, vigenciaAutomaticaAtiva, vigenciaSelecionadaId]);
+
+  function alterarFilhoAberto(chave: string, aberto: boolean) {
+    setFilhosAbertos((atual) => {
+      const proximo = { ...atual, [chave]: aberto };
+      salvarPreferenciaLocal(CHAVE_ACCORDIONS_ATRIBUICOES, proximo);
+      return proximo;
+    });
+  }
 
   async function excluir(id: number) {
     const { error } = await supabase.rpc("excluir_atribuicao_com_regra", {
@@ -168,7 +180,6 @@ function AtribuicoesPage() {
     });
 
     setVigenciaSelecionadaId(id);
-    setFilhoAbertoChave(null);
     setFiltrosRascunho(ajustar);
     setFiltrosAplicados(ajustar);
   }
@@ -300,7 +311,7 @@ function AtribuicoesPage() {
                 {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
                   const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
                   const temAtribuicoes = atribuicoesFilho.length > 0;
-                  const aberto = temAtribuicoes && filhoAbertoChave === chave;
+                  const aberto = temAtribuicoes && filhosAbertos[chave] === true;
 
                   return (
                     <section key={filhoItem.id} className="overflow-hidden rounded-xl border bg-card">
@@ -310,7 +321,7 @@ function AtribuicoesPage() {
                           className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
                           onClick={() => {
                             if (!temAtribuicoes) return;
-                            setFilhoAbertoChave(aberto ? null : chave);
+                            alterarFilhoAberto(chave, !aberto);
                           }}
                           aria-expanded={temAtribuicoes ? aberto : undefined}
                           aria-label={temAtribuicoes ? `${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}` : undefined}
