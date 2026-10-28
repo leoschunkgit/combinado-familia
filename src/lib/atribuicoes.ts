@@ -1,12 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FilhoTarefa, Vigencia } from "@/lib/db";
 import { situacaoVigencia } from "@/components/VigenciaStatus";
-import {
-  funcionalidadeAtiva,
-  obterAppConfigPublico,
-} from "@/lib/app-system-config";
-
-export const CHAVE_VIGENCIA_AUTOMATICA = "vigencia_automatica";
+import { obterVigenciaAutomaticaAtiva } from "@/lib/vigencia-automatica";
 
 export type ModoVigenciaAtribuicao = "MANUAL" | "AUTOMATICA";
 
@@ -62,10 +57,7 @@ const mesmaAtribuicao = (a: AtribuicaoItem, b: AtribuicaoItem) =>
   a.id_tarefa === b.id_tarefa;
 
 export async function obterModoVigenciaAtribuicao(): Promise<ModoVigenciaAtribuicao> {
-  const config = await obterAppConfigPublico();
-  return funcionalidadeAtiva(config, CHAVE_VIGENCIA_AUTOMATICA)
-    ? "AUTOMATICA"
-    : "MANUAL";
+  return (await obterVigenciaAutomaticaAtiva()) ? "AUTOMATICA" : "MANUAL";
 }
 
 export function prepararAtribuicoes({
