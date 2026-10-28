@@ -92,6 +92,20 @@ function VigenciasPage() {
     setVigenciaParaAtribuir(null);
   }, [vigenciaAutomaticaAtiva]);
 
+  useEffect(() => {
+    if (!vigenciaAutomaticaAtiva) return;
+
+    const atualizarSilenciosamente = () => {
+      void qc.invalidateQueries({ queryKey: ["vigencias"] });
+      void qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+    };
+
+    atualizarSilenciosamente();
+    const timer = window.setInterval(atualizarSilenciosamente, 5_000);
+
+    return () => window.clearInterval(timer);
+  }, [qc, vigenciaAutomaticaAtiva]);
+
   function bloquearGerenciamentoManual() {
     if (carregandoVigenciaAutomatica) {
       toast.info("Aguarde a configuração de vigência ser carregada.");
