@@ -15,8 +15,12 @@ const dataHora = (valor: string) => new Intl.DateTimeFormat("pt-BR", {
 
 export function RecompensasAproveitadasSection({
   resgates,
+  open,
+  onOpenChange,
 }: {
   resgates: CicloRecompensaResumo[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const aproveitadas = resgates
     .filter((resgate) => resgate.status === "ENTREGUE" && resgate.aproveitou_em)
@@ -38,6 +42,8 @@ export function RecompensasAproveitadasSection({
       }
       description="Recompensas que já viraram bons momentos."
       count={aproveitadas.length}
+      open={open}
+      onOpenChange={onOpenChange}
       contentClassName="bg-clean-surface p-2.5 sm:p-3"
     >
       <div className="space-y-2.5">
