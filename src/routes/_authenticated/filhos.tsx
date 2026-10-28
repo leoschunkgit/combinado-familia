@@ -21,6 +21,7 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { InfoTile } from "@/components/InfoTile";
 import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 import { FilhoEstrelasPainel } from "@/components/FilhoEstrelasPainel";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
@@ -127,6 +128,7 @@ function FilhosPage() {
   const { data: tarefas = [] } = useTarefas();
   const { data: vigencias = [] } = useVigencias();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
+  const { ativa: vigenciaAutomaticaAtiva } = useVigenciaAutomatica();
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [novoAberto, setNovoAberto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -186,7 +188,7 @@ function FilhosPage() {
       qc.invalidateQueries({ queryKey: ["resumo_estrelas_filho"] }),
     ]);
 
-    if (tarefas.length > 0 && vigenciaAtual) {
+    if (tarefas.length > 0 && (vigenciaAutomaticaAtiva || vigenciaAtual)) {
       setFilhoPosCadastro({
         id: criado.id,
         nome: criado.nome ?? p.data.nome,
@@ -343,7 +345,7 @@ function FilhosPage() {
             <span>{filhoPosCadastro.nome}</span>
           </div>
         )}
-        <p className="text-sm text-muted-foreground">Deseja atribuir tarefas para este filho na vigência atual?</p>
+        <p className="text-sm text-muted-foreground">{vigenciaAutomaticaAtiva ? "Deseja atribuir tarefas para este filho agora?" : "Deseja atribuir tarefas para este filho na vigência atual?"}</p>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => { setPerguntarAtribuicao(false); setFilhoPosCadastro(null); }}>Agora não</Button>
           <Button type="button" onClick={() => { setPerguntarAtribuicao(false); setAtribuirAberto(true); }}>Sim, atribuir</Button>
