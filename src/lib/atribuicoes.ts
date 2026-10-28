@@ -122,14 +122,11 @@ async function cadastrarAtribuicoesAutomaticas(
     id_tarefa,
   }));
 
-  const rpc = supabase.rpc as unknown as (
-    nome: string,
-    args: Record<string, unknown>,
-  ) => PromiseLike<RpcAutomaticaLoteResult>;
-
-  const { data, error } = await rpc(
-    "atribuir_tarefas_vigencia_automatica_lote",
-    { p_atribuicoes: payload },
+  const { data, error } = await (
+    supabase.rpc(
+      "atribuir_tarefas_vigencia_automatica_lote" as never,
+      { p_atribuicoes: payload } as never,
+    ) as unknown as PromiseLike<RpcAutomaticaLoteResult>
   );
 
   if (error) {
