@@ -14,6 +14,8 @@ import {
 } from "@/lib/app-system-config";
 
 export const CHAVE_VIGENCIA_AUTOMATICA = "vigencia_automatica";
+export const MENSAGEM_VIGENCIA_AUTOMATICA_GERENCIAMENTO =
+  "A vigência automática está ativada. Os períodos e os próximos ciclos são gerenciados automaticamente pelo sistema.";
 
 export type EstadoVigenciaAutomatica = {
   ativa: boolean;
