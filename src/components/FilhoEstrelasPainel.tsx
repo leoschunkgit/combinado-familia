@@ -17,6 +17,15 @@ import { resumoEstrelasVazio, type RecompensaEstrelaResumo, type ResumoEstrelas 
 import { compararVigencias, situacaoVigencia } from "@/components/VigenciaStatus";
 import { normalizarNomeRecompensa, RECOMPENSA_SUGESTOES_CATEGORIAS } from "@/lib/recompensa-sugestoes";
 import { RecompensaIcone } from "@/components/RecompensaIcone";
+import { lerPreferenciaLocal, salvarPreferenciaLocal } from "@/lib/preferencias-ui";
+
+const CHAVE_ACCORDIONS_ESTRELAS = "combinado.ui.estrelas.accordions.v1";
+
+type SecaoEstrelas = "recompensas" | "aproveitadas";
+
+function chaveSecaoEstrelas(idFilho: number, secao: SecaoEstrelas) {
+  return `${idFilho}:${secao}`;
+}
 
 function Estrela({ className = "" }: { className?: string }) {
   return (
@@ -44,7 +53,8 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [estrelas, setEstrelas] = useState("");
-  const [recompensasAbertas, setRecompensasAbertas] = useState(!somenteRecompensas);
+  const [recompensasAbertas, setRecompensasAbertas] = useState(false);
+  const [aproveitadasAbertas, setAproveitadasAbertas] = useState(false);
   const [confirmacao, setConfirmacao] = useState<
     | { tipo: "APROVEITOU"; recompensa: RecompensaEstrelaResumo }
     | { tipo: "EXCLUIR"; recompensa: RecompensaEstrelaResumo }
@@ -81,7 +91,14 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     setAbaForm("cadastrar");
     setSugestoesSelecionadas([]);
     setEstrelasSugestoes({});
-    setRecompensasAbertas(!somenteRecompensas);
+    if (somenteRecompensas) {
+      setRecompensasAbertas(false);
+      setAproveitadasAbertas(false);
+    } else {
+      const estados = lerPreferenciaLocal<Record<string, boolean>>(CHAVE_ACCORDIONS_ESTRELAS, {});
+      setRecompensasAbertas(estados[chaveSecaoEstrelas(filho.id, "recompensas")] === true);
+      setAproveitadasAbertas(estados[chaveSecaoEstrelas(filho.id, "aproveitadas")] === true);
+    }
     setConfirmacao(null);
     void carregar();
 
@@ -91,6 +108,22 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
 
     return () => window.clearInterval(intervalo);
   }, [filho.id, somenteRecompensas]);
+
+  function alterarSecaoEstrelas(secao: SecaoEstrelas, aberta: boolean) {
+    if (secao === "recompensas") {
+      setRecompensasAbertas(aberta);
+    } else {
+      setAproveitadasAbertas(aberta);
+    }
+
+    if (somenteRecompensas) return;
+
+    const estados = lerPreferenciaLocal<Record<string, boolean>>(CHAVE_ACCORDIONS_ESTRELAS, {});
+    salvarPreferenciaLocal(CHAVE_ACCORDIONS_ESTRELAS, {
+      ...estados,
+      [chaveSecaoEstrelas(filho.id, secao)]: aberta,
+    });
+  }
 
   function limparForm() {
     setEditando(null);
@@ -349,7 +382,7 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
           title="Recompensas"
           count={resumo.recompensas.length}
           open={recompensasAbertas}
-          onOpenChange={setRecompensasAbertas}
+          onOpenChange={(open) => alterarSecaoEstrelas("recompensas", open)}
           contentDivider={false}
           contentClassName="bg-clean-surface px-3.5 pb-3.5 pt-2 sm:px-4 sm:pb-4 sm:pt-2.5"
           action={
@@ -461,7 +494,13 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
         </CollapsibleSection>
         </div>
 
-        {!somenteRecompensas && <RecompensasAproveitadasSection resgates={resumo.resgates} />}
+        {!somenteRecompensas && (
+          <RecompensasAproveitadasSection
+            resgates={resumo.resgates}
+            open={aproveitadasAbertas}
+            onOpenChange={(open) => alterarSecaoEstrelas("aproveitadas", open)}
+          />
+        )}
 
       </div>
 
