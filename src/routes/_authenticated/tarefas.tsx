@@ -24,6 +24,7 @@ import {
   normalizarNomeTarefa,
   TAREFA_SUGESTOES_CATEGORIAS,
 } from "@/lib/tarefa-sugestoes";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({ meta: [
@@ -44,6 +45,7 @@ function TarefasPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: vigencias = [] } = useVigencias();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
+  const { ativa: vigenciaAutomaticaAtiva } = useVigenciaAutomatica();
   const [nome, setNome] = useState("");
   const [lote, setLote] = useState("");
   const [novoAberto, setNovoAberto] = useState(false);
@@ -98,7 +100,7 @@ function TarefasPage() {
     setNovoAberto(false);
     await qc.invalidateQueries({ queryKey: ["tarefas"] });
 
-    if (filhos.length > 0 && vigenciaAtual && criadas.length > 0) {
+    if (filhos.length > 0 && (vigenciaAutomaticaAtiva || vigenciaAtual) && criadas.length > 0) {
       setTarefasPosCadastro(
         criadas.map((tarefa) => ({ id: tarefa.id, nome: tarefa.nome })),
       );
@@ -456,9 +458,13 @@ function TarefasPage() {
             <DialogTitle>{tarefasPosCadastro.length > 1 ? "Tarefas cadastradas com sucesso" : "Tarefa cadastrada com sucesso"}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            {tarefasPosCadastro.length > 1
-              ? `Deseja atribuir estas ${tarefasPosCadastro.length} tarefas na vigência atual?`
-              : "Deseja atribuir esta tarefa na vigência atual?"}
+            {vigenciaAutomaticaAtiva
+              ? tarefasPosCadastro.length > 1
+                ? `Deseja atribuir estas ${tarefasPosCadastro.length} tarefas aos filhos agora?`
+                : "Deseja atribuir esta tarefa aos filhos agora?"
+              : tarefasPosCadastro.length > 1
+                ? `Deseja atribuir estas ${tarefasPosCadastro.length} tarefas na vigência atual?`
+                : "Deseja atribuir esta tarefa na vigência atual?"}
           </p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { setPerguntarAtribuicao(false); setTarefasPosCadastro([]); }}>Agora não</Button>
