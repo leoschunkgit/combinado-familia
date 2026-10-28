@@ -256,8 +256,8 @@ function AtribuicoesPage() {
                 <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
                   <button
                     type="button"
-                    onClick={() => navegarVigencia(-1)}
-                    disabled={indiceVigenciaSelecionada <= 0}
+                    onClick={() => navegarVigencia(1)}
+                    disabled={indiceVigenciaSelecionada < 0 || indiceVigenciaSelecionada >= vigenciasOrdenadas.length - 1}
                     className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                     aria-label="Ir para a vigência anterior"
                   >
@@ -270,8 +270,8 @@ function AtribuicoesPage() {
 
                   <button
                     type="button"
-                    onClick={() => navegarVigencia(1)}
-                    disabled={indiceVigenciaSelecionada < 0 || indiceVigenciaSelecionada >= vigenciasOrdenadas.length - 1}
+                    onClick={() => navegarVigencia(-1)}
+                    disabled={indiceVigenciaSelecionada <= 0}
                     className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                     aria-label="Ir para a próxima vigência"
                   >
