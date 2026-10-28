@@ -37,6 +37,7 @@ import {
   saveThemePreference,
   THEME_CHANGE_EVENT,
 } from "@/lib/theme";
+import { VigenciaAutomaticaProvider } from "@/lib/vigencia-automatica";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -103,6 +104,14 @@ const ETAPAS = [
 ] as const;
 
 function AuthenticatedLayout() {
+  return (
+    <VigenciaAutomaticaProvider>
+      <AuthenticatedLayoutContent />
+    </VigenciaAutomaticaProvider>
+  );
+}
+
+function AuthenticatedLayoutContent() {
   const { nomePai, user, ehAdmin } = Route.useRouteContext();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
