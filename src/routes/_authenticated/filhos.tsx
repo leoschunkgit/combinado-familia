@@ -23,6 +23,9 @@ import { InfoTile } from "@/components/InfoTile";
 import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
 import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 import { FilhoEstrelasPainel } from "@/components/FilhoEstrelasPainel";
+import { lerPreferenciaLocal, salvarPreferenciaLocal } from "@/lib/preferencias-ui";
+
+const CHAVE_ACCORDION_FILHOS = "combinado.ui.filhos.accordion.v1";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -140,7 +143,15 @@ function FilhosPage() {
   const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string; cor: string | null; avatar: string | null } | null>(null);
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
-  const [filhoAbertoId, setFilhoAbertoId] = useState<number | null>(null);
+  const [filhoAbertoId, setFilhoAbertoId] = useState<number | null>(
+    () => lerPreferenciaLocal<number | null>(CHAVE_ACCORDION_FILHOS, null),
+  );
+  function alterarFilhoAberto(idFilho: number, aberto: boolean) {
+    const proximoId = aberto ? idFilho : null;
+    setFilhoAbertoId(proximoId);
+    salvarPreferenciaLocal(CHAVE_ACCORDION_FILHOS, proximoId);
+  }
+
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
@@ -270,7 +281,7 @@ function FilhosPage() {
             </span>
           }
           open={aberto}
-          onOpenChange={(open) => setFilhoAbertoId(open ? f.id : null)}
+          onOpenChange={(open) => alterarFilhoAberto(f.id, open)}
           action={
             <>
               <Hint content="Gerenciar acesso">
