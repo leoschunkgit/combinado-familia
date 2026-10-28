@@ -4,6 +4,7 @@ import { ArrowRight, BellRing, CalendarRange, CheckCircle2, ClipboardCheck, Gift
 import { Button } from "@/components/ui/button";
 import { useFilhoTarefas, useOcorrencias, useVigencias } from "@/lib/db";
 import { pendenciasAnteriores, pendenciasDoDia, useDataBrasilAtual } from "@/lib/notificacoes";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 
 export const Route = createFileRoute("/_authenticated/inicio")({
   component: Inicio,
@@ -13,20 +14,29 @@ function Inicio() {
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
+  const { ativa: vigenciaAutomaticaAtiva } = useVigenciaAutomatica();
   const hoje = useDataBrasilAtual();
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
   const pendenciasHoje = pendenciasDoDia(vigencias, atribuicoes, ocorrencias, agoraBrasil);
   const pendenciasPassadas = pendenciasAnteriores(vigencias, atribuicoes, ocorrencias, agoraBrasil);
   const totalPendencias = pendenciasHoje.length + pendenciasPassadas.length;
 
-  const etapas = [
-    { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
-    { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
-    { numero: "3", titulo: "Crie uma vigência", texto: "Defina o período em que os combinados ficarão valendo.", to: "/vigencias", icon: CalendarRange },
-    { numero: "4", titulo: "Faça as atribuições", texto: "Associe cada filho às tarefas dentro da vigência escolhida.", to: "/atribuicoes", icon: Link2 },
-    { numero: "5", titulo: "Cadastre as recompensas", texto: "Defina recompensas para cada filho conquistar com as estrelas.", to: "/estrelas", icon: Gift },
-    { numero: "6", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
-  ];
+  const etapas = vigenciaAutomaticaAtiva
+    ? [
+        { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
+        { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
+        { numero: "3", titulo: "Faça as atribuições", texto: "Associe cada filho às tarefas. A vigência será definida automaticamente ao salvar.", to: "/atribuicoes", icon: Link2 },
+        { numero: "4", titulo: "Cadastre as recompensas", texto: "Defina recompensas para cada filho conquistar com as estrelas.", to: "/estrelas", icon: Gift },
+        { numero: "5", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
+      ]
+    : [
+        { numero: "1", titulo: "Cadastre os filhos", texto: "Comece informando quem participa dos combinados da família.", to: "/filhos", icon: Users },
+        { numero: "2", titulo: "Crie as tarefas", texto: "Defina o que cada filho precisa fazer no dia a dia.", to: "/tarefas", icon: ListTodo },
+        { numero: "3", titulo: "Crie uma vigência", texto: "Defina o período em que os combinados ficarão valendo.", to: "/vigencias", icon: CalendarRange },
+        { numero: "4", titulo: "Faça as atribuições", texto: "Associe cada filho às tarefas dentro da vigência escolhida.", to: "/atribuicoes", icon: Link2 },
+        { numero: "5", titulo: "Cadastre as recompensas", texto: "Defina recompensas para cada filho conquistar com as estrelas.", to: "/estrelas", icon: Gift },
+        { numero: "6", titulo: "Registre os resultados", texto: "Marque “Fez”, “Não fez” ou “Não precisou” e acompanhe os registros.", to: "/ocorrencias", icon: ClipboardCheck },
+      ];
 
   return (
     <div className="space-y-8">
@@ -119,7 +129,9 @@ function Inicio() {
           <div>
             <h2 className={uiTypography.secondaryTitle}>A primeira ação é cadastrar os filhos</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Depois disso, crie as tarefas, defina a vigência, faça as atribuições e cadastre as recompensas de cada filho. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados.
+              {vigenciaAutomaticaAtiva
+                ? "Depois disso, crie as tarefas, faça as atribuições e cadastre as recompensas de cada filho. A vigência será cuidada automaticamente pelo sistema. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados."
+                : "Depois disso, crie as tarefas, defina a vigência, faça as atribuições e cadastre as recompensas de cada filho. Quando estiver tudo configurado, os resultados ficam prontos para serem lançados."}
             </p>
           </div>
         </div>
