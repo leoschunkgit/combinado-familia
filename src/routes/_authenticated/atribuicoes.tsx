@@ -17,6 +17,7 @@ import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/component
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { TarefaIcone } from "@/components/TarefaIcone";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -42,6 +43,7 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
+  const { ativa: vigenciaAutomaticaAtiva } = useVigenciaAutomatica();
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filhoContextoId, setFilhoContextoId] = useState<number | null>(null);
@@ -226,7 +228,11 @@ function AtribuicoesPage() {
       )}
 
       {vigenciasOrdenadas.length === 0 ? (
-        <EmptyState>Nenhuma vigência cadastrada.</EmptyState>
+        <EmptyState>
+          {vigenciaAutomaticaAtiva
+            ? "Ainda não há uma vigência automática. Use Adicionar para fazer a primeira atribuição; o período será criado automaticamente ao salvar."
+            : "Nenhuma vigência cadastrada."}
+        </EmptyState>
       ) : (
         <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           {vigenciaSelecionada && (
