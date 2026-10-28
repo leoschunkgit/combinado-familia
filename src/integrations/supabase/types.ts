@@ -1534,6 +1534,7 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_vigencia_automatica_impacto: { Args: never; Returns: Json }
       admin_feedback_excluir: {
         Args: { p_feedback_id: number }
         Returns: boolean
