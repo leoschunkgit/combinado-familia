@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Link2, Plus, Trash2 } from "lucide-react";
@@ -11,7 +11,7 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Hint } from "@/components/Hint";
 import { Pick } from "@/components/Pick";
-import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { fmtDataHora, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
@@ -53,6 +53,7 @@ function AtribuicoesPage() {
   );
   const [filtrosRascunho, setFiltrosRascunho] = useState({ filho: "all", tarefa: "all" });
   const [filtrosAplicados, setFiltrosAplicados] = useState({ filho: "all", tarefa: "all" });
+  const ultimaVigenciaAtivaIdRef = useRef<number | null>(null);
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
   const vigenciaAtiva = vigenciasOrdenadas.find(
@@ -82,6 +83,25 @@ function AtribuicoesPage() {
 
     setVigenciaSelecionadaId(vigenciaAtiva?.id ?? vigenciasOrdenadas[0]?.id ?? null);
   }, [vigenciaAtiva?.id, vigenciaSelecionadaId, vigenciasOrdenadas]);
+
+  useEffect(() => {
+    const vigenciaAtivaId = vigenciaAtiva?.id ?? null;
+    if (vigenciaAtivaId === null) return;
+
+    const vigenciaAtivaAnteriorId = ultimaVigenciaAtivaIdRef.current;
+
+    if (
+      vigenciaAutomaticaAtiva
+      && vigenciaAtivaAnteriorId !== null
+      && vigenciaAtivaAnteriorId !== vigenciaAtivaId
+      && vigenciaSelecionadaId === vigenciaAtivaAnteriorId
+    ) {
+      setVigenciaSelecionadaId(vigenciaAtivaId);
+      setFilhoAbertoChave(null);
+    }
+
+    ultimaVigenciaAtivaIdRef.current = vigenciaAtivaId;
+  }, [vigenciaAtiva?.id, vigenciaAutomaticaAtiva, vigenciaSelecionadaId]);
 
   async function excluir(id: number) {
     const { error } = await supabase.rpc("excluir_atribuicao_com_regra", {
@@ -179,15 +199,8 @@ function AtribuicoesPage() {
         : grupo.atribuicoes.length > 0
     );
 
-  const formatadorDataCurta = new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  });
-
   const periodoCurto = (item: (typeof vigencias)[number]) =>
-    `${formatadorDataCurta.format(new Date(item.data_inicio))} à ${formatadorDataCurta.format(new Date(item.data_fim))}`;
+    `${fmtDataHora(item.data_inicio)} à ${fmtDataHora(item.data_fim)}`;
 
   const indiceVigenciaSelecionada = vigenciaSelecionada
     ? vigenciasOrdenadas.findIndex((item) => item.id === vigenciaSelecionada.id)
