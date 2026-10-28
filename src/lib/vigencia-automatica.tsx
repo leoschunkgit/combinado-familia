@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   funcionalidadeAtiva,
@@ -32,6 +33,7 @@ export async function obterVigenciaAutomaticaAtiva(): Promise<boolean> {
 }
 
 export function VigenciaAutomaticaProvider({ children }: { children: ReactNode }) {
+  const qc = useQueryClient();
   const [ativa, setAtiva] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
@@ -76,6 +78,18 @@ export function VigenciaAutomaticaProvider({ children }: { children: ReactNode }
           void atualizar();
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "t_vigencia",
+        },
+        () => {
+          void qc.invalidateQueries({ queryKey: ["vigencias"] });
+          void qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+        },
+      )
       .subscribe();
 
     return () => {
@@ -84,7 +98,7 @@ export function VigenciaAutomaticaProvider({ children }: { children: ReactNode }
       document.removeEventListener("visibilitychange", atualizarAoVoltar);
       void supabase.removeChannel(channel);
     };
-  }, [atualizar]);
+  }, [atualizar, qc]);
 
   const valor = useMemo<EstadoVigenciaAutomatica>(
     () => ({
