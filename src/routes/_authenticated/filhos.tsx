@@ -24,6 +24,7 @@ import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasR
 import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 import { FilhoEstrelasPainel } from "@/components/FilhoEstrelasPainel";
 import { lerPreferenciaLocal, salvarPreferenciaLocal } from "@/lib/preferencias-ui";
+import { nomePessoaCanonico, nomePessoaMaiusculo } from "@/lib/nome-pessoa";
 
 const CHAVE_ACCORDION_FILHOS = "combinado.ui.filhos.accordion.v1";
 
@@ -48,7 +49,7 @@ const corValida = (valor: string) => {
 };
 
 const schema = z.object({
-  nome: z.string().trim().min(2, "Informe o nome").max(100),
+  nome: z.string().transform(nomePessoaCanonico).pipe(z.string().min(2, "Informe o nome").max(100)),
   idade: z.string().refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) <= 150), "Informe uma idade inteira entre 0 e 150"),
   cor: z.string().trim().max(50).refine(corValida, "Use uma cor hexadecimal ou RGB válida"),
   avatar: z.union([z.literal(""), z.literal("menino"), z.literal("menina")]),
@@ -233,7 +234,7 @@ function FilhosPage() {
 
   function abrirEdicao(filho: Filho) {
     setEditando(filho);
-    setEdicao({ nome: filho.nome, idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", valor_mesada: filho.tem_mesada === true && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "" });
+    setEdicao({ nome: nomePessoaMaiusculo(filho.nome), idade: filho.idade === null ? "" : String(filho.idade), cor: filho.cor ?? "", avatar: filho.avatar === "menino" || filho.avatar === "menina" ? filho.avatar : "", valor_mesada: filho.tem_mesada === true && filho.valor_mesada !== null ? filho.valor_mesada.toFixed(2).replace(".", ",") : "" });
   }
 
   async function salvarEdicao(e: FormEvent) {
@@ -328,7 +329,7 @@ function FilhosPage() {
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>Adicionar filho</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { void runAction(() => salvar(e)); }} className="space-y-4">
-          <div className="space-y-2"><Label>Nome <span className="text-destructive">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
+          <div className="space-y-2"><Label>Nome <span className="text-destructive">*</span></Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: nomePessoaMaiusculo(e.target.value) })} /></div>
           <CamposExtras value={form} onChange={setForm} prefix="novo-filho" />
           <div className="border-t pt-3">
             <RecompensasRapidas value={recompensasNovo} onChange={setRecompensasNovo} prefix="novo-filho" />
@@ -390,7 +391,7 @@ function FilhosPage() {
           <form onSubmit={(e) => { void runAction(() => salvarEdicao(e)); }} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="editar-filho-nome">Nome *</Label>
-              <Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: e.target.value })} />
+              <Input id="editar-filho-nome" value={edicao.nome} onChange={(e) => setEdicao({ ...edicao, nome: nomePessoaMaiusculo(e.target.value) })} />
             </div>
             <CamposExtras value={edicao} onChange={setEdicao} prefix="editar-filho" />
             <DialogFooter>
