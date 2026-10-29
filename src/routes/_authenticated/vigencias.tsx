@@ -51,6 +51,23 @@ const vazio: VigenciaForm = { data_inicio: "", data_fim: "" };
 const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
 const diaCampo = (valor: string) => valor.slice(0, 10);
 
+const formatarDataVigencia = (valor: string) =>
+  new Date(valor).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "America/Sao_Paulo",
+  });
+
+const formatarHoraVigencia = (valor: string) =>
+  new Date(valor).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+    timeZone: "America/Sao_Paulo",
+  });
+
 function formatarDuracaoVigencia(vigencia: Pick<Vigencia, "data_inicio" | "data_fim">) {
   const totalSegundos = Math.max(
     0,
@@ -342,7 +359,13 @@ function VigenciasPage() {
             title={
               <span className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] font-semibold tracking-tight text-foreground sm:text-sm">
                 <CalendarRange className="h-4 w-4 shrink-0 text-primary" />
-                <span className="min-w-0 break-words">{fmtVigencia(v)}</span>
+                <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-1">
+                  <span>{formatarDataVigencia(v.data_inicio)}</span>
+                  <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_inicio)}</span>
+                  <span className="font-medium text-muted-foreground">à</span>
+                  <span>{formatarDataVigencia(v.data_fim)}</span>
+                  <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_fim)}</span>
+                </span>
                 <span className="inline-flex h-5 shrink-0 items-center rounded-full border bg-muted/40 px-1.5 text-[10px] font-medium tabular-nums text-muted-foreground">
                   {formatarDuracaoVigencia(v)}
                 </span>
