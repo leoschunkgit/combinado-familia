@@ -312,7 +312,9 @@ export function FilhoEstrelasPainel({ filho, modo = "completo", seletorFilho }: 
     }
   }
 
-  const recompensasOrdenadas = [...resumo.recompensas].sort((a, b) => a.id - b.id);
+  const recompensasOrdenadas = [...resumo.recompensas].sort((a, b) =>
+    a.estrelas_necessarias - b.estrelas_necessarias || a.id - b.id,
+  );
   const agora = Date.now();
   const vigenciaResumo = [...vigencias]
     .sort(compararVigencias)

@@ -18,6 +18,7 @@ import {
   liberarBiometriaNestaExecucao,
 } from "@/lib/biometric-auth";
 import { obterSessaoResponsavelPersistida } from "@/lib/responsavel-session";
+import { nomePessoaCanonico, nomePessoaMaiusculo } from "@/lib/nome-pessoa";
 import { AcessoFilhoLogin } from "@/components/AcessoFilhoLogin";
 import { PainelFilhoApp } from "@/components/PainelFilhoApp";
 import { AppBrand } from "@/components/AppBrand";
@@ -43,7 +44,7 @@ const REGRAS_SENHA = [
 ] as const;
 const senhaValida = (s: string) => REGRAS_SENHA.every((r) => r.ok(s));
 const cadastroSchema = z.object({
-  nome: z.string().trim().min(2, "Informe o nome").max(100),
+  nome: z.string().transform(nomePessoaCanonico).pipe(z.string().min(2, "Informe o nome").max(100)),
   email: z.string().trim().email("Email inválido").max(255),
   senha: z.string().max(72).refine(senhaValida, "A senha não atende aos requisitos abaixo"),
   confirmarSenha: z.string(),
@@ -441,7 +442,7 @@ function Index() {
                   </>
                 ) : (
                   <>
-                <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" className="h-12 text-base" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" className="h-12 text-base" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: nomePessoaMaiusculo(e.target.value) })} /></div>
                 <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" className="h-12 text-base" type="email" autoComplete="email" inputMode="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" className="h-12 text-base" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><p className="flex flex-wrap items-center gap-x-1 pt-1 text-[10px] leading-4 sm:flex-nowrap sm:text-[11px]" aria-live="polite">{REGRAS_SENHA.map((r, index) => { const ok = r.ok(cad.senha); return <span key={r.id} className={ok ? "font-medium text-emerald-700 dark:text-emerald-400" : "text-red-400 dark:text-red-300"}>{index > 0 && <span className="text-muted-foreground"> · </span>}{r.label}</span>; })}</p></div>
                 <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" className="h-12 text-base" autoComplete="new-password" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
