@@ -339,11 +339,6 @@ function VigenciasPage() {
         <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Irá começar</span>
       )}
     </div>
-    <div className="mb-3 px-1 py-1 text-xs leading-relaxed text-muted-foreground">
-      {vigenciaAutomaticaAtiva
-        ? "Este período faz parte do ciclo automático. As atribuições continuam sendo definidas por filho e tarefa."
-        : "A vigência define somente o período do combinado. As consequências de “Não fez” são escolhidas em cada registro."}
-    </div>
     <div className="space-y-3">
         {vigencias.length === 0 && (
           <EmptyState>
