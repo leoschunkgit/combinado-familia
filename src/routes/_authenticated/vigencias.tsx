@@ -363,10 +363,10 @@ function VigenciasPage() {
                   <CalendarRange className="h-4 w-4 shrink-0 text-primary" />
                   <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-1">
                     <span>{formatarDataVigencia(v.data_inicio)}</span>
-                    <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_inicio)}</span>
+                    <span className="text-[11px] font-medium tabular-nums text-muted-foreground sm:text-xs">{formatarHoraVigencia(v.data_inicio)}</span>
                     <span className="font-medium text-muted-foreground">à</span>
                     <span>{formatarDataVigencia(v.data_fim)}</span>
-                    <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_fim)}</span>
+                    <span className="text-[11px] font-medium tabular-nums text-muted-foreground sm:text-xs">{formatarHoraVigencia(v.data_fim)}</span>
                   </span>
                   <span className="inline-flex h-5 shrink-0 items-center rounded-full border bg-muted/40 px-1.5 text-[10px] font-medium tabular-nums text-muted-foreground">
                     {formatarDuracaoVigencia(v)}
