@@ -51,6 +51,27 @@ const vazio: VigenciaForm = { data_inicio: "", data_fim: "" };
 const diaBrasil = (valor: string | Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(typeof valor === "string" ? new Date(valor) : valor);
 const diaCampo = (valor: string) => valor.slice(0, 10);
 
+function formatarDuracaoVigencia(vigencia: Pick<Vigencia, "data_inicio" | "data_fim">) {
+  const totalSegundos = Math.max(
+    0,
+    Math.floor((new Date(vigencia.data_fim).getTime() - new Date(vigencia.data_inicio).getTime()) / 1_000),
+  );
+
+  const dias = Math.floor(totalSegundos / 86_400);
+  const horas = Math.floor((totalSegundos % 86_400) / 3_600);
+  const minutos = Math.floor((totalSegundos % 3_600) / 60);
+  const segundos = totalSegundos % 60;
+
+  const partes = [
+    dias > 0 ? `${dias}d` : null,
+    horas > 0 ? `${horas}h` : null,
+    minutos > 0 ? `${minutos}m` : null,
+    segundos > 0 || (dias === 0 && horas === 0 && minutos === 0) ? `${segundos}s` : null,
+  ].filter(Boolean);
+
+  return partes.join(" ");
+}
+
 function VigenciasPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -319,9 +340,12 @@ function VigenciasPage() {
           return <CollapsibleSection
             key={v.id}
             title={
-              <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold tracking-tight text-foreground sm:text-sm">
+              <span className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] font-semibold tracking-tight text-foreground sm:text-sm">
                 <CalendarRange className="h-4 w-4 shrink-0 text-primary" />
                 <span className="min-w-0 break-words">{fmtVigencia(v)}</span>
+                <span className="inline-flex h-5 shrink-0 items-center rounded-full border bg-muted/40 px-1.5 text-[10px] font-medium tabular-nums text-muted-foreground">
+                  {formatarDuracaoVigencia(v)}
+                </span>
               </span>
             }
             description={<VigenciaStatus vigencia={v} />}
