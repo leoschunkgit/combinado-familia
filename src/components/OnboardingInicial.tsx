@@ -29,6 +29,7 @@ import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/co
 import { encontrarTarefaEquivalente } from "@/lib/tarefa-sugestoes";
 import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
 import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
+import { nomePessoaCanonico, nomePessoaMaiusculo } from "@/lib/nome-pessoa";
 
 const PASSOS_MANUAL = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
 const PASSOS_AUTOMATICO = ["Filho", "Tarefa", "Atribuição"] as const;
@@ -111,7 +112,7 @@ export function OnboardingInicial() {
 
 
   async function cadastrarFilho() {
-    const nome = nomeFilho.trim();
+    const nome = nomePessoaCanonico(nomeFilho);
     if (nome.length < 2 || nome.length > 100) {
       toast.error("Informe o nome do filho");
       return;
@@ -374,7 +375,7 @@ export function OnboardingInicial() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="onboarding-filho">Nome *</Label>
-              <Input id="onboarding-filho" autoFocus value={nomeFilho} onChange={(e) => setNomeFilho(e.target.value)} placeholder="Nome do filho" />
+              <Input id="onboarding-filho" autoFocus value={nomeFilho} onChange={(e) => setNomeFilho(nomePessoaMaiusculo(e.target.value))} placeholder="Nome do filho" />
             </div>
             <div className="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-3">
               <div className="space-y-2">
