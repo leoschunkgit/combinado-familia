@@ -20,7 +20,6 @@ import { useActionLoading } from "@/components/ActionLoading";
 import { clonarUltimaVigencia, obterUltimaVigencia } from "@/lib/clonar-vigencia";
 import { excluirVigenciaComRegra } from "@/lib/excluir-vigencia";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
-import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { calcularPeriodoPorDias, diasDaVigencia, sugerirInicioVigencia, type PeriodoVigenciaModo } from "@/lib/vigencia-periodo";
 import { extrairPdfVigencia, podeExtrairPdfVigencia } from "@/lib/vigencia-relatorio-pdf";
 import { MENSAGEM_VIGENCIA_AUTOMATICA_GERENCIAMENTO, useVigenciaAutomatica } from "@/lib/vigencia-automatica";
@@ -112,7 +111,6 @@ function VigenciasPage() {
   const [confirmarCloneAberto, setConfirmarCloneAberto] = useState(false);
   const [vigenciaParaAtribuir, setVigenciaParaAtribuir] = useState<number | null>(null);
   const [vigenciaInfoId, setVigenciaInfoId] = useState<number | null>(null);
-  const [vigenciasAbertas, setVigenciasAbertas] = useState<Record<number, boolean>>({});
   const paraCampo = paraCampoDataHoraBrasil;
   const paraIso = paraIsoDataHoraBrasil;
 
@@ -341,6 +339,11 @@ function VigenciasPage() {
         <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-300" />Irá começar</span>
       )}
     </div>
+    <div className="mb-3 rounded-lg border bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+      {vigenciaAutomaticaAtiva
+        ? "Este período faz parte do ciclo automático. As atribuições continuam sendo definidas por filho e tarefa."
+        : "A vigência define somente o período do combinado. As consequências de “Não fez” são escolhidas em cada registro."}
+    </div>
     <div className="space-y-3">
         {vigencias.length === 0 && (
           <EmptyState>
@@ -353,30 +356,28 @@ function VigenciasPage() {
           const situacao = situacaoVigencia(v, agora);
           const finalizada = situacao === "finalizada";
           const emAndamento = situacao === "andamento";
-          const aberto = vigenciasAbertas[v.id] === true;
-          return <CollapsibleSection
-            key={v.id}
-            title={
-              <span className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] font-semibold tracking-tight text-foreground sm:text-sm">
-                <CalendarRange className="h-4 w-4 shrink-0 text-primary" />
-                <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-1">
-                  <span>{formatarDataVigencia(v.data_inicio)}</span>
-                  <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_inicio)}</span>
-                  <span className="font-medium text-muted-foreground">à</span>
-                  <span>{formatarDataVigencia(v.data_fim)}</span>
-                  <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_fim)}</span>
-                </span>
-                <span className="inline-flex h-5 shrink-0 items-center rounded-full border bg-muted/40 px-1.5 text-[10px] font-medium tabular-nums text-muted-foreground">
-                  {formatarDuracaoVigencia(v)}
-                </span>
-              </span>
-            }
-            description={<VigenciaStatus vigencia={v} />}
-            alignFirstRow
-            open={aberto}
-            onOpenChange={(open) => setVigenciasAbertas((atuais) => ({ ...atuais, [v.id]: open }))}
-            action={
-              <DropdownMenu>
+          return <section key={v.id} className="overflow-hidden rounded-2xl border bg-card">
+            <div className="flex items-start">
+              <div className="min-w-0 flex-1 px-4 py-4 sm:px-5">
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] font-semibold tracking-tight text-foreground sm:text-sm">
+                  <CalendarRange className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-1">
+                    <span>{formatarDataVigencia(v.data_inicio)}</span>
+                    <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_inicio)}</span>
+                    <span className="font-medium text-muted-foreground">à</span>
+                    <span>{formatarDataVigencia(v.data_fim)}</span>
+                    <span className="font-medium tabular-nums text-muted-foreground">{formatarHoraVigencia(v.data_fim)}</span>
+                  </span>
+                  <span className="inline-flex h-5 shrink-0 items-center rounded-full border bg-muted/40 px-1.5 text-[10px] font-medium tabular-nums text-muted-foreground">
+                    {formatarDuracaoVigencia(v)}
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <VigenciaStatus vigencia={v} />
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center py-4 pr-4 sm:pr-5">
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -437,15 +438,9 @@ function VigenciasPage() {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-            }
-            contentClassName="p-4"
-          >
-            <div className="rounded-lg border bg-muted/20 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-              {vigenciaAutomaticaAtiva
-                ? "Este período faz parte do ciclo automático. As atribuições continuam sendo definidas por filho e tarefa."
-                : "A vigência define somente o período do combinado. As consequências de “Não fez” são escolhidas em cada registro."}
+              </div>
             </div>
-          </CollapsibleSection>;
+          </section>;
         })}
     </div>
 
