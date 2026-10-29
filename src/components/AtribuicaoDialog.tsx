@@ -145,6 +145,52 @@ export function AtribuicaoDialog({
     : tarefas;
   const semTarefasSelecionaveis = tarefasParaSelecionar.length === 0;
 
+  const vigenciaNormalId = vigenciaAutomaticaAtiva
+    ? vigenciaAtiva?.id ?? null
+    : vig
+      ? Number(vig)
+      : null;
+  const filhoNormalId = filho ? Number(filho) : null;
+  const filtroTarefasNormalAtivo = filhoNormalId !== null && vigenciaNormalId !== null;
+  const tarefasDisponiveisNormal = useMemo(() => {
+    if (mode !== "NORMAL" || !filtroTarefasNormalAtivo) return tarefas;
+
+    return tarefas.filter((tarefa) => {
+      const jaCadastrada = existentes.some((item) =>
+        item.id_vigencia === vigenciaNormalId
+        && item.id_filho === filhoNormalId
+        && item.id_tarefa === tarefa.id
+      );
+      if (jaCadastrada) return false;
+
+      return !itens.some((item) =>
+        item.id_filho === filhoNormalId
+        && item.id_tarefa === tarefa.id
+        && (
+          vigenciaAutomaticaAtiva
+          || item.id_vigencia === vigenciaNormalId
+        )
+      );
+    });
+  }, [
+    mode,
+    filtroTarefasNormalAtivo,
+    tarefas,
+    existentes,
+    itens,
+    vigenciaNormalId,
+    filhoNormalId,
+    vigenciaAutomaticaAtiva,
+  ]);
+  const semTarefasDisponiveisNormal = filtroTarefasNormalAtivo && tarefasDisponiveisNormal.length === 0;
+
+  useEffect(() => {
+    if (!open || mode !== "NORMAL" || !filtroTarefasNormalAtivo) return;
+
+    const idsDisponiveis = new Set(tarefasDisponiveisNormal.map((tarefa) => tarefa.id));
+    setTarefasSelecionadas((atuais) => atuais.filter((id) => idsDisponiveis.has(id)));
+  }, [open, mode, filtroTarefasNormalAtivo, tarefasDisponiveisNormal]);
+
   const statusVigencia = (v: (typeof vigencias)[number]) => ({
     value: String(v.id),
     label: fmtVigencia(v),
@@ -363,31 +409,33 @@ export function AtribuicaoDialog({
                     <span className="text-sm font-medium">Tarefas <span className="text-destructive" aria-hidden="true">*</span></span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={semTarefas}>
+                        <Button type="button" variant="outline" className="w-full justify-between font-normal" disabled={semTarefas || semTarefasDisponiveisNormal}>
                           <span className="truncate">
                             {semTarefas
                               ? "Nenhuma tarefa cadastrada"
-                              : tarefasSelecionadas.length === 0
-                                ? "Selecione"
-                                : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}
+                              : semTarefasDisponiveisNormal
+                                ? "Todas as tarefas já foram atribuídas"
+                                : tarefasSelecionadas.length === 0
+                                  ? "Selecione"
+                                  : `${tarefasSelecionadas.length} tarefa(s) selecionada(s)`}
                           </span>
                           <ChevronsUpDown className="h-4 w-4 opacity-50" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                        {tarefas.length > 0 && (
+                        {tarefasDisponiveisNormal.length > 0 && (
                           <>
                             <DropdownMenuCheckboxItem
-                              checked={tarefasSelecionadas.length === tarefas.length}
+                              checked={tarefasSelecionadas.length === tarefasDisponiveisNormal.length}
                               onSelect={(e) => e.preventDefault()}
-                              onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefas.map((t) => t.id) : [])}
+                              onCheckedChange={(checked) => setTarefasSelecionadas(checked ? tarefasDisponiveisNormal.map((t) => t.id) : [])}
                             >
                               Selecionar todas
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuSeparator />
                           </>
                         )}
-                        {tarefas.map((t) => (
+                        {tarefasDisponiveisNormal.map((t) => (
                           <DropdownMenuCheckboxItem key={t.id} className="whitespace-normal break-words" checked={tarefasSelecionadas.includes(t.id)} onSelect={(e) => e.preventDefault()} onCheckedChange={() => alternarTarefa(t.id)}>
                             <span className="flex min-w-0 flex-1 items-start gap-2">
                               <TarefaIcone nome={t.nome} className="mt-0.5" />
