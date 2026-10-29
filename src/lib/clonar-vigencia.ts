@@ -20,10 +20,10 @@ function montarPeriodoClone(vigencias: Vigencia[], origem: Vigencia) {
     return fim > maior ? fim : maior;
   }, Number.NEGATIVE_INFINITY);
 
-  const inicioBase = Number.isFinite(maiorFim)
-    ? maiorFim
-    : new Date(origem.data_fim).getTime();
-  const inicio = new Date(inicioBase + 1_000);
+  const inicioAposUltimaVigencia = Number.isFinite(maiorFim)
+    ? maiorFim + 1_000
+    : new Date(origem.data_fim).getTime() + 1_000;
+  const inicio = new Date(Math.max(Date.now(), inicioAposUltimaVigencia));
 
   const duracaoVigenciaMs =
     new Date(origem.data_fim).getTime() - new Date(origem.data_inicio).getTime();
