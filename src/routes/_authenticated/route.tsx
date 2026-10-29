@@ -37,6 +37,7 @@ import {
   saveThemePreference,
   THEME_CHANGE_EVENT,
 } from "@/lib/theme";
+import { MENSAGEM_VIGENCIA_AUTOMATICA_GERENCIAMENTO, VigenciaAutomaticaProvider, useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -93,7 +94,7 @@ const NAV_ITENS: NavItem[] = [
   { to: "/atribuicoes", label: "Atribuições", icon: Link2 },
 ];
 
-const ETAPAS = [
+const ETAPAS_MANUAL = [
   { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se ele recebe mesada, marque essa opção e informe o valor. A consequência de cada “Não fez” será escolhida no momento da marcação." },
   { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
   { to: "/vigencias", label: "Vigências", title: "Defina o período", rule: "Escolha apenas o início e o fim do combinado. A vigência organiza o período e as atribuições; as consequências pertencem a cada ocorrência." },
@@ -102,7 +103,23 @@ const ETAPAS = [
   { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre “Fez”, “Não fez” ou “Não precisou” na data em que aconteceu. “Não precisou” encerra a pendência sem estrela e sem consequência. Em cada “Não fez”, escolha de forma independente: nada, desconto da mesada (quando houver) ou penalidade." },
 ] as const;
 
+const ETAPAS_AUTOMATICO = [
+  { to: "/filhos", label: "Filhos", title: "Cadastre os filhos", rule: "Informe o nome de cada filho. Se ele recebe mesada, marque essa opção e informe o valor. A consequência de cada “Não fez” será escolhida no momento da marcação." },
+  { to: "/tarefas", label: "Tarefas", title: "Crie as tarefas", rule: "Cadastre as tarefas que você quer combinar com os filhos. Depois, você poderá atribuir a mesma tarefa a mais de um filho." },
+  { to: "/atribuicoes", label: "Atribuições", title: "Associe filhos e tarefas", rule: "Selecione o filho e as tarefas. Ao salvar, o sistema define a vigência automaticamente e mantém os próximos ciclos sem exigir cadastro manual de período." },
+  { to: "/estrelas", label: "Recompensas", title: "Cadastre as recompensas", rule: "Defina recompensas para cada filho e quantas estrelas serão necessárias para conquistá-las." },
+  { to: "/ocorrencias", label: "Fez / Não fez", title: "Acompanhe os combinados", rule: "Registre “Fez”, “Não fez” ou “Não precisou” na data em que aconteceu. “Não precisou” encerra a pendência sem estrela e sem consequência. Em cada “Não fez”, escolha de forma independente: nada, desconto da mesada (quando houver) ou penalidade." },
+] as const;
+
 function AuthenticatedLayout() {
+  return (
+    <VigenciaAutomaticaProvider>
+      <AuthenticatedLayoutContent />
+    </VigenciaAutomaticaProvider>
+  );
+}
+
+function AuthenticatedLayoutContent() {
   const { nomePai, user, ehAdmin } = Route.useRouteContext();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -110,6 +127,8 @@ function AuthenticatedLayout() {
   const { data: vigencias = [] } = useVigencias();
   const { data: atribuicoes = [] } = useFilhoTarefas();
   const { data: ocorrencias = [] } = useOcorrencias();
+  const { ativa: vigenciaAutomaticaAtiva, carregando: carregandoVigenciaAutomatica } = useVigenciaAutomatica();
+  const etapas = vigenciaAutomaticaAtiva ? ETAPAS_AUTOMATICO : ETAPAS_MANUAL;
   const qc = useQueryClient();
   const { runAction } = useActionLoading();
   const hoje = useDataBrasilAtual();
@@ -147,7 +166,19 @@ function AuthenticatedLayout() {
     saveThemePreference(escuro ? "dark" : "light");
   };
 
+  useEffect(() => {
+    if (vigenciaAutomaticaAtiva) {
+      setConfirmarCloneMenuAberto(false);
+    }
+  }, [vigenciaAutomaticaAtiva]);
+
   async function clonarPeloMenu() {
+    if (vigenciaAutomaticaAtiva) {
+      setConfirmarCloneMenuAberto(false);
+      toast.info(MENSAGEM_VIGENCIA_AUTOMATICA_GERENCIAMENTO);
+      return;
+    }
+
     try {
       const { qtdAtribuicoes } = await clonarUltimaVigencia(vigencias);
       await Promise.all([
@@ -173,7 +204,7 @@ function AuthenticatedLayout() {
   }
 
   function irParaEtapa(indice: number) {
-    const destino = ETAPAS[indice];
+    const destino = etapas[indice];
     if (!destino) return;
     setAberto(false); setEtapa(indice); navigate({ to: destino.to });
   }
@@ -204,7 +235,7 @@ function AuthenticatedLayout() {
     navigate({ to: "/", replace: true });
   }
 
-  const passoAtual = etapa === null ? null : ETAPAS[etapa];
+  const passoAtual = etapa === null ? null : etapas[etapa];
   const configuracaoInicialConcluida = filhos.length > 0 && vigencias.length > 0 && atribuicoes.length > 0;
   const agoraBrasil = new Date(hoje + "T12:00:00-03:00");
   const pendenciasHoje = configuracaoInicialConcluida ? pendenciasDoDia(vigencias, atribuicoes, ocorrencias, agoraBrasil) : [];
@@ -217,7 +248,10 @@ function AuthenticatedLayout() {
   const ultimaVigencia = obterUltimaVigencia(vigencias);
   const inicialResponsavel = nomePai.trim().charAt(0).toUpperCase() || "R";
 
-  const AtalhosPrincipais = ({ mobile = false }: { mobile?: boolean }) => (
+  const AtalhosPrincipais = ({ mobile = false }: { mobile?: boolean }) => {
+    if (carregandoVigenciaAutomatica || vigenciaAutomaticaAtiva) return null;
+
+    return (
     <div className={mobile ? "mt-5 space-y-2" : "mb-2 mt-7 space-y-1.5"}>
       <button
         type="button"
@@ -242,7 +276,8 @@ function AuthenticatedLayout() {
         </span>
       </button>
     </div>
-  );
+    );
+  };
 
   const MenuPrincipal = ({ mobile = false }: { mobile?: boolean }) => (
     <div className={mobile ? "space-y-1.5" : "space-y-1.5"}>
@@ -503,7 +538,7 @@ function AuthenticatedLayout() {
               </div>
             </div>
           </div>
-          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {ETAPAS.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Hint content="Pular guia"><button type="button" className={modalCloseInlineButtonClass} onClick={() => void runAction(encerrar)} disabled={salvando} aria-label="Pular guia"><ModalCloseIcon /></button></Hint></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === ETAPAS.length - 1 ? void runAction(encerrar) : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === ETAPAS.length - 1 ? "Concluir" : "Próximo"} {etapa < ETAPAS.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button></div></section>}
+          {etapa !== null && passoAtual && <section aria-label="Guia de primeiros passos" className="mb-6 border-l-4 border-primary bg-accent p-4 text-accent-foreground md:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-muted-foreground">Passo {etapa + 1} de {etapas.length} · {passoAtual.label}</p><h2 className="mt-1 text-lg font-semibold">{passoAtual.title}</h2></div><Hint content="Pular guia"><button type="button" className={modalCloseInlineButtonClass} onClick={() => void runAction(encerrar)} disabled={salvando} aria-label="Pular guia"><ModalCloseIcon /></button></Hint></div><p className="mt-2 text-sm leading-relaxed">{passoAtual.rule}</p><div className="mt-4 flex flex-wrap items-center gap-2">{etapa > 0 && <Button variant="outline" size="sm" onClick={() => irParaEtapa(etapa - 1)}><ArrowLeft /> Anterior</Button>}<Button size="sm" onClick={() => etapa === etapas.length - 1 ? void runAction(encerrar) : irParaEtapa(etapa + 1)} disabled={salvando}>{etapa === etapas.length - 1 ? "Concluir" : "Próximo"} {etapa < etapas.length - 1 && <ArrowRight />}</Button><Button variant="ghost" size="sm" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button></div></section>}
           <Outlet />
         </AppPageContent>
 
@@ -666,12 +701,12 @@ function AuthenticatedLayout() {
         />
 
         <ClonarVigenciaDialog
-          open={confirmarCloneMenuAberto}
+          open={!vigenciaAutomaticaAtiva && confirmarCloneMenuAberto}
           onOpenChange={setConfirmarCloneMenuAberto}
           onConfirm={() => void runAction(clonarPeloMenu)}
         />
 
-        <Dialog open={aberto} onOpenChange={(open) => { if (!open) void runAction(encerrar); }}><DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-lg"><DialogHeader><DialogTitle>Boas-vindas ao Combinado</DialogTitle><DialogDescription>Um caminho simples para começar a organizar os combinados da família.</DialogDescription></DialogHeader><ol className="space-y-2 py-2">{ETAPAS.map((item, index) => <li key={item.to} className="flex gap-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span><span className="self-center font-medium">{item.title}</span></li>)}</ol><div className="flex flex-row justify-end gap-2"><Button variant="ghost" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button><Button onClick={() => irParaEtapa(0)}>Começar <ArrowRight /></Button></div></DialogContent></Dialog>
+        <Dialog open={aberto} onOpenChange={(open) => { if (!open) void runAction(encerrar); }}><DialogContent className="max-h-[90vh] max-w-md overflow-y-auto rounded-lg"><DialogHeader><DialogTitle>Boas-vindas ao Combinado</DialogTitle><DialogDescription>Um caminho simples para começar a organizar os combinados da família.</DialogDescription></DialogHeader><ol className="space-y-2 py-2">{etapas.map((item, index) => <li key={item.to} className="flex gap-3 text-sm"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span><span className="self-center font-medium">{item.title}</span></li>)}</ol><div className="flex flex-row justify-end gap-2"><Button variant="ghost" onClick={() => void runAction(encerrar)} disabled={salvando}>Pular guia</Button><Button onClick={() => irParaEtapa(0)}>Começar <ArrowRight /></Button></div></DialogContent></Dialog>
       </div>
     </>
   );

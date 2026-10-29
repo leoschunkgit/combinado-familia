@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Link2, Plus, Trash2 } from "lucide-react";
@@ -11,12 +11,14 @@ import { EmptyState, PageHeader } from "@/components/PageHeader";
 import { ResponsiveFilters } from "@/components/ResponsiveFilters";
 import { Hint } from "@/components/Hint";
 import { Pick } from "@/components/Pick";
-import { msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
+import { fmtDataHora, msgErro, useFilhos, useFilhoTarefas, useTarefas, useVigencias } from "@/lib/db";
 import { useActionLoading } from "@/components/ActionLoading";
 import { compararVigencias, situacaoVigencia, VigenciaStatus } from "@/components/VigenciaStatus";
 import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapseChevron } from "@/components/CollapseChevron";
 import { TarefaIcone } from "@/components/TarefaIcone";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
+import { lerPreferenciaLocal, salvarPreferenciaLocal } from "@/lib/preferencias-ui";
 
 export const Route = createFileRoute("/_authenticated/atribuicoes")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -34,6 +36,8 @@ export const Route = createFileRoute("/_authenticated/atribuicoes")({
   component: AtribuicoesPage,
 });
 
+const CHAVE_ACCORDIONS_ATRIBUICOES = "combinado.ui.atribuicoes.accordions.v2";
+
 function AtribuicoesPage() {
   const { adicionar, vigencia } = Route.useSearch();
   const qc = useQueryClient();
@@ -42,15 +46,19 @@ function AtribuicoesPage() {
   const { data: filhos = [] } = useFilhos();
   const { data: tarefas = [] } = useTarefas();
   const { data: existentes = [] } = useFilhoTarefas();
+  const { ativa: vigenciaAutomaticaAtiva } = useVigenciaAutomatica();
   const [novoAberto, setNovoAberto] = useState(adicionar);
   const [confirmarExclusao, setConfirmarExclusao] = useState<number | null>(null);
   const [filhoContextoId, setFilhoContextoId] = useState<number | null>(null);
-  const [filhoAbertoChave, setFilhoAbertoChave] = useState<string | null>(null);
+  const [filhoAbertoPorVigencia, setFilhoAbertoPorVigencia] = useState<Record<string, number | null>>(
+    () => lerPreferenciaLocal<Record<string, number | null>>(CHAVE_ACCORDIONS_ATRIBUICOES, {}),
+  );
   const [vigenciaSelecionadaId, setVigenciaSelecionadaId] = useState<number | null>(
     vigencia ? Number(vigencia) : null,
   );
   const [filtrosRascunho, setFiltrosRascunho] = useState({ filho: "all", tarefa: "all" });
   const [filtrosAplicados, setFiltrosAplicados] = useState({ filho: "all", tarefa: "all" });
+  const ultimaVigenciaAtivaIdRef = useRef<number | null>(null);
 
   const vigenciasOrdenadas = useMemo(() => [...vigencias].sort(compararVigencias), [vigencias]);
   const vigenciaAtiva = vigenciasOrdenadas.find(
@@ -80,6 +88,35 @@ function AtribuicoesPage() {
 
     setVigenciaSelecionadaId(vigenciaAtiva?.id ?? vigenciasOrdenadas[0]?.id ?? null);
   }, [vigenciaAtiva?.id, vigenciaSelecionadaId, vigenciasOrdenadas]);
+
+  useEffect(() => {
+    const vigenciaAtivaId = vigenciaAtiva?.id ?? null;
+    if (vigenciaAtivaId === null) return;
+
+    const vigenciaAtivaAnteriorId = ultimaVigenciaAtivaIdRef.current;
+
+    if (
+      vigenciaAutomaticaAtiva
+      && vigenciaAtivaAnteriorId !== null
+      && vigenciaAtivaAnteriorId !== vigenciaAtivaId
+      && vigenciaSelecionadaId === vigenciaAtivaAnteriorId
+    ) {
+      setVigenciaSelecionadaId(vigenciaAtivaId);
+    }
+
+    ultimaVigenciaAtivaIdRef.current = vigenciaAtivaId;
+  }, [vigenciaAtiva?.id, vigenciaAutomaticaAtiva, vigenciaSelecionadaId]);
+
+  function alterarFilhoAberto(idVigencia: number, idFilho: number, aberto: boolean) {
+    setFilhoAbertoPorVigencia((atual) => {
+      const proximo = {
+        ...atual,
+        [String(idVigencia)]: aberto ? idFilho : null,
+      };
+      salvarPreferenciaLocal(CHAVE_ACCORDIONS_ATRIBUICOES, proximo);
+      return proximo;
+    });
+  }
 
   async function excluir(id: number) {
     const { error } = await supabase.rpc("excluir_atribuicao_com_regra", {
@@ -146,7 +183,6 @@ function AtribuicoesPage() {
     });
 
     setVigenciaSelecionadaId(id);
-    setFilhoAbertoChave(null);
     setFiltrosRascunho(ajustar);
     setFiltrosAplicados(ajustar);
   }
@@ -177,15 +213,8 @@ function AtribuicoesPage() {
         : grupo.atribuicoes.length > 0
     );
 
-  const formatadorDataCurta = new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  });
-
   const periodoCurto = (item: (typeof vigencias)[number]) =>
-    `${formatadorDataCurta.format(new Date(item.data_inicio))} à ${formatadorDataCurta.format(new Date(item.data_fim))}`;
+    `${fmtDataHora(item.data_inicio)} à ${fmtDataHora(item.data_fim)}`;
 
   const indiceVigenciaSelecionada = vigenciaSelecionada
     ? vigenciasOrdenadas.findIndex((item) => item.id === vigenciaSelecionada.id)
@@ -226,7 +255,11 @@ function AtribuicoesPage() {
       )}
 
       {vigenciasOrdenadas.length === 0 ? (
-        <EmptyState>Nenhuma vigência cadastrada.</EmptyState>
+        <EmptyState>
+          {vigenciaAutomaticaAtiva
+            ? "Ainda não há uma vigência automática. Use Adicionar para fazer a primeira atribuição; o período será criado automaticamente ao salvar."
+            : "Nenhuma vigência cadastrada."}
+        </EmptyState>
       ) : (
         <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           {vigenciaSelecionada && (
@@ -237,8 +270,8 @@ function AtribuicoesPage() {
                 <div className="flex min-w-0 items-center justify-center gap-5 sm:gap-6">
                   <button
                     type="button"
-                    onClick={() => navegarVigencia(-1)}
-                    disabled={indiceVigenciaSelecionada <= 0}
+                    onClick={() => navegarVigencia(1)}
+                    disabled={indiceVigenciaSelecionada < 0 || indiceVigenciaSelecionada >= vigenciasOrdenadas.length - 1}
                     className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                     aria-label="Ir para a vigência anterior"
                   >
@@ -251,8 +284,8 @@ function AtribuicoesPage() {
 
                   <button
                     type="button"
-                    onClick={() => navegarVigencia(1)}
-                    disabled={indiceVigenciaSelecionada < 0 || indiceVigenciaSelecionada >= vigenciasOrdenadas.length - 1}
+                    onClick={() => navegarVigencia(-1)}
+                    disabled={indiceVigenciaSelecionada <= 0}
                     className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-muted/50 disabled:hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                     aria-label="Ir para a próxima vigência"
                   >
@@ -279,9 +312,12 @@ function AtribuicoesPage() {
             ) : (
               <div className="space-y-4 sm:space-y-5">
                 {gruposFilhos.map(({ filho: filhoItem, atribuicoes: atribuicoesFilho }) => {
-                  const chave = `${vigenciaSelecionadaId ?? "sem-vigencia"}-${filhoItem.id}`;
                   const temAtribuicoes = atribuicoesFilho.length > 0;
-                  const aberto = temAtribuicoes && filhoAbertoChave === chave;
+                  const aberto = Boolean(
+                    temAtribuicoes
+                    && vigenciaSelecionadaId !== null
+                    && filhoAbertoPorVigencia[String(vigenciaSelecionadaId)] === filhoItem.id,
+                  );
 
                   return (
                     <section key={filhoItem.id} className="overflow-hidden rounded-xl border bg-card">
@@ -291,7 +327,7 @@ function AtribuicoesPage() {
                           className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
                           onClick={() => {
                             if (!temAtribuicoes) return;
-                            setFilhoAbertoChave(aberto ? null : chave);
+                            if (vigenciaSelecionadaId !== null) alterarFilhoAberto(vigenciaSelecionadaId, filhoItem.id, !aberto);
                           }}
                           aria-expanded={temAtribuicoes ? aberto : undefined}
                           aria-label={temAtribuicoes ? `${aberto ? "Recolher" : "Expandir"} tarefas de ${filhoItem.nome}` : undefined}

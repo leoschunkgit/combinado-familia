@@ -28,8 +28,10 @@ import { ModalCloseIcon, modalCloseInlineButtonClass } from "@/components/ui/mod
 import { FilhoPersonalizacao, corFilhoValida, type FilhoAvatarOpcao } from "@/components/FilhoPersonalizacao";
 import { encontrarTarefaEquivalente } from "@/lib/tarefa-sugestoes";
 import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 
-const PASSOS = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
+const PASSOS_MANUAL = ["Filho", "Tarefa", "Vigência", "Atribuição"] as const;
+const PASSOS_AUTOMATICO = ["Filho", "Tarefa", "Atribuição"] as const;
 
 export function OnboardingInicial() {
   const navigate = useNavigate();
@@ -40,6 +42,10 @@ export function OnboardingInicial() {
   const { data: vigencias = [], isLoading: carregandoVigencias } = useVigencias();
   const { data: atribuicoes = [], isLoading: carregandoAtribuicoes } = useFilhoTarefas();
   const { data: usuarioPai, isLoading: carregandoUsuarioPai } = useUsuarioPai();
+  const {
+    ativa: vigenciaAutomaticaAtiva,
+    carregando: carregandoVigenciaAutomatica,
+  } = useVigenciaAutomatica();
 
   const [salvando, setSalvando] = useState(false);
   const [confirmarPularAberto, setConfirmarPularAberto] = useState(false);
@@ -61,14 +67,30 @@ export function OnboardingInicial() {
   const [tarefaSelecionada, setTarefaSelecionada] = useState("");
   const [vigenciaSelecionada, setVigenciaSelecionada] = useState("");
 
-  const carregando = carregandoFilhos || carregandoTarefas || carregandoVigencias || carregandoAtribuicoes || carregandoUsuarioPai;
+  const carregando =
+    carregandoFilhos
+    || carregandoTarefas
+    || carregandoVigencias
+    || carregandoAtribuicoes
+    || carregandoUsuarioPai
+    || carregandoVigenciaAutomatica;
   const vigenciasAtivas = vigencias.filter(vigenciaEmAndamento);
+  const passos = vigenciaAutomaticaAtiva ? PASSOS_AUTOMATICO : PASSOS_MANUAL;
+  const etapaAtribuicao = vigenciaAutomaticaAtiva ? 2 : 3;
 
-  const etapaBase =
-    filhos.length === 0 ? 0 :
-    tarefas.length === 0 ? 1 :
-    vigencias.length === 0 ? 2 :
-    3;
+  const etapaBase = vigenciaAutomaticaAtiva
+    ? filhos.length === 0
+      ? 0
+      : tarefas.length === 0
+        ? 1
+        : 2
+    : filhos.length === 0
+      ? 0
+      : tarefas.length === 0
+        ? 1
+        : vigencias.length === 0
+          ? 2
+          : 3;
   const etapa = etapaBase;
 
   const aberto = !onboardingEncerradoLocalmente && !carregando && usuarioPai?.onboarding_concluido !== true && etapa >= 0;
@@ -76,13 +98,14 @@ export function OnboardingInicial() {
   const tarefaAtual = tarefaSelecionada || (tarefas[0] ? String(tarefas[0].id) : "");
   const vigenciaAtual = vigenciaSelecionada || (vigenciasAtivas[0] ? String(vigenciasAtivas[0].id) : "");
   const atribuicaoAtualExiste = Boolean(
-    filhoAtual &&
-    tarefaAtual &&
-    vigenciaAtual &&
-    atribuicoes.some((atribuicao) =>
-      atribuicao.id_filho === Number(filhoAtual) &&
-      atribuicao.id_tarefa === Number(tarefaAtual) &&
-      atribuicao.id_vigencia === Number(vigenciaAtual)
+    !vigenciaAutomaticaAtiva
+    && filhoAtual
+    && tarefaAtual
+    && vigenciaAtual
+    && atribuicoes.some((atribuicao) =>
+      atribuicao.id_filho === Number(filhoAtual)
+      && atribuicao.id_tarefa === Number(tarefaAtual)
+      && atribuicao.id_vigencia === Number(vigenciaAtual)
     ),
   );
 
@@ -230,56 +253,71 @@ export function OnboardingInicial() {
   }
 
   async function cadastrarAssociacao() {
-    if (!filhoAtual || !tarefaAtual || !vigenciaAtual) {
-      toast.error("Selecione o filho, a tarefa e a vigência");
+    if (
+      !filhoAtual
+      || !tarefaAtual
+      || (!vigenciaAutomaticaAtiva && !vigenciaAtual)
+    ) {
+      toast.error(
+        vigenciaAutomaticaAtiva
+          ? "Selecione o filho e a tarefa"
+          : "Selecione o filho, a tarefa e a vigência",
+      );
       return;
     }
 
     setSalvando(true);
 
-    if (!atribuicaoAtualExiste) {
-      const resultado = await cadastrarAtribuicoes({
-        candidatos: [{
-          id_filho: Number(filhoAtual),
-          id_tarefa: Number(tarefaAtual),
-          id_vigencia: Number(vigenciaAtual),
-        }],
-        existentes: atribuicoes,
-        vigencias,
-        politica: "SOMENTE_ATUAL",
-      });
+    try {
+      if (!atribuicaoAtualExiste) {
+        const resultado = await cadastrarAtribuicoes({
+          candidatos: [{
+            id_filho: Number(filhoAtual),
+            id_tarefa: Number(tarefaAtual),
+            ...(vigenciaAutomaticaAtiva
+              ? {}
+              : { id_vigencia: Number(vigenciaAtual) }),
+          }],
+          existentes: atribuicoes,
+          vigencias,
+          politica: "SOMENTE_ATUAL",
+        });
 
-      if (!resultado.ok) {
-        setSalvando(false);
-        toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+        if (!resultado.ok) {
+          toast.error("erroBanco" in resultado ? msgErro(resultado.erroBanco) : resultado.mensagem);
+          return;
+        }
+
+        await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
+        if (resultado.modo === "AUTOMATICA") {
+          await qc.invalidateQueries({ queryKey: ["vigencias"] });
+        }
+      }
+
+      if (!usuarioPai?.id) {
+        toast.error("Não foi possível identificar sua conta para concluir o aprendizado.");
         return;
       }
 
-      await qc.invalidateQueries({ queryKey: ["filho_tarefas"] });
-    }
+      const { error: erroOnboarding } = await supabase
+        .from("t_usuario_pai")
+        .update({ onboarding_concluido: true })
+        .eq("id", usuarioPai.id);
 
-    if (!usuarioPai?.id) {
+      if (erroOnboarding) {
+        toast.error(msgErro(erroOnboarding));
+        return;
+      }
+
+      setOnboardingEncerradoLocalmente(true);
+      await qc.invalidateQueries({ queryKey: ["usuario_pai"] });
+      toast.success("Configuração inicial concluída!");
+      navigate({ to: "/ocorrencias" });
+    } catch (erro) {
+      toast.error(msgErro(erro));
+    } finally {
       setSalvando(false);
-      toast.error("Não foi possível identificar sua conta para concluir o aprendizado.");
-      return;
     }
-
-    const { error: erroOnboarding } = await supabase
-      .from("t_usuario_pai")
-      .update({ onboarding_concluido: true })
-      .eq("id", usuarioPai.id);
-
-    setSalvando(false);
-
-    if (erroOnboarding) {
-      toast.error(msgErro(erroOnboarding));
-      return;
-    }
-
-    setOnboardingEncerradoLocalmente(true);
-    await qc.invalidateQueries({ queryKey: ["usuario_pai"] });
-    toast.success("Configuração inicial concluída!");
-    navigate({ to: "/ocorrencias" });
   }
 
   return (
@@ -307,11 +345,18 @@ export function OnboardingInicial() {
             Primeiros passos
           </div>
           <DialogTitle>Configure seu primeiro combinado</DialogTitle>
-          <DialogDescription>Quatro passos rápidos para começar.</DialogDescription>
+          <DialogDescription>
+            {vigenciaAutomaticaAtiva
+              ? "Três passos rápidos para começar."
+              : "Quatro passos rápidos para começar."}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-4 gap-1.5" aria-label="Progresso da configuração inicial">
-          {PASSOS.map((passo, index) => (
+        <div
+          className={`grid gap-1.5 ${vigenciaAutomaticaAtiva ? "grid-cols-3" : "grid-cols-4"}`}
+          aria-label="Progresso da configuração inicial"
+        >
+          {passos.map((passo, index) => (
             <div key={passo} className="min-w-0">
               <div className={`h-1.5 rounded-full ${index <= etapa ? "bg-primary" : "bg-muted"}`} />
               <p className={`mt-1 truncate text-[10px] sm:text-xs ${index === etapa ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
@@ -382,7 +427,7 @@ export function OnboardingInicial() {
           </div>
         )}
 
-        {etapa === 2 && (
+        {!vigenciaAutomaticaAtiva && etapa === 2 && (
           <div className="space-y-4">
             <h3 className="font-semibold">3. Vigência</h3>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -400,12 +445,16 @@ export function OnboardingInicial() {
           </div>
         )}
 
-        {etapa === 3 && (
+        {etapa === etapaAtribuicao && (
           <div className="space-y-4">
-            <h3 className="font-semibold">4. Atribuição</h3>
+            <h3 className="font-semibold">
+              {vigenciaAutomaticaAtiva ? "3. Atribuição" : "4. Atribuição"}
+            </h3>
             <Pick label="Filho" childIcons required value={filhoAtual} onChange={setFilhoSelecionado} options={filhos.map((f) => ({ value: String(f.id), label: f.nome, cor: f.cor, avatar: f.avatar === "menino" || f.avatar === "menina" ? f.avatar : null }))} />
             <Pick label="Tarefa" taskIcons required value={tarefaAtual} onChange={setTarefaSelecionada} options={tarefas.map((t) => ({ value: String(t.id), label: t.nome }))} />
-            <Pick label="Vigência" required value={vigenciaAtual} onChange={setVigenciaSelecionada} options={vigenciasAtivas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: "andamento" as const }))} />
+            {!vigenciaAutomaticaAtiva && (
+              <Pick label="Vigência" required value={vigenciaAtual} onChange={setVigenciaSelecionada} options={vigenciasAtivas.map((v) => ({ value: String(v.id), label: fmtVigencia(v), status: "andamento" as const }))} />
+            )}
             <Button className="w-full" disabled={salvando} onClick={() => void runAction(cadastrarAssociacao)}>
               {salvando ? "Salvando..." : "Concluir configuração"}
             </Button>

@@ -21,7 +21,11 @@ import { FilhoAvatar } from "@/components/FilhoAvatar";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { InfoTile } from "@/components/InfoTile";
 import { RecompensasRapidas, criarRecompensasRapidasVazias, prepararRecompensasRapidas } from "@/components/RecompensasRapidas";
+import { useVigenciaAutomatica } from "@/lib/vigencia-automatica";
 import { FilhoEstrelasPainel } from "@/components/FilhoEstrelasPainel";
+import { lerPreferenciaLocal, salvarPreferenciaLocal } from "@/lib/preferencias-ui";
+
+const CHAVE_ACCORDION_FILHOS = "combinado.ui.filhos.accordion.v1";
 
 export const Route = createFileRoute("/_authenticated/filhos")({
   head: () => ({ meta: [
@@ -127,6 +131,7 @@ function FilhosPage() {
   const { data: tarefas = [] } = useTarefas();
   const { data: vigencias = [] } = useVigencias();
   const vigenciaAtual = vigencias.find(vigenciaEmAndamento);
+  const { ativa: vigenciaAutomaticaAtiva } = useVigenciaAutomatica();
   const [form, setForm] = useState<FilhoForm>(vazio);
   const [novoAberto, setNovoAberto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -138,7 +143,15 @@ function FilhosPage() {
   const [filhoPosCadastro, setFilhoPosCadastro] = useState<{ id: number; nome: string; cor: string | null; avatar: string | null } | null>(null);
   const [perguntarAtribuicao, setPerguntarAtribuicao] = useState(false);
   const [atribuirAberto, setAtribuirAberto] = useState(false);
-  const [filhoAbertoId, setFilhoAbertoId] = useState<number | null>(null);
+  const [filhoAbertoId, setFilhoAbertoId] = useState<number | null>(
+    () => lerPreferenciaLocal<number | null>(CHAVE_ACCORDION_FILHOS, null),
+  );
+  function alterarFilhoAberto(idFilho: number, aberto: boolean) {
+    const proximoId = aberto ? idFilho : null;
+    setFilhoAbertoId(proximoId);
+    salvarPreferenciaLocal(CHAVE_ACCORDION_FILHOS, proximoId);
+  }
+
   async function salvar(e: FormEvent) {
     e.preventDefault();
     const p = schema.safeParse(form);
@@ -186,7 +199,7 @@ function FilhosPage() {
       qc.invalidateQueries({ queryKey: ["resumo_estrelas_filho"] }),
     ]);
 
-    if (tarefas.length > 0 && vigenciaAtual) {
+    if (tarefas.length > 0 && (vigenciaAutomaticaAtiva || vigenciaAtual)) {
       setFilhoPosCadastro({
         id: criado.id,
         nome: criado.nome ?? p.data.nome,
@@ -259,7 +272,6 @@ function FilhosPage() {
         const aberto = filhoAbertoId === f.id;
         const temIdade = f.idade !== null;
         const temMesada = f.tem_mesada === true && f.valor_mesada !== null;
-        const temResumo = temIdade || temMesada;
         return <CollapsibleSection
           key={f.id}
           title={
@@ -269,7 +281,7 @@ function FilhosPage() {
             </span>
           }
           open={aberto}
-          onOpenChange={(open) => setFilhoAbertoId(open ? f.id : null)}
+          onOpenChange={(open) => alterarFilhoAberto(f.id, open)}
           action={
             <>
               <Hint content="Gerenciar acesso">
@@ -293,26 +305,20 @@ function FilhosPage() {
           }
           contentClassName="p-4"
         >
-          {temResumo && (
-            <div className={`grid gap-2 text-sm ${temIdade && temMesada ? "grid-cols-2" : "grid-cols-1"}`}>
-              {temIdade && (
-                <InfoTile
-                  label="Idade"
-                  value={`${f.idade} anos`}
-                />
-              )}
-              {temMesada && (
-                <InfoTile
-                  label="Mesada"
-                  icon={<WalletCards className="h-3.5 w-3.5" />}
-                  value={dinheiro(f.valor_mesada)}
-                />
-              )}
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <InfoTile
+              label="Idade"
+              value={temIdade ? `${f.idade} anos` : "Não informada"}
+            />
+            <InfoTile
+              label="Mesada"
+              icon={<WalletCards className="h-3.5 w-3.5" />}
+              value={temMesada ? dinheiro(f.valor_mesada) : "Sem mesada"}
+            />
+          </div>
 
           {aberto && (
-            <div className="mt-3 border-t pt-3">
+            <div className="mt-3">
               <FilhoEstrelasPainel filho={f} modo="recompensas" />
             </div>
           )}
@@ -343,7 +349,7 @@ function FilhosPage() {
             <span>{filhoPosCadastro.nome}</span>
           </div>
         )}
-        <p className="text-sm text-muted-foreground">Deseja atribuir tarefas para este filho na vigência atual?</p>
+        <p className="text-sm text-muted-foreground">{vigenciaAutomaticaAtiva ? "Deseja atribuir tarefas para este filho agora?" : "Deseja atribuir tarefas para este filho na vigência atual?"}</p>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => { setPerguntarAtribuicao(false); setFilhoPosCadastro(null); }}>Agora não</Button>
           <Button type="button" onClick={() => { setPerguntarAtribuicao(false); setAtribuirAberto(true); }}>Sim, atribuir</Button>

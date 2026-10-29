@@ -1,9 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import {
-  paraCampoDataHoraBrasil,
-  paraIsoDataHoraBrasil,
-  type Vigencia,
-} from "@/lib/db";
+import { type Vigencia } from "@/lib/db";
 
 export type CloneVigenciaResult = {
   qtdAtribuicoes: number;
@@ -24,18 +20,18 @@ function montarPeriodoClone(vigencias: Vigencia[], origem: Vigencia) {
     return fim > maior ? fim : maior;
   }, Number.NEGATIVE_INFINITY);
 
-  const inicio = Number.isFinite(maiorFim)
-    ? new Date(maiorFim)
-    : new Date(origem.data_fim);
-  inicio.setDate(inicio.getDate() + 1);
+  const inicioAposUltimaVigencia = Number.isFinite(maiorFim)
+    ? maiorFim + 1_000
+    : new Date(origem.data_fim).getTime() + 1_000;
+  const inicio = new Date(Math.max(Date.now(), inicioAposUltimaVigencia));
 
   const duracaoVigenciaMs =
     new Date(origem.data_fim).getTime() - new Date(origem.data_inicio).getTime();
   const fim = new Date(inicio.getTime() + duracaoVigenciaMs);
 
   return {
-    dataInicio: paraCampoDataHoraBrasil(inicio.toISOString()),
-    dataFim: paraCampoDataHoraBrasil(fim.toISOString()),
+    dataInicio: inicio.toISOString(),
+    dataFim: fim.toISOString(),
   };
 }
 
@@ -49,8 +45,8 @@ export async function clonarUltimaVigencia(
 
   const { data, error } = await supabase.rpc("duplicar_vigencia_com_atribuicoes", {
     p_modelo_id: origem.id,
-    p_data_inicio: paraIsoDataHoraBrasil(dataInicio),
-    p_data_fim: paraIsoDataHoraBrasil(dataFim),
+    p_data_inicio: dataInicio,
+    p_data_fim: dataFim,
   });
 
   if (error) throw error;

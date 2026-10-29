@@ -35,11 +35,11 @@ export const Route = createFileRoute("/")({
 });
 
 const REGRAS_SENHA = [
-  { id: "tam", label: "Pelo menos 8 caracteres", ok: (s: string) => s.length >= 8 },
-  { id: "min", label: "Uma letra minúscula", ok: (s: string) => /[a-z]/.test(s) },
-  { id: "mai", label: "Uma letra maiúscula", ok: (s: string) => /[A-Z]/.test(s) },
-  { id: "num", label: "Um número", ok: (s: string) => /\d/.test(s) },
-  { id: "especial", label: "Um caractere especial (ex.: !, @ ou #)", ok: (s: string) => /[^\p{L}\p{N}\s]/u.test(s) },
+  { id: "tam", label: "8 caracteres", ok: (s: string) => s.length >= 8 },
+  { id: "min", label: "1 minúscula", ok: (s: string) => /[a-z]/.test(s) },
+  { id: "mai", label: "1 maiúscula", ok: (s: string) => /[A-Z]/.test(s) },
+  { id: "num", label: "1 número", ok: (s: string) => /\d/.test(s) },
+  { id: "especial", label: "1 especial (! @ #)", ok: (s: string) => /[^\p{L}\p{N}\s]/u.test(s) },
 ] as const;
 const senhaValida = (s: string) => REGRAS_SENHA.every((r) => r.ok(s));
 const cadastroSchema = z.object({
@@ -351,7 +351,7 @@ function Index() {
       )}
       <section className="relative flex flex-col justify-between overflow-hidden bg-primary p-4 text-primary-foreground sm:p-6 md:p-8 lg:p-14">
         <AppBrand inverse className="h-[3.25rem] md:h-16 [&_img]:h-[3.25rem] md:[&_img]:h-16" />
-        <div className="my-4 sm:my-5 lg:my-12"><h1 className="max-w-lg text-4xl font-bold leading-tight md:text-6xl">Combinado é combinado. <span className="text-accent">Em família também.</span></h1><p className="mt-2 max-w-md text-sm leading-snug opacity-80 sm:text-base lg:mt-6 lg:text-lg lg:leading-normal">Defina tarefas e um período para cada filho. Cadastre uma penalidade escrita e um desconto por ocorrência: quem tem mesada recebe o desconto; quem não tem recebe a penalidade escrita. Acompanhe tudo em um só lugar.</p></div>
+        <div className="my-4 sm:my-5 lg:my-12"><h1 className="max-w-lg text-4xl font-bold leading-tight md:text-6xl">Combinado é combinado. <span className="text-accent">Em família também.</span></h1><p className="mt-2 max-w-md text-sm leading-snug opacity-80 sm:text-base lg:mt-6 lg:text-lg lg:leading-normal">Crie tarefas, acompanhe o progresso, acumule estrelas e transforme conquistas em recompensas. Quando algo não for cumprido, aplique desconto na mesada ou uma penalidade escrita. Tudo simples, organizado e em um só lugar.</p></div>
         <ul className="hidden gap-3 text-sm opacity-90 sm:grid sm:grid-cols-3 lg:grid"><li className="flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> Vários filhos</li><li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Ocorrências claras</li><li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-accent" /> Dados privados</li></ul>
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/20" />
       </section>
@@ -443,7 +443,7 @@ function Index() {
                   <>
                 <div className="space-y-2"><Label htmlFor="cn">Nome <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="cn" className="h-12 text-base" autoComplete="name" value={cad.nome} onChange={(e) => setCad({ ...cad, nome: e.target.value })} /></div>
                 <div className="space-y-2"><Label htmlFor="ce">Email <span className="text-destructive" aria-hidden="true">*</span></Label><Input id="ce" className="h-12 text-base" type="email" autoComplete="email" inputMode="email" value={cad.email} onChange={(e) => setCad({ ...cad, email: e.target.value })} /></div>
-                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" className="h-12 text-base" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><ul className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 text-[11px] sm:text-xs" aria-live="polite">{REGRAS_SENHA.map((r) => { const ok = r.ok(cad.senha); return <li key={r.id} className={ok ? "text-success" : "text-destructive"}>{r.label}</li>; })}</ul></div>
+                <div className="space-y-2"><Label htmlFor="cs">Senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="cs" className="h-12 text-base" autoComplete="new-password" value={cad.senha} onChange={(e) => setCad({ ...cad, senha: e.target.value })} /><p className="flex flex-wrap items-center gap-x-1 pt-1 text-[10px] leading-4 sm:flex-nowrap sm:text-[11px]" aria-live="polite">{REGRAS_SENHA.map((r, index) => { const ok = r.ok(cad.senha); return <span key={r.id} className={ok ? "font-medium text-emerald-700 dark:text-emerald-400" : "text-red-400 dark:text-red-300"}>{index > 0 && <span className="text-muted-foreground"> · </span>}{r.label}</span>; })}</p></div>
                 <div className="space-y-2"><Label htmlFor="ccs">Confirmar senha <span className="text-destructive" aria-hidden="true">*</span></Label><SenhaInput id="ccs" className="h-12 text-base" autoComplete="new-password" value={cad.confirmarSenha} onChange={(e) => setCad({ ...cad, confirmarSenha: e.target.value })} /><p className={`text-sm ${cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "text-destructive" : "text-muted-foreground"}`}>{cad.confirmarSenha && cad.confirmarSenha !== cad.senha ? "As senhas não coincidem." : "Digite novamente a senha para confirmar."}</p></div>
                   </>
                 )}

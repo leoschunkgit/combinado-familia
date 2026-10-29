@@ -149,8 +149,11 @@ export const fmtData = (d: string) =>
 export const fmtDataHora = (d: string) =>
   new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" });
 
+export const fmtDataHoraSegundos = (d: string) =>
+  new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" });
+
 export const fmtVigencia = (v: Pick<Vigencia, "data_inicio" | "data_fim">) =>
-  `${fmtDataHora(v.data_inicio)} à ${fmtDataHora(v.data_fim)}`;
+  `${fmtDataHoraSegundos(v.data_inicio)} à ${fmtDataHoraSegundos(v.data_fim)}`;
 
 export const paraCampoDataHoraBrasil = (d: string) => {
   const partes = new Intl.DateTimeFormat("en-CA", {

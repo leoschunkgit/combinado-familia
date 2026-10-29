@@ -11,7 +11,6 @@ import {
   Clock3,
   Database,
   Globe2,
-  Link2,
   ListTodo,
   RefreshCw,
   Search,
@@ -59,7 +58,6 @@ type AdminResumo = {
   atribuicoes: number;
   fez_hoje: number;
   nao_fez_hoje: number;
-  links_publicos_ativos: number;
   push_dispositivos: number;
   push_ativos: number;
   push_android_ativos: number;
@@ -152,7 +150,6 @@ const RESUMO_VAZIO: AdminResumo = {
   atribuicoes: 0,
   fez_hoje: 0,
   nao_fez_hoje: 0,
-  links_publicos_ativos: 0,
   push_dispositivos: 0,
   push_ativos: 0,
   push_android_ativos: 0,
@@ -219,7 +216,6 @@ function normalizarResumo(data: unknown): AdminResumo {
     atribuicoes: numero(r["atribuicoes"]),
     fez_hoje: numero(r["fez_hoje"]),
     nao_fez_hoje: numero(r["nao_fez_hoje"]),
-    links_publicos_ativos: numero(r["links_publicos_ativos"]),
     push_dispositivos: numero(r["push_dispositivos"]),
     push_ativos: numero(r["push_ativos"]),
     push_android_ativos: numero(r["push_android_ativos"]),
@@ -603,7 +599,6 @@ function AdministracaoPage() {
             <Indicador titulo="Vigências ativas" valor={resumo.vigencias_ativas} icon={<CalendarRange className="h-4 w-4" />} />
             <Indicador titulo="Fez hoje" valor={resumo.fez_hoje} icon={<ThumbsUp className="h-4 w-4" />} />
             <Indicador titulo="Não fez hoje" valor={resumo.nao_fez_hoje} icon={<ThumbsDown className="h-4 w-4" />} />
-            <Indicador titulo="Links públicos ativos" valor={resumo.links_publicos_ativos} icon={<Link2 className="h-4 w-4" />} />
           </div>
 
           <section className={uiSpacing.sectionCard}>
