@@ -28,7 +28,8 @@ const secoes = [
 ];
 
 function ManualPage() {
-  const pdfUrl = "/manual/Manual-Combinado-Familia.pdf";
+  const pdfUrl =
+    "https://radwzkgpgdcwyjcpfcqw.supabase.co/storage/v1/object/public/documentos-publicos/Manual-Combinado-Familia.pdf";
 
   return (
     <main className="min-h-screen bg-background">
@@ -70,7 +71,8 @@ function ManualPage() {
             </a>
             <a
               href={pdfUrl}
-              download="Manual-Combinado-Familia.pdf"
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
             >
               <Download className="h-4 w-4" />
