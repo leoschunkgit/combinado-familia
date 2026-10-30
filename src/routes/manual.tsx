@@ -13,18 +13,20 @@ export const Route = createFileRoute("/manual")({
 });
 
 const secoes = [
-  "Primeiros passos",
-  "Cadastro de filhos",
-  "Tarefas",
-  "Vigências",
+  "Cadastro do responsável",
+  "Cadastro do filho",
+  "Recompensas do filho",
+  "Vigências e PDF",
+  "Cadastro de tarefas",
   "Atribuições",
   "Fez, Não fez e Não precisou",
-  "Mesada e penalidades",
-  "Estrelas e recompensas",
-  "Acesso do filho",
-  "Notificações",
-  "Histórico e PDF",
-  "Dúvidas frequentes",
+  "Consequência do Não fez",
+  "Pendências",
+  "Acesso do filho — responsável",
+  "Como entrar como filho",
+  "O que o filho pode fazer no app",
+  "Aparelhos conectados",
+  "Fluxo completo do sistema",
 ];
 
 function ManualPage() {
